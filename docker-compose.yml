@@ -1,0 +1,30 @@
+services:
+
+  backend:
+    build:
+      context: ./backend
+    container_name: support-ai-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend/app:/app/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: support-ai-frontend
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: support-ai-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
