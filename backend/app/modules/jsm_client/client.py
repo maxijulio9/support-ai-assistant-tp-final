@@ -10,7 +10,7 @@ def _get_auth_header() -> dict:
         "Content-Type": "application/json",
     }
 
-def post_comment(issue_key: str, body: str) -> dict:
+def post_public_comment(issue_key: str, body: str) -> dict:
     #publica un comentario público en un ticket de JSM 
     #url = f"{settings.jsm_base_url}/rest/api/3/issue/{issue_key}/comment"
     # url = f"{settings.jsm_base_url}/rest/servicedeskapi/request/{issue_key}/comment"
@@ -86,6 +86,14 @@ def transition_issue(issue_key: str, transition_id: str) -> bool:
         response = client.post(url, json=payload, headers=_get_auth_header())
         return response.status_code == 204
 
+def get_transitions(issue_key: str) -> dict:
+    # obtiene las transiciones disponibles para un ticket
+    url = f"{settings.jsm_base_url}/rest/api/3/issue/{issue_key}/transitions"
+    with httpx.Client() as client:
+        response = client.get(url, headers=_get_auth_header())
+        response.raise_for_status()
+        return response.json()
+    
 def assign_issue(issue_key: str, account_id: str) -> bool:
 
     #Asigna un ticket a un agente.
@@ -94,3 +102,5 @@ def assign_issue(issue_key: str, account_id: str) -> bool:
     with httpx.Client() as client:
         response = client.put(url, json=payload, headers=_get_auth_header())
         return response.status_code == 204
+    
+
