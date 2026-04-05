@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 from app.modules.jsm_client.schemas import JsmWebhookPayload
+from app.modules.jsm_client import client
 
-router = APIRouter(prefix="/webhook", tags=["JSM Webhook"])
+router = APIRouter( tags=["JSM"])
 
-@router.post("/jsm")
+@router.post("/webhook/jsm")
 def receive_jsm_webhook(payload: JsmWebhookPayload):
     
     #Endpoint para recibir  eventos de JSM via webhook.
@@ -17,16 +18,15 @@ def receive_jsm_webhook(payload: JsmWebhookPayload):
 
     return {"status": "ignored", "event": event}
 
-from app.modules.jsm_client import client
 
 @router.post("/jsm/comment/{issue_key}")
-def test_post_comment(issue_key: str, body: str):
+def post_public_comment(issue_key: str, body: str):
     # endpoint temporal para probar post_comment
-    result = client.post_comment(issue_key, body)
+    result = client.post_public_comment(issue_key, body)
     return result
 
 @router.post("/jsm/internal-comment/{issue_key}")
-def test_post_internal_comment(issue_key: str, body: str):
+def post_internal_comment(issue_key: str, body: str):
     # endpoint temporal para probar post_internal_comment
     result = client.post_internal_comment(issue_key, body)
     return result
