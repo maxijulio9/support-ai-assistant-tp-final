@@ -42,3 +42,15 @@ def transition_issue(issue_key: str, transition_id: str):
     # prueba cambio de estado de un ticket
     result = client.transition_issue(issue_key, transition_id)
     return {"success": result}
+
+@router.post("/jsm/assign/{issue_key}/{account_id}")
+def assign_issue(issue_key: str, account_id: str):
+    # asigna un ticket a un agente
+    result = client.assign_issue(issue_key, account_id)
+    return {"success": result}
+
+@router.get("/jsm/agents")
+def get_agents():
+    # obtiene los agentes disponibles en la instancia
+    result = client.get_agents()
+    return result

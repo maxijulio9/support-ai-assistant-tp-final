@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = ""
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     jsm_base_url: str = ""
     jsm_user_email: str = ""
     jsm_api_token: str = ""
+    jsm_default_agent_id: str = ""
 
     # Confluence
     confluence_base_url: str = ""
