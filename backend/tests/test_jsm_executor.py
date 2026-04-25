@@ -1,4 +1,5 @@
-"""Tests unitarios para M5 - JSM Action Executor."""
+"""Tests unitarios para Modluo 5 - JSM Executor
+Se utiliza mocks para simular las respuestas de la API de JSM y verificar que el módulo construye  las solicitudes."""
 
 from unittest.mock import patch, MagicMock
 from app.modules.jsm_executor.client import (
@@ -9,7 +10,7 @@ from app.modules.jsm_executor.client import (
 )
 
 
-# verifica que post_comment envía el payload correcto para comentario público
+# verifica que post_comment envía el payload correcto para comentario publico
 @patch("app.modules.jsm_executor.client.httpx.Client")
 def test_post_comment_public(mock_client_class):
     mock_response = MagicMock()
@@ -76,6 +77,7 @@ def test_assign_issue_success(mock_client_class):
 
     assert result is True
 
+
 # verifica que get_transitions retorna las transiciones disponibles
 @patch("app.modules.jsm_executor.client.httpx.Client")
 def test_get_transitions(mock_client_class):
@@ -97,3 +99,4 @@ def test_get_transitions(mock_client_class):
 
     assert len(result["transitions"]) == 2
     mock_client.get.assert_called_once()
+
