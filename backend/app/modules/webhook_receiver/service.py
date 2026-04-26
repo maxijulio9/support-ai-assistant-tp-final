@@ -6,7 +6,7 @@ contiene la lógica de validación, normalización y despacho de eventos de JSM
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
 
 
-def _extract_plain_text(adf_node: dict) -> str:
+def extract_plain_text(adf_node: dict) -> str:
     # extrae texto plano desde el formato ADF (Atlassian Document Format)
     # es un JSON anidado con nodos de tipo paragraph, text, etc.
     if not adf_node:
@@ -38,10 +38,10 @@ def normalize_payload(payload: JsmWebhookPayload) -> NormalizedEvent | None:
     if not fields:
         return None
 
-    # extrae texto plano de la descripción en formato ADF
-    description_text = _extract_plain_text(fields.description) if fields.description else None
+    # con un ternario extrae texto plano de la descripcion que viene en formato ADF
+    description_text = extract_plain_text(fields.description) if fields.description else None
 
-    # extrae request type desde el campo personalizado de JSM
+    # extrae request type desde el campo personalizado estndar de JSM
     request_type = None
     if fields.customfield_10010 and fields.customfield_10010.requestType:
         request_type = fields.customfield_10010.requestType.name
@@ -76,17 +76,16 @@ def normalize_payload(payload: JsmWebhookPayload) -> NormalizedEvent | None:
 
 def dispatch_event(event: NormalizedEvent) -> dict:
     # determina la ruta del evento y lo despacha al módulo correspondiente
-    # por ahora retorna el evento normalizado — integración con Redis viene en siguiente iteración
-
+    # >>>>>> aca se va a considerar la  integración con redis 
     if event.event_type == "jira:issue_created":
-        # nuevo ticket → flujo principal → M2 Ticket Analyzer
-        print(f"[M1] issue_created recibido: {event.issue_key}")
+        # nuevo ticket: flujo principal>> al M2 Ticket Analyzer
+        print(f"M1 issue_created recibido: {event.issue_key}")
         return {"status": "dispatched", "route": "ticket_analyzer", "issue_key": event.issue_key}
 
     if event.event_type == "jira:issue_updated":
-        # comentario de usuario → flujo de conversación
-        print(f"[M1] comment_created recibido: {event.issue_key}")
+        # si es comentario de usuario >> flujo de conversación
+        print(f"M1 comment_created recibido: {event.issue_key}")
         return {"status": "dispatched", "route": "conversation_handler", "issue_key": event.issue_key}
 
-    # evento no reconocido → ignorar
+    # si en caso de revibir un evento no reconocido  ignorar simplemente, no debería pasar
     return {"status": "ignored", "event_type": event.event_type}
