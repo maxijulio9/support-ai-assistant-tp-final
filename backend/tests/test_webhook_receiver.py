@@ -124,3 +124,41 @@ def test_normalize_payload_sin_issue():
     event = normalize_payload(payload)
 
     assert event is None
+
+
+    
+#verifica que dispatch_event rutea issue_created al ticket_analyzer dle módilo 2
+def test_dispatch_event_issue_created():
+    event = NormalizedEvent(
+        issue_key="TEST-101",
+        event_type="jira:issue_created"
+    )
+    result = dispatch_event(event)
+
+    assert result["status"] == "dispatched"
+    assert result["route"] == "ticket_analyzer"
+    assert result["issue_key"] == "TEST-101"
+
+
+#verifica que dispatch_event rutea comentario de usuario al conversation_handler
+def test_dispatch_event_comentario_usuario():
+    event = NormalizedEvent(
+        issue_key="TEST-101",
+        event_type="jira:issue_updated"
+    )
+    result = dispatch_event(event)
+
+    assert result["status"] == "dispatched"
+    assert result["route"] == "conversation_handler"
+    assert result["issue_key"] == "TEST-101"
+
+
+# verifica que eventos no reconocidos retornan status ignored
+def test_dispatch_event_ignorado():
+    event = NormalizedEvent(
+        issue_key="TEST-101",
+        event_type="jira:unknown_event"
+    )
+    result = dispatch_event(event)
+
+    assert result["status"] == "ignored"
