@@ -1,8 +1,10 @@
 """Tests unitarios para M1 - Webhook Receiver."""
 
-from app.modules.webhook_receiver.service import normalize_payload, dispatch_event
+
+from app.modules.webhook_receiver.service import WebhookReceiver
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
 
+receiver = WebhookReceiver()
 
 # construye un payload de issue_created genérico para pruebas
 def build_payload_issue_created(
@@ -82,7 +84,7 @@ def build_payload_comment_created(
 #verifica que normalize_payload extrae los campos del payload raw que viene de jsm
 def test_normalize_payload_issue_created():
     payload = build_payload_issue_created()
-    event = normalize_payload(payload)
+    event = receiver.normalize_payload(payload)
 
     assert event is not None
     assert event.issue_key == "TEST-101"
@@ -99,7 +101,7 @@ def test_normalize_payload_issue_created():
 def test_normalize_payload_extrae_descripcion_adf():
     descripcion = "Desde ayer no puedo ingresar a mi cuenta. Me aparece error de credenciales incorrectas."
     payload = build_payload_issue_created(description_text=descripcion)
-    event = normalize_payload(payload)
+    event = receiver.normalize_payload(payload)
 
     assert event.description == descripcion
 
@@ -111,7 +113,7 @@ def test_normalize_payload_prioridad_alta():
         summary="Mi transferencia no aparece reflejada en la cuenta",
         priority="High"
     )
-    event = normalize_payload(payload)
+    event = receiver.normalize_payload(payload)
 
     assert event is not None
     assert event.issue_key == "TEST-202"
@@ -121,7 +123,7 @@ def test_normalize_payload_prioridad_alta():
 #verifica que normalize_payload retorna None si el payload no contiene issue
 def test_normalize_payload_sin_issue():
     payload = JsmWebhookPayload(webhookEvent="jira:issue_created")
-    event = normalize_payload(payload)
+    event = receiver.normalize_payload(payload)
 
     assert event is None
 
@@ -133,7 +135,7 @@ def test_dispatch_event_issue_created():
         issue_key="TEST-101",
         event_type="jira:issue_created"
     )
-    result = dispatch_event(event)
+    result = receiver.dispatch_event(event)
 
     assert result["status"] == "dispatched"
     assert result["route"] == "ticket_analyzer"
@@ -146,7 +148,7 @@ def test_dispatch_event_comentario_usuario():
         issue_key="TEST-101",
         event_type="jira:issue_updated"
     )
-    result = dispatch_event(event)
+    result = receiver.dispatch_event(event)
 
     assert result["status"] == "dispatched"
     assert result["route"] == "conversation_handler"
@@ -159,6 +161,6 @@ def test_dispatch_event_ignorado():
         issue_key="TEST-101",
         event_type="jira:unknown_event"
     )
-    result = dispatch_event(event)
+    result = receiver.dispatch_event(event)
 
     assert result["status"] == "ignored"
