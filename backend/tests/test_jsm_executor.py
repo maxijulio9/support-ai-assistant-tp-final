@@ -2,13 +2,10 @@
 Se utiliza mocks para simular las respuestas de la API de JSM y verificar que el módulo construye  las solicitudes."""
 
 from unittest.mock import patch, MagicMock
-from app.modules.jsm_executor.client import (
-    post_comment,
-    transition_issue,
-    get_transitions,
-    assign_issue,
-)
+from app.modules.jsm_executor.client import JsmExecutor
 
+#crea una instancia del executor para usar en los tests
+executor = JsmExecutor()
 
 # verifica que post_comment envía el payload correcto para comentario publico
 @patch("app.modules.jsm_executor.client.httpx.Client")
@@ -22,7 +19,7 @@ def test_post_comment_public(mock_client_class):
     mock_client_class.return_value.__enter__ = MagicMock(return_value=mock_client)
     mock_client_class.return_value.__exit__ = MagicMock(return_value=False)
 
-    result = post_comment("TEST-1", "respuesta de prueba", public=True)
+    result = executor.post_comment("TEST-1", "respuesta de prueba", public=True)
 
     assert result["public"] is True
     assert result["body"] == "test"
@@ -41,7 +38,7 @@ def test_post_comment_internal(mock_client_class):
     mock_client_class.return_value.__enter__ = MagicMock(return_value=mock_client)
     mock_client_class.return_value.__exit__ = MagicMock(return_value=False)
 
-    result = post_comment("TEST-1", "nota interna", public=False)
+    result = executor.post_comment("TEST-1", "nota interna", public=False)
 
     assert result["public"] is False
 
@@ -57,7 +54,7 @@ def test_transition_issue_success(mock_client_class):
     mock_client_class.return_value.__enter__ = MagicMock(return_value=mock_client)
     mock_client_class.return_value.__exit__ = MagicMock(return_value=False)
 
-    result = transition_issue("TEST-1", "21")
+    result = executor.transition_issue("TEST-1", "21")
 
     assert result is True
 
@@ -73,7 +70,7 @@ def test_assign_issue_success(mock_client_class):
     mock_client_class.return_value.__enter__ = MagicMock(return_value=mock_client)
     mock_client_class.return_value.__exit__ = MagicMock(return_value=False)
 
-    result = assign_issue("TEST-1", "abc123")
+    result = executor.assign_issue("TEST-1", "abc123")
 
     assert result is True
 
@@ -95,8 +92,7 @@ def test_get_transitions(mock_client_class):
     mock_client_class.return_value.__enter__ = MagicMock(return_value=mock_client)
     mock_client_class.return_value.__exit__ = MagicMock(return_value=False)
 
-    result = get_transitions("TEST-1")
+    result = executor.get_transitions("TEST-1")
 
     assert len(result["transitions"]) == 2
     mock_client.get.assert_called_once()
-
