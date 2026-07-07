@@ -1,0 +1,62 @@
+category,doc_type,scope,space_key,topic
+Acceso y autenticación,requirements,Transversal,TG,Datos necesarios para gestionar un problema de acceso a la cuenta
+Acceso y autenticación,resolution,Transversal,TG,Cómo recuperar la contraseña olvidada
+Acceso y autenticación,resolution,Transversal,TG,Cómo configurar la verificación en dos pasos
+Acceso y autenticación,resolution,Transversal,TG,Qué hacer si no llega el código de verificación por SMS o app
+Acceso y autenticación,resolution,Transversal,TG,Error de credenciales inválidas al iniciar sesión
+Acceso y autenticación,resolution,Transversal,TG,Cómo desbloquear la cuenta tras varios intentos fallidos de acceso
+Operaciones de compra/venta crypto,requirements,Transversal,TG,Datos necesarios para gestionar una consulta sobre compra o venta de criptomonedas
+Operaciones de compra/venta crypto,resolution,Transversal,TG,Cómo comprar criptomonedas dentro de la plataforma
+Operaciones de compra/venta crypto,resolution,Transversal,TG,Cómo vender criptomonedas dentro de la plataforma
+Operaciones de compra/venta crypto,resolution,Transversal,TG,Diferencia entre orden de mercado y orden límite
+Operaciones de compra/venta crypto,resolution,Transversal,TG,Por qué el precio ejecutado difirió del precio mostrado
+Operaciones de compra/venta crypto,resolution,Transversal,TG,Cómo cancelar una orden pendiente
+Operaciones de compra/venta fiat,requirements,Transversal,TG,Datos necesarios para gestionar una consulta sobre operaciones en moneda local
+Operaciones de compra/venta fiat,resolution,Transversal,TG,Cómo comprar criptomonedas con moneda local
+Operaciones de compra/venta fiat,resolution,AR,TA,Métodos disponibles para operar con ARS
+Operaciones de compra/venta fiat,resolution,BR,TB,Métodos disponibles para operar con BRL
+Operaciones de compra/venta fiat,resolution,Transversal,TG,Cómo operar con USD dentro de la plataforma
+Operaciones de compra/venta fiat,resolution,Transversal,TG,Tiempo de acreditación de una operación en moneda local
+Depósito y retiros,requirements,Transversal,TG,Datos necesarios para gestionar un reclamo de depósito o retiro
+Depósito y retiros,resolution,AR,TA,Cómo depositar ARS vía transferencia bancaria
+Depósito y retiros,resolution,BR,TB,Cómo depositar BRL vía PIX
+Depósito y retiros,resolution,Transversal,TG,Cómo depositar criptomonedas
+Depósito y retiros,resolution,Transversal,TG,Qué hacer si un depósito no se acreditó
+Depósito y retiros,resolution,Transversal,TG,Cómo solicitar un retiro de fondos
+Depósito y retiros,resolution,Transversal,TG,Tiempos estimados de procesamiento de un retiro
+Seguridad de la cuenta,requirements,Transversal,TG,Datos necesarios para gestionar un reporte de seguridad
+Seguridad de la cuenta,resolution,Transversal,TG,Qué hacer ante actividad sospechosa en la cuenta
+Seguridad de la cuenta,resolution,Transversal,TG,Cómo solicitar el bloqueo preventivo de la cuenta
+Seguridad de la cuenta,resolution,Transversal,TG,Cómo actuar ante una notificación de acceso no reconocido
+Seguridad de la cuenta,resolution,Transversal,TG,Recomendaciones de seguridad para proteger la cuenta
+Billetera y direcciones,requirements,Transversal,TG,Datos necesarios para gestionar una consulta sobre direcciones de wallet
+Billetera y direcciones,resolution,Transversal,TG,Cómo obtener la dirección de depósito de una criptomoneda
+Billetera y direcciones,resolution,Transversal,TG,Redes soportadas para el depósito de USDT (ERC-20 / TRC-20)
+Billetera y direcciones,resolution,Transversal,TG,Qué hacer si se enviaron fondos por la red incorrecta
+Billetera y direcciones,resolution,Transversal,TG,Cómo validar una dirección de retiro antes de confirmar la operación
+Información y consultas generales,requirements,Transversal,TG,Datos necesarios para gestionar una consulta general
+Información y consultas generales,resolution,Transversal,TG,Qué es Tokenia y cómo funciona la plataforma
+Información y consultas generales,resolution,Transversal,TG,Criptomonedas disponibles para operar
+Información y consultas generales,resolution,Transversal,TG,Canales de contacto y horarios de atención
+Información y consultas generales,resolution,Transversal,TG,Políticas de uso de la plataforma
+Tarifa y comisiones,requirements,Transversal,TG,Datos necesarios para gestionar un reclamo por comisiones
+Tarifa y comisiones,resolution,Transversal,TG,Esquema de comisiones por operación de compra o venta
+Tarifa y comisiones,resolution,Transversal,TG,Comisiones aplicadas a depósitos y retiros
+Tarifa y comisiones,resolution,Transversal,TG,Qué es el spread y cómo se aplica
+Tarifa y comisiones,resolution,Transversal,TG,Por qué el monto cobrado no coincide con lo esperado
+Problemas técnicos de la app/web,requirements,Transversal,TG,Datos necesarios para gestionar un reporte técnico
+Problemas técnicos de la app/web,resolution,Transversal,TG,La aplicación no carga o se cierra inesperadamente
+Problemas técnicos de la app/web,resolution,Transversal,TG,Error al procesar una operación en la plataforma web
+Problemas técnicos de la app/web,resolution,Transversal,TG,Registro de incidentes técnicos conocidos
+Problemas técnicos de la app/web,resolution,Transversal,TG,Cómo actualizar la aplicación a la última versión
+Límites y restricciones,requirements,Transversal,TG,Datos necesarios para gestionar una consulta sobre límites operativos
+Límites y restricciones,resolution,Transversal,TG,Límites operativos según el nivel de verificación
+Límites y restricciones,resolution,AR,TA,Restricciones regulatorias vigentes en Argentina
+Límites y restricciones,resolution,BR,TB,Restricciones regulatorias vigentes en Brasil
+Límites y restricciones,resolution,Transversal,TG,Cómo aumentar el límite operativo mensual
+Verificación de identidad,requirements,Transversal,TG,Datos necesarios para gestionar una consulta sobre verificación de identidad
+Verificación de identidad,resolution,Transversal,TG,Documentación requerida según el nivel de KYC
+Verificación de identidad,resolution,AR,TA,Proceso de verificación de identidad con DNI en Argentina
+Verificación de identidad,resolution,BR,TB,Proceso de verificación de identidad con CPF en Brasil
+Verificación de identidad,resolution,Transversal,TG,Tiempos de procesamiento de la verificación de identidad
+Verificación de identidad,resolution,Transversal,TG,Motivos frecuentes de rechazo de la verificación
