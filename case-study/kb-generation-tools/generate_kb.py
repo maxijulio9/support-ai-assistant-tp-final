@@ -37,40 +37,47 @@ def armar_prompt(canon, fila):
     scope = fila["scope"]
     categoria = fila["category"]
     tema = fila["topic"]
-
+ 
     if doc_type == "requirements":
         instruccion = (
             "Escribi un articulo breve que liste los datos obligatorios y opcionales "
             "que un agente de soporte necesita para gestionar una solicitud de esta categoria. "
-            "No expliques como resolver el problema, solo que informacion hace falta pedirle al usuario."
+            "No expliques como resolver el problema, solo que informacion hace falta pedirle al usuario. "
+            "Sin saludos ni frases de cierre. Sin negrita en cada item, solo en terminos tecnicos importantes."
         )
     else:
         instruccion = (
             "Escribi un articulo de resolucion claro y directo, como los que tendria un help center real. "
-            "Explica el procedimiento paso a paso cuando corresponda."
+            "Explica el procedimiento paso a paso cuando corresponda. "
+            "Sin saludos ni frases de cierre tipo gracias o esperamos haberte ayudado. "
+            "Sin negrita en cada item, solo en terminos tecnicos importantes."
         )
-
-    contexto_pais = ""
+ 
     if scope == "AR":
-        contexto_pais = "Este articulo aplica especificamente a usuarios de Argentina."
+        idioma = (
+            "Escribilo en español formal rioplatense. "
+            "Usa vos, ingresá, andá, seleccioná. Sin tuteo ni usted."
+        )
     elif scope == "BR":
-        contexto_pais = "Este articulo aplica especificamente a usuarios de Brasil."
-
-    prompt = f"""Sos redactor de contenido de soporte para Tokenia, un exchange de criptomonedas ficticio.
-
+        idioma = "Escribilo en portugués brasileño formal."
+    else:
+        idioma = "Escribilo en español formal rioplatense."
+ 
+    prompt = f"""Sos redactor de contenido de help center para Tokenia, un exchange de criptomonedas.
+ 
 Datos de referencia de Tokenia (no los repitas textual, usalos como contexto):
 {canon}
-
+ 
 Categoria: {categoria}
 Tema del articulo: {tema}
-{contexto_pais}
-
+ 
 {instruccion}
-
-Extension: entre 150 y 300 palabras. Tono profesional pero cercano.
-Si el articulo es para Brasil, escribilo en portugues. En cualquier otro caso, en espanol rioplatense.
-Devolve solo el contenido del articulo, sin titulo ni encabezados markdown."""
-
+ 
+{idioma}
+Extension: entre 150 y 300 palabras.
+Devolve solo el contenido del articulo, sin titulo ni encabezados markdown.
+No uses listas con asteriscos. Para pasos usa numeracion. Para datos usa guion simple."""
+ 
     return prompt
 
 
@@ -91,7 +98,7 @@ def formatear_nombre(texto):
 
 def guardar_articulo(fila, contenido, idx):
     Path(OUTPUT_DIR).mkdir(exist_ok=True)
-    nombre = f"{idx:03d}-{formatear_nombre(fila['category'])}-{formatear_nombre(fila['doc_type'])}-{formatear_nombre(fila['scope'])}.md"
+    nombre = f"{idx:02d}-{formatear_nombre(fila['category'])}-{formatear_nombre(fila['doc_type'])}-{formatear_nombre(fila['scope'])}.md"
     filepath = os.path.join(OUTPUT_DIR, nombre)
 
     # front matter con los metadatos que usa publish_kb.py despues
@@ -121,8 +128,8 @@ def main():
     #
 
     # produccion, genera los 61 articulos
-    for idx, fila in enumerate(filas[:3], start=1):
-    # for idx, fila in enumerate(filas, start=1):
+    # for idx, fila in enumerate(filas[:3], start=1):
+    for idx, fila in enumerate(filas, start=1):
         prompt = armar_prompt(canon, fila)
         try:
             contenido = generar_articulo(prompt)
