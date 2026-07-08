@@ -36,3 +36,8 @@ npm-debug.log*
 Thumbs.db
 /test_jsm_connection.py
 /test_jsm_actions.py
+
+
+# Case study 
+case-study/kb-generation-tools/.env
+case-study/kb-generation-tools/kb_generado-testing/
