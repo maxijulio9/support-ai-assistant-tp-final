@@ -128,8 +128,19 @@ def main():
     #
 
     # produccion, genera los 61 articulos
-    # for idx, fila in enumerate(filas[:3], start=1):
-    for idx, fila in enumerate(filas, start=1):
+    #for idx, fila in enumerate(filas[:3], start=1):
+    #for idx, fila in enumerate(filas, start=1):
+    for idx, fila in enumerate(filas[10:], start=11):
+        categoria = formatear_nombre(fila['category'])
+        doc_type = formatear_nombre(fila['doc_type'])
+        scope = formatear_nombre(fila['scope'])
+        nombre = f"{idx:02d}-{categoria}-{doc_type}-{scope}.md"
+
+        #si ya existe lo saltea 
+        if Path(OUTPUT_DIR, nombre).exists():
+            print(f"[{idx}/61] existee")
+            continue
+
         prompt = armar_prompt(canon, fila)
         try:
             contenido = generar_articulo(prompt)
