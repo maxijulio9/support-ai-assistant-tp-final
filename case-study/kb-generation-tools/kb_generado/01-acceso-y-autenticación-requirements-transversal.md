@@ -6,17 +6,16 @@ space_key: TG
 topic: Datos necesarios para gestionar un problema de acceso a la cuenta
 ---
 
-Para gestionar eficazmente cualquier inconveniente relacionado con el acceso a su cuenta Tokenia, es fundamental que nuestro equipo de soporte disponga de la siguiente información detallada:
+Para gestionar un problema de acceso a su cuenta Tokenia, nuestro equipo de soporte requiere la siguiente información. La provisión de estos datos es fundamental para una identificación precisa y una gestión eficiente de su solicitud.
 
-1.  Datos obligatorios:
-    -   La dirección de correo electrónico vinculada a su cuenta Tokenia.
-    -   El número de teléfono asociado a su perfil de usuario.
-    -   Su nombre y apellido completos tal como fueron registrados en la plataforma.
-    -   Una descripción pormenorizada del problema que experimenta, especificando si se trata de una dificultad para iniciar sesión, un olvido de contraseña, un inconveniente con la verificación de dos factores (**2FA**), un bloqueo de cuenta, entre otros.
-    -   Cualquier mensaje de error que se le presente al intentar acceder o realizar una acción.
+Datos obligatorios para la identificación de su cuenta y el tipo de inconveniente:
+- Su dirección de correo electrónico registrada en Tokenia.
+- El número de teléfono asociado a su cuenta.
+- Una descripción detallada del inconveniente que presenta, especificando cuándo comenzó a experimentarlo y qué acciones realizó previamente.
 
-2.  Datos opcionales, pero que agilizan significativamente la gestión:
-    -   La fecha y hora aproximadas de su último acceso exitoso a la plataforma.
-    -   El tipo de dispositivo (ordenador, teléfono móvil) y la versión del navegador web o de la aplicación móvil utilizada al momento del incidente.
-    -   Capturas de pantalla o un breve video que ilustren el inconveniente o los mensajes de error visualizados.
-    -   Información sobre su última operación realizada en la plataforma, como la fecha, el tipo de operación (depósito o retiro) y el monto estimado, lo cual puede facilitar la verificación de su identidad.
+Información adicional que puede acelerar la resolución de su caso:
+- Si recibió algún mensaje de error al intentar ingresar, por favor, incluya el texto exacto o una captura de pantalla del mismo.
+- Indique si el problema está relacionado con la **autenticación de dos factores (2FA)**. En ese caso, especifique si utiliza una **app autenticadora** o SMS y si ha cambiado o perdido el dispositivo móvil asociado.
+- Si su cuenta se encuentra bloqueada, mencione si recibió alguna notificación por parte de Tokenia al respecto.
+- Detalle la fecha y hora aproximada de su último acceso exitoso a la plataforma.
+- Cualquier otra información que considere relevante para la comprensión y resolución de su caso.

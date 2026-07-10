@@ -6,15 +6,18 @@ space_key: TG
 topic: Cómo recuperar la contraseña olvidada
 ---
 
-Para recuperar su contraseña de Tokenia, siga los siguientes pasos:
+El procedimiento para recuperar su contraseña de Tokenia es sencillo y le permitirá acceder nuevamente a su cuenta. Siga los pasos detallados a continuación:
 
-1.  Acceda a la página de inicio de sesión de Tokenia. Puede hacerlo a través de la plataforma web o la aplicación móvil.
-2.  En la pantalla de inicio de sesión, ubique y haga clic en el enlace "¿Olvidó su contraseña?" o "Recuperar contraseña".
-3.  Se le solicitará que ingrese la dirección de correo electrónico asociada a su cuenta de Tokenia. Es fundamental que sea la misma que utilizó al registrarse.
-4.  Una vez ingresado el correo electrónico, presione el botón para enviar la solicitud de recuperación. Recibirá un email de Tokenia en esa dirección.
-5.  Abra el correo electrónico y haga clic en el enlace provisto para restablecer su contraseña. Por seguridad, este enlace es temporal y tiene una validez limitada.
-6.  Será redirigido a una página donde podrá establecer una nueva contraseña. Elija una contraseña segura que combine letras mayúsculas y minúsculas, números y símbolos.
-7.  Confirme la nueva contraseña ingresándola nuevamente en el campo correspondiente.
-8.  Una vez que haya establecido y confirmado su nueva contraseña, podrá iniciar sesión en su cuenta de Tokenia utilizando su correo electrónico y la contraseña recién creada.
+1.  Acceda a la página principal de Tokenia y diríjase a la sección de **Inicio de Sesión**.
+2.  Debajo de los campos de usuario y contraseña, encontrará la opción "¿Olvidó su contraseña?". Haga clic allí para iniciar el proceso de recuperación.
+3.  Se le solicitará ingresar el correo electrónico asociado a su cuenta de Tokenia. Ingrese la dirección correcta y haga clic en enviar.
+4.  Automáticamente, nuestro sistema enviará un correo electrónico a la dirección proporcionada. Este correo contendrá un enlace único para que pueda restablecer su contraseña.
+5.  Abra el correo electrónico y haga clic en el enlace. Es importante que lo haga a la brevedad, ya que por motivos de seguridad, el enlace tiene un período de validez limitado.
+6.  Será redirigido a una página donde deberá establecer una nueva contraseña. Asegúrese de elegir una contraseña segura, combinando mayúsculas, minúsculas, números y símbolos.
+7.  Confirme la nueva contraseña ingresándola por segunda vez en el campo correspondiente.
+8.  Una vez definida y confirmada, su contraseña habrá sido restablecida con éxito. Ya puede iniciar sesión en su cuenta de Tokenia utilizando la nueva clave.
 
-Si no recibe el correo electrónico de recuperación en su bandeja de entrada, le recomendamos revisar su carpeta de spam o correo no deseado. En caso de seguir experimentando dificultades o si cree que su cuenta pudo haber sido comprometida, por favor, contacte a nuestro equipo de soporte a través de los canales disponibles.
+Consideraciones importantes:
+- Si no recibe el correo electrónico para restablecer la contraseña en unos minutos, verifique su carpeta de **spam** o correo no deseado.
+- Asegúrese de utilizar la dirección de correo electrónico que tiene registrada en su cuenta de Tokenia. Si intenta con una dirección no asociada, el sistema no podrá enviarle el enlace.
+- En caso de experimentar alguna dificultad o no poder completar el proceso, puede contactar a nuestro equipo de soporte a través de los canales disponibles.

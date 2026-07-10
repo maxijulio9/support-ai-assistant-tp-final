@@ -6,10 +6,18 @@ space_key: TG
 topic: Error de credenciales inválidas al iniciar sesión
 ---
 
-El error "Credenciales inválidas" indica que la combinación de correo electrónico o nombre de usuario y contraseña ingresada no coincide con los registros de Tokenia. Para resolver este inconveniente, siga los pasos a continuación:
+Verifique cuidadosamente que la dirección de correo electrónico y la contraseña se hayan ingresado correctamente. Preste especial atención a posibles errores de tipeo y a la sensibilidad de mayúsculas y minúsculas en su contraseña.
 
-1.  Verifique la información ingresada. Asegúrese de que el correo electrónico o nombre de usuario esté escrito correctamente y que no haya errores de tipeo. Confirme que la tecla **Bloq Mayús** no esté activada y que la configuración de su teclado sea la correcta, especialmente si utiliza caracteres especiales.
-2.  Restablezca su contraseña. Si está seguro de su correo electrónico o nombre de usuario pero el problema persiste, utilice la función 'Olvidé mi contraseña' ubicada en la pantalla de inicio de sesión. Se le enviará un correo electrónico a la dirección registrada en su cuenta con las instrucciones para establecer una nueva contraseña. Asegúrese de revisar la bandeja de entrada y la carpeta de spam.
-3.  Compruebe su autenticación de dos factores (**2FA**). Si tiene habilitada la 2FA (ya sea por aplicación autenticadora o SMS), asegúrese de ingresar el código correcto dentro de su período de validez. En ocasiones, la sincronización de la hora en el dispositivo con la aplicación autenticadora puede ser necesaria.
-4.  Considere un posible bloqueo preventivo. Aunque el mensaje se refiere a las credenciales, si ha intentado iniciar sesión múltiples veces sin éxito, su cuenta podría haber sido bloqueada temporalmente por seguridad. En estos casos, Tokenia suele notificar al usuario por correo electrónico. Revise su casilla y su carpeta de spam.
-5.  Contacte a nuestro equipo de soporte. Si después de seguir estos pasos aún no puede acceder a su cuenta, comuníquese con el soporte técnico de Tokenia a través de nuestro portal de ayuda o enviando un correo electrónico. Incluya todos los detalles relevantes, como el mensaje de error exacto y los pasos que ya intentó para agilizar la resolución.
+Asegúrese de que la tecla **Bloq Mayús** (Caps Lock) no esté activada en su teclado, ya que esto podría cambiar la entrada de su contraseña sin que lo note.
+
+Si no recuerda su contraseña o cree que pudo haberla ingresado incorrectamente, puede restablecerla siguiendo estos pasos:
+
+1.  Desde la pantalla de inicio de sesión de Tokenia, haga clic en el enlace "¿Olvidó su contraseña?".
+2.  Introduzca la dirección de correo electrónico asociada a su cuenta de Tokenia y luego haga clic en el botón para "Restablecer contraseña".
+3.  Revisar su bandeja de entrada de correo electrónico. Recibirá un mensaje con un enlace e instrucciones para crear una nueva contraseña. Si no lo encuentra, por favor, verifique también las carpetas de spam o correo no deseado.
+4.  Acceda al enlace provisto en el correo electrónico y establezca una nueva contraseña segura.
+5.  Una vez que haya actualizado su contraseña, intente iniciar sesión nuevamente utilizando su email y la nueva contraseña.
+
+Tenga en cuenta que, si tiene la autenticación de dos factores (**2FA**) habilitada, después de ingresar sus credenciales correctas, se le solicitará un código adicional generado por su aplicación autenticadora o enviado por SMS.
+
+Si, después de realizar estas verificaciones y un eventual restablecimiento de contraseña, el problema persiste y no puede acceder a su cuenta, le recomendamos contactar a nuestro equipo de soporte. Puede hacerlo a través del portal de soporte integrado en nuestra plataforma web o móvil, o enviando un correo electrónico. Recibirá una respuesta en un plazo de 24 a 48 horas hábiles.

@@ -6,14 +6,24 @@ space_key: TG
 topic: Qué hacer si no llega el código de verificación por SMS o app
 ---
 
-El código de verificación es una medida de seguridad crucial para proteger su cuenta. Si no está recibiendo el código vía SMS o a través de su **app autenticadora**, siga los siguientes pasos para resolver el inconveniente:
+Si no recibís el código de verificación por SMS o a través de tu **aplicación autenticadora** para acceder a tu cuenta Tokenia, te sugerimos seguir los siguientes pasos de resolución:
 
-1.  Verifique su conexión de red. Asegúrese de tener buena señal en su celular y una conexión a internet estable. Los códigos SMS pueden demorar en llegar o no recibirse si la cobertura es deficiente.
-2.  Confirme el número de teléfono o la **app autenticadora** vinculada. Acceda a la sección de Seguridad de su perfil en Tokenia y verifique que el número de teléfono registrado sea el correcto o que la **app autenticadora** esté configurada adecuadamente.
-3.  Revise la bandeja de entrada de su celular. A veces, los mensajes pueden filtrarse en carpetas de spam, promociones o "no deseados" de su aplicación de mensajes.
-4.  Si utiliza una **app autenticadora** (como Google Authenticator o Authy), asegúrese de que la hora y fecha de su dispositivo estén correctamente sincronizadas con la red. Una desincronización de pocos segundos puede impedir que los códigos generados sean válidos. Vaya a la configuración de fecha y hora de su celular y active la opción de sincronización automática.
-5.  Espere unos minutos y solicite el reenvío del código. En ocasiones, puede haber demoras en la entrega por parte de los operadores de telefonía.
-6.  Reinicie la aplicación de Tokenia o su navegador web. Intente limpiar la caché y las cookies de su navegador si está usando la versión web. Luego, pruebe nuevamente solicitar el código.
-7.  Pruebe desde un dispositivo o navegador diferente. Esto puede ayudar a descartar problemas específicos de software en su equipo habitual.
+Para problemas con el código SMS:
+1. Verificá que tu dispositivo móvil tenga buena señal de red y conexión a internet estable.
+2. Confirmá que el número de teléfono registrado en tu cuenta Tokenia sea el correcto y esté activo.
+3. Esperá unos minutos, ya que la entrega de SMS puede experimentar demoras ocasionales en la red.
+4. Revisá la bandeja de entrada de tu aplicación de mensajes, incluyendo carpetas de spam o no deseados.
+5. Reiniciá tu teléfono celular.
 
-Si luego de seguir estos pasos el problema persiste, por favor, contacte a nuestro equipo de soporte a través del portal de ayuda de Tokenia o mediante el email correspondiente a su país. Brinde todos los detalles posibles sobre el problema, incluyendo los pasos que ya intentó. Nuestro equipo le asistirá con la verificación de su cuenta.
+Para problemas con la aplicación autenticadora (por ejemplo, Google Authenticator o Authy):
+1. Asegurate de que la hora de tu dispositivo móvil esté configurada para sincronizarse automáticamente con la red. Una desincronización horaria puede causar que los códigos **2FA** generados sean inválidos.
+2. Confirmá que la aplicación esté correctamente vinculada a tu cuenta Tokenia. Si recientemente reinstalaste la aplicación o cambiaste de dispositivo, es posible que debas vincularla nuevamente siguiendo el procedimiento de configuración.
+
+En ambos casos, intentá solicitar un nuevo código de verificación después de realizar estas comprobaciones.
+
+Si, a pesar de seguir estas indicaciones, el problema persiste y no podés acceder a tu cuenta, por favor contactate con nuestro equipo de soporte a través del portal de JSM o el email de soporte. Incluí en tu consulta:
+- El email asociado a tu cuenta Tokenia.
+- El método de verificación de dos factores (SMS o aplicación autenticadora) con el que tenés inconvenientes.
+- Una descripción detallada del problema y los pasos que ya realizaste para intentar resolverlo.
+
+Nuestro equipo de soporte responderá tu solicitud en un plazo de 24 a 48 horas hábiles.
