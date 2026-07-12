@@ -4,7 +4,8 @@ Contiene la clase WebhookReceiver, responsable de la validación, normalización
 """
 
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
-
+from app.core.redis_client import get_redis
+from app.core.config import settings
 
 class WebhookReceiver:
 
@@ -54,22 +55,43 @@ class WebhookReceiver:
         )
 
     # determina la ruta del evento y lo despacha al módulo correspondiente
-    # >>>>>> aca se va a considerar la  integración con redis 
-    def dispatch_event(self, event: NormalizedEvent) -> dict:
+   # determina la ruta del evento y lo despacha al módulo correspondiente
+    # encola en redis para que el worker lo procese
+    async def dispatch_event(self, event: NormalizedEvent) -> dict:
+
+        redis = get_redis()
 
         if event.event_type == "jira:issue_created":
         # nuevo ticket: flujo principal>> al M2 Ticket Analyzer
             print(f"M1 issue_created recibido: {event.issue_key}")
+            # encola el evento serializado como json para que el worker lo desencole
+            await redis.rpush("queue:issue_created", event.model_dump_json())
             return {"status": "dispatched", "route": "ticket_analyzer", "issue_key": event.issue_key}
 
         if event.event_type == "jira:issue_updated":
-            # si es comentario de usuario >> flujo de conversación
+            # si es comentario de usuario >> flujo de conversación con debouncing
             print(f"M1 comment_created recibido: {event.issue_key}")
+
+            # acumula el comentario en el hash de debouncing
+            # si ya hay texto previo, lo concatena con un salto de linea
+            debounce_key = f"debounce:{event.issue_key}"
+            existing = await redis.hget(debounce_key, "body")
+            nuevo_body = event.comment_body or ""
+            if existing:
+                nuevo_body = f"{existing}\n{nuevo_body}"
+
+            # guarda el body actualizado y resetea el ttl a 30s
+            await redis.hset(debounce_key, "body", nuevo_body)
+            await redis.expire(debounce_key, settings.debounce_ttl_seconds)
+
+            # encola el issue_key para que el worker lo procese cuando venza el ttl
+            # el worker leera el hash y ejecutara el pipeline con el texto acumulado
+            await redis.rpush("queue:comment_created", event.issue_key)
+
             return {"status": "dispatched", "route": "conversation_handler", "issue_key": event.issue_key}
 
         # si en caso de revibir un evento no reconocido  ignorar simplemente, no debería pasar
         return {"status": "ignored", "event_type": event.event_type}
-
 
     #ewxtrae texto plano desde el formato ADF Atlassian Document Format
     def _extract_plain_text(self, adf_node: dict) -> str:
