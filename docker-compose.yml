@@ -18,7 +18,7 @@ services:
     build:
       context: ./backend
     container_name: support-ai-worker
-    command: arq app.modules.event_pipeline.settings.WorkerSettings
+    command: arq app.modules.event_pipeline.settings.WorkerSettings --watch /app/app
     env_file:
       - .env
     volumes:
@@ -27,7 +27,7 @@ services:
       - redis
     restart: unless-stopped
 
-    
+
   frontend:
     build:
       context: ./frontend
