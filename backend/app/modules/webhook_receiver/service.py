@@ -83,9 +83,11 @@ class WebhookReceiver:
             # guarda el body actualizado y resetea el ttl
             #
             await redis.hset(debounce_key, "body", nuevo_body)
-            await redis.expire(debounce_key, settings.debounce_ttl_seconds)
+            # await redis.expire(debounce_key, settings.debounce_ttl_seconds)
+            await redis.expire(debounce_key, settings.debounce_ttl_seconds + 5)
 
-            # agenda el job con defer_by para esperar mas comentarios
+
+            # agenda el job con defer_by para esperar mas comentariossss
             # el job_id fijo evita que se creen jobs duplicados para el mismo ticket
             #
             await pool.enqueue_job(
