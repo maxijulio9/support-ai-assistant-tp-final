@@ -14,7 +14,7 @@ orchestrator = Orchestrator()
 async def process_issue_created(arq_context, event_data: dict):
     logger.info(f"worker: procesando issue_created")
 
-    event = NormalizedEvent(
+    event = NormalizedEvent( 
         issue_key=event_data["issue_key"],
         event_type=event_data["event_type"],
         summary=event_data.get("summary"),
@@ -30,7 +30,7 @@ async def process_issue_created(arq_context, event_data: dict):
         comment_author_id=event_data.get("comment_author_id"),
     )
 
-    result = orchestrator.process_event(event)
+    result = await orchestrator.process_event(event)
 
     logger.info(f"issue_created procesado, issue_key={event.issue_key}")
     return result
@@ -56,7 +56,7 @@ async def process_comment_created(arq_context, issue_key: str):
         comment_body=comment_body,
     )
 
-    result = orchestrator.process_event(event)
+    result = await orchestrator.process_event(event)
 
     logger.info(f"worker: comment_created procesado, issue_key={issue_key}")
     return result

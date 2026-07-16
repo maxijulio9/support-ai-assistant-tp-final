@@ -17,12 +17,12 @@ class Orchestrator:
 
     # punto de entrada del pipeline
     #por ahora solo ejecuta M2, los siguientes módulos se agregan en futuras iteraciones
-    def process_event(self, event: NormalizedEvent) -> dict:
+    async def process_event(self, event: NormalizedEvent) -> dict:
         
         logger.info(f"[{event.issue_key}] iniciando procesamiento del evento {event.event_type}")
 
         #  analisis y clasificaciòn del ticket
-        analysis = self.ticket_analyzer.analyze(event)
+        analysis = await self.ticket_analyzer.analyze(event)
         logger.info(f"[{event.issue_key}] M2 listorti, priority={analysis.priority}, country={analysis.country}")
 
 

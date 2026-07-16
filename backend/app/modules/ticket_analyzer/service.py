@@ -4,6 +4,8 @@
 import logging
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
+from app.modules.ticket_analyzer.conversation_history import ConversationHistory
+
 
 logger = logging.getLogger(__name__)
 
@@ -86,17 +88,32 @@ PROJECT_COUNTRY = {
 
 class TicketAnalyzer:
 
-    def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
+    def __init__(self):
+        self.history = ConversationHistory()
+
+    async def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
         # punto de entrada, por ahora arma el objeto base con lo que llega de M1
         # priority = self._determine_priority(event.priority)
         country = self._get_country(event.issue_key)
+        
+        # lee el historial previo de la conversacion en caso de que existan
+        conversation_history = await self.history.get(event.issue_key)
+        
+        # cu9 agrega el turno nuevo del usuario al historial
+        # si es comentario usa comment_body, si es ticket nuevo usa summary + description
+        texto_usuario = f"{event.summary or ''} {event.description or ''}".strip()
+        if event.comment_body:
+            texto_usuario = event.comment_body
+        if texto_usuario:
+            await self.history.append(event.issue_key, "user", texto_usuario)
+
+
         priority = self._determine_priority(
             category=None,
             intent=None,
             user_priority=event.priority,
             issue_key=event.issue_key
         )
-
         return TicketAnalysis(
             issue_key=event.issue_key,
             event_type=event.event_type,
