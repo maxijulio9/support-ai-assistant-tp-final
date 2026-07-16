@@ -1,0 +1,15 @@
+{
+  "webhookEvent": "jira:issue_created",
+  "issue": {
+    "id": "10001",
+    "key": "TARG-10",
+    "fields": {
+      "summary": "Prueba manual M1",
+      "issuetype": {"id": "10000", "name": "Task"},
+      "priority": {"id": "3", "name": "Medium"},
+      "status": {"id": "1", "name": "Open"},
+      "reporter": {"accountId": "user123", "emailAddress": "test@gmail.com"},
+      "created": "2026-07-12T22:00:00.000-0300"
+    }
+  }
+}

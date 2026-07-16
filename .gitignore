@@ -34,3 +34,5 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+/test_jsm_connection.py
+/test_jsm_actions.py
