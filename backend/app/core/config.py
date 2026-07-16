@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://redis:6379"
     debounce_ttl_seconds: int = 30
+    history_ttl_seconds: int = 604800 #aprox 7 dias
 
     # JSM
     jsm_base_url: str = ""
