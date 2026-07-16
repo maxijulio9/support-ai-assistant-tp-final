@@ -88,13 +88,21 @@ class TicketAnalyzer:
 
     def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
         # punto de entrada, por ahora arma el objeto base con lo que llega de M1
-        priority = self._determine_priority(event.priority)
+        # priority = self._determine_priority(event.priority)
+        country = self._get_country(event.issue_key)
+        priority = self._determine_priority(
+            category=None,
+            intent=None,
+            user_priority=event.priority,
+            issue_key=event.issue_key
+        )
 
         return TicketAnalysis(
             issue_key=event.issue_key,
             event_type=event.event_type,
-            priority=priority,
             summary=event.summary,
+            country=country,
+            priority=priority,
         )
 
     #pendiente de implementar la logica de clasificacion, por ahora devuelve un diccionario sin nada
@@ -102,7 +110,36 @@ class TicketAnalyzer:
 
         return {}
 
-    def _determine_priority(self, user_priority: str = None) -> str:
-        # usa la prioridad del ticket por ahora
-        # cuando esté CU27 completo, consulta project_priority en BD
-        return user_priority or "Medium"
+    # si no hay clasificacion todavia, usa la prioridad del usuario, cu8
+    def _determine_priority(self, category: str, intent: str, user_priority: str, issue_key: str) -> str:
+        if not category or not intent:
+            return user_priority or "Medium"
+
+        calculated = self._calculate_priority(category, intent)
+
+        if calculated == user_priority:
+            logger.info(f"[{issue_key}] prioridad ok con la del usuario: {calculated}")
+            return calculated
+
+        logger.info(f"[{issue_key}] prioridad calculada '{calculated}' diferente a la elegida por usuario '{user_priority}'")
+        # aca invocaría a m5 para aplicar la prioridad en jsm
+
+
+        return calculated
+
+     # deriva el country desde la nomenclatura del issue_key
+    def _get_country(self, issue_key: str) -> str:
+        project_key = issue_key.split("-")[0] if "-" in issue_key else ""
+        country = PROJECT_COUNTRY.get(project_key)
+        if not country:
+            logger.warning(f"project_key '{project_key}' no mapeado en PROJECT_COUNTRY")
+            return "unknown"
+        return country
+
+    # busca la prioridad en el esquema del negocio segun category, intent
+    def _calculate_priority(self, category: str, intent: str) -> str:
+        priority = PRIORITY_SCHEMA.get((category, intent))
+        if not priority:
+            logger.warning(f"combinacion ({category}, {intent}) no encontrada en PRIORITY_SCHEMA usando Medium")
+            return "Medium"
+        return priority
