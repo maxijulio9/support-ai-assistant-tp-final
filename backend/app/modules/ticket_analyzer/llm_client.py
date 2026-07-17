@@ -52,7 +52,7 @@ Solicitud del usuario:
 
 class LlmClient:
 
-     def __init__(self):
+    def __init__(self):
         if settings.llm_provider == "gemini":
             api_key = settings.gemini_api_key
             base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -105,11 +105,11 @@ class LlmClient:
 
                 # valida que category e intent sean valores conocidos
                 if data.get("category") not in VALID_CATEGORIES:
-                    logger.warning(f"category '{data.get('category')}' no valida, reintentando ({intento + 1}/3)")
+                    logger.warning(f"category '{data.get('category')}' no valida, reintentando ({attempt + 1}/3)")
                     continue
 
                 if data.get("intent") not in VALID_INTENTS:
-                    logger.warning(f"intent '{data.get('intent')}' no valido, reintentando ({intento + 1}/3)")
+                    logger.warning(f"intent '{data.get('intent')}' no valido, reintentando ({attempt + 1}/3)")
                     continue
 
                 result = ClassificationResult(

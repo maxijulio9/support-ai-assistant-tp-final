@@ -5,6 +5,7 @@ import logging
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
+from app.modules.ticket_analyzer.llm_client import LlmClient
 
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,8 @@ class TicketAnalyzer:
 
     def __init__(self):
         self.history = ConversationHistory()
+        self.llm_client = LlmClient()
+
 
     async def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
         # punto de entrada, por ahora arma el objeto base con lo que llega de M1
@@ -107,25 +110,37 @@ class TicketAnalyzer:
         if texto_usuario:
             await self.history.append(event.issue_key, "user", texto_usuario)
 
+        # cu7 clasifica el ticket usando el llm
+        classification = self._classify(texto_usuario, conversation_history)
 
         priority = self._determine_priority(
-            category=None,
-            intent=None,
+            category=classification.category if classification else None,
+            intent=classification.intent if classification else None,
             user_priority=event.priority,
             issue_key=event.issue_key
         )
+
         return TicketAnalysis(
             issue_key=event.issue_key,
             event_type=event.event_type,
             summary=event.summary,
             country=country,
             priority=priority,
+            intent=classification.intent if classification else None,
+            category=classification.category if classification else None,
+            resolved_by=classification.resolved_by if classification else None,
+            scope=classification.scope if classification else None,
+            sentiment=classification.sentiment if classification else None,
+            conversation_history=conversation_history,
         )
+        
 
-    #pendiente de implementar la logica de clasificacion, por ahora devuelve un diccionario sin nada
-    def _classify(self, text: str) -> dict:
-
-        return {}
+    # done pendiente de implementar la logica de clasificacion, por ahora devuelve un diccionario sin nada
+    # def _classify(self, text: str) -> dict:
+    #     return {}
+    # llm implementado, clasifica el ticket usando el llm configurado 
+    def _classify(self, text: str, conversation_history: list = []):
+        return self.llm_client.classify(text, conversation_history)
 
     # si no hay clasificacion todavia, usa la prioridad del usuario, cu8
     def _determine_priority(self, category: str, intent: str, user_priority: str, issue_key: str) -> str:
