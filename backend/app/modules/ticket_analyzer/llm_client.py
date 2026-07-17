@@ -103,6 +103,18 @@ class LlmClient:
                 content = response.choices[0].message.content
                 data = json.loads(content)
 
+                finish_reason = response.choices[0].finish_reason
+
+                logger.info(
+                    f"llm respondio: model={response.model}, "
+                    f"tokens={response.usage.total_tokens}, "
+                    f"finish_reason={finish_reason}"
+                )
+
+                if finish_reason == "length":
+                    logger.warning("la respuesta del llm se corto por limite de tokens")
+
+
                 # valida que category e intent sean valores conocidos
                 if data.get("category") not in VALID_CATEGORIES:
                     logger.warning(f"category '{data.get('category')}' no valida, reintentando ({attempt + 1}/3)")
@@ -124,7 +136,7 @@ class LlmClient:
                 return result
 
             except json.JSONDecodeError as e:
-                logger.warning(f"json invalido del llm, reintentando ({intento + 1}/3): {e}")
+                logger.warning(f"json invalido del llm, reintentando ({attempt + 1}/3): {e}")
                 continue
 
             except Exception as e:
