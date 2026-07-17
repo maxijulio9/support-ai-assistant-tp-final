@@ -4,8 +4,10 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
     openai_llm_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
+    
 
     # Database
     database_url: str = ""

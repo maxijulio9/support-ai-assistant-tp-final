@@ -52,9 +52,22 @@ Solicitud del usuario:
 
 class LlmClient:
 
-    def __init__(self):
-        self.client = OpenAI(api_key=settings.openai_api_key)
-        self.model = settings.openai_llm_model
+     def __init__(self):
+        if settings.llm_provider == "gemini":
+            api_key = settings.gemini_api_key
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+            model = settings.gemini_llm_model
+        else:
+            api_key = settings.openai_api_key
+            base_url = "https://api.openai.com/v1"
+            model = settings.openai_llm_model
+
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        self.model = model
+    # def __init__(self):
+    #     self.client = OpenAI(api_key=settings.openai_api_key)
+    #     self.model = settings.openai_llm_model
+
 
     # crea el prompt con el texto del ticket 
     def _build_prompt(self, text: str, conversation_history: list[ConversationTurn] = []) -> str:
