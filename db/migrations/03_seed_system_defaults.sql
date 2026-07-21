@@ -26,3 +26,12 @@ INSERT INTO sentiment_typ (code, name, score_weight, triggers_alert) VALUES
     ('neutro',   'Neutro',   0.5, FALSE),
     ('negativo', 'Negativo', 0.0, TRUE)
 ON CONFLICT (code) DO NOTHING;
+
+-- niveles de prioridad universales del dominio itsm
+-- level define el orden de mayor a menor urgencia (1 es la maxima)
+INSERT INTO ticket_priority (code, name, level) VALUES
+    ('highest', 'Highest', 1),
+    ('high',    'High',    2),
+    ('medium',  'Medium',  3),
+    ('low',     'Low',     4)
+ON CONFLICT (code) DO NOTHING;
