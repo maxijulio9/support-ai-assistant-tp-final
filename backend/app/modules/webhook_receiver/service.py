@@ -2,7 +2,7 @@
 Modulo 1: Webhook Receiver
 Contiene la clase WebhookReceiver, responsable de la validación, normalización y despacho de eventos recibidos desde JSM vía webhook
 """
-
+import time
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
 from app.core.redis_client import get_redis
 from app.core.config import settings
@@ -93,7 +93,8 @@ class WebhookReceiver:
             await pool.enqueue_job(
                 "process_comment_created",
                 event.issue_key,
-                _job_id=f"comment:{event.issue_key}",
+                # _job_id=f"comment:{event.issue_key}",
+                _job_id=f"comment:{event.issue_key}:{int(time.time() // 60)}",
                 _defer_by=settings.debounce_ttl_seconds,
             )
 
