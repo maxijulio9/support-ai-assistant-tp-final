@@ -26,6 +26,15 @@ class InteractionLogger:
             priority_id = self._find_catalog_id(db, "ticket_priority", analysis.priority)
             sentiment_id = self._find_catalog_id(db, "sentiment_type", analysis.sentiment)
 
+            # el texto analizado es el ultimo turno del historial conversacional
+            # si no hay historial, usa el summary como respaldo
+            if analysis.conversation_history:
+                ultimo_turno = analysis.conversation_history[-1]
+                text_input = ultimo_turno.content
+            else:
+                text_input = analysis.summary
+
+
             # guarda el resultado del analisis en la tabla interaction
             query = text("""
                 INSERT INTO interaction (
@@ -44,7 +53,8 @@ class InteractionLogger:
                 "category_id": category_id,
                 "priority_id": priority_id,
                 "sentiment_id": sentiment_id,
-                "text_input": analysis.summary,
+                # "text_input": analysis.summary,
+                "text_input": text_input,
                 "detected_intent": analysis.intent,
                 "info_sufficient": analysis.info_sufficient,
             })
