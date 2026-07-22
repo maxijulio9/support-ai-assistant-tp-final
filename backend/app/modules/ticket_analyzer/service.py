@@ -82,8 +82,8 @@ PRIORITY_SCHEMA = {
 
 # mapeo project_key y country para tokenia hardcre por ahora
 PROJECT_COUNTRY = {
-    "TGA": "AR",  #tokenia Argentina
-    "TGB": "BR",  #tokenia Brasil
+    "TARG": "AR",  #tokenia Argentina
+    "TBRA": "BR",  #tokenia Brasil
 }
 
 

@@ -5,6 +5,8 @@
 import logging
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.service import TicketAnalyzer
+from app.modules.interaction_logger.service import InteractionLogger
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,8 @@ class Orchestrator:
     # instancia los módulos que va a coordinar
     def __init__(self):
         self.ticket_analyzer = TicketAnalyzer()
+        self.interaction_logger = InteractionLogger()
+
 
     # punto de entrada del pipeline
     #por ahora solo ejecuta M2, los siguientes módulos se agregan en futuras iteraciones
@@ -25,6 +29,8 @@ class Orchestrator:
         analysis = await self.ticket_analyzer.analyze(event)
         logger.info(f"[{event.issue_key}] M2 listorti, priority={analysis.priority}, country={analysis.country}")
 
+        # persiste el resultado del analisis en la bd relacional
+        self.interaction_logger.log_analysis(analysis)
 
         return {
             "status": "processed",
