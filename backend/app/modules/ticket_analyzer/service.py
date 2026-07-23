@@ -99,8 +99,6 @@ class TicketAnalyzer:
         # priority = self._determine_priority(event.priority)
         country = self._get_country(event.issue_key)
         
-        # lee el historial previo de la conversacion en caso de que existan
-        conversation_history = await self.history.get(event.issue_key)
         
         # cu9 agrega el turno nuevo del usuario al historial
         # si es comentario usa comment_body, si es ticket nuevo usa summary + description
@@ -110,6 +108,9 @@ class TicketAnalyzer:
         if texto_usuario:
             await self.history.append(event.issue_key, "user", texto_usuario)
 
+        # lee el historial previo de la conversacion en caso de que existan
+        conversation_history = await self.history.get(event.issue_key)
+        
         # cu7 clasifica el ticket usando el llm
         classification = self._classify(texto_usuario, conversation_history)
 
