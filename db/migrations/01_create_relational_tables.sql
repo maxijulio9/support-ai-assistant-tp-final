@@ -111,3 +111,12 @@ CREATE TABLE IF NOT EXISTS interaction (
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     reviewed_at             TIMESTAMPTZ
 );
+
+-- tabla para almacenar credenciales externas que van a estar encriptadas
+-- las credenciales se encriptan usando APP_SECRET_KEY antes de guardarse
+CREATE TABLE IF NOT EXISTS system_config (
+    id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key             VARCHAR(100) UNIQUE NOT NULL,
+    encrypted_value TEXT        NOT NULL,
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
