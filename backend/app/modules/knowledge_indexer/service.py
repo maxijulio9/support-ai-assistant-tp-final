@@ -22,6 +22,25 @@ class KnowledgeIndexer:
         self.embedding_client = EmbeddingClient()
         self.storage = ChunkStorage()
 
+    # extrae category y doc_type desde los labels de ls kb
+    # si la pagina no tiene labels, devuelve None en ambos campos - formato harcoreado para probar
+    def _extract_metadata_from_labels(self, page_content: dict) -> dict:
+        labels = page_content.get("metadata", {}).get("labels", {}).get("results", [])
+
+        category = None
+        doc_type = None
+
+        for label in labels:
+            nombre = label.get("name", "")
+            if nombre.startswith("cat-"):
+                category = nombre[4:]
+            elif nombre.startswith("type-"):
+                doc_type = nombre[5:]
+
+        return {"category": category, "doc_type": doc_type}
+
+
+    
     # recorre todos los spaces indicados, indexa cada pagina de punta a punta:
     #extrae, limpia, divide en chunks, genera embeddings y persiste en la bd vectorial    def index_spaces(self, space_keys: list[str]):
     def index_spaces(self, space_keys: list[str]):
@@ -63,11 +82,15 @@ class KnowledgeIndexer:
                 html = content["body"]["storage"]["value"]
                 texto_plano = self.cleaner.clean_html(html)
 
+                metadata = self._extract_metadata_from_labels(content)
+
                 pagina = ExtractedPage(
                     page_id=page_id,
                     page_title=content["title"],
                     space_key=space_key,
                     content=texto_plano,
+                    category=metadata["category"],
+                    doc_type=metadata["doc_type"],
                 )
                 paginas_extraidas.append(pagina)
 
