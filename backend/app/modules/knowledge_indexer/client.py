@@ -33,8 +33,9 @@ class ConfluenceClient:
     # expand=body.storage trae el html/contenido de la pagina
     def get_page_content(self, page_id: str) -> dict:
         url = f"{self.base_url}/rest/api/content/{page_id}"
-        params = {"expand": "body.storage"}
-
+        # params = {"expand": "body.storage"}
+        params = {"expand": "body.storage,metadata.labels"}
+        
         response = httpx.get(url, auth=self.auth, params=params)
         response.raise_for_status()
 
