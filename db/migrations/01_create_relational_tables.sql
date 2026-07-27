@@ -120,3 +120,25 @@ CREATE TABLE IF NOT EXISTS system_config (
     encrypted_value TEXT        NOT NULL,
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
+
+-- tabla que representa cada space de confluence que se usa para indexar
+CREATE TABLE IF NOT EXISTS confluence_space (
+    id              UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    space_key       VARCHAR(50)  UNIQUE NOT NULL,
+    country_id      UUID         REFERENCES country(id),
+    description     VARCHAR(200),
+    is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    last_indexed_at TIMESTAMPTZ
+);
+
+-- tabla intermedia que asocia proyectos con spaces
+-- un proyecto puede tener multiples spaces
+CREATE TABLE IF NOT EXISTS project_space (
+    id          UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id  UUID    NOT NULL REFERENCES project(id),
+    space_id    UUID    NOT NULL REFERENCES confluence_space(id),
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE (project_id, space_id)
+);
