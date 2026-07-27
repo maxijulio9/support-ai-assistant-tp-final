@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     confluence_api_token: str = ""
     confluence_space_key: str = ""
 
+    # secret key para encriptar credenciales externas
+    app_secret_key: str = ""
+
     class Config:
         env_file = ".env"
 
