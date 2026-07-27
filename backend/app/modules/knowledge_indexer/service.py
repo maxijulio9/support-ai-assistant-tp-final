@@ -8,6 +8,7 @@ from app.modules.knowledge_indexer.chunker import TextChunker
 from app.modules.knowledge_indexer.schemas import ExtractedPage
 from app.modules.knowledge_indexer.chunk_storage import ChunkStorage
 from app.modules.knowledge_indexer.embedding_client import EmbeddingClient
+from app.modules.knowledge_indexer.kb_space_repository import KbSpaceRepository
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class KnowledgeIndexer:
         self.chunker = TextChunker()
         self.embedding_client = EmbeddingClient()
         self.storage = ChunkStorage()
+        self.space_repo = KbSpaceRepository()
 
     # extrae category y doc_type desde los labels de ls kb
     # si la pagina no tiene labels, devuelve None en ambos campos - formato harcoreado para probar
@@ -71,28 +73,39 @@ class KnowledgeIndexer:
     def extract_pages(self, space_keys: list[str]) -> list[ExtractedPage]:
         paginas_extraidas = []
 
-        for space_key in space_keys:
-            logger.info(f"extrayendo paginas del space {space_key}")
-            pages = self.client.get_pages_from_space(space_key)
+        db = next(get_db())
 
-            for page in pages:
-                page_id = page["id"]
-                content = self.client.get_page_content(page_id)
 
-                html = content["body"]["storage"]["value"]
-                texto_plano = self.cleaner.clean_html(html)
+        try:
 
-                metadata = self._extract_metadata_from_labels(content)
+            for space_key in space_keys:
+                logger.info(f"extrayendo paginas del space {space_key}")
 
-                pagina = ExtractedPage(
-                    page_id=page_id,
-                    page_title=content["title"],
-                    space_key=space_key,
-                    content=texto_plano,
-                    category=metadata["category"],
-                    doc_type=metadata["doc_type"],
-                )
-                paginas_extraidas.append(pagina)
+                country_code = self.space_repo.get_country_code(db, space_key)
+                pages = self.client.get_pages_from_space(space_key)
 
+                for page in pages:
+                    page_id = page["id"]
+                    content = self.client.get_page_content(page_id)
+
+                    html = content["body"]["storage"]["value"]
+                    texto_plano = self.cleaner.clean_html(html)
+
+                    metadata = self._extract_metadata_from_labels(content)
+
+                    pagina = ExtractedPage(
+                        page_id=page_id,
+                        page_title=content["title"],
+                        space_key=space_key,
+                        content=texto_plano,
+                        category=metadata["category"],
+                        doc_type=metadata["doc_type"],
+                        country=country_code,
+
+                    )
+                    paginas_extraidas.append(pagina)
+        finally:
+            db.close()
+            
         logger.info(f"extraccion completa, total de paginas: {len(paginas_extraidas)}")
         return paginas_extraidas

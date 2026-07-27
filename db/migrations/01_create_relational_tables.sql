@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS system_config (
 
 
 -- tabla que representa cada space de confluence que se usa para indexar
-CREATE TABLE IF NOT EXISTS confluence_space (
+CREATE TABLE IF NOT EXISTS kb_spaces (
     id              UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
     space_key       VARCHAR(50)  UNIQUE NOT NULL,
     country_id      UUID         REFERENCES country(id),
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS confluence_space (
 CREATE TABLE IF NOT EXISTS project_space (
     id          UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id  UUID    NOT NULL REFERENCES project(id),
-    space_id    UUID    NOT NULL REFERENCES confluence_space(id),
+    space_id    UUID    NOT NULL REFERENCES kb_spaces(id),
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE (project_id, space_id)
 );
