@@ -16,11 +16,11 @@ class ChunkRetriever:
 
     # similitud coseno: busca los chunks mas similares al vector de consulta
     # filtra por country y category si estan disponibles
-    def search(
-        self,
+    def search(self,
         query_embedding: list[float],
         category: str | None = None,
         country: str | None = None,
+        doc_type: str | None = None,
         top_k: int = TOP_K,
     ) -> list[RetrievedChunk]:
 
