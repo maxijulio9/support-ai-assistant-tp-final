@@ -29,12 +29,7 @@ class KnowledgeRetriever:
             texto_consulta = analysis.summary or ""
 
         # genera el embedding del texto del ticket
-        print(f"texto_consulta: {texto_consulta}")
-        print(f"category: {repr(analysis.category)}")
-        print(f"country: {repr(analysis.country)}")
-
         query_embedding = self.embedding_client.generate_embedding(texto_consulta)
-        print(f"embedding generado, largo: {len(query_embedding)}")
 
         # busca los chunks mas similares con filtros opcionales
         chunks = self.chunk_retriever.search(
@@ -42,7 +37,6 @@ class KnowledgeRetriever:
             category=analysis.category,
             country=analysis.country,
         )
-        print(f"chunks devueltos: {len(chunks)}")
 
         # verifica si hay al menos un chunk de tipo requirements
         has_requirements = any(c.doc_type == "requirements" for c in chunks)
