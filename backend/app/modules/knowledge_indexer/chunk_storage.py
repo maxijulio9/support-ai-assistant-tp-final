@@ -12,14 +12,14 @@ class ChunkStorage:
     # almacanea un chunk ya vectorizado en la bd
     def save_chunk(self, db, pagina: ExtractedPage, chunk_texto: str, embedding: list[float], chunk_index: int, total_chunks: int):
         query = text("""
-            INSERT INTO knowledge_chunk (
-                content, embedding, source, space_key, page_id, page_title,
-                chunk_index, total_chunks
-            )
-            VALUES (
-                :content, :embedding, :source, :space_key, :page_id, :page_title,
-                :chunk_index, :total_chunks
-            )
+        INSERT INTO knowledge_chunk (
+            content, embedding, source, space_key, page_id, page_title,
+            chunk_index, total_chunks, category, country, doc_type
+        )
+        VALUES (
+            :content, :embedding, :source, :space_key, :page_id, :page_title,
+            :chunk_index, :total_chunks, :category, :country, :doc_type
+        )
         """)
 
         db.execute(query, {
@@ -31,4 +31,7 @@ class ChunkStorage:
             "page_title": pagina.page_title,
             "chunk_index": chunk_index,
             "total_chunks": total_chunks,
+            "category": pagina.category,
+            "country": pagina.country,
+            "doc_type": pagina.doc_type,
         })
