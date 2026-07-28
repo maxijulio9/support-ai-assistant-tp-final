@@ -8,13 +8,13 @@ from app.modules.knowledge_retriever.schemas import RetrievedChunk
 
 logger = logging.getLogger(__name__)
 
-# cantidad de chunks a devolver por defecto
+# cantidad de chunks a devolver. Seguro se pueda parameetrizar
 TOP_K = 5
 
 
 class ChunkRetriever:
 
-    # busca los chunks mas similares al vector de consulta
+    # similitud coseno: busca los chunks mas similares al vector de consulta
     # filtra por country y category si estan disponibles
     def search(
         self,
@@ -40,7 +40,7 @@ class ChunkRetriever:
 
         params = {"query_embedding": str(query_embedding), "top_k": top_k}
 
-        # agrega filtros opcionales segun lo que detectó M2
+        # agrega filtros opcionales segun lo que detectó m2
         if country:
             query_sql += " AND country = :country"
             params["country"] = country
@@ -66,7 +66,7 @@ class ChunkRetriever:
                     doc_type=row.doc_type,
                 ))
 
-            logger.info(f"busqueda completada, chunks encontrados: {len(chunks)}")
+            logger.info(f"busqueda completada chunks: {len(chunks)}")
             return chunks
 
         except Exception as e:
