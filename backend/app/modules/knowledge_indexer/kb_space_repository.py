@@ -31,3 +31,13 @@ class KbSpaceRepository:
             return None
 
         return str(row.code)
+
+    # actualiza el timestamp de la ultima indexacion de un space
+    def update_last_indexed_at(self, db, space_key: str):
+        query = text("""
+            UPDATE kb_spaces
+            SET last_indexed_at = NOW()
+            WHERE space_key = :space_key
+        """)
+        db.execute(query, {"space_key": space_key})
+        logger.info(f"last_indexed_at actualizado para space '{space_key}'")
