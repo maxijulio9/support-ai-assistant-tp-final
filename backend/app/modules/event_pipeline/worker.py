@@ -60,3 +60,17 @@ async def process_comment_created(arq_context, issue_key: str):
 
     logger.info(f"worker: comment_created procesado, issue_key={issue_key}")
     return result
+
+
+
+# tarea para disparar la indexacion de spaces de confluence desde m7
+# recibe la lista de space_keys que el admin selecciono desde la ui
+async def process_kb_indexing(arq_context, space_keys: list[str]):
+    logger.info(f"worker: iniciando indexacion de spaces {space_keys}")
+    
+    from app.modules.knowledge_indexer.service import KnowledgeIndexer
+    indexer = KnowledgeIndexer()
+    indexer.index_spaces(space_keys)
+    
+    logger.info(f"worker: indexacion completada para spaces {space_keys}")
+    return {"status": "completed", "space_keys": space_keys}
