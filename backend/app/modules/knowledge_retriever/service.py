@@ -10,6 +10,13 @@ from app.modules.knowledge_indexer.embedding_client import EmbeddingClient
 
 logger = logging.getLogger(__name__)
 
+
+# umbral minimo de similitud coseno para considerar un chunk relevante
+SIMILARITY_THRESHOLD = 0.70
+
+
+
+
 class KnowledgeRetriever:
 
     def __init__(self):
@@ -37,6 +44,15 @@ class KnowledgeRetriever:
             category=analysis.category,
             country=analysis.country,
         )
+
+        # si no hay chunks o el mejor no supera el umbral, no hay contexto suficiente
+        if not chunks or chunks[0].similarity_score < SIMILARITY_THRESHOLD:
+            logger.info(f"[{analysis.issue_key}] score insuficiente o sin resultados, devolviendo resultado vacio")
+            return RetrievalResult(
+                issue_key=analysis.issue_key,
+                chunks=[],
+                has_requirements_doc=False,
+            )
 
         # verifica si hay al menos un chunk de tipo requirements
         has_requirements = any(c.doc_type == "requirements" for c in chunks)
