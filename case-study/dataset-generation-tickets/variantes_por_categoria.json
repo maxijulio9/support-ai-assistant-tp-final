@@ -1,0 +1,57 @@
+{
+  "Acceso y autenticación": {
+    "summaries": [
+      "no puedo entraar a mi cuenta",
+      "che no puedo entrar a tokenia, no me deja loguearme",
+      "no me anda la cuetna",
+      "quiero entrar a tokenia y no puedo, me tira error con la contaseña o el usuario, qué hago?",
+      "olvide la clve de tokenia y el mail de reseteo no aparece",
+      "che, olvidé mi contrasenia de tokenia y por más que pido el mail para resetearla no me llega nada, qué onda?",
+      "olvidé mi contra y el mail de recupero no entra, ya lo pedí varias veces",
+      "no puedo entrar, me olvide la clave y el mail de recuparo no me llega",
+      "me trabaron la cueta",
+      "che me aparece la cuenta bloqueada, no puedo entrar ni nada",
+      "me baneron la cuenta",
+      "che me re bloquearon la cuenta de la nada, no entiendo por qué, qué hago?"
+    ],
+    "descriptions": [
+      "che, no puedo entrar a tokenia. pongo el mail y la pass que tengo anotada y me tira que esta mal. estoy re seguro que es esa.",
+      "la pucha, no me deja entrar a tokenia desde hoy a la mañana. pongo mi mail y la contraseña que tengo guardada y me dice que son invalidos. posta estoy seguro que es la que usé para registrarme, no cambié nada.",
+      "hola, que onda? parece que se buggeo tokenia. pongo el mail y la clave que tengo anotada y ni a ganchos me deja entrar. me dice que son incorrectas. estoy re seguro que son las que usé cuando me registre y no las cambié.",
+      "che, no me deja entrar a tokenia. pongo el mail y la clabe y me dice que son incorrectas. ya probé mil veces y no hay forma. estoy seguro que son las del regsitro.",
+      "che, olvidé mi contraseña de tokenia y le doy a 'recuperar clave' pero el mail no me llega ni a palo. ya chequeé el spam y nada, qué onda?",
+      "me olvide la clave de la cuenta y al intentar resetearla no me esta llegando el correo para hacerlo, ya revise spam y sigue sin llegar.",
+      "flaco, me quedé afuera de tokenia. le doy a olvidé mi contraseña y no me llega el mail de reseteo. es una paja, ya miré hasta en promociones y nada. ayuda porfa.",
+      "uh, olvidé mi contraseña de Tokenia y el mail para cambiarla no llega. Ya vi en spam, basura, todos lados y nada. necesito entrar urgente."
+    ],
+    "agent_resolutions": [
+      "Para proceder con la recuperación de su cuenta, le solicitamos seleccionar la opción 'He olvidado mi contraseña' que encontrará en la pantalla principal de la aplicación. Seguidamente, será necesario que realice un breve video de auto-identificación. Asegúrese de hacerlo en un espacio bien iluminado y sin utilizar ningún accesorio. Una vez confirmada su identidad con éxito, le enviaremos las instrucciones detalladas para establecer una nueva clave de seguridad a su correo electrónico vinculado.",
+      "Para asistirlo en el restablecimiento de su acceso, le indicamos que el primer paso es dirigirse a la interfaz de inicio de nuestro aplicativo móvil y optar por la funcionalidad 'Restablecer mi contraseña'. Posteriormente, y como medida de seguridad imprescindible para verificar su identidad, se le solicitará grabar una secuencia de video personal. Es crucial que esta filmación se realice en un ambiente con adecuada iluminación y que no porte elementos que cubran su rostro. Una vez que hayamos completado la verificación de sus datos a través de este proceso, se le hará llegar, vía correo electrónico a la dirección que figura en su perfil, las directrices exactas para definir una nueva contraseña de acceso a su cuenta.",
+      "Para recuperar su ingreso, diríjase a la pantalla inicial de la aplicación y pulse 'He olvidado mi contraseña'. Deberá enviar un video breve de usted para confirmar su identidad, asegurándose de que haya buena claridad y sin usar accesorios. Las indicaciones para fijar una nueva clave serán enviadas a su email asociado una vez validado.",
+      "Con el fin de restablecer el acceso a su cuenta, primero debe proceder a la selección de 'Problemas para acceder' o 'He olvidado mi contraseña' desde la pantalla principal de la app. Para la verificación de su titularidad, será indispensable que grabe un video corto de su persona, garantizando óptima iluminación y la ausencia de objetos que obstruyan su visión. Posteriormente a la aprobación de dicho material, las instrucciones para establecer una nueva credencial serán remitidas a la dirección de correo electrónico que tenemos archivada."
+    ]
+  },
+  "Operaciones de compra/venta crypto": {
+    "summaries": [
+      "quiero comprar BTC pero me da error",
+      "hice una compra de ETH y no aparece en mi billetera",
+      "no me deja vender usdt",
+      "che, no puedo vender los usdt, q onda?",
+      "se tildó, no puedo vender usdt",
+      "q bronca, no puedo vender mis usdt en toenia"
+    ],
+    "descriptions": [
+      "che quise comprar btc, la operacion me tiró error pero me sacaron la guita igual. ya pasó una hora y pico y no me llegó nada.",
+      "recién intenté comprar 0.01 btc, hice todos los pasos, puse la clave, todo ok, y me saltó 'operación fallida'. la cosa es que me descontaron la plata de la cuenta al toque, pero los btc nunca aparecieron. ya va más de una hora y estoy sin la guita y sin la cripto, es una bronca.",
+      "compré 0.01 btc recién, me dió error pero me cobraron la guita igual. ya pasó más de una hora y no tengo nada de nada, ni la plata ni los btc. que pasó ahi?",
+      "hola, estaba comprando 0.01 btc y puse todos los datos, confirmé, y me salió un cartel de error. pero lo peor es que la plata, la guita, me la descontaron igual de mi cuenta. ya hace mas de una hora que espero y no aparece ni el btc ni la plata de vuelta. pueden chequear? es una re cagada esto.",
+      "che, hice una compra de eth hace como dos horas, me llego la confirmación pero no hay nada en la billetera. la guita si se descontó, qué onda?",
+      "hola, la verdad estoy re caliente porque hice una compra de eth hace banda de tiempo, me saltó la confirmación y todo, pero en la billetera no aparece ni a ganchos. la plata de la cuenta sí se me descontó, o sea que la transacción se hizo, pero el eth? ni rastro. es un garronazo esto, necesito una solución ya.",
+      "compre eth, me dio ok la transa y se descontó la plata, pero en la wallet no tengo nada. que onda ahi?",
+      "hice una compra de ethereum hace ya un buen rato, me salio la confirmación y me llegó el mail, pero la billetera de tokens está vacía. mi plata si se descontó del saldo disponible pero no me aparece el eth. no entiendo que paso, qué hago?"
+    ],
+    "agent_resolutions": [
+      "Las compras de crypto pueden demorar hasta 30 minutos en verse reflejadas en la billetera dependiendo de la congestión de la red. Si pasado ese tiempo no aparece el saldo, necesitamos el número de la transacción para rastrearlo."
+    ]
+  }
+}
