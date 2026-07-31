@@ -45,10 +45,19 @@ class ChunkRetriever:
             query_sql += " AND country = :country"
             params["country"] = country
 
-        if category:
-            query_sql += " AND category = :category"
-            params["category"] = category
+        if doc_type:
+            query_sql += " AND doc_type = :doc_type"
+            params["doc_type"] = doc_type
 
+        # if category:
+        #     query_sql += " AND category = :category"
+        #     params["category"] = category
+
+        # category ya no filtra, se usa despues como boost en el ranking
+        # trae mas candidatos de los necesarios para tener margen al aplicar el boost
+        candidates_to_fetch = top_k * 3
+        params["candidates_to_fetch"] = candidates_to_fetch
+        
         query_sql += " ORDER BY similarity_score DESC LIMIT :top_k"
 
         db = next(get_db())

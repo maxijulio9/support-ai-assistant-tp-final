@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 # umbral minimo de similitud coseno para considerar un chunk relevante
 SIMILARITY_THRESHOLD = 0.4
 
-
+# cuanto se suma al score si la categoria del chunk coincide con la del ticket
+CATEGORY_BOOST = 0.05
 
 
 class KnowledgeRetriever:
@@ -31,19 +32,40 @@ class KnowledgeRetriever:
 
         # arma el texto de consulta desde el ultimo turno del historial
         if analysis.conversation_history:
-            texto_consulta = analysis.conversation_history[-1].content
+            query_text = analysis.conversation_history[-1].content
         else:
-            texto_consulta = analysis.summary or ""
+            query_text = analysis.summary or ""
 
         # genera el embedding del texto del ticket
-        query_embedding = self.embedding_client.generate_embedding(texto_consulta)
+        query_embedding = self.embedding_client.generate_embedding(query_text)
 
-        # busca los chunks mas similares con filtros opcionales
-        chunks = self.chunk_retriever.find_similar_chunks(
+        # trae mas candidatos de los que se van a devolver, sin filtrar por category
+        candidates = self.chunk_retriever.find_similar_chunks(
             query_embedding=query_embedding,
-            category=analysis.category,
             country=analysis.country,
         )
+
+
+        # aplica el alg boost: suma puntos a los chunks cuya categoria coincide con la del ticket
+        for chunk in candidates:
+            if analysis.category and chunk.category == analysis.category:
+                chunk.similarity_score += CATEGORY_BOOST
+
+       
+        def get_score(chunk):
+            return chunk.similarity_score
+
+        # ordena de mayor a menor por score
+        candidates.sort(key=get_score, reverse=True)
+        chunks = candidates[:5]
+
+
+        # # busca los chunks mas similares con filtros opcionales
+        # chunks = self.chunk_retriever.find_similar_chunks(
+        #     query_embedding=query_embedding,
+        #     category=analysis.category,
+        #     country=analysis.country,
+        # )
 
         # si no hay chunks o el mejor no supera el umbral, no hay contexto suficiente
         if not chunks or chunks[0].similarity_score < SIMILARITY_THRESHOLD:
@@ -60,8 +82,6 @@ class KnowledgeRetriever:
         logger.info(f"[{analysis.issue_key}] chunks encontrados: {len(chunks)}, has_requirements: {has_requirements}")
 
 
-        # por ahora devuelve resultado vacio
-        # se completa cuando se integre ChunkRetriever y EmbeddingClient
         return RetrievalResult(
             issue_key=analysis.issue_key,
             chunks=chunks,
