@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 # umbral minimo de similitud coseno para considerar un chunk relevante
-SIMILARITY_THRESHOLD = 0.70
+SIMILARITY_THRESHOLD = 0.4
 
 
 
@@ -39,7 +39,7 @@ class KnowledgeRetriever:
         query_embedding = self.embedding_client.generate_embedding(texto_consulta)
 
         # busca los chunks mas similares con filtros opcionales
-        chunks = self.chunk_retriever.search(
+        chunks = self.chunk_retriever.find_similar_chunks(
             query_embedding=query_embedding,
             category=analysis.category,
             country=analysis.country,
