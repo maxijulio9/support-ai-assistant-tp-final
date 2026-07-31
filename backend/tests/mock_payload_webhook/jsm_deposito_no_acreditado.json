@@ -1,0 +1,15 @@
+{
+  "webhookEvent": "jira:issue_created",
+  "issue": {
+    "id": "10003",
+    "key": "TARG-15",
+    "fields": {
+      "summary": "Hice una transferencia hace dos días y todavía no me figura el saldo, NECEISTO AYUDA!!",
+      "issuetype": {"id": "10000", "name": "Task"},
+      "priority": {"id": "3", "name": "Medium"},
+      "status": {"id": "1", "name": "Open"},
+      "reporter": {"accountId": "user456", "emailAddress": "cliente@gmail.com"},
+      "created": "2026-07-30T14:00:00.000-0300"
+    }
+  }
+}

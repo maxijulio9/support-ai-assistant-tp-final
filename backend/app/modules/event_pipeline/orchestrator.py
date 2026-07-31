@@ -6,6 +6,7 @@ import logging
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.service import TicketAnalyzer
 from app.modules.interaction_logger.service import InteractionLogger
+from app.modules.knowledge_retriever.service import KnowledgeRetriever
 
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ class Orchestrator:
     def __init__(self):
         self.ticket_analyzer = TicketAnalyzer()
         self.interaction_logger = InteractionLogger()
+        self.knowledge_retriever = KnowledgeRetriever()
 
 
     # punto de entrada del pipeline
@@ -27,7 +29,11 @@ class Orchestrator:
 
         #  analisis y clasificaciòn del ticket
         analysis = await self.ticket_analyzer.analyze(event)
+
         logger.info(f"[{event.issue_key}] M2 listorti, priority={analysis.priority}, country={analysis.country}")
+
+        # busca en la kb los chunks mas relevantes segun el analisis de M2 en M3
+        retrieval_result = self.knowledge_retriever.retrieve(analysis)   
 
         # persiste el resultado del analisis en la bd relacional
         self.interaction_logger.log_analysis(analysis)
@@ -36,4 +42,5 @@ class Orchestrator:
             "status": "processed",
             "issue_key": event.issue_key,
             "analysis": analysis.model_dump(),
+            "retrieved_chunks": [chunk.model_dump() for chunk in retrieval_result.chunks] #TEST
         }
