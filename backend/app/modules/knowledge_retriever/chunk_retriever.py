@@ -52,6 +52,7 @@ class ChunkRetriever:
         # if category:
         #     query_sql += " AND category = :category"
         #     params["category"] = category
+        
 
         # category ya no filtra, se usa despues como boost en el ranking
         # trae mas candidatos de los necesarios para tener margen al aplicar el boost
