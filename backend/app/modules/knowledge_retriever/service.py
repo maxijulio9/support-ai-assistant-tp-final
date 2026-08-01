@@ -85,5 +85,5 @@ class KnowledgeRetriever:
         return RetrievalResult(
             issue_key=analysis.issue_key,
             chunks=chunks,
-            has_requirements_doc=False,
+            has_requirements_doc=has_requirements,
         )
