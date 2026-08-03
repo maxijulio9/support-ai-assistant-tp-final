@@ -139,31 +139,66 @@ def armar_prompt(categoria, seeds, n):
     descriptions_txt = "\n".join(f'- "{d}"' for d in seeds["descriptions"])
     resolutions_txt = "\n".join(f'- "{r}"' for r in seeds["agent_resolutions"])
 
-    return f"""Sos un generador de datos sinteticos para un dataset de tickets de soporte de un exchange de criptomonedas argentino ficticio llamado Tokenia.
+    return f"""
+            ROL
+            Sos el redactor de datos sintéticos para un dataset de entrenamiento de un sistema de soporte técnico. No estás charlando con nadie, no sos un chatbot, no respondés consultas: tu única función es reformular texto manteniendo el significado exacto.
 
-Categoria: {categoria}
+            OBJETIVO
+            Generar {n} variantes de cada uno de estos tres elementos para la categoría "{categoria}": summaries, descriptions y agent_resolutions. Cada variante conserva el mismo problema, los mismos pasos, los mismos plazos, los mismos montos y la misma resolución. Solo cambia la forma de escribirlo.
 
-Tengo estos summaries (titulos cortos escritos por clientes):
-{summaries_txt}
+            CONTEXTO
+            <summaries_originales>
+            {summaries_txt}
+            </summaries_originales>
 
-Estas descriptions (descripciones largas escritas por clientes):
-{descriptions_txt}
+            <descriptions_originales>
+            {descriptions_txt}
+            </descriptions_originales>
 
-Y estas resoluciones (respuestas escritas por un agente de soporte):
-{resolutions_txt}
+            <resoluciones_originales>
+            {resolutions_txt}
+            </resoluciones_originales>
 
-Necesito que generes variantes de cada uno:
+            INSTRUCCIONES
 
-Para los summaries y descriptions, generame {n} variantes de CADA UNO que mantengan el mismo problema pero con vocabulario y forma de escribir distinta entre si, jerga argentina como escribe la gente en apps (no formal), algunas mas cortas otras mas largas, algun error de tipeo natural en algunas (no todas), sin mayuscula al inicio siempre. Que no suene a texto armado por IA.
+            Tarea 1 — summaries y descriptions (mensajes del cliente)
+            Estos los escribe un cliente argentino, no el agente. Puede escribir con voseo o tuteo indistintamente, en minúsculas, con errores de tipeo, sin tildes, mezclando frases largas y cortas. No corregir su forma de escribir ni volverlo más prolijo. Variar longitud, orden, estructura y vocabulario entre las {n} variantes — no alcanza con cambiar sinónimos sueltos.
 
-Para las resoluciones, generame {n} variantes de CADA UNA que mantengan el mismo contenido factual (mismos pasos, plazos, montos) pero con otras palabras y otro orden de oraciones, sin calcar frases del original, tono formal de agente. Es importante que no repitan las palabras clave del texto de referencia.
+            Tarea 2 — agent_resolutions (respuestas del agente)
+            Estos los escribe un agente de soporte humano. El registro es profesional y cercano, con voseo argentino (ingresá, verificá, contactanos), como el soporte de un banco o fintech argentina seria. Ni acartonado ni de chat entre amigos.
 
-Devolveme SOLO un json con esta forma exacta, sin texto extra, sin markdown:
-{{
-  "summaries": ["variante1", "variante2", ...],
-  "descriptions": ["variante1", "variante2", ...],
-  "agent_resolutions": ["variante1", "variante2", ...]
-}}"""
+            REGLAS NEGATIVAS
+
+            Prohibido en agent_resolutions — vocabulario corporativo/traducido: "activos digitales", "monedero", "titular", "efectuar", "proceder a", "con el fin de", "sin dilación", "concretar", "desembolso", "estimado usuario", "cordialmente".
+
+            Prohibido en agent_resolutions — vocabulario de chat informal: "al toque", "posta", "qué garrón", "dale", signos de exclamación en cada oración, diminutivos.
+
+            Prohibido en ambas tareas: no inventar información, no agregar pasos, montos o plazos que no estén en el original, no eliminar información del original.
+
+            EJEMPLOS (agent_resolutions)
+
+            Muy formal (mal): "Hemos procedido a inhabilitar su perfil de usuario sin dilación, con el fin de resguardar sus activos."
+            Punto justo (esto quiero): "Suspendimos tu cuenta de forma preventiva para proteger tus fondos. Para levantar la suspensión necesitamos verificar tu identidad."
+            Muy informal (mal): "Listo, suspendimos tu cuenta al toque. Es una medida para cuidar tu plata, posta."
+
+            Muy formal (mal): "El desembolso asociado a las operaciones en Tokenia se conforma por dos conceptos."
+            Punto justo (esto quiero): "El costo de operar en Tokenia se compone de dos partes: la comisión de la plataforma y el spread de mercado."
+            Muy informal (mal): "Che, lo que pagás acá tiene dos partes nomás."
+
+            FORMATO DE SALIDA
+            Devolvé solo este json, sin texto antes ni después, sin markdown:
+            {{
+            "summaries": ["variante1", "variante2", ...],
+            "descriptions": ["variante1", "variante2", ...],
+            "agent_resolutions": ["variante1", "variante2", ...]
+            }}
+
+            CHECKLIST ANTES DE RESPONDER
+            - ¿Cada variante de agent_resolutions mantiene los mismos montos, plazos y pasos que el original? Si no, corregilo.
+            - ¿Alguna variante de agent_resolutions quedó en el registro "muy formal" o "muy informal" de los ejemplos? Si es así, reescribila hacia el punto justo.
+            - ¿Las variantes de summaries/descriptions suenan todas igual entre sí? Si es así, cambiá más la estructura, no solo las palabras.
+            - ¿El output es JSON puro, sin backticks ni texto adicional?"""
+        
 
 
 def pedir_variantes_categoria(categoria, seeds):
