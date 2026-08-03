@@ -1,57 +1,354 @@
 {
   "Acceso y autenticación": {
     "summaries": [
-      "no puedo entraar a mi cuenta",
-      "che no puedo entrar a tokenia, no me deja loguearme",
-      "no me anda la cuetna",
-      "quiero entrar a tokenia y no puedo, me tira error con la contaseña o el usuario, qué hago?",
-      "olvide la clve de tokenia y el mail de reseteo no aparece",
-      "che, olvidé mi contrasenia de tokenia y por más que pido el mail para resetearla no me llega nada, qué onda?",
-      "olvidé mi contra y el mail de recupero no entra, ya lo pedí varias veces",
-      "no puedo entrar, me olvide la clave y el mail de recuparo no me llega",
-      "me trabaron la cueta",
-      "che me aparece la cuenta bloqueada, no puedo entrar ni nada",
-      "me baneron la cuenta",
-      "che me re bloquearon la cuenta de la nada, no entiendo por qué, qué hago?"
+      "no puedo ingresar a mi usuario",
+      "problemas para logearme",
+      "mi cuenta no abre",
+      "no tengo acceso a mi perfil",
+      "perdi la clave y no recibo el correo de recuperacion",
+      "olvide mi contra y el mail de reset no llega",
+      "no me llega el mail cuando pongo olvide mi clave",
+      "hice el paso de contraseña olvidada pero no me llego ningun mail",
+      "mi cuenta esta bloqueada y no puedo entrar",
+      "no puedo acceder, me la bloquearon",
+      "me inhabilitaron el acceso a la cuenta",
+      "mi usuario fue suspendido"
     ],
     "descriptions": [
-      "che, no puedo entrar a tokenia. pongo el mail y la pass que tengo anotada y me tira que esta mal. estoy re seguro que es esa.",
-      "la pucha, no me deja entrar a tokenia desde hoy a la mañana. pongo mi mail y la contraseña que tengo guardada y me dice que son invalidos. posta estoy seguro que es la que usé para registrarme, no cambié nada.",
-      "hola, que onda? parece que se buggeo tokenia. pongo el mail y la clave que tengo anotada y ni a ganchos me deja entrar. me dice que son incorrectas. estoy re seguro que son las que usé cuando me registre y no las cambié.",
-      "che, no me deja entrar a tokenia. pongo el mail y la clabe y me dice que son incorrectas. ya probé mil veces y no hay forma. estoy seguro que son las del regsitro.",
-      "che, olvidé mi contraseña de tokenia y le doy a 'recuperar clave' pero el mail no me llega ni a palo. ya chequeé el spam y nada, qué onda?",
-      "me olvide la clave de la cuenta y al intentar resetearla no me esta llegando el correo para hacerlo, ya revise spam y sigue sin llegar.",
-      "flaco, me quedé afuera de tokenia. le doy a olvidé mi contraseña y no me llega el mail de reseteo. es una paja, ya miré hasta en promociones y nada. ayuda porfa.",
-      "uh, olvidé mi contraseña de Tokenia y el mail para cambiarla no llega. Ya vi en spam, basura, todos lados y nada. necesito entrar urgente."
+      "che no puedo loguearme en tokenia. pongo mi correo y la pass q siempre uso pero me dice q es incorrecta. la verdad es la que tengo registrada",
+      "buenas, intento ingresar a tokenia con mi usuario y contraseña, me dice 'credenciales incorrectas' y estoy seguro q son las q use. por que no me deja pasar?",
+      "hola, tengo problemas para acceder a la app de tokenia. mi mail y clave me dan error, pero estoy seguro que es la combinacion correcta q registre. q hago?",
+      "no me deja entrar a tokenia. pongo mi correo y mi clave, y siempre me salta q estan mal, pero la verdad es q estoy seguro q son los datos q puse cuando abri la cuenta.",
+      "olvide mi clave y le di a 'olvide mi clave' pero el mail para reestablecer no me llega por mas q mire el spam",
+      "perdi la contraseña, puse reestablecerla y nunca me llego el mail con los pasos, ya mire en el no deseado",
+      "hice el proceso de 'olvide mi clave' para poner una nueva pero no recibo ningun correo en mi bandeja, tampoco en spam",
+      "no me llega el mail de recuperacion de contraseña. hago clic en 'olvide mi clave' y espero, pero nada, ni en la carpeta de correo no deseado"
     ],
     "agent_resolutions": [
-      "Para proceder con la recuperación de su cuenta, le solicitamos seleccionar la opción 'He olvidado mi contraseña' que encontrará en la pantalla principal de la aplicación. Seguidamente, será necesario que realice un breve video de auto-identificación. Asegúrese de hacerlo en un espacio bien iluminado y sin utilizar ningún accesorio. Una vez confirmada su identidad con éxito, le enviaremos las instrucciones detalladas para establecer una nueva clave de seguridad a su correo electrónico vinculado.",
-      "Para asistirlo en el restablecimiento de su acceso, le indicamos que el primer paso es dirigirse a la interfaz de inicio de nuestro aplicativo móvil y optar por la funcionalidad 'Restablecer mi contraseña'. Posteriormente, y como medida de seguridad imprescindible para verificar su identidad, se le solicitará grabar una secuencia de video personal. Es crucial que esta filmación se realice en un ambiente con adecuada iluminación y que no porte elementos que cubran su rostro. Una vez que hayamos completado la verificación de sus datos a través de este proceso, se le hará llegar, vía correo electrónico a la dirección que figura en su perfil, las directrices exactas para definir una nueva contraseña de acceso a su cuenta.",
-      "Para recuperar su ingreso, diríjase a la pantalla inicial de la aplicación y pulse 'He olvidado mi contraseña'. Deberá enviar un video breve de usted para confirmar su identidad, asegurándose de que haya buena claridad y sin usar accesorios. Las indicaciones para fijar una nueva clave serán enviadas a su email asociado una vez validado.",
-      "Con el fin de restablecer el acceso a su cuenta, primero debe proceder a la selección de 'Problemas para acceder' o 'He olvidado mi contraseña' desde la pantalla principal de la app. Para la verificación de su titularidad, será indispensable que grabe un video corto de su persona, garantizando óptima iluminación y la ausencia de objetos que obstruyan su visión. Posteriormente a la aprobación de dicho material, las instrucciones para establecer una nueva credencial serán remitidas a la dirección de correo electrónico que tenemos archivada."
+      "Para que recuperes el acceso, ingresá a la app y tocá en 'Olvidé mi clave' desde la pantalla principal. Te vamos a pedir un video selfie para confirmar tu identidad, asegurate de tener buena luz y de no usar accesorios. Cuando esté validado, te mandamos un correo con los pasos para generar una clave nueva al mail que tenés registrado.",
+      "Podés restablecer tu acceso yendo a la pantalla de inicio de la aplicación y seleccionando la opción 'Olvidé mi clave'. Para verificar tu identidad, vas a necesitar grabar un video selfie. Recordá hacerlo en un lugar con buena iluminación y sin accesorios. Cuando validemos tu video, te enviaremos las indicaciones para crear una clave nueva a tu mail registrado.",
+      "Si querés volver a entrar, andá a la pantalla de inicio de la app y elegí 'Olvidé mi clave'. Para que podamos validar quién sos, te vamos a pedir que grabes un video selfie. Es importante que la luz sea buena y no tengas accesorios puestos. Apenas confirmemos tu identidad, te enviamos a tu mail registrado los pasos para configurar una clave diferente.",
+      "Para recuperar tu cuenta, dirigite a la pantalla principal de la app y pulsá en 'Olvidé mi clave'. Para validar tu identidad, vas a tener que grabar un video selfie. Acordate de que sea con buena iluminación y sin ningún tipo de accesorio. Cuando validemos tu video, te mandamos al mail registrado los pasos para que puedas definir una nueva contraseña."
     ]
   },
   "Operaciones de compra/venta crypto": {
     "summaries": [
-      "quiero comprar BTC pero me da error",
-      "hice una compra de ETH y no aparece en mi billetera",
-      "no me deja vender usdt",
-      "che, no puedo vender los usdt, q onda?",
-      "se tildó, no puedo vender usdt",
-      "q bronca, no puedo vender mis usdt en toenia"
+      "error al comprar bitcoin",
+      "no puedo comprar btc, me salta un error",
+      "falla la compra de bitcoin",
+      "intento comprar btc y me tira error",
+      "mi eth comprado no aparece",
+      "no veo la compra de eth en la billetera",
+      "compre eth y no me figura en mi cuenta",
+      "el ether que compre no se cargo en la wallet",
+      "me esta fallando la venta de usdt",
+      "no consigo vender usdt",
+      "tengo problemas para vender mis usdt",
+      "la venta de mis usdt no se concreta"
     ],
     "descriptions": [
-      "che quise comprar btc, la operacion me tiró error pero me sacaron la guita igual. ya pasó una hora y pico y no me llegó nada.",
-      "recién intenté comprar 0.01 btc, hice todos los pasos, puse la clave, todo ok, y me saltó 'operación fallida'. la cosa es que me descontaron la plata de la cuenta al toque, pero los btc nunca aparecieron. ya va más de una hora y estoy sin la guita y sin la cripto, es una bronca.",
-      "compré 0.01 btc recién, me dió error pero me cobraron la guita igual. ya pasó más de una hora y no tengo nada de nada, ni la plata ni los btc. que pasó ahi?",
-      "hola, estaba comprando 0.01 btc y puse todos los datos, confirmé, y me salió un cartel de error. pero lo peor es que la plata, la guita, me la descontaron igual de mi cuenta. ya hace mas de una hora que espero y no aparece ni el btc ni la plata de vuelta. pueden chequear? es una re cagada esto.",
-      "che, hice una compra de eth hace como dos horas, me llego la confirmación pero no hay nada en la billetera. la guita si se descontó, qué onda?",
-      "hola, la verdad estoy re caliente porque hice una compra de eth hace banda de tiempo, me saltó la confirmación y todo, pero en la billetera no aparece ni a ganchos. la plata de la cuenta sí se me descontó, o sea que la transacción se hizo, pero el eth? ni rastro. es un garronazo esto, necesito una solución ya.",
-      "compre eth, me dio ok la transa y se descontó la plata, pero en la wallet no tengo nada. que onda ahi?",
-      "hice una compra de ethereum hace ya un buen rato, me salio la confirmación y me llegó el mail, pero la billetera de tokens está vacía. mi plata si se descontó del saldo disponible pero no me aparece el eth. no entiendo que paso, qué hago?"
+      "compre 0.01 btc, me cobraron pero me dio error la operacion. ya va una hora y todavia no se ve el btc ni me devolvieron la plata.",
+      "intente comprar 0.01 bitcoin, me confirmo todo y despues me dijo error. me sacaron la plata y ya paso mas de una hora y el btc no esta.",
+      "me descontaron el dinero por 0.01 btc que intente comprar, pero la operacion no salio. hace una hora que estoy esperando y no aparece.",
+      "compre 0.01 btc y me descontaron la plata, pero la compra fallo. paso una hora y no lo tengo acreditado.",
+      "me llego la confirmacion de compra de eth pero no se ve en mi billetera, el dinero se desconto hace ya 2 horas.",
+      "hace dos horas compre ether, me confirmaron la operacion pero no se me cargo. la plata si la sacaron de mi cuenta.",
+      "compre eth y el dinero se me descontó, pero despues de 2 horas no aparece en mi billetera. me llego un mail de confirmacion.",
+      "ya pasaron 2 horas desde que compre eth, tengo la confirmacion pero no lo veo en la billetera. el monto si se debito."
     ],
     "agent_resolutions": [
-      "Las compras de crypto pueden demorar hasta 30 minutos en verse reflejadas en la billetera dependiendo de la congestión de la red. Si pasado ese tiempo no aparece el saldo, necesitamos el número de la transacción para rastrearlo."
+      "Te cuento que las compras de criptomonedas a veces tardan hasta 30 minutos en aparecer en tu billetera, esto depende de cómo esté la red en ese momento. Si después de media hora el saldo no se actualiza, vamos a necesitar que nos pases el número de tu transacción para poder buscarla.",
+      "Es normal que las operaciones de compra de cripto puedan demorar hasta 30 minutos en reflejarse en tu cuenta, según la saturación de la red. Si superado ese plazo no visualizás tu saldo, por favor, envianos el identificador de la transacción así podemos rastrearla.",
+      "Las compras de criptomonedas pueden tener una demora de hasta 30 minutos para acreditarse en tu billetera, debido a la congestión de la red. En caso de que transcurrido ese tiempo no veas tus fondos, precisamos que nos brindes el hash de la transacción para su seguimiento.",
+      "Queremos informarte que tus compras de cripto podrían tardar hasta 30 minutos en mostrarse en tu billetera, ya que la red puede estar congestionada. Si pasado este lapso no ves el monto, vamos a necesitar el comprobante o el número de operación para poder ayudarte a localizarlo."
+    ]
+  },
+  "Operaciones de compra/venta fiat": {
+    "summaries": [
+      "mande plata y no me aparece",
+      "transferi y no se ve reflejado el monto",
+      "no se acredito una transferencia que hice",
+      "el dinero que mande no llego a la cuenta",
+      "cuando se acredita mi deposito en pesos?",
+      "tiempo de acreditacion de un deposito",
+      "cuanto demora en llegar mi plata que puse",
+      "consulta de plazo de acreditacion de un ingreso",
+      "mi retiro no llego al banco",
+      "la plata que saque no esta en mi cbu",
+      "saque la plata y no la tengo en mi cuenta",
+      "retiro de fondos pendientes en el banco"
+    ],
+    "descriptions": [
+      "mande 80000 pesos de galicia a tokenia hace 4hs y todavia no los veo acreditados. tengo el recibo.",
+      "transferi ochenta mil pesos desde mi cuenta de galicia a tokenia. pasaron 4 horas y no se acredita. cuento con el comprobante de la operacion.",
+      "hace 4hs hice una transferencia de 80.000$ desde el banco galicia y no me aparecen en tokenia. tengo el comprobante.",
+      "no me cae en tokenia un pago de 80 lucas que hice del galicia hace unas 4 horas. tengo el comprobante para enviar.",
+      "pedi un retiro de cuarenta y cinco mil pesos a mi santander cbu hace 2 dias y no me llego. la aplicacion dice que sigue procesando.",
+      "saque 45.000$ a mi cuenta del santander hace dos dias y todavia no tengo la plata. en la app me figura como 'en proceso'.",
+      "hace dos dias que pedi sacar 45 mil pesos a mi cbu del banco santander y no los recibo. la app me muestra 'en proceso'.",
+      "un retiro de $45000 que hice al santander hace dos dias no se acredito. la app lo marca como 'en proceso'."
+    ],
+    "agent_resolutions": [
+      "Las transferencias bancarias se acreditan en tu cuenta en un plazo de hasta 2 horas hábiles en la mayoría de los casos. Para poder ayudarte a rastrear tu operación, necesitamos que nos envíes el número de la misma o el comprobante.",
+      "Para los depósitos por transferencia bancaria, el dinero se acredita en tu cuenta en un máximo de 2 horas hábiles. Para revisar tu transferencia, por favor, envianos el número de operación o el comprobante.",
+      "Normalmente, el plazo para que se acrediten los depósitos por transferencia es de hasta 2 horas hábiles. Si necesitás que lo verifiquemos, indicanos el número de operación o adjuntá el comprobante.",
+      "Tu transferencia bancaria suele acreditarse en hasta 2 horas hábiles. Para hacer un seguimiento de tu depósito, es necesario que nos facilites el número de operación o el comprobante."
+    ]
+  },
+  "Depósitos y retiros": {
+    "summaries": [
+      "deposite ETH y no aparece en mi cuenta",
+      "hice un deposito de eth y no lo veo en la cuenta",
+      "mi eth no llega, lo mande a la cuenta",
+      "deposité eth pero mi saldo no se actualiza",
+      "mande cripto a la dirección equivocada",
+      "envie criptomonedas a una direccion que no era",
+      "metí la pata y mandé la cripto a otra wallet",
+      "la transferencia de cripto fue a la direccion mal",
+      "el retiro de BTC no llegó a mi billetera externa",
+      "retire btc y nunca llego a la wallet de afuera",
+      "no recibi los btc que saque a mi otra billetera",
+      "mi retiro de btc no figura en la direccion que puse"
+    ],
+    "descriptions": [
+      "mande 0.05 eth desde mi billetera externa a tokenia. ya tiene mas de 15 confirmaciones en etherscan pero no aparece en mi cuenta",
+      "envie 0.05 eth de mi wallet de afuera a tokenia. ya figura con mas de 15 confs en etherscan pero no se ve en mi saldo",
+      "hice un envio de 0.05 ether desde otra billetera para tokenia. en etherscan ya tiene mas de quince confirmaciones pero no me impacta en el balance",
+      "deposité 0.05 eth a tokenia desde una billetera mia que es externa. ya hay 15+ confirmaciones en el explorer pero no se acredita el monto en mi cuenta",
+      "por error mande usdt a la red bsc en lugar de erc20. el monto era de 300 usdt. se puede recuperar?",
+      "sin querer envie 300 usdt a la red de bsc en vez de erc20. hay forma de recuperarlos?",
+      "me equivoque y transferi 300 usdt a la bsc network en vez de a la red erc20. es posible revertir esto?",
+      "envié 300 usdt a la binance smart chain por error, cuando debia ser erc20. se puede hacer algo para recuperarlos?"
+    ],
+    "agent_resolutions": [
+      "Para rastrear tu depósito necesitamos el hash de la transacción (TxID). Lo podés obtener desde la billetera que usaste para enviar o buscando tu dirección en el explorador de la red correspondiente.",
+      "Para poder buscar tu depósito, te pedimos que nos envíes el hash de la operación (TxID). Lo vas a encontrar en la billetera desde donde hiciste el envío o si buscás tu dirección en el explorador de la red.",
+      "Para verificar tu depósito, es fundamental que nos pases el identificador de la transacción (TxID). Podés conseguirlo en la plataforma que utilizaste para enviar los fondos o rastreando tu dirección en el explorador de la red.",
+      "Necesitamos el código de seguimiento de la operación (TxID) para poder ubicar tu depósito. Este dato lo obtenés desde la billetera que usaste para mandar o buscando tu dirección en el explorador de la red."
+    ]
+  },
+  "Billetera y direcciones": {
+    "summaries": [
+      "no logro sacar mi direccion para depositar",
+      "como hago para tener una direccion de deposito?",
+      "error al generar direccion de ingreso de fondos",
+      "no me aparece la direccion para meter plata",
+      "que es el memo de XRP y para que se usa?",
+      "XRP: para que es el memo?",
+      "memo de XRP: qué onda con eso?",
+      "funcion del memo en transacciones XRP",
+      "envie criptos a una direccion vieja de tokenia",
+      "direccion de deposito de tokenia antigua, mande plata ahi",
+      "qué pasa si mando crypto a una direccion tokenia que ya no uso?",
+      "mande a una direccion que no se si es la actual de tokenia"
+    ],
+    "descriptions": [
+      "no puedo ver la direccion de mi billetera para recibir btc, me aparece un error cuando quiero entrar a la opcion de recibir",
+      "quiero mi direccion para recibir btc pero la app me tira un error cuando pongo 'recibir'",
+      "donde esta mi direccion de billetera de btc? quiero que me pasen btc y cuando pongo la opcion recibir me sale un problema",
+      "no me muestra la direccion para que me manden btc, cuando intento verla me da un error la pagina",
+      "tengo una direccion de tokenia que me pasaron hace 2 meses para mandar plata, me sirve todavia?",
+      "si mando crypto a una direccion de tokenia que me pasaron hace un tiempo (como 2 meses), llega igual o ya vencio?",
+      "es valida una direccion de tokenia que me dieron hace un par de meses para hacer un envio?",
+      "che, una direccion de tokenia que tengo guardada de hace 2 meses, si le mando plata hoy, va a llegar? o ya no sirve?"
+    ],
+    "agent_resolutions": [
+      "En Tokenia, las direcciones de depósito se actualizan regularmente por cuestiones de seguridad. Pero no te preocupes, todas las direcciones anteriores siguen siendo válidas y tus fondos se acreditan sin inconvenientes.",
+      "Te informamos que las direcciones de depósito en Tokenia pueden variar cada tanto por motivos de seguridad. Sin embargo, todas las direcciones que usaste previamente siguen vigentes y los fondos enviados se acreditarán correctamente.",
+      "Desde Tokenia te contamos que, por seguridad, las direcciones de depósito pueden actualizarse. De todas maneras, todas las direcciones previas que usaste conservan su validez y los fondos que mandes se acreditan correctamente.",
+      "En Tokenia, las direcciones de depósito pueden cambiar de vez en cuando por cuestiones de seguridad. Pero tené la tranquilidad de que todas las direcciones anteriores siguen funcionando y tus fondos se van a acreditar sin inconvenientes."
+    ]
+  },
+  "Información y consultas generales": {
+    "summaries": [
+      "como va tokenia",
+      "que onda tokenia",
+      "quiero saber como funciona tokenia",
+      "tokenia como usarla",
+      "q criptos se pueden comprar",
+      "listado de criptos",
+      "que criptomonedas tienen",
+      "que monedas comprar",
+      "hay referidos?",
+      "tienen sistema de referidos",
+      "ganar con referidos",
+      "programa de amigos tokenia"
+    ],
+    "descriptions": [
+      "hola quiero usar tokenia pero no se como va. se verifica identidad primero o se puede arrancar a operar sin verificar?",
+      "che estoy viendo para usar tokenia y tengo dudas sobre el funcionamiento. necesito verificar mis datos antes de meter plata o se puede operar de una?",
+      "no me queda claro como se usa tokenia. hay q hacer la verificacion de identidad antes si o si? o se puede operar sin ese paso?",
+      "para empezar a usar tokenia, como es? hay que verificar la identidad al principio? o puedo hacer operaciones sin verificar primero?",
+      "hola queria saber q criptos tienen para comprar. por ej, btc, eth, sol? y stablecoins como usdt o usdc, estan?",
+      "que monedas se pueden comprar aca en tokenia? tienen las principales tipo bitcoin, ethereum, solana? y stablecoins como usdt y usdc las manejan?",
+      "que tipo de criptomonedas puedo operar? pregunto si hay las mas conocidas, como bitcoin ethereum solana. tambien si tienen stablecoins como usdt o usdc.",
+      "cuales criptos puedo comprar en tokenia? tienen bitcoin, ethereum, solana? y las stablecoins tipo usdt usdc?"
+    ],
+    "agent_resolutions": [
+      "Hola, para que puedas empezar a operar, te contamos los pasos: primero, registrate con tu mail y creá una contraseña. Luego, verificá tu identidad subiendo tu DNI y una selfie. Una vez que tu verificación sea aprobada, ya vas a poder cargar fondos y operar en la plataforma.",
+      "Te explicamos cómo arrancar a usar la plataforma: primero, completá el registro con tu correo y definí tu clave. Después, validá tu identidad enviando una foto de tu DNI y una selfie. Una vez aprobada tu verificación, ya vas a poder depositar y empezar a operar.",
+      "Acá te detallamos el proceso para que puedas operar: primero, completá tu registro con tu mail y una contraseña. Después, verificá tu identidad subiendo tu DNI y una selfie. Cuando la verificación esté aprobada, ya podés cargar dinero y hacer tus primeras operaciones.",
+      "Para empezar a operar en Tokenia, el proceso es así: registrate con tu email y creá una contraseña. Luego, verificá tu identidad con tu DNI y una selfie. Apenas tu verificación esté lista, ya vas a poder ingresar fondos y empezar a invertir."
+    ]
+  },
+  "Tarifas y comisiones": {
+    "summaries": [
+      "q comision pago x btc",
+      "costo de comision compra bitcoin",
+      "sobre la comision al comprar btc",
+      "cual es la comision de la compra de btc",
+      "pague de mas",
+      "el cobro fue mayor",
+      "hubo un recargo en mi compra",
+      "porque me cobraron extra",
+      "el spread q es",
+      "duda con spread tokenia",
+      "explicame el spread",
+      "que significa spread aca"
+    ],
+    "descriptions": [
+      "necesito saber los costos exactos de comision al comprar btc con ars. entendi que era 1% pero hay otros cargos?",
+      "cuando compro bitcoin con plata argentina, que comisiones me aplican? lei un 1% pero me preocupa si hay otros gastos",
+      "me gustaria entender bien que comisiones aplican cuando hago una compra de btc en pesos. si es el 1% nomas o si hay mas cosas",
+      "cuanto sale la comision por comprar btc con pesos argentinos? dicen que es 1% pero nose si hay algun extra",
+      "hice una compra de 10000 pesos de eth y me aparecio un total de 10650. de donde viene esa plata extra?",
+      "compre 10mil en ether y el total final fue de 10650. por que esa diferencia?",
+      "el total cobrado por mi compra de $10.000 de eth fue de $10.650. me pueden explicar esa diferencia en el precio?",
+      "puse 10000 para comprar eth y me sacaron 10650. que es ese adicional?"
+    ],
+    "agent_resolutions": [
+      "El costo de tus operaciones en Tokenia se compone de dos elementos: la comisión de la plataforma, que es el 1% del valor operado, y el spread de mercado, que es la diferencia entre los precios de compra y venta.",
+      "Al operar en Tokenia, el costo final incluye dos conceptos: la comisión de plataforma (el 1% sobre el monto de tu operación) y el spread, que es la diferencia entre el precio de compra y el de venta en el mercado.",
+      "Cuando operás en Tokenia, el costo total se divide en dos partes: por un lado, la comisión de plataforma (un 1% del monto de la operación) y, por otro, el spread de mercado, que representa la diferencia entre los precios de compra y venta.",
+      "Las operaciones que hacés en Tokenia tienen dos tipos de costos: la comisión de plataforma (que es el 1% sobre el monto operado) y el spread de mercado, que es la diferencia de precios entre compra y venta que vas a encontrar en el mercado."
+    ]
+  },
+  "Problemas técnicos de la app/web": {
+    "summaries": [
+      "se me cierra la app al entrar al mercado",
+      "abro el mercado en la app y se me cierra",
+      "la aplicacion se cierra cuando quiero ver el mercado",
+      "entro a la seccion de mercado y la app se apaga sola",
+      "la pagina carga re lento",
+      "no me carga la web, es muy lenta",
+      "tarda un monton en abrir la pagina",
+      "la web se cuelga y no carga",
+      "no puedo subir mi doc para el kyc",
+      "el sistema no me deja cargar el dni para kyc",
+      "no consigo subir el documento para verificar mi identidad",
+      "tengo problemas para cargar los papeles del kyc"
+    ],
+    "descriptions": [
+      "despues de la ultima actualizacion, la aplicacion se me cierra siempre que entro a mercados. mi telefono es un samsung s21 con android 13",
+      "se me crashea la app cada vez q voy a mercados, fue despues de la actualizacion. mi celu es un galaxy s21 android 13",
+      "desde que actualice la app, se cierra sola al abrir la parte de mercados. tengo un samsung s21 y android version 13",
+      "mi app se cierra apenas entro a la seccion de mercados. esto empezo a pasar despues de la ultima actualizacion. tengo un samsung galaxy s21 con android 13",
+      "quiero subir el dni para el kyc y me tira error de archivo grande, pero pesa solo 1.5mb y es jpg",
+      "no puedo cargar mi documento de identidad para el kyc. la app me avisa que el archivo es muy grande, pero es un jpg que pesa 1.5 megabytes",
+      "subo mi dni al kyc y me sale un cartel de que el archivo es muy grande. pero es un jpg de 1,5mb, no entiendo",
+      "el sistema no me deja subir el dni para el kyc. dice que el archivo es demasiado grande, pero es un jpg de apenas 1.5mb"
+    ],
+    "agent_resolutions": [
+      "Hola! Confirmamos que hay una incidencia con la app en Android después de la última actualización. Nuestro equipo ya está desarrollando una corrección. Mientras tanto, te sugerimos que uses la plataforma desde el navegador de tu celular.",
+      "¡Hola! Sabemos que hay un inconveniente con la app para Android a raíz de la última actualización. Ya estamos trabajando para solucionarlo. Por ahora, podés ingresar a tu cuenta usando el navegador de tu teléfono.",
+      "¡Qué tal! Registramos una falla con la aplicación de Android que apareció con la última actualización. Nuestros técnicos ya están buscando una solución. Como alternativa, podés entrar desde el navegador de tu celular.",
+      "Hola. Te confirmamos que existe un error con la app en Android a partir de la reciente actualización. Nuestro equipo de desarrollo ya está trabajando en ello. Te recomendamos que, de momento, accedas desde el navegador de tu celular."
+    ]
+  },
+  "Límites y restricciones": {
+    "summaries": [
+      "saber limite de extraccion por dia",
+      "cual es el tope para sacar plata por dia",
+      "hasta cuanto puedo retirar hoy",
+      "limite diario de retiro",
+      "quiero subir mis limites",
+      "como hago para tener mas limite en las operaciones",
+      "se pueden aumentar los topes de operacion?",
+      "necesito mas limite para operar",
+      "me salta limite mensual superado",
+      "pase el tope del mes",
+      "excedí el límite mensual",
+      "la app me dice que ya gasté el maximo del mes"
+    ],
+    "descriptions": [
+      "quise sacar 300 lucas y me salto que pase el limite x dia. necesito saber el tope y si se puede subir",
+      "intenté extraer trescientos mil pesos y no me deja, dice limite diario superado. cual es el maximo que puedo retirar y como hago para subirlo?",
+      "con 300.000 pesos me tiró que excedi el limite de extraccion diario. que limite tengo y como lo subo?",
+      "no pude sacar $300000. me aparece un cartel de limite diario. que limite es y como lo subo?",
+      "para operar con mas plata me pone un tope de 100 mil. como hago para aumentarlo?",
+      "no puedo hacer transacciones de mas de cien mil. como hago para subir ese tope de operacion?",
+      "me gustaria mover mas de cien mil pesos por transaccion pero no me deja, hay un limite. como subo el limite?",
+      "necesito operar por mas de $100.000 pero tengo un limite. se puede aumentar?"
+    ],
+    "agent_resolutions": [
+      "En Tokenia, los límites de retiro están relacionados con el nivel de verificación de tu cuenta. Si tenés una verificación básica, el máximo diario para retirar es de $100.000 ARS. Si completaste la verificación, podés retirar hasta $500.000 ARS por día.",
+      "Tus límites en Tokenia varían según el nivel de verificación de tu perfil. Con una cuenta con verificación básica, el tope para extraer por día es de $100.000 ARS. Si tu verificación es completa, este límite asciende a $500.000 ARS.",
+      "Los topes que tenés para operar en Tokenia se definen por el grado de verificación de tu cuenta. Para cuentas con verificación básica, el monto máximo de retiro diario es de $100.000 ARS. En cambio, si tu cuenta tiene verificación completa, ese límite se eleva a $500.000 ARS.",
+      "La cantidad de dinero que podés retirar por día en Tokenia está directamente relacionada con la verificación de tu cuenta. Si tenés verificación básica, el máximo es de $100.000 ARS. En caso de tener verificación completa, el límite diario aumenta a $500.000 ARS."
+    ]
+  },
+  "Verificación de identidad": {
+    "summaries": [
+      "no me aprobaron el kyc y quiero saber por que",
+      "el kyc fue rechazado y no entiendo el motivo",
+      "rechazaron mi verificacion de identidad y necesito saber la razon",
+      "me dieron de baja el kyc no se q paso",
+      "quiero saber cuanto tiempo lleva la verificacion",
+      "la verificacion de identidad cuanto demora",
+      "en cuanto tiempo esta lista mi verificacion",
+      "cuantos dias tarda la aprobacion de mi cuenta",
+      "tengo problemas para la selfie del kyc",
+      "no me sale la foto para el kyc",
+      "la selfie de verificacion no funciona",
+      "se me traba la camara para sacar la selfie del kyc"
+    ],
+    "descriptions": [
+      "trate de hacer la verificacion pero me rechazan el dni. esta todo ok con el documento las fotos son nitidas",
+      "el sistema no me acepto el documento para la verificacion, pero mi dni esta perfecto y las fotos se ven bien",
+      "mi dni fue rechazado en la verificacion de identidad. el documento esta en buen estado y las imagenes salieron claras",
+      "hice el kyc y me salto error con el dni. esta impecable y saque buenas fotos",
+      "hace 5 dias termine la verificacion y sigue en revision. cuanto mas tengo que esperar?",
+      "mi verificacion ya lleva 5 dias 'en revision'. para cuando estaria?",
+      "complete la verificacion hace una semana casi, y todavia no se aprobo. hay algun problema?",
+      "pasaron 5 dias desde que hice la verificacion y todavia no se confirma. cuanto tiempo mas puede demorar?"
+    ],
+    "agent_resolutions": [
+      "¡Hola! Los rechazos en la verificación suelen darse por fotos poco claras, reflejos en el documento o que no se vean bien los bordes. Te sugerimos usar luz natural y asegurarte de que todo el documento entre en la foto.",
+      "¿Cómo estás? La verificación puede ser rechazada si la imagen está borrosa, si el documento tiene brillos o si no se ven los cuatro costados. Para que salga bien, probá con buena iluminación y fijate que se vean todos los bordes de tu documento.",
+      "¡Qué tal! Los motivos más comunes de rechazo en la verificación son fotos que no se ven nítidas, luces que tapen parte del documento o que alguna esquina no aparezca en la imagen. Te aconsejamos sacarla con luz natural y chequear que los cuatro bordes de tu documento estén visibles.",
+      "Hola. Si tu verificación fue rechazada, puede deberse a una imagen con poca claridad, reflejos en el DNI o que alguna parte no haya salido completa. Para evitarlo, te recomendamos tomar la foto con buena luz y verificar que se vean las cuatro esquinas del documento."
+    ]
+  },
+  "Seguridad de la cuenta": {
+    "summaries": [
+      "veo operaciones que no son mias",
+      "aparecieron movimientos no reconocidos",
+      "no hice esas transacciones",
+      "registros de cosas que no autorice",
+      "pienso que alguien entro a mi cuenta",
+      "me robaron el acceso a mi cuenta",
+      "me intervinieron la cuenta, creo",
+      "posible hackeo de mi cuenta",
+      "recibi un mail sospechoso de tokenia",
+      "un correo que parece de tokenia pero me da desconfianza",
+      "mail que dice ser de tokenia, medio raro",
+      "me llego un email de tokenia que me hizo dudar"
+    ],
+    "descriptions": [
+      "estuve viendo los movimientos y anoche hubo una venta de btc que no es mia. tambien un retiro de 0.5 eth. por favor bloqueen la cuenta urgente",
+      "alguien vendio btc anoche desde mi cuenta y retiro 0.5 eth, yo no lo hice. necesito que me congelen la cuenta ahora mismo",
+      "me aparecen una venta de btc y un retiro de 0.5 eth de ayer que yo no autorice. por favor necesito que cierren la cuenta ya",
+      "hubo una operacion de venta de btc y un retiro de 0.5 eth anoche, que yo no reconozco. quiero que me bloqueen la cuenta de inmediato",
+      "me llego un correo supuestamente de tokenia que me pide que ponga mis datos en un link. la direccion de donde viene es soporte-tokenia@gmail.com. es posta?",
+      "un email llego pidiendome datos, dice ser de ustedes pero me parece raro. viene de soporte-tokenia@gmail.com. es legitimo?",
+      "me mandaron un mail que pide que ingrese mis datos. dice tokenia. la direccion es soporte-tokenia@gmail.com. que onda es de ustedes?",
+      "hay un mail que recibi de soporte-tokenia@gmail.com que me pide entrar a un link y poner mis datos. es oficial de tokenia o no?"
+    ],
+    "agent_resolutions": [
+      "Vamos a suspender tu cuenta enseguida como medida preventiva. Esto es para proteger tus fondos. Después, necesitamos que verifiques tu identidad para que la suspensión quede firme.",
+      "Ya estamos suspendiendo tu cuenta, es una medida de seguridad urgente. Así cuidamos tu dinero. Después, te vamos a pedir que verifiques tu identidad para terminar con el proceso.",
+      "Para cuidar tus fondos, suspendemos tu cuenta de inmediato por precaución. Después, te pediremos verificar tu identidad para que la suspensión sea total.",
+      "Tu cuenta queda suspendida ahora mismo para proteger tu dinero. Es una acción preventiva. Necesitamos que verifiques tu identidad después para que tus fondos estén seguros."
     ]
   }
 }
