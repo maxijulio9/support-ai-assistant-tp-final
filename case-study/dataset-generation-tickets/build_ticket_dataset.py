@@ -192,6 +192,19 @@ def contar_tickets_existentes():
     with open(OUTPUT_PATH, encoding="utf-8") as f:
         return sum(1 for _ in f) - 1
 
+def calcular_demora_inicial(prioridad):
+    # cuanto tarda el agente en responder por primera vez, segun la prioridad
+    # el 12% de las veces se demora igual, sin importar la prioridad
+    # (agente saturado, fuera de horario, cola de espera con congestion)
+    medianas = {"Highest": 15, "High": 45, "Medium": 120, "Low": 240}  # minutos
+    mediana = medianas[prioridad]
+
+    if random.random() < 0.12:
+        minutos = random.randint(360, 2880)  # entre 6 y 48 horas
+    else:
+        minutos = max(5, int(mediana * random.lognormvariate(mu=0, sigma=0.7)))
+
+    return timedelta(minutes=minutos)
 
 def generar_ticket_completo(categoria, variantes_cat):
     data = pedir_ticket(categoria, variantes_cat)
@@ -205,7 +218,7 @@ def generar_ticket_completo(categoria, variantes_cat):
     canal = random.choice(REQUEST_TYPES)
 
     creado = fecha_random()
-    demora_inicial = timedelta(minutes=random.randint(15, 240))
+    demora_inicial = calcular_demora_inicial(prioridad)
     fecha_comentario = creado + demora_inicial
 
     comentarios = [armar_comentario(fecha_comentario, agente["email"], data["agent_resolution"])]
