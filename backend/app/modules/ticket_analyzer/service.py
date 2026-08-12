@@ -120,6 +120,13 @@ class TicketAnalyzer:
             user_priority=event.priority,
             issue_key=event.issue_key
         )
+        
+        # si el llm no pudo clasificar, asumimos que hay info suficiente
+        if classification is None:
+            info_sufficient = True
+        else:
+            info_sufficient = classification.resolved_by != "MISSING_INFO"
+
 
         return TicketAnalysis(
             issue_key=event.issue_key,
@@ -133,6 +140,7 @@ class TicketAnalyzer:
             scope=classification.scope if classification else None,
             sentiment=classification.sentiment if classification else None,
             conversation_history=conversation_history,
+            info_sufficient=info_sufficient
         )
         
 
