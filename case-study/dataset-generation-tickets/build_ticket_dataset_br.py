@@ -17,8 +17,8 @@ client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 MODEL = "gpt-4o-mini"
 
 VARIANTES_PATH = "variantes_por_categoria_br.json"
-OUTPUT_PATH = "tokenia_tickets_brasil.csv"
-TOTAL_TICKETS = 1
+OUTPUT_PATH = "tokenia_tickets_generados_br.csv"
+TOTAL_TICKETS = 450
 SLEEP_BETWEEN_CALLS = 2
 
 AGENTS = [
