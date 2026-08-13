@@ -10,7 +10,7 @@ from app.modules.response_generator.schemas import (
 
 logger = logging.getLogger(__name__)
 
-# luego se parametriza desde project_config cuando exista CU26 en m7
+# luego se parametriza desde project_config cuando exisa m7
 THRESHOLD_AUTO_PUBLISH = 0.85
 THRESHOLD_NEEDS_REVIEW = 0.60
 
