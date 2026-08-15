@@ -1,7 +1,8 @@
-# M4 - ResponseGenerator
-# cliente que genera la respuesta final usando el llm configurado
+# M4 ResponseGenerator: cliente que genera la respuesta final usando el llm configurado
 
 import logging
+import json
+from app.core.config import settings
 from openai import OpenAI
 from app.core.config import settings
 
@@ -35,3 +36,43 @@ class LlmClient:
         except Exception as e:
             logger.error(f"error al llamar al llm para generar respuesta: {e}")
             return None
+        
+        
+    # evalua que tan fundamentada esta la respuesta en el contexto, usando schema estricto
+    # el schema garantiza el tipo y la forma del json, no hace falta reintentar por json invalido
+    def evaluate_confidence(self, prompt: str) -> float:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "confidence_evaluation",
+                        "strict": True,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "confidence_score": {"type": "number"}
+                            },
+                            "required": ["confidence_score"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                temperature=0,
+            )
+
+            content = response.choices[0].message.content
+            data = json.loads(content)
+            score = float(data["confidence_score"])
+
+            # clamp defensivo, el schema garantiza el tipo pero no el rango
+            score = max(0.0, min(1.0, score))
+
+            logger.info(f"confidence_score evaluado: {score}")
+            return score
+
+        except Exception as e:
+            logger.error(f"error al evaluar confianza de la respuesta: {e}")
+            return 0.0
