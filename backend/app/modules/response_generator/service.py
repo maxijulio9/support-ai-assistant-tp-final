@@ -44,12 +44,18 @@ class ResponseGenerator:
             logger.error(f"[{analysis.issue_key}] fallo la llamada al llm, escalando")
             return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE)
 
-        #aca se va SE envvia el action_tyupe harcod pero luego se obtiene de de _evaluate_action..
+        confidence_prompt = self.prompt_builder.build_confidence_prompt(retrieval, response_text)
+        confidence_score = self.llm_client.evaluate_confidence(confidence_prompt)
+        action_type = self._evaluate_action(confidence_score)
+        
         return GeneratedResponse(
             issue_key=analysis.issue_key,
             response_text=response_text,
-            action_type=ACTION_NEEDS_REVIEW,
+            action_type=action_type,
+            confidence_score=confidence_score
         )
+        
+        
     def _evaluate_action(self, confidence_score: float) -> str:
         if confidence_score >= THRESHOLD_AUTO_PUBLISH:
             return "AUTO_PUBLISH"
