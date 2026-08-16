@@ -43,6 +43,16 @@ CONFIDENCE_PROMPT = """Tu tarea es evaluar si la respuesta generada esta fundame
                     - Si la respuesta contradice el contexto, asigná un score muy bajo.
                     """
 
+SUFFICIENCY_PROMPT = """Evaluá si el contexto de abajo tiene informacion suficiente para responder la consulta con precision, sin necesidad de inventar ni asumir datos que no esten ahi.
+
+                    <context>
+                    {context}
+                    </context>
+
+                    <query>
+                    {query}
+                    </query>
+                    """
 class PromptBuilder:
 
     # arma el prompt final combinando el system prompt, los chunks de m3 y el historial
@@ -63,6 +73,12 @@ class PromptBuilder:
     def build_confidence_prompt(self, retrieval: RetrievalResult, response_text: str) -> str:
         context_text = self._format_chunks(retrieval.chunks)
         return CONFIDENCE_PROMPT.format(context=context_text, response_text=response_text)
+    
+    # arma el prompt para chequear si el contexto alcanza para responder, antes de generar la respuesta completa
+    def build_sufficiency_prompt(self, retrieval: RetrievalResult, query: str) -> str:
+        context_text = self._format_chunks(retrieval.chunks)
+        return SUFFICIENCY_PROMPT.format(context=context_text, query=query)
+    
     
     # concatena el contenido de los chunks recuperados, numerados
     def _format_chunks(self, chunks) -> str:

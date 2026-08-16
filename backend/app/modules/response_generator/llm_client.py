@@ -1,8 +1,8 @@
-# M4 ResponseGenerator: cliente que genera la respuesta final usando el llm configurado
+# M4 ResponseGenerator
+# cliente que genera la respuesta final usando el llm configurado
 
 import logging
 import json
-from app.core.config import settings
 from openai import OpenAI
 from app.core.config import settings
 
@@ -76,3 +76,40 @@ class LlmClient:
         except Exception as e:
             logger.error(f"error al evaluar confianza de la respuesta: {e}")
             return 0.0
+        
+        
+    # chequea si el contexto alcanza para responder, antes de generar la respuesta completa
+    # si falla por un error de infraestructura, devuelve false por seguridad, mismo criterio que evaluate_confidence
+    def check_context_sufficiency(self, prompt: str) -> bool:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "sufficiency_check",
+                        "strict": True,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "sufficient": {"type": "boolean"}
+                            },
+                            "required": ["sufficient"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                temperature=0,
+            )
+
+            content = response.choices[0].message.content
+            data = json.loads(content)
+            is_sufficient = bool(data["sufficient"])
+
+            logger.info(f"chequeo de suficiencia de contexto: {is_sufficient}")
+            return is_sufficient
+
+        except Exception as e:
+            logger.error(f"error al chequear suficiencia de contexto: {e}")
+            return False

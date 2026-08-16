@@ -3,9 +3,11 @@ from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.knowledge_retriever.schemas import RetrievalResult
 from app.modules.response_generator.schemas import (
     GeneratedResponse,
+    ACTION_AUTO_PUBLISH,
     ACTION_NEEDS_REVIEW,
     ACTION_REQUEST_INFO,
     ACTION_ESCALATE,
+    ACTION_RETRY,
 )
 from app.modules.response_generator.prompt_builder import PromptBuilder 
 from app.modules.response_generator.llm_client import LlmClient
@@ -37,6 +39,15 @@ class ResponseGenerator:
             logger.info(f"[{analysis.issue_key}] sin chunks relevantes en la kb, escalando")
             return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE)
         
+        query = analysis.conversation_history[-1].content if analysis.conversation_history else analysis.summary
+        sufficiency_prompt = self.prompt_builder.build_sufficiency_prompt(retrieval, query)
+        is_sufficient = self.llm_client.check_context_sufficiency(sufficiency_prompt)
+
+        if not is_sufficient:
+            logger.info(f"[{analysis.issue_key}] contexto insuficiente segun chequeo previo, solicitando retry")
+            return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_RETRY)
+
+
         prompt = self.prompt_builder.build_prompt(analysis, retrieval)
         response_text = self.llm_client.generate_response(prompt)
 
@@ -58,7 +69,7 @@ class ResponseGenerator:
         
     def _evaluate_action(self, confidence_score: float) -> str:
         if confidence_score >= THRESHOLD_AUTO_PUBLISH:
-            return "AUTO_PUBLISH"
+            return ACTION_AUTO_PUBLISH
         if confidence_score >= THRESHOLD_NEEDS_REVIEW:
             return ACTION_NEEDS_REVIEW
         return ACTION_ESCALATE
