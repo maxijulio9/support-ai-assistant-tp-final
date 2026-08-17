@@ -6,6 +6,7 @@ from app.modules.response_generator.schemas import (
     ACTION_ESCALATE,
     ACTION_REQUEST_INFO,
     ACTION_NEEDS_REVIEW,
+    ACTION_RETRY,
 )
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.knowledge_retriever.schemas import RetrievalResult, RetrievedChunk
@@ -75,6 +76,7 @@ def test_escalates_when_no_chunks_found():
 @patch("app.modules.response_generator.service.LlmClient")
 def test_escalates_when_llm_call_fails(mock_llm_class):
     mock_llm = MagicMock()
+    mock_llm.check_context_sufficiency.return_value = True
     mock_llm.generate_response.return_value = None
     mock_llm_class.return_value = mock_llm
 
@@ -90,6 +92,7 @@ def test_escalates_when_llm_call_fails(mock_llm_class):
 @patch("app.modules.response_generator.service.LlmClient")
 def test_auto_publish_when_confidence_is_high(mock_llm_class):
     mock_llm = MagicMock()
+    mock_llm.check_context_sufficiency.return_value = True
     mock_llm.generate_response.return_value = "texto de respuesta generado"
     mock_llm.evaluate_confidence.return_value = 0.90
     mock_llm_class.return_value = mock_llm
@@ -106,6 +109,7 @@ def test_auto_publish_when_confidence_is_high(mock_llm_class):
 @patch("app.modules.response_generator.service.LlmClient")
 def test_needs_review_when_confidence_is_medium(mock_llm_class):
     mock_llm = MagicMock()
+    mock_llm.check_context_sufficiency.return_value = True
     mock_llm.generate_response.return_value = "texto de respuesta generado"
     mock_llm.evaluate_confidence.return_value = 0.70
     mock_llm_class.return_value = mock_llm
@@ -122,6 +126,7 @@ def test_needs_review_when_confidence_is_medium(mock_llm_class):
 @patch("app.modules.response_generator.service.LlmClient")
 def test_escalates_when_confidence_is_low(mock_llm_class):
     mock_llm = MagicMock()
+    mock_llm.check_context_sufficiency.return_value = True
     mock_llm.generate_response.return_value = "texto de respuesta generado"
     mock_llm.evaluate_confidence.return_value = 0.20
     mock_llm_class.return_value = mock_llm
@@ -131,4 +136,18 @@ def test_escalates_when_confidence_is_low(mock_llm_class):
     result = generator.generate(analysis, _build_retrieval())
 
     assert result.action_type == ACTION_ESCALATE
+    assert result.confidence_score == 0.20
     
+# verifica que devuelve retry cuando el contexto no alcanza, sin llegar a generar la respuesta
+@patch("app.modules.response_generator.service.LlmClient")
+def test_retries_when_context_insufficient(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.check_context_sufficiency.return_value = False
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.action_type == ACTION_RETRY
+    mock_llm.generate_response.assert_not_called()
