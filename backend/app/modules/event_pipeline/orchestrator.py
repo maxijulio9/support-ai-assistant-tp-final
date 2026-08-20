@@ -8,7 +8,14 @@ from app.modules.ticket_analyzer.service import TicketAnalyzer
 from app.modules.interaction_logger.service import InteractionLogger
 from app.modules.knowledge_retriever.service import KnowledgeRetriever
 from app.modules.response_generator.service import ResponseGenerator
-from app.modules.response_generator.schemas import ACTION_RETRY
+from app.modules.response_generator.schemas import (
+    ACTION_AUTO_PUBLISH,
+    ACTION_NEEDS_REVIEW,
+    ACTION_REQUEST_INFO,
+    ACTION_ESCALATE,
+    ACTION_RETRY,
+)
+from app.modules.jsm_executor.client import JsmExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +28,8 @@ class Orchestrator:
         self.ticket_analyzer = TicketAnalyzer()
         self.interaction_logger = InteractionLogger()
         self.knowledge_retriever = KnowledgeRetriever()
-        self.response_generator = ResponseGenerator()  
+        self.response_generator = ResponseGenerator()
+        self.jsm_executor = JsmExecutor()
 
 
     # punto de entrada del pipeline
@@ -54,6 +62,22 @@ class Orchestrator:
             logger.warning(f"[{event.issue_key}] contexto insuficiente, requeriria retry, no implementado todavia")
 
 
+        # m5 ejecuta la accion segun lo que decidio m4
+        # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
+        # escalate por ahora solo logea, la asignacion depende de m7
+        if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO):
+            is_public = generated_response.action_type != ACTION_NEEDS_REVIEW
+            try:
+                self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
+                logger.info(f"[{event.issue_key}] m5 publico el comentario,es public={is_public}")
+            except Exception as e:
+                logger.error(f"[{event.issue_key}] fallo al publicar comentario en jsm: {e}")
+
+        elif generated_response.action_type == ACTION_ESCALATE:
+            logger.warning(f"[{event.issue_key}] ticket va para escalamiento, sin asignacion automatica todavia")
+
+        elif generated_response.action_type == ACTION_RETRY:
+            logger.warning(f"[{event.issue_key}] contexto insuficiente, necesita retry, no implementado todavia")
 
 
         return {
