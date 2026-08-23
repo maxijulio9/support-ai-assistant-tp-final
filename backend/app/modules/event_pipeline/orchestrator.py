@@ -68,7 +68,7 @@ class Orchestrator:
         if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO):
             is_public = generated_response.action_type != ACTION_NEEDS_REVIEW
             try:
-                self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
+                await self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
                 logger.info(f"[{event.issue_key}] m5 publico el comentario,es public={is_public}")
             except Exception as e:
                 logger.error(f"[{event.issue_key}] fallo al publicar comentario en jsm: {e}")
