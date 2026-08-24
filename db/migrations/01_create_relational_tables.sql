@@ -60,7 +60,21 @@ CREATE TABLE IF NOT EXISTS project (
     platform        VARCHAR(50),
     kb_space_key    VARCHAR(50),
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    threshold_auto_publish NUMERIC(4,3) DEFAULT 0.85,
+    threshold_needs_review NUMERIC(4,3) DEFAULT 0.60,
+    similarity_threshold    NUMERIC(4,3) DEFAULT 0.40
+);
+
+-- mapeo de acciones del sistema a estados reales de jsm, configurable por proyecto
+-- una fila por combinacion proyecto + estado generico (referencia a ticket_status)
+CREATE TABLE IF NOT EXISTS project_config (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id      UUID NOT NULL REFERENCES project(id),
+    status_id       UUID NOT NULL REFERENCES ticket_status(id),
+    system_action   VARCHAR(50),
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE (project_id, status_id)
 );
 
 -- ticket procesado por el sistema
