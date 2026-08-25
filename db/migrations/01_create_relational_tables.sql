@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS ticket_request_type (
 );
 
 -- tipos de sentimiento detectado en el mensaje del usuario
-CREATE TABLE IF NOT EXISTS sentiment_typ (
+CREATE TABLE IF NOT EXISTS sentiment_type (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code            VARCHAR(50)  NOT NULL UNIQUE,
     name            VARCHAR(100) NOT NULL,
