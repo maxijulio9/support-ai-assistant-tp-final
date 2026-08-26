@@ -34,20 +34,27 @@ VALID_INTENTS = [
     "cancelacion",
 ]
 
+# niveles de impacto y urgencia segun ITIL, universales, no dependen del negocio
+VALID_IMPACT_LEVELS = ["Critical", "High", "Medium", "Low"]
+VALID_URGENCY_LEVELS = ["Critical", "High", "Medium", "Low"]
+
 # prompt que se le envia al llm para clasificar el ticket
 CLASSIFICATION_PROMPT = """Sos un agente de soporte nivel 1. Tu tarea es clasificar la siguiente solicitud de soporte.
-Devolvé UNICAMENTE un JSON con estos 5 campos, sin texto adicional:
+Devolvé UNICAMENTE un JSON con estos 7 campos, sin texto adicional:
 {{
   "category": una de estas categorias: {categories},
   "intent": uno de estos intents: {intents},
   "resolved_by": "L1" si se puede resolver con informacion de la base de conocimiento, "L2" si requiere intervencion humana especializada, "MISSING_INFO" si falta informacion para resolver,
   "scope": "IN_SCOPE" si la consulta esta dentro del alcance del soporte, "OUT_OF_SCOPE" si no tiene relacion con los servicios,
-  "sentiment": "positivo", "negativo" o "neutro" segun el tono del usuario
+  "sentiment": "positivo", "negativo" o "neutro" segun el tono del usuario,
+  "impact": uno de estos niveles: {impact_levels}, segun cuanto del negocio afecta este problema (cuantos usuarios, si es un servicio critico, riesgo financiero o de seguridad),
+  "urgency": uno de estos niveles: {urgency_levels}, segun que tan rapido hay que resolverlo
 }}
 
 Solicitud del usuario:
 {ticket_text}
 """
+
 
 
 class LlmClient:
@@ -74,6 +81,8 @@ class LlmClient:
         prompt = CLASSIFICATION_PROMPT.format(
             categories=", ".join(VALID_CATEGORIES),
             intents=", ".join(VALID_INTENTS),
+            impact_levels= ", ".join(VALID_IMPACT_LEVELS),
+            urgency_levels= ", ".join(VALID_URGENCY_LEVELS),
             ticket_text=text,
         )
 
@@ -123,12 +132,23 @@ class LlmClient:
                 if data.get("intent") not in VALID_INTENTS:
                     logger.warning(f"intent '{data.get('intent')}' no valido, reintentando ({attempt + 1}/3)")
                     continue
+                if data.get("impact") not in VALID_IMPACT_LEVELS:
+                    logger.warning(f"impact '{data.get('impact')}' no valido, reintentando ({attempt + 1}/3)")
+                    continue    
+                
+                if data.get("urgency") not in VALID_URGENCY_LEVELS:
+                    logger.warning(f"urgency '{data.get('urgency')}' no valido, reintentando ({attempt + 1}/3)")
+                    continue
+                
+
 
                 result = ClassificationResult(
                     category=data["category"],
                     intent=data["intent"],
                     resolved_by=data.get("resolved_by", "L1"),
                     scope=data.get("scope", "IN_SCOPE"),
+                    impact=data.get("impact", "medium"),
+                    urgency=data.get("urgency", "medium"),
                     sentiment=data.get("sentiment", "neutro"),
                 )
 
