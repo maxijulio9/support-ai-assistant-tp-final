@@ -17,9 +17,11 @@ class ClassificationResult(BaseModel):
     # lo que devuelve el LLM cuando clasifica el ticket (CU7)
     intent: str
     category: str
-    resolved_by: str  # "L1" | "L2" | "MISSING_INFO"
-    scope: str        # "IN_SCOPE" | "OUT_OF_SCOPE"
-    sentiment: str    # "positivo" | "negativo" | "neutro"
+    resolved_by: str  
+    scope: str       
+    sentiment: str
+    impact: str
+    urgency: str
 
 
 class TicketAnalysis(BaseModel):
