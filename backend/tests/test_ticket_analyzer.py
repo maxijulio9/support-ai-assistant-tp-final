@@ -1,10 +1,10 @@
 """Tests unitarios para el Modulo 2 - TicketAnalyzer.
-Se mockean LlmClient y ConversationHistory para no depender de OpenAI ni de Redis."""
+Se mockean LlmClient, ConversationHistory y ProjectRepository para no depender de OpenAI, Redis ni la bd real."""
 
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from app.modules.ticket_analyzer.service import TicketAnalyzer
-from app.modules.ticket_analyzer.schemas import ClassificationResult
+from app.modules.ticket_analyzer.schemas import ClassificationResult, ProjectContext
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 
 
@@ -30,11 +30,23 @@ def _build_classification(resolved_by: str) -> ClassificationResult:
     )
 
 
+# arma un ProjectContext basico para usar en los tests
+def _build_project_context(**overrides) -> ProjectContext:
+    defaults = {
+        "project_id": "proj-1",
+        "country": "AR",
+        "categories": ["acceso_autenticacion", "seguridad_cuenta"],
+    }
+    defaults.update(overrides)
+    return ProjectContext(**defaults)
+
+
 # verifica que info_sufficient es False cuando el llm devuelve MISSING_INFO
+@patch("app.modules.ticket_analyzer.service.ProjectRepository")
 @patch("app.modules.ticket_analyzer.service.ConversationHistory")
 @patch("app.modules.ticket_analyzer.service.LlmClient")
 @pytest.mark.asyncio
-async def test_info_sufficient_false_cuando_falta_info(mock_llm_class, mock_history_class):
+async def test_info_sufficient_false_cuando_falta_info(mock_llm_class, mock_history_class, mock_repo_class):
     mock_history = MagicMock()
     mock_history.append = AsyncMock()
     mock_history.get = AsyncMock(return_value=[])
@@ -44,6 +56,10 @@ async def test_info_sufficient_false_cuando_falta_info(mock_llm_class, mock_hist
     mock_llm.classify.return_value = _build_classification("MISSING_INFO")
     mock_llm_class.return_value = mock_llm
 
+    mock_repo = MagicMock()
+    mock_repo.get_project_context.return_value = _build_project_context()
+    mock_repo_class.return_value = mock_repo
+
     analyzer = TicketAnalyzer()
     result = await analyzer.analyze(_build_event())
 
@@ -52,10 +68,11 @@ async def test_info_sufficient_false_cuando_falta_info(mock_llm_class, mock_hist
 
 
 # verifica que info_sufficient es True cuando el llm devuelve L1
+@patch("app.modules.ticket_analyzer.service.ProjectRepository")
 @patch("app.modules.ticket_analyzer.service.ConversationHistory")
 @patch("app.modules.ticket_analyzer.service.LlmClient")
 @pytest.mark.asyncio
-async def test_info_sufficient_true_cuando_resuelve_l1(mock_llm_class, mock_history_class):
+async def test_info_sufficient_true_cuando_resuelve_l1(mock_llm_class, mock_history_class, mock_repo_class):
     mock_history = MagicMock()
     mock_history.append = AsyncMock()
     mock_history.get = AsyncMock(return_value=[])
@@ -65,6 +82,10 @@ async def test_info_sufficient_true_cuando_resuelve_l1(mock_llm_class, mock_hist
     mock_llm.classify.return_value = _build_classification("L1")
     mock_llm_class.return_value = mock_llm
 
+    mock_repo = MagicMock()
+    mock_repo.get_project_context.return_value = _build_project_context()
+    mock_repo_class.return_value = mock_repo
+
     analyzer = TicketAnalyzer()
     result = await analyzer.analyze(_build_event())
 
@@ -73,10 +94,11 @@ async def test_info_sufficient_true_cuando_resuelve_l1(mock_llm_class, mock_hist
 
 
 # verifica que info_sufficient es True por defecto si el llm no puede clasificar
+@patch("app.modules.ticket_analyzer.service.ProjectRepository")
 @patch("app.modules.ticket_analyzer.service.ConversationHistory")
 @patch("app.modules.ticket_analyzer.service.LlmClient")
 @pytest.mark.asyncio
-async def test_info_sufficient_true_por_defecto_si_falla_llm(mock_llm_class, mock_history_class):
+async def test_info_sufficient_true_por_defecto_si_falla_llm(mock_llm_class, mock_history_class, mock_repo_class):
     mock_history = MagicMock()
     mock_history.append = AsyncMock()
     mock_history.get = AsyncMock(return_value=[])
@@ -85,6 +107,10 @@ async def test_info_sufficient_true_por_defecto_si_falla_llm(mock_llm_class, moc
     mock_llm = MagicMock()
     mock_llm.classify.return_value = None
     mock_llm_class.return_value = mock_llm
+
+    mock_repo = MagicMock()
+    mock_repo.get_project_context.return_value = _build_project_context()
+    mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
     result = await analyzer.analyze(_build_event())
