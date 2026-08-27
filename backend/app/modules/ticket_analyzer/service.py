@@ -6,6 +6,7 @@ from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.ticket_analyzer.llm_client import LlmClient
+from app.modules.ticket_analyzer.project_repository import ProjectRepository
 
 
 logger = logging.getLogger(__name__)
@@ -33,25 +34,20 @@ PRIORITY_MATRIX = {
     ("Low", "Low"):      "Low",
 }
 
-# mapeo project_key y country para tokenia hardcre por ahora
-PROJECT_COUNTRY = {
-    "TARG": "AR",  #tokenia Argentina
-    "TBRA": "BR",  #tokenia Brasil
-}
-
 
 class TicketAnalyzer:
 
     def __init__(self):
         self.history = ConversationHistory()
         self.llm_client = LlmClient()
+        self.project_repository = ProjectRepository()
+
 
 
     async def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
         # punto de entrada, por ahora arma el objeto base con lo que llega de M1
-        # priority = self._determine_priority(event.priority)
-        country = self._get_country(event.issue_key)
-        
+        project_key = self._get_project_key(event.issue_key)
+        project_context = self.project_repository.get_project_context(project_key)
         
         # cu9 agrega el turno nuevo del usuario al historial
         # si es comentario usa comment_body, si es ticket nuevo usa summary + description
@@ -65,8 +61,9 @@ class TicketAnalyzer:
         conversation_history = await self.history.get(event.issue_key)
         
         # cu7 clasifica el ticket usando el llm
-        classification = self._classify(texto_usuario, conversation_history)
-
+        classification = self._classify(texto_usuario, conversation_history, project_context.categories)
+        
+        
         priority = self._determine_priority(
             impact=classification.impact if classification else None,
             urgency=classification.urgency if classification else None,
@@ -85,7 +82,7 @@ class TicketAnalyzer:
             issue_key=event.issue_key,
             event_type=event.event_type,
             summary=event.summary,
-            country=country,
+            country=project_context.country,
             priority=priority,
             intent=classification.intent if classification else None,
             category=classification.category if classification else None,
@@ -97,12 +94,11 @@ class TicketAnalyzer:
         )
         
 
-    # done pendiente de implementar la logica de clasificacion, por ahora devuelve un diccionario sin nada
-    # def _classify(self, text: str) -> dict:
-    #     return {}
+
     # llm implementado, clasifica el ticket usando el llm configurado 
-    def _classify(self, text: str, conversation_history: list = []):
-        return self.llm_client.classify(text, conversation_history)
+    def _classify(self, text: str, conversation_history: list = [], categories: list[str] = []):
+        return self.llm_client.classify(text, conversation_history, categories)
+    
 
     # si no hay clasificacion todavia, usa la prioridad del usuario, cu8
     def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str) -> str:
@@ -121,14 +117,10 @@ class TicketAnalyzer:
 
         return calculated
 
-     # deriva el country desde la nomenclatura del issue_key
-    def _get_country(self, issue_key: str) -> str:
-        project_key = issue_key.split("-")[0] if "-" in issue_key else ""
-        country = PROJECT_COUNTRY.get(project_key)
-        if not country:
-            logger.warning(f"project_key '{project_key}' no mapeado en PROJECT_COUNTRY")
-            return "unknown"
-        return country
+    # deriva el project_key desde la nomenclatura del issue_key
+    def _get_project_key(self, issue_key: str) -> str:
+        return issue_key.split("-")[0] if "-" in issue_key else ""
+    
 
     # busca la prioridad en el esquema del negocio segun category, intent
     def _calculate_priority(self, impact: str, urgency: str) -> str:
