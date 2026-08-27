@@ -25,6 +25,8 @@ def _build_classification(resolved_by: str) -> ClassificationResult:
         resolved_by=resolved_by,
         scope="IN_SCOPE",
         sentiment="negativo",
+        impact="Medium",
+        urgency="Medium",
     )
 
 
