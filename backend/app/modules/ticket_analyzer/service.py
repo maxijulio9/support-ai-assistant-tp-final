@@ -10,74 +10,27 @@ from app.modules.ticket_analyzer.llm_client import LlmClient
 
 logger = logging.getLogger(__name__)
 
-# esquema de prioridades de tokenia  hardcodeado temporalmente
-# TODO: leer de project_config cuando la feature para obtener esa info desde confluecne 
-PRIORITY_SCHEMA = {
-    ("seguridad_cuenta", "reporte_problema"):     "Highest",
-    ("seguridad_cuenta", "reclamo"):              "Highest",
-    ("seguridad_cuenta", "solicitud_accion"):     "Highest",
-    ("seguridad_cuenta", "consulta_informativa"): "Highest",
-    ("seguridad_cuenta", "cancelacion"):          "Highest",
+# matriz de prioridad segun impacto y urgencia (ITIL), universal, no depende del negocio
+PRIORITY_MATRIX = {
+    ("Critical", "Critical"): "Highest",
+    ("Critical", "High"):     "Highest",
+    ("Critical", "Medium"):   "High",
+    ("Critical", "Low"):      "High",
 
-    ("acceso_autenticacion", "reporte_problema"):     "High",
-    ("acceso_autenticacion", "reclamo"):              "High",
-    ("acceso_autenticacion", "solicitud_accion"):     "High",
-    ("acceso_autenticacion", "consulta_informativa"): "Medium",
-    ("acceso_autenticacion", "cancelacion"):          "Low",
+    ("High", "Critical"): "Highest",
+    ("High", "High"):     "High",
+    ("High", "Medium"):   "High",
+    ("High", "Low"):      "Medium",
 
-    ("depositos_retiros", "reporte_problema"):     "High",
-    ("depositos_retiros", "reclamo"):              "High",
-    ("depositos_retiros", "solicitud_accion"):     "Medium",
-    ("depositos_retiros", "consulta_informativa"): "Low",
-    ("depositos_retiros", "cancelacion"):          "Medium",
+    ("Medium", "Critical"): "High",
+    ("Medium", "High"):     "Medium",
+    ("Medium", "Medium"):   "Medium",
+    ("Medium", "Low"):      "Low",
 
-    ("operaciones_crypto", "reporte_problema"):     "High",
-    ("operaciones_crypto", "reclamo"):              "High",
-    ("operaciones_crypto", "solicitud_accion"):     "Medium",
-    ("operaciones_crypto", "consulta_informativa"): "Low",
-    ("operaciones_crypto", "cancelacion"):          "Low",
-
-    ("operaciones_fiat", "reporte_problema"):     "High",
-    ("operaciones_fiat", "reclamo"):              "High",
-    ("operaciones_fiat", "solicitud_accion"):     "Medium",
-    ("operaciones_fiat", "consulta_informativa"): "Low",
-    ("operaciones_fiat", "cancelacion"):          "Low",
-
-    ("verificacion_identidad", "reporte_problema"):     "Medium",
-    ("verificacion_identidad", "reclamo"):              "Medium",
-    ("verificacion_identidad", "solicitud_accion"):     "Medium",
-    ("verificacion_identidad", "consulta_informativa"): "Low",
-    ("verificacion_identidad", "cancelacion"):          "Low",
-
-    ("billetera_direcciones", "reporte_problema"):     "Medium",
-    ("billetera_direcciones", "reclamo"):              "Medium",
-    ("billetera_direcciones", "solicitud_accion"):     "Medium",
-    ("billetera_direcciones", "consulta_informativa"): "Low",
-    ("billetera_direcciones", "cancelacion"):          "Low",
-
-    ("limites_restricciones", "reporte_problema"):     "Medium",
-    ("limites_restricciones", "reclamo"):              "Medium",
-    ("limites_restricciones", "solicitud_accion"):     "Low",
-    ("limites_restricciones", "consulta_informativa"): "Low",
-    ("limites_restricciones", "cancelacion"):          "Low",
-
-    ("problemas_tecnicos", "reporte_problema"):     "Medium",
-    ("problemas_tecnicos", "reclamo"):              "Medium",
-    ("problemas_tecnicos", "solicitud_accion"):     "Low",
-    ("problemas_tecnicos", "consulta_informativa"): "Low",
-    ("problemas_tecnicos", "cancelacion"):          "Low",
-
-    ("tarifas_comisiones", "reporte_problema"):     "Low",
-    ("tarifas_comisiones", "reclamo"):              "Low",
-    ("tarifas_comisiones", "solicitud_accion"):     "Low",
-    ("tarifas_comisiones", "consulta_informativa"): "Low",
-    ("tarifas_comisiones", "cancelacion"):          "Low",
-
-    ("informacion_general", "reporte_problema"):     "Low",
-    ("informacion_general", "reclamo"):              "Low",
-    ("informacion_general", "solicitud_accion"):     "Low",
-    ("informacion_general", "consulta_informativa"): "Low",
-    ("informacion_general", "cancelacion"):          "Low",
+    ("Low", "Critical"): "Medium",
+    ("Low", "High"):     "Low",
+    ("Low", "Medium"):   "Low",
+    ("Low", "Low"):      "Low",
 }
 
 # mapeo project_key y country para tokenia hardcre por ahora
@@ -115,8 +68,8 @@ class TicketAnalyzer:
         classification = self._classify(texto_usuario, conversation_history)
 
         priority = self._determine_priority(
-            category=classification.category if classification else None,
-            intent=classification.intent if classification else None,
+            impact=classification.impact if classification else None,
+            urgency=classification.urgency if classification else None,
             user_priority=event.priority,
             issue_key=event.issue_key
         )
@@ -152,11 +105,11 @@ class TicketAnalyzer:
         return self.llm_client.classify(text, conversation_history)
 
     # si no hay clasificacion todavia, usa la prioridad del usuario, cu8
-    def _determine_priority(self, category: str, intent: str, user_priority: str, issue_key: str) -> str:
-        if not category or not intent:
+    def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str) -> str:
+        if not impact or not urgency:
             return user_priority or "Medium"
 
-        calculated = self._calculate_priority(category, intent)
+        calculated = self._calculate_priority(impact, urgency)
 
         if calculated == user_priority:
             logger.info(f"[{issue_key}] prioridad ok con la del usuario: {calculated}")
@@ -178,9 +131,9 @@ class TicketAnalyzer:
         return country
 
     # busca la prioridad en el esquema del negocio segun category, intent
-    def _calculate_priority(self, category: str, intent: str) -> str:
-        priority = PRIORITY_SCHEMA.get((category, intent))
+    def _calculate_priority(self, impact: str, urgency: str) -> str:
+        priority = PRIORITY_MATRIX.get((impact, urgency))
         if not priority:
-            logger.warning(f"combinacion ({category}, {intent}) no encontrada en PRIORITY_SCHEMA usando Medium")
+            logger.warning(f"combinacion ({impact}, {urgency}) no encontrada en PRIORITY_MATRIX usando Medium")
             return "Medium"
         return priority
