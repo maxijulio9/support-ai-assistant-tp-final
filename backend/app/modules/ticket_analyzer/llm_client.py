@@ -11,19 +11,19 @@ logger = logging.getLogger(__name__)
 
 # categorias validas del negocio de tokenia
 # esto se va aparamaetrizar, de project_config cuando exista CU26
-VALID_CATEGORIES = [
-    "seguridad_cuenta",
-    "acceso_autenticacion",
-    "depositos_retiros",
-    "operaciones_crypto",
-    "operaciones_fiat",
-    "verificacion_identidad",
-    "billetera_direcciones",
-    "limites_restricciones",
-    "problemas_tecnicos",
-    "tarifas_comisiones",
-    "informacion_general",
-]
+# VALID_CATEGORIES = [
+#     "seguridad_cuenta",
+#     "acceso_autenticacion",
+#     "depositos_retiros",
+#     "operaciones_crypto",
+#     "operaciones_fiat",
+#     "verificacion_identidad",
+#     "billetera_direcciones",
+#     "limites_restricciones",
+#     "problemas_tecnicos",
+#     "tarifas_comisiones",
+#     "informacion_general",
+# ]
 
 # intents validos 
 VALID_INTENTS = [
@@ -77,12 +77,12 @@ class LlmClient:
 
 
     # crea el prompt con el texto del ticket 
-    def _build_prompt(self, text: str, conversation_history: list[ConversationTurn] = []) -> str:
+    def _build_prompt(self, text: str, conversation_history: list[ConversationTurn] = [], categories: list[str] = []) -> str:
         prompt = CLASSIFICATION_PROMPT.format(
-            categories=", ".join(VALID_CATEGORIES),
+            categories=", ".join(categories),
             intents=", ".join(VALID_INTENTS),
-            impact_levels= ", ".join(VALID_IMPACT_LEVELS),
-            urgency_levels= ", ".join(VALID_URGENCY_LEVELS),
+            impact_levels=", ".join(VALID_IMPACT_LEVELS),
+            urgency_levels=", ".join(VALID_URGENCY_LEVELS),
             ticket_text=text,
         )
 
@@ -97,8 +97,8 @@ class LlmClient:
 
     # llama al llm y parsea la respuesta como ClassificationResult
     # reintenta hasta 2 veces si el json es invalido
-    def classify(self, text: str, conversation_history: list[ConversationTurn] = []) -> ClassificationResult | None:
-        prompt = self._build_prompt(text, conversation_history)
+    def classify(self, text: str, conversation_history: list[ConversationTurn] = [], categories: list[str] = []) -> ClassificationResult | None:
+        prompt = self._build_prompt(text, conversation_history, categories)
 
         for attempt in range(3):
             try:
@@ -124,11 +124,11 @@ class LlmClient:
                     logger.warning("la respuesta del llm se corto por limite de tokens")
 
 
-                # valida que category e intent sean valores conocidos
-                if data.get("category") not in VALID_CATEGORIES:
+                # valida category solo si el proyecto tiene categorias configuradas
+                # si no hay ninguna cargada todavia se acepta lo que devuelva el llm
+                if categories and data.get("category") not in categories:
                     logger.warning(f"category '{data.get('category')}' no valida, reintentando ({attempt + 1}/3)")
                     continue
-
                 if data.get("intent") not in VALID_INTENTS:
                     logger.warning(f"intent '{data.get('intent')}' no valido, reintentando ({attempt + 1}/3)")
                     continue
