@@ -1,7 +1,5 @@
-"""
-M2 - TicketAnalyzer
-Define los objetos que maneja este módulo.
-"""
+#M2 TicketAnalyzer: Define los objetos que maneja este módulo."
+#
 
 from pydantic import BaseModel
 from typing import Optional, List
@@ -48,3 +46,8 @@ class TicketAnalysis(BaseModel):
 
     # historial conversacional gestionado por CU9
     conversation_history: List[ConversationTurn] = []
+    
+class ProjectContext(BaseModel):
+    project_id: Optional[str] = None
+    country: str = "unknown"
+    categories: List[str] = []
