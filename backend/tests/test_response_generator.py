@@ -151,3 +151,22 @@ def test_retries_when_context_insufficient(mock_llm_class):
 
     assert result.action_type == ACTION_RETRY
     mock_llm.generate_response.assert_not_called()
+    
+    
+
+# verifica que usa los umbrales custom del proyecto en vez de los defaults, si vienen resueltos
+@patch("app.modules.response_generator.service.LlmClient")
+def test_uses_custom_thresholds_from_analysis(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.check_context_sufficiency.return_value = True
+    mock_llm.generate_response.return_value = "texto de respuesta generado"
+    mock_llm.evaluate_confidence.return_value = 0.75
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    # con los defaults, 0.75 caeria en NEEDS_REVIEW (entre 0.60 y 0.85)
+    # con un threshold_auto_publish custom mas bajo, 0.75 deberia alcanzar para AUTO_PUBLISH
+    analysis = _build_analysis(threshold_auto_publish=0.70, threshold_needs_review=0.50)
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.action_type == "AUTO_PUBLISH"
