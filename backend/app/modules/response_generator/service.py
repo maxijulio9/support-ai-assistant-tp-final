@@ -14,9 +14,9 @@ from app.modules.response_generator.llm_client import LlmClient
 
 logger = logging.getLogger(__name__)
 
-# luego se parametriza desde project_config cuando exisa m7
-THRESHOLD_AUTO_PUBLISH = 0.85
-THRESHOLD_NEEDS_REVIEW = 0.60
+# # luego se parametriza desde project_config cuando exisa m7
+# THRESHOLD_AUTO_PUBLISH = 0.85
+# THRESHOLD_NEEDS_REVIEW = 0.60
 
 
 class ResponseGenerator:
@@ -57,8 +57,11 @@ class ResponseGenerator:
 
         confidence_prompt = self.prompt_builder.build_confidence_prompt(retrieval, response_text)
         confidence_score = self.llm_client.evaluate_confidence(confidence_prompt)
-        action_type = self._evaluate_action(confidence_score)
-        
+        action_type = self._evaluate_action(
+            confidence_score,
+            threshold_auto_publish=analysis.threshold_auto_publish,
+            threshold_needs_review=analysis.threshold_needs_review,
+        )        
         return GeneratedResponse(
             issue_key=analysis.issue_key,
             response_text=response_text,
@@ -67,9 +70,14 @@ class ResponseGenerator:
         )
         
         
-    def _evaluate_action(self, confidence_score: float) -> str:
-        if confidence_score >= THRESHOLD_AUTO_PUBLISH:
+    # si TicketAnalysis llego sin umbrales resueltos (caso raro, deberia venir siempre completo desde M2)
+    # usa los mismos defaults conservadores que ya definimos en ProjectContext
+    def _evaluate_action(self, confidence_score: float, threshold_auto_publish: float | None, threshold_needs_review: float | None) -> str:
+        threshold_auto_publish = threshold_auto_publish if threshold_auto_publish is not None else 0.85
+        threshold_needs_review = threshold_needs_review if threshold_needs_review is not None else 0.60
+
+        if confidence_score >= threshold_auto_publish:
             return ACTION_AUTO_PUBLISH
-        if confidence_score >= THRESHOLD_NEEDS_REVIEW:
+        if confidence_score >= threshold_needs_review:
             return ACTION_NEEDS_REVIEW
         return ACTION_ESCALATE
