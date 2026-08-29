@@ -68,7 +68,38 @@ class ResponseGenerator:
             action_type=action_type,
             confidence_score=confidence_score
         )
-        
+    
+    # regenera la respuesta despues de un rechazo humano, reusa el mismo contexto
+    # solo puede terminar en auto_publish o escalate, nunca en un segundo needs_review
+    def regenerate(self, analysis: TicketAnalysis, retrieval: RetrievalResult, rejection_reason: str) -> GeneratedResponse:
+        logger.info(f"[{analysis.issue_key}] regenerando respuesta tras rechazo, motivo: {rejection_reason}")
+
+        prompt = self.prompt_builder.build_prompt(analysis, retrieval, rejection_reason)
+        response_text = self.llm_client.generate_response(prompt)
+
+        if response_text is None:
+            logger.error(f"[{analysis.issue_key}] fallo la llamada al llm en la regeneracion, escalando")
+            return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE, rejection_reason=rejection_reason)
+
+        confidence_prompt = self.prompt_builder.build_confidence_prompt(retrieval, response_text)
+        confidence_score = self.llm_client.evaluate_confidence(confidence_prompt)
+        action_type = self._evaluate_action(
+            confidence_score,
+            threshold_auto_publish=analysis.threshold_auto_publish,
+            threshold_needs_review=analysis.threshold_needs_review,
+        )
+
+        if action_type == ACTION_NEEDS_REVIEW:
+            logger.info(f"[{analysis.issue_key}] la respuesta regenerada sigue en revision, escala en vez de pedir otra vuelta")
+            action_type = ACTION_ESCALATE
+
+        return GeneratedResponse(
+            issue_key=analysis.issue_key,
+            response_text=response_text,
+            action_type=action_type,
+            confidence_score=confidence_score,
+            rejection_reason=rejection_reason,
+        )   
         
     # si TicketAnalysis llego sin umbrales resueltos (caso raro, deberia venir siempre completo desde M2)
     # usa los mismos defaults conservadores que ya definimos en ProjectContext
