@@ -170,3 +170,47 @@ def test_uses_custom_thresholds_from_analysis(mock_llm_class):
     result = generator.generate(analysis, _build_retrieval())
 
     assert result.action_type == "AUTO_PUBLISH"
+    
+# verifica que regenerate publica cuando la confianza del segundo intento es alta
+@patch("app.modules.response_generator.service.LlmClient")
+def test_regenerate_auto_publish_when_confidence_is_high(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = "respuesta regenerada"
+    mock_llm.evaluate_confidence.return_value = 0.90
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.regenerate(analysis, _build_retrieval(), rejection_reason="no aplica a Brasil")
+
+    assert result.action_type == "AUTO_PUBLISH"
+    assert result.rejection_reason == "no aplica a Brasil"
+
+
+# verifica que regenerate escala si la llamada al llm falla
+@patch("app.modules.response_generator.service.LlmClient")
+def test_regenerate_escalates_when_llm_call_fails(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = None
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.regenerate(analysis, _build_retrieval(), rejection_reason="mal redactada")
+
+    assert result.action_type == ACTION_ESCALATE
+
+
+# verifica que un segundo needs_review se convierte en escalate, para no loopear reintentos
+@patch("app.modules.response_generator.service.LlmClient")
+def test_regenerate_escalates_instead_of_second_needs_review(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = "respuesta regenerada"
+    mock_llm.evaluate_confidence.return_value = 0.70
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.regenerate(analysis, _build_retrieval(), rejection_reason="poco claro")
+
+    assert result.action_type == ACTION_ESCALATE
