@@ -9,21 +9,7 @@ from app.modules.ticket_analyzer.schemas import ClassificationResult, Conversati
 
 logger = logging.getLogger(__name__)
 
-# categorias validas del negocio de tokenia
-# esto se va aparamaetrizar, de project_config cuando exista CU26
-# VALID_CATEGORIES = [
-#     "seguridad_cuenta",
-#     "acceso_autenticacion",
-#     "depositos_retiros",
-#     "operaciones_crypto",
-#     "operaciones_fiat",
-#     "verificacion_identidad",
-#     "billetera_direcciones",
-#     "limites_restricciones",
-#     "problemas_tecnicos",
-#     "tarifas_comisiones",
-#     "informacion_general",
-# ]
+
 
 # intents validos 
 VALID_INTENTS = [
