@@ -27,15 +27,19 @@ class ProjectRepository:
                 project_id=str(project_row.id),
                 country=project_row.country_code or "unknown",
                 categories=categories,
+                threshold_auto_publish=project_row.threshold_auto_publish,
+                threshold_needs_review=project_row.threshold_needs_review,
             )
 
         finally:
             db.close()
 
     # busca el proyecto por code, con join a country para traer el code del pais
+    # de paso trae los umbrales de decision del pipeline, definidos por proyecto
     def _fetch_project_by_code(self, db, project_key: str):
         query = text("""
-            SELECT p.id, c.code AS country_code
+            SELECT p.id, c.code AS country_code,
+                   p.threshold_auto_publish, p.threshold_needs_review
             FROM project p
             LEFT JOIN country c ON p.country_id = c.id
             WHERE p.code = :project_key
