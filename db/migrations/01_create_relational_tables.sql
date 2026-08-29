@@ -66,6 +66,17 @@ CREATE TABLE IF NOT EXISTS project (
     similarity_threshold    NUMERIC(4,3) DEFAULT 0.40
 );
 
+-- categorias de soporte que usa cada proyecto/organizacion
+-- resuelve que categorias tiene habilitadas cada proyecto, sin acoplar el sistema
+-- al vocabulario de negocio de una organizacion en particular
+CREATE TABLE IF NOT EXISTS project_category (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id  UUID NOT NULL REFERENCES project(id),
+    category_id UUID NOT NULL REFERENCES ticket_category(id),
+    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE (project_id, category_id)
+);
+
 -- mapeo de acciones del sistema a estados reales de jsm, configurable por proyecto
 -- una fila por combinacion proyecto + estado generico (referencia a ticket_status)
 CREATE TABLE IF NOT EXISTS project_config (
