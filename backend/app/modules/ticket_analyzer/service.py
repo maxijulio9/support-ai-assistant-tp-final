@@ -84,6 +84,8 @@ class TicketAnalyzer:
             summary=event.summary,
             country=project_context.country,
             project_id=project_context.project_id,
+            threshold_auto_publish=project_context.threshold_auto_publish,
+            threshold_needs_review=project_context.threshold_needs_review,
             priority=priority,
             intent=classification.intent if classification else None,
             category=classification.category if classification else None,
