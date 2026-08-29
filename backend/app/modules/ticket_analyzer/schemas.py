@@ -43,9 +43,13 @@ class TicketAnalysis(BaseModel):
     # metadatos que M3 necesita para filtrar chunks por país y categoría
     country: Optional[str] = None
     summary: Optional[str] = None
+    
+    # id del proyecto, lo necesita m4 para leer sus umbrales de decision
+    project_id: Optional[str] = None
 
     # historial conversacional gestionado por CU9
     conversation_history: List[ConversationTurn] = []
+    
     
 class ProjectContext(BaseModel):
     project_id: Optional[str] = None
