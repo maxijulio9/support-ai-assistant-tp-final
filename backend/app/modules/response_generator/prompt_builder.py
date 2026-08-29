@@ -57,7 +57,7 @@ class PromptBuilder:
 
     # arma el prompt final combinando el system prompt, los chunks de m3 y el historial
     # el historial ya trae la consulta actual del usuario como ultimo turno, no hace falta agregarla aparte
-    def build_prompt(self, analysis: TicketAnalysis, retrieval: RetrievalResult) -> str:
+    def build_prompt(self, analysis: TicketAnalysis, retrieval: RetrievalResult, rejection_reason: str | None = None) -> str:
         context_text = self._format_chunks(retrieval.chunks)
         history_text = self._format_history(analysis.conversation_history)
 
@@ -66,6 +66,9 @@ class PromptBuilder:
             f"Contexto recuperado de la base de conocimiento:\n{context_text}",
             f"Historial de la conversacion:\n{history_text}",
         ]
+
+        if rejection_reason:
+            sections.append(f"Un agente humano rechazo tu respuesta anterior por el siguiente motivo, tenelo en cuenta:\n{rejection_reason}")
 
         return "\n\n".join(sections)
     
