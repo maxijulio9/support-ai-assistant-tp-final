@@ -36,6 +36,8 @@ def _build_project_context(**overrides) -> ProjectContext:
         "project_id": "proj-1",
         "country": "AR",
         "categories": ["acceso_autenticacion", "seguridad_cuenta"],
+        "threshold_auto_publish": 0.85,
+        "threshold_needs_review": 0.60,
     }
     defaults.update(overrides)
     return ProjectContext(**defaults)
