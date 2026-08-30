@@ -10,15 +10,20 @@ from app.modules.internal_api.schemas import (
     RegenerateRequest,
     EscalateRequest,
     InteractionReviewResponse,
+    ItsmConnectionRequest,
+    ItsmConnectionResponse
 )
 from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
+from app.modules.internal_api.itsm_connection_service import ItsmConnectionService 
 
 router = APIRouter(tags=["InternalAPI"])
 
 # instancia unica del servicio para toda la aplicacion
 _service = ProjectConfigService()
 _review_service = InteractionReviewService()
+_itsm_connection_service = ItsmConnectionService()
+
 
 # configura los umbrales y el mapeo de estados de un proyecto
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
@@ -70,3 +75,19 @@ async def escalate_interaction(interaction_id: str, request: EscalateRequest):
         raise HTTPException(status_code=503, detail="No se pudo escalar la interacción")
 
     return InteractionReviewResponse(status="ok", action_type=action_type)
+
+# configura la conexion con jsm, valida las credenciales antes de guardarlas
+@router.post("/api/config/itsm", response_model=ItsmConnectionResponse)
+async def configure_itsm_connection(request: ItsmConnectionRequest):
+    try:
+        await _itsm_connection_service.configure_connection(
+            request.base_url, request.user_email, request.api_token, request.webhook_secret
+        )
+    except httpx.HTTPStatusError:
+        raise HTTPException(status_code=400, detail="Las credenciales de JSM no son validas")
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="No se pudo conectar con JSM")
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo guardar la configuracion")
+
+    return ItsmConnectionResponse(status="ok")
