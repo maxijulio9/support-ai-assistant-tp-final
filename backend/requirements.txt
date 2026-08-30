@@ -10,4 +10,5 @@ httpx==0.27.2
 pydantic-settings==2.5.2
 arq==0.26.1
 beautifulsoup4==4.12.3
-langchain-text-splitters==0.3.0cryptography
+langchain-text-splitters==0.3.0
+cryptography
