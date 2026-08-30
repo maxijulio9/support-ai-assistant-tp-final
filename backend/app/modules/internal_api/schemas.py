@@ -58,3 +58,14 @@ class EscalateRequest(BaseModel):
 class InteractionReviewResponse(BaseModel):
     status: str
     action_type: str
+    
+# request para configurar la conexion con JSM
+class ItsmConnectionRequest(BaseModel):
+    base_url: str
+    user_email: str
+    api_token: str
+    webhook_secret: str
+
+# response de confirmacion
+class ItsmConnectionResponse(BaseModel):
+    status: str
