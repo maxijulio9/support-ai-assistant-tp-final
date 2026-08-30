@@ -25,7 +25,7 @@ class ClassificationResult(BaseModel):
 class TicketAnalysis(BaseModel):
     # objeto final que M2 produce y entrega al pipeline (CU5 y CU6)
     issue_key: str
-    event_type: str
+    event_type: Optional[str] = None
 
     # resultado de CU7
     intent: Optional[str] = None
