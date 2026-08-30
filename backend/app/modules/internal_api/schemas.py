@@ -35,3 +35,26 @@ class ProjectConfigRequest(BaseModel):
 class ProjectConfigResponse(BaseModel):
     status: str
     mappings_configured: int
+    
+
+# request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta tal cual esta
+class ApproveRequest(BaseModel):
+    reviewed_by: str | None = None  # referencia logica al agente, sin FK hasta que exista M9
+
+
+# request para regenerar una interaccion rechazada (CU17)
+class RegenerateRequest(BaseModel):
+    rejection_reason: str
+    reviewed_by: str | None = None
+
+
+# request para escalar una interaccion directo a un humano, sin generar nada nuevo
+class EscalateRequest(BaseModel):
+    rejection_reason: str | None = None
+    reviewed_by: str | None = None
+
+
+# response comun a las 3 acciones de revision
+class InteractionReviewResponse(BaseModel):
+    status: str
+    action_type: str
