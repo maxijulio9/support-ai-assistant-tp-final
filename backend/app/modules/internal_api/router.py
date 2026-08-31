@@ -14,13 +14,14 @@ from app.modules.internal_api.schemas import (
     ItsmConnectionRequest,
     ItsmConnectionResponse,
     AvailableProjectsResponse,
+    CountriesResponse,
 )
 from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
 from app.modules.internal_api.itsm_connection_service import ItsmConnectionService
 from app.modules.internal_api.itsm_project_onboarding_service import ItsmProjectOnboardingService
 from app.modules.internal_api.schemas import OnboardProjectsRequest, OnboardProjectsResponse
-
+from app.modules.internal_api.country_repository import CountryRepository
 router = APIRouter(tags=["InternalAPI"])
 
 # instancia unica del servicio para toda la aplicacion
@@ -28,8 +29,7 @@ _service = ProjectConfigService()
 _review_service = InteractionReviewService()
 _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
-
-
+_country_repository = CountryRepository()
 
 # configura los umbrales y el mapeo de estados de un proyecto
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
@@ -122,3 +122,9 @@ async def onboard_projects(request: OnboardProjectsRequest):
         raise HTTPException(status_code=503, detail="No se pudo dar de alta los proyectos")
 
     return OnboardProjectsResponse(status="ok", projects_created=projects_created)
+
+# lista los paises validos del catalogo, para el dropdown del frontend
+@router.get("/api/config/countries", response_model=CountriesResponse)
+async def list_countries():
+    countries = _country_repository.list_countries()
+    return CountriesResponse(countries=countries)
