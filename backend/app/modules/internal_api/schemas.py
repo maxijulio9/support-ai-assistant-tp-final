@@ -73,3 +73,21 @@ class ItsmConnectionResponse(BaseModel):
 # response con la lista de proyectos disponibles en jsm, para que el admin elija (CU27)
 class AvailableProjectsResponse(BaseModel):
     projects: list[dict] 
+    
+
+# un proyecto elegido por el admin para dar de alta, con su pais correspondiente
+class ProjectToOnboard(BaseModel):
+    code: str
+    name: str
+    country_code: str
+
+
+# request para dar de alta los proyectos elegidos (CU27)
+class OnboardProjectsRequest(BaseModel):
+    projects: list[ProjectToOnboard]
+
+
+# response de confirmacion
+class OnboardProjectsResponse(BaseModel):
+    status: str
+    projects_created: int
