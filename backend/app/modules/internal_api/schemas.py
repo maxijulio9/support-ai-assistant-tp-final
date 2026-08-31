@@ -69,3 +69,7 @@ class ItsmConnectionRequest(BaseModel):
 # response de confirmacion
 class ItsmConnectionResponse(BaseModel):
     status: str
+    
+# response con la lista de proyectos disponibles en jsm, para que el admin elija (CU27)
+class AvailableProjectsResponse(BaseModel):
+    projects: list[dict] 
