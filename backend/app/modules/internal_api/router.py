@@ -2,6 +2,7 @@
 #Endpoints de configuracion de proyectos, consumidos por el dashboard
 
 
+import httpx
 from fastapi import APIRouter, HTTPException
 from app.modules.internal_api.schemas import (
     ProjectConfigRequest,
@@ -11,11 +12,13 @@ from app.modules.internal_api.schemas import (
     EscalateRequest,
     InteractionReviewResponse,
     ItsmConnectionRequest,
-    ItsmConnectionResponse
+    ItsmConnectionResponse,
+    AvailableProjectsResponse,
 )
 from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
-from app.modules.internal_api.itsm_connection_service import ItsmConnectionService 
+from app.modules.internal_api.itsm_connection_service import ItsmConnectionService
+from app.modules.internal_api.itsm_project_onboarding_service import ItsmProjectOnboardingService
 
 router = APIRouter(tags=["InternalAPI"])
 
@@ -23,6 +26,8 @@ router = APIRouter(tags=["InternalAPI"])
 _service = ProjectConfigService()
 _review_service = InteractionReviewService()
 _itsm_connection_service = ItsmConnectionService()
+_project_onboarding_service = ItsmProjectOnboardingService()
+
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -91,3 +96,15 @@ async def configure_itsm_connection(request: ItsmConnectionRequest):
         raise HTTPException(status_code=503, detail="No se pudo guardar la configuracion")
 
     return ItsmConnectionResponse(status="ok")
+
+# lista los proyectos reales disponibles en jsm
+@router.get("/api/config/itsm/projects/available", response_model=AvailableProjectsResponse)
+async def list_available_projects():
+    try:
+        projects = await _project_onboarding_service.list_available_projects()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
+
+    return AvailableProjectsResponse(projects=projects)
