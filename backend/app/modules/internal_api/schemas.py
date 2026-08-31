@@ -91,3 +91,7 @@ class OnboardProjectsRequest(BaseModel):
 class OnboardProjectsResponse(BaseModel):
     status: str
     projects_created: int
+
+# response con los paises validos, para que el frontend arme el dropdown al dar de alta proyectos
+class CountriesResponse(BaseModel):
+    countries: list[dict]
