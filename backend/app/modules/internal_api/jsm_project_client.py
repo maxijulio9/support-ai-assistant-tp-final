@@ -1,0 +1,27 @@
+# M7 InternalAPI: consulta a JSM la lista de proyectos disponibles para dar de alta
+# es de solo lectura, en tiempo de configuracion
+
+import httpx
+import base64
+
+
+class JsmProjectClient:
+
+    # trae la lista de proyectos reales de la instancia de JSM
+    async def get_projects(self, base_url: str, user_email: str, api_token: str) -> list[dict]:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/api/3/project/search")
+            response.raise_for_status()
+            data = response.json()
+
+        return [{"key": p["key"], "name": p["name"]} for p in data.get("values", [])]
+
+    def _build_auth_header(self, user_email: str, api_token: str) -> dict:
+        credentials = f"{user_email}:{api_token}"
+        encoded = base64.b64encode(credentials.encode()).decode()
+        return {
+            "Authorization": f"Basic {encoded}",
+            "Content-Type": "application/json",
+        }
