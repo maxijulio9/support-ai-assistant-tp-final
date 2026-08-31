@@ -19,6 +19,7 @@ from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
 from app.modules.internal_api.itsm_connection_service import ItsmConnectionService
 from app.modules.internal_api.itsm_project_onboarding_service import ItsmProjectOnboardingService
+from app.modules.internal_api.schemas import OnboardProjectsRequest, OnboardProjectsResponse
 
 router = APIRouter(tags=["InternalAPI"])
 
@@ -108,3 +109,16 @@ async def list_available_projects():
         raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
 
     return AvailableProjectsResponse(projects=projects)
+
+
+# da de alta los proyectos que el admin eligio de la lista disponible
+@router.post("/api/config/itsm/projects/onboard", response_model=OnboardProjectsResponse)
+async def onboard_projects(request: OnboardProjectsRequest):
+    try:
+        projects_created = _project_onboarding_service.onboard_projects(request.projects)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo dar de alta los proyectos")
+
+    return OnboardProjectsResponse(status="ok", projects_created=projects_created)
