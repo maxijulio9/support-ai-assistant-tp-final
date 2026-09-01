@@ -50,6 +50,7 @@ class TicketAnalysis(BaseModel):
     # umbrales de decision del pipeline, resueltos por m2 para que m4 no consulte la bd de nuevo
     threshold_auto_publish: Optional[float] = None
     threshold_needs_review: Optional[float] = None
+    similarity_threshold: Optional[float] = None
 
     # historial conversacional gestionado por CU9
     conversation_history: List[ConversationTurn] = []
@@ -61,3 +62,4 @@ class ProjectContext(BaseModel):
     categories: List[str] = []
     threshold_auto_publish: float = 0.85
     threshold_needs_review: float = 0.60
+    similarity_threshold: float = 0.40
