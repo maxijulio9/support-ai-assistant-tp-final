@@ -82,3 +82,33 @@ def test_retrieve_score_insuficiente(mock_chunk_retriever_class, mock_embedding_
 
     assert result.chunks == []
     assert result.has_requirements_doc is False
+    
+
+# verifica que usa el similarity_threshold custom del proyecto en vez del default, si viene resuelto
+@patch("app.modules.knowledge_retriever.service.EmbeddingClient")
+@patch("app.modules.knowledge_retriever.service.ChunkRetriever")
+def test_retrieve_usa_threshold_custom_del_proyecto(mock_chunk_retriever_class, mock_embedding_client_class):
+    mock_embedding_client = MagicMock()
+    mock_embedding_client.generate_embedding.return_value = [0.1] * 1536
+    mock_embedding_client_class.return_value = mock_embedding_client
+
+    mock_chunk_retriever = MagicMock()
+    mock_chunk_retriever.find_similar_chunks.return_value = [
+        RetrievedChunk(chunk_id="1", content="algo con score medio", similarity_score=0.50, doc_type="resolution"),
+    ]
+    mock_chunk_retriever_class.return_value = mock_chunk_retriever
+
+    analysis = TicketAnalysis(
+        issue_key="TEST-1",
+        event_type="issue_created",
+        category="depositos_retiros",
+        country="AR",
+        summary="el deposito no se acredito en la cuenta",
+        similarity_threshold=0.60,
+    )
+
+    retriever = KnowledgeRetriever()
+    result = retriever.retrieve(analysis)
+
+    # con el default 0.40 este chunk pasaria (0.50 > 0.40), pero con el threshold custom 0.60 no alcanza
+    assert result.chunks == []
