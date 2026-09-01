@@ -43,3 +43,40 @@ class JsmProjectClient:
                 statuses[status["id"]] = status["name"]
 
         return [{"id": status_id, "name": name} for status_id, name in statuses.items()]
+    
+    # trae los campos custom del proyecto que son de tipo lista de seleccion unica
+    async def get_select_fields(self, base_url: str, user_email: str, api_token: str) -> list[dict]:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/api/3/field")
+            response.raise_for_status()
+            fields = response.json()
+
+        return [
+            {"id": f["id"], "name": f["name"]}
+            for f in fields
+            if f.get("schema", {}).get("type") == "option"
+        ]
+
+    # trae los valores reales configurados para un campo custom
+    # nota: en instancias donde el campo tiene un unico contexto global (compartido entre proyectos),
+    # esta lista puede incluir opciones que no aplican a todos los proyectos, el admin elige cuales usar
+    async def get_field_options(self, base_url: str, user_email: str, api_token: str, field_id: str) -> list[str]:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            contexts_response = await client.get(f"{base_url}/rest/api/3/field/{field_id}/context")
+            contexts_response.raise_for_status()
+            contexts = contexts_response.json().get("values", [])
+
+            if not contexts:
+                return []
+
+            context_id = contexts[0]["id"]
+
+            options_response = await client.get(f"{base_url}/rest/api/3/field/{field_id}/context/{context_id}/option")
+            options_response.raise_for_status()
+            options = options_response.json().get("values", [])
+
+        return [option["value"] for option in options]
