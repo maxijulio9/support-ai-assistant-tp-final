@@ -68,7 +68,8 @@ class KnowledgeRetriever:
         # )
 
         # si no hay chunks o el mejor no supera el umbral, no hay contexto suficiente
-        if not chunks or chunks[0].similarity_score < SIMILARITY_THRESHOLD:
+        threshold = analysis.similarity_threshold if analysis.similarity_threshold is not None else SIMILARITY_THRESHOLD
+        if not chunks or chunks[0].similarity_score < threshold:
             logger.info(f"[{analysis.issue_key}] score insuficiente o sin resultados, devolviendo resultado vacio")
             return RetrievalResult(
                 issue_key=analysis.issue_key,
