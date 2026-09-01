@@ -99,3 +99,8 @@ class CountriesResponse(BaseModel):
 # response con los estados reales de un proyecto de jsm, para el mapeo del admin (TF-122)
 class ProjectStatusesResponse(BaseModel):
     statuses: list[dict]
+    
+    
+# response con los campos custom de tipo lista de seleccion unica, para que el admin elija cual es categoria
+class SelectFieldsResponse(BaseModel):
+    fields: list[dict]
