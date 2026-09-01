@@ -15,6 +15,7 @@ from app.modules.internal_api.schemas import (
     ItsmConnectionResponse,
     AvailableProjectsResponse,
     CountriesResponse,
+    ProjectStatusesResponse,
 )
 from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
@@ -22,6 +23,8 @@ from app.modules.internal_api.itsm_connection_service import ItsmConnectionServi
 from app.modules.internal_api.itsm_project_onboarding_service import ItsmProjectOnboardingService
 from app.modules.internal_api.schemas import OnboardProjectsRequest, OnboardProjectsResponse
 from app.modules.internal_api.country_repository import CountryRepository
+from app.modules.internal_api.itsm_status_mapping_service import ItsmStatusMappingService
+
 router = APIRouter(tags=["InternalAPI"])
 
 # instancia unica del servicio para toda la aplicacion
@@ -30,6 +33,7 @@ _review_service = InteractionReviewService()
 _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
+_status_mapping_service = ItsmStatusMappingService()
 
 # configura los umbrales y el mapeo de estados de un proyecto
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
@@ -128,3 +132,15 @@ async def onboard_projects(request: OnboardProjectsRequest):
 async def list_countries():
     countries = _country_repository.list_countries()
     return CountriesResponse(countries=countries)
+
+# trae los estados reales de un proyecto de jsm, para que el admin arme el mapeo
+@router.get("/api/config/itsm/projects/{project_key}/statuses", response_model=ProjectStatusesResponse)
+async def list_project_statuses(project_key: str):
+    try:
+        statuses = await _status_mapping_service.list_project_statuses(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar los estados de JSM")
+
+    return ProjectStatusesResponse(statuses=statuses)
