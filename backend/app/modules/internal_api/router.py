@@ -24,6 +24,7 @@ from app.modules.internal_api.itsm_project_onboarding_service import ItsmProject
 from app.modules.internal_api.schemas import OnboardProjectsRequest, OnboardProjectsResponse
 from app.modules.internal_api.country_repository import CountryRepository
 from app.modules.internal_api.itsm_status_mapping_service import ItsmStatusMappingService
+from app.modules.internal_api.schemas import SelectFieldsResponse
 
 router = APIRouter(tags=["InternalAPI"])
 
@@ -34,6 +35,7 @@ _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
+_select_fields_service = ItsmProjectOnboardingService()
 
 # configura los umbrales y el mapeo de estados de un proyecto
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
@@ -144,3 +146,15 @@ async def list_project_statuses(project_key: str):
         raise HTTPException(status_code=503, detail="No se pudo consultar los estados de JSM")
 
     return ProjectStatusesResponse(statuses=statuses)
+
+# lista los campos custom de jsm de tipo lista de seleccion unica, para elegir cual representa categoria
+@router.get("/api/config/itsm/fields", response_model=SelectFieldsResponse)
+async def list_select_fields():
+    try:
+        fields = await _project_onboarding_service.list_select_fields()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
+
+    return SelectFieldsResponse(fields=fields)
