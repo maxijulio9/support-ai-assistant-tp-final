@@ -21,7 +21,7 @@ INSERT INTO country (code, name) VALUES
 ON CONFLICT (code) DO NOTHING;
 
 -- tipos de sentimiento detectados por el LLM en cada interaccion
-INSERT INTO sentiment_typ (code, name, score_weight, triggers_alert) VALUES
+INSERT INTO sentiment_type (code, name, score_weight, triggers_alert) VALUES
     ('positivo', 'Positivo', 1.0, FALSE),
     ('neutro',   'Neutro',   0.5, FALSE),
     ('negativo', 'Negativo', 0.0, TRUE)
