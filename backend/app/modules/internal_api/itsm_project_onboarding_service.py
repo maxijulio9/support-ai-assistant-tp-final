@@ -7,6 +7,7 @@ from app.modules.internal_api.jsm_project_client import JsmProjectClient
 from app.modules.internal_api.project_onboarding_repository import ProjectOnboardingRepository
 
 
+
 class ItsmProjectOnboardingService:
 
     def __init__(self):
@@ -26,3 +27,13 @@ class ItsmProjectOnboardingService:
     # da de alta los proyectos que el admin eligio
     def onboard_projects(self, projects: list) -> int:
         return self.project_onboarding_repository.onboard_projects(projects)
+    
+    
+    # trae los campos custom de jsm de tipo lista de seleccion unica, para que el admin elija cual es categoria
+    async def list_select_fields(self) -> list[dict]:
+        credentials = self.credentials_repository.get_credentials()
+
+        if credentials is None:
+            raise ValueError("todavia no se configuro la conexion con jsm")
+
+        return await self.jsm_project_client.get_select_fields(**credentials)
