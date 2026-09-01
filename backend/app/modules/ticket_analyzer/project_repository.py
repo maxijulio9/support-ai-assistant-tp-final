@@ -29,6 +29,7 @@ class ProjectRepository:
                 categories=categories,
                 threshold_auto_publish=project_row.threshold_auto_publish,
                 threshold_needs_review=project_row.threshold_needs_review,
+                similarity_threshold=project_row.similarity_threshold,
             )
 
         finally:
@@ -37,14 +38,14 @@ class ProjectRepository:
     # busca el proyecto por code, con join a country para traer el code del pais
     # de paso trae los umbrales de decision del pipeline, definidos por proyecto
     def _fetch_project_by_code(self, db, project_key: str):
-        query = text("""
+       query = text("""
             SELECT p.id, c.code AS country_code,
-                   p.threshold_auto_publish, p.threshold_needs_review
+                   p.threshold_auto_publish, p.threshold_needs_review, p.similarity_threshold
             FROM project p
             LEFT JOIN country c ON p.country_id = c.id
             WHERE p.code = :project_key
         """)
-        return db.execute(query, {"project_key": project_key}).fetchone()
+       return db.execute(query, {"project_key": project_key}).fetchone()
 
     # busca las categorias activas configuradas para este proyecto
     def _fetch_active_categories_for_project(self, db, project_id: str) -> list[str]:
