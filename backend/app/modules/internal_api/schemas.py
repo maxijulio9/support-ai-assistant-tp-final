@@ -95,3 +95,7 @@ class OnboardProjectsResponse(BaseModel):
 # response con los paises validos, para que el frontend arme el dropdown al dar de alta proyectos
 class CountriesResponse(BaseModel):
     countries: list[dict]
+
+# response con los estados reales de un proyecto de jsm, para el mapeo del admin (TF-122)
+class ProjectStatusesResponse(BaseModel):
+    statuses: list[dict]
