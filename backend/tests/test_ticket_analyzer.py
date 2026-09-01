@@ -38,6 +38,8 @@ def _build_project_context(**overrides) -> ProjectContext:
         "categories": ["acceso_autenticacion", "seguridad_cuenta"],
         "threshold_auto_publish": 0.85,
         "threshold_needs_review": 0.60,
+        "similarity_threshold": 0.40,
+
     }
     defaults.update(overrides)
     return ProjectContext(**defaults)
