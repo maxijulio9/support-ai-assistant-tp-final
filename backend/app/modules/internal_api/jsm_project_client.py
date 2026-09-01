@@ -25,3 +25,21 @@ class JsmProjectClient:
             "Authorization": f"Basic {encoded}",
             "Content-Type": "application/json",
         }
+
+    # trae los estados reales configurados para un proyecto puntual de jsm
+    async def get_project_statuses(self, base_url: str, user_email: str, api_token: str, project_key: str) -> list[dict]:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/api/3/project/{project_key}/statuses")
+            response.raise_for_status()
+            data = response.json()
+
+        # cada tipo de issue trae su propia lista de estados, algunos se repiten entre tipos
+        # los junto en un solo diccionario por id para no duplicar
+        statuses = {}
+        for issue_type in data:
+            for status in issue_type.get("statuses", []):
+                statuses[status["id"]] = status["name"]
+
+        return [{"id": status_id, "name": name} for status_id, name in statuses.items()]
