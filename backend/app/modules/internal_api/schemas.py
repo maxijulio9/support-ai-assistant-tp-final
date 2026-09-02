@@ -117,3 +117,9 @@ class ConfigureCategoriesResponse(BaseModel):
     
 class FieldOptionsResponse(BaseModel):
     options: list[str]
+    
+    
+# response de confirmacion al configurar los tipos de solicitud de un proyecto
+class ConfigureRequestTypesResponse(BaseModel):
+    status: str
+    request_types_configured: int
