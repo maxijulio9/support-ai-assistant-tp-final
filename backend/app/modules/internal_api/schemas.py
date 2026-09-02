@@ -104,3 +104,14 @@ class ProjectStatusesResponse(BaseModel):
 # response con los campos custom de tipo lista de seleccion unica, para que el admin elija cual es categoria
 class SelectFieldsResponse(BaseModel):
     fields: list[dict]
+
+# request para confirmar las categorias elegidas por el admin para un proyecto
+class ConfigureCategoriesRequest(BaseModel):
+    project_key: str
+    categories: list[str]  # los valores crudos de jsm, tal cual, sin modificar
+
+
+# response de confirmacion
+class ConfigureCategoriesResponse(BaseModel):
+    status: str
+    categories_configured: int
