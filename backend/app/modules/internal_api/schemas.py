@@ -107,7 +107,6 @@ class SelectFieldsResponse(BaseModel):
 
 # request para confirmar las categorias elegidas por el admin para un proyecto
 class ConfigureCategoriesRequest(BaseModel):
-    project_key: str
     categories: list[str]  # los valores crudos de jsm, tal cual, sin modificar
 
 
@@ -115,3 +114,6 @@ class ConfigureCategoriesRequest(BaseModel):
 class ConfigureCategoriesResponse(BaseModel):
     status: str
     categories_configured: int
+    
+class FieldOptionsResponse(BaseModel):
+    options: list[str]
