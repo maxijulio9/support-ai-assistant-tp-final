@@ -80,3 +80,29 @@ class JsmProjectClient:
             options = options_response.json().get("values", [])
 
         return [option["value"] for option in options]
+    
+    # trae el service desk id asociado a un proyecto, necesario para consultar sus request types
+    async def get_service_desk_id(self, base_url: str, user_email: str, api_token: str, project_key: str) -> str | None:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/servicedeskapi/servicedesk")
+            response.raise_for_status()
+            data = response.json()
+
+        for sd in data.get("values", []):
+            if sd.get("projectKey") == project_key:
+                return sd["id"]
+
+        return None
+
+    # trae los tipos de solicitud reales de un proyecto, ya vienen escaneados por ese service desk especifico
+    async def get_request_types(self, base_url: str, user_email: str, api_token: str, service_desk_id: str) -> list[dict]:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/servicedeskapi/servicedesk/{service_desk_id}/requesttype")
+            response.raise_for_status()
+            data = response.json()
+
+        return [{"id": rt["id"], "name": rt["name"]} for rt in data.get("values", [])]
