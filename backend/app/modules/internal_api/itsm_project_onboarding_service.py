@@ -37,3 +37,17 @@ class ItsmProjectOnboardingService:
             raise ValueError("todavia no se configuro la conexion con jsm")
 
         return await self.jsm_project_client.get_select_fields(**credentials)
+    
+      # trae los valores reales de un campo elegido por el admin, para que confirme cuales aplican al proyecto
+    async def list_field_options(self, field_id: str) -> list[str]:
+        credentials = self.credentials_repository.get_credentials()
+
+        if credentials is None:
+            raise ValueError("todavia no se configuro la conexion con jsm")
+
+        return await self.jsm_project_client.get_field_options(field_id=field_id, **credentials)
+
+    # vincula el proyecto a las categorias que el admin confirmo
+    def configure_categories(self, project_key: str, categories: list[str]) -> int:
+        return self.category_configuration_repository.configure_categories(project_key, categories)
+    
