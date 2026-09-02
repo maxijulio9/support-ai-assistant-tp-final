@@ -88,6 +88,15 @@ CREATE TABLE IF NOT EXISTS project_config (
     UNIQUE (project_id, status_id)
 );
 
+-- mapeo de tipos de solicitud reales de jsm, configurable por proyecto
+CREATE TABLE IF NOT EXISTS project_request_type (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id      UUID NOT NULL REFERENCES project(id),
+    request_type_id UUID NOT NULL REFERENCES ticket_request_type(id),
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    UNIQUE (project_id, request_type_id)
+);
+
 -- ticket procesado por el sistema
 CREATE TABLE IF NOT EXISTS ticket (
     id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
