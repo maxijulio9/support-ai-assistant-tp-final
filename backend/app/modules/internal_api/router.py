@@ -19,6 +19,8 @@ from app.modules.internal_api.schemas import (
     FieldOptionsResponse,
     ConfigureCategoriesRequest,
     ConfigureCategoriesResponse,
+    ConfigureRequestTypesResponse,
+    
 )
 from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
@@ -187,3 +189,15 @@ async def configure_categories(project_key: str, request: ConfigureCategoriesReq
         raise HTTPException(status_code=503, detail="No se pudo configurar las categorias")
 
     return ConfigureCategoriesResponse(status="ok", categories_configured=categories_configured)
+
+# trae y persiste automaticamente los tipos de solicitud reales de un proyecto, sin necesitar seleccion del admin
+@router.post("/api/config/itsm/projects/{project_key}/request-types", response_model=ConfigureRequestTypesResponse)
+async def configure_request_types(project_key: str):
+    try:
+        request_types_configured = await _project_onboarding_service.configure_request_types(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo configurar los tipos de solicitud")
+
+    return ConfigureRequestTypesResponse(status="ok", request_types_configured=request_types_configured)
