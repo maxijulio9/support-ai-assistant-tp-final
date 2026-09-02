@@ -16,6 +16,9 @@ from app.modules.internal_api.schemas import (
     AvailableProjectsResponse,
     CountriesResponse,
     ProjectStatusesResponse,
+    FieldOptionsResponse,
+    ConfigureCategoriesRequest,
+    ConfigureCategoriesResponse,
 )
 from app.modules.internal_api.service import ProjectConfigService
 from app.modules.internal_api.interaction_review_service import InteractionReviewService
@@ -26,6 +29,7 @@ from app.modules.internal_api.country_repository import CountryRepository
 from app.modules.internal_api.itsm_status_mapping_service import ItsmStatusMappingService
 from app.modules.internal_api.schemas import SelectFieldsResponse
 
+
 router = APIRouter(tags=["InternalAPI"])
 
 # instancia unica del servicio para toda la aplicacion
@@ -35,7 +39,7 @@ _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
-_select_fields_service = ItsmProjectOnboardingService()
+
 
 # configura los umbrales y el mapeo de estados de un proyecto
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
@@ -158,3 +162,28 @@ async def list_select_fields():
         raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
 
     return SelectFieldsResponse(fields=fields)
+
+# trae las opciones reales de un campo elegido por el admin
+@router.get("/api/config/itsm/fields/{field_id}/options", response_model=FieldOptionsResponse)
+async def list_field_options(field_id: str):
+    try:
+        options = await _project_onboarding_service.list_field_options(field_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
+
+    return FieldOptionsResponse(options=options)
+
+
+# confirma las categorias que el admin eligio para su proyecto
+@router.post("/api/config/itsm/projects/{project_key}/categories", response_model=ConfigureCategoriesResponse)
+async def configure_categories(project_key: str, request: ConfigureCategoriesRequest):
+    try:
+        categories_configured = _project_onboarding_service.configure_categories(project_key, request.categories)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo configurar las categorias")
+
+    return ConfigureCategoriesResponse(status="ok", categories_configured=categories_configured)
