@@ -20,6 +20,10 @@ from app.modules.internal_api.schemas import (
     ConfigureCategoriesRequest,
     ConfigureCategoriesResponse,
     ConfigureRequestTypesResponse,
+    ConfigurePriorityMappingRequest,
+    ConfigurePriorityMappingResponse,
+    PrioritiesWithSuggestionResponse,
+    
     
 )
 from app.modules.internal_api.service import ProjectConfigService
@@ -41,6 +45,7 @@ _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
+
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -201,3 +206,29 @@ async def configure_request_types(project_key: str):
         raise HTTPException(status_code=503, detail="No se pudo configurar los tipos de solicitud")
 
     return ConfigureRequestTypesResponse(status="ok", request_types_configured=request_types_configured)
+
+
+# trae las prioridades reales de un proyecto, con sugerencia automatica de mapeo
+@router.get("/api/config/itsm/projects/{project_key}/priorities", response_model=PrioritiesWithSuggestionResponse)
+async def list_priorities(project_key: str):
+    try:
+        result = await _project_onboarding_service.list_priorities_with_suggestion()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
+
+    return PrioritiesWithSuggestionResponse(**result)
+
+
+# confirma el mapeo de prioridades para un proyecto
+@router.post("/api/config/itsm/projects/{project_key}/priorities", response_model=ConfigurePriorityMappingResponse)
+async def configure_priority_mapping(project_key: str, request: ConfigurePriorityMappingRequest):
+    try:
+        mappings_configured = _project_onboarding_service.configure_priority_mapping(project_key, request.mapping)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo configurar el mapeo de prioridades")
+
+    return ConfigurePriorityMappingResponse(status="ok", mappings_configured=mappings_configured)
