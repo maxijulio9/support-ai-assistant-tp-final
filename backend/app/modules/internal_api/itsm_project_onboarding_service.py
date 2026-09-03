@@ -6,6 +6,8 @@ from app.modules.internal_api.jsm_credentials_repository import JsmCredentialsRe
 from app.modules.internal_api.jsm_project_client import JsmProjectClient
 from app.modules.internal_api.project_onboarding_repository import ProjectOnboardingRepository
 from app.modules.internal_api.request_type_configuration_repository import RequestTypeConfigurationRepository
+from app.modules.internal_api.priority_mapping_suggester import PriorityMappingSuggester
+from app.modules.internal_api.priority_mapping_repository import PriorityMappingRepository
 
 
 
@@ -16,6 +18,8 @@ class ItsmProjectOnboardingService:
         self.jsm_project_client = JsmProjectClient()
         self.project_onboarding_repository = ProjectOnboardingRepository()
         self.request_type_configuration_repository = RequestTypeConfigurationRepository()
+        self.priority_mapping_suggester = PriorityMappingSuggester()
+        self.priority_mapping_repository = PriorityMappingRepository()
         
     # trae la lista de proyectos disponibles en jsm, usando las credenciales ya configuradas
     async def list_available_projects(self) -> list[dict]:
@@ -70,3 +74,18 @@ class ItsmProjectOnboardingService:
 
         return self.request_type_configuration_repository.configure_request_types(project_key, request_types)
     
+    # trae las prioridades reales de jsm junto con una sugerencia automatica de mapeo
+    async def list_priorities_with_suggestion(self) -> dict:
+        credentials = self.credentials_repository.get_credentials()
+
+        if credentials is None:
+            raise ValueError("todavia no se configuro la conexion con jsm")
+
+        priorities = await self.jsm_project_client.get_priorities(**credentials)
+        suggestions = self.priority_mapping_suggester.suggest(priorities)
+
+        return {"priorities": priorities, "suggestions": suggestions}
+
+    # persiste el mapeo que el admin confirmo, con o sin ajustes sobre la sugerencia
+    def configure_priority_mapping(self, project_key: str, mapping: dict) -> int:
+        return self.priority_mapping_repository.configure_priority_mapping(project_key, mapping)
