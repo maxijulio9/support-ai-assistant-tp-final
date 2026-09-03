@@ -123,3 +123,19 @@ class FieldOptionsResponse(BaseModel):
 class ConfigureRequestTypesResponse(BaseModel):
     status: str
     request_types_configured: int
+    
+# response con las prioridades reales de jsm y una sugerencia automatica de mapeo
+class PrioritiesWithSuggestionResponse(BaseModel):
+    priorities: list[dict]
+    suggestions: dict
+
+
+# request para confirmar el mapeo de prioridades, el admin puede ajustar la sugerencia
+class ConfigurePriorityMappingRequest(BaseModel):
+    mapping: dict[str, list[str]]
+
+
+# response de confirmacion
+class ConfigurePriorityMappingResponse(BaseModel):
+    status: str
+    mappings_configured: int
