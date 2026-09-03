@@ -97,6 +97,16 @@ CREATE TABLE IF NOT EXISTS project_request_type (
     UNIQUE (project_id, request_type_id)
 );
 
+-- mapeo de los niveles universales de prioridad a los ids reales de jsm, por proyecto
+-- un universal puede mapear a mas de un id real (ej. Low y Lowest ambos caen en nuestro Low)
+CREATE TABLE IF NOT EXISTS project_priority (
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id          UUID NOT NULL REFERENCES project(id),
+    priority_id         UUID NOT NULL REFERENCES ticket_priority(id),
+    system_priority_id  VARCHAR(50) NOT NULL,
+    UNIQUE (project_id, priority_id, system_priority_id)
+);
+
 -- ticket procesado por el sistema
 CREATE TABLE IF NOT EXISTS ticket (
     id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
