@@ -106,3 +106,16 @@ class JsmProjectClient:
             data = response.json()
 
         return [{"id": rt["id"], "name": rt["name"]} for rt in data.get("values", [])]
+    
+    
+    # trae los niveles de prioridad reales de la instancia de jsm
+    async def get_priorities(self, base_url: str, user_email: str, api_token: str) -> list[dict]:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/api/3/priority")
+            response.raise_for_status()
+            data = response.json()
+
+        return [{"id": p["id"], "name": p["name"]} for p in data]
+
