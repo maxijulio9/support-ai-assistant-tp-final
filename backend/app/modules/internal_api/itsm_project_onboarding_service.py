@@ -8,8 +8,7 @@ from app.modules.internal_api.project_onboarding_repository import ProjectOnboar
 from app.modules.internal_api.request_type_configuration_repository import RequestTypeConfigurationRepository
 from app.modules.internal_api.priority_mapping_suggester import PriorityMappingSuggester
 from app.modules.internal_api.priority_mapping_repository import PriorityMappingRepository
-
-
+from app.modules.internal_api.category_configuration_repository import CategoryConfigurationRepository
 
 class ItsmProjectOnboardingService:
 
@@ -20,6 +19,7 @@ class ItsmProjectOnboardingService:
         self.request_type_configuration_repository = RequestTypeConfigurationRepository()
         self.priority_mapping_suggester = PriorityMappingSuggester()
         self.priority_mapping_repository = PriorityMappingRepository()
+        self.category_configuration_repository = CategoryConfigurationRepository()
         
     # trae la lista de proyectos disponibles en jsm, usando las credenciales ya configuradas
     async def list_available_projects(self) -> list[dict]:
