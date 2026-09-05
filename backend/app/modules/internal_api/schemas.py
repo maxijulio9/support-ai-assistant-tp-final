@@ -139,3 +139,17 @@ class ConfigurePriorityMappingRequest(BaseModel):
 class ConfigurePriorityMappingResponse(BaseModel):
     status: str
     mappings_configured: int
+    
+    
+    
+#CONFLUENCE  KB 
+# request para configurar la conexion con confluence
+class ConfluenceConnectionRequest(BaseModel):
+    base_url: str
+    user_email: str
+    api_token: str
+
+
+# response de confirmacion
+class ConfluenceConnectionResponse(BaseModel):
+    status: str
