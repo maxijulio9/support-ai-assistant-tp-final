@@ -153,3 +153,25 @@ class ConfluenceConnectionRequest(BaseModel):
 # response de confirmacion
 class ConfluenceConnectionResponse(BaseModel):
     status: str
+
+# un space elegido por el admin para vincular al proyecto
+class SpaceToLink(BaseModel):
+    space_key: str
+    country_code: str | None = None
+    description: str | None = None
+
+
+# response con la lista de spaces disponibles en confluence, para que el admin elija (CU29)
+class AvailableSpacesResponse(BaseModel):
+    spaces: list[dict]
+
+
+# request para confirmar los spaces elegidos por el admin
+class ConfigureSpacesRequest(BaseModel):
+    spaces: list[SpaceToLink]
+
+
+# response de confirmacion
+class ConfigureSpacesResponse(BaseModel):
+    status: str
+    spaces_configured: int
