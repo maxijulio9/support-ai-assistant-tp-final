@@ -27,6 +27,8 @@ from app.modules.internal_api.schemas import (
     OnboardProjectsRequest,
     OnboardProjectsResponse,
     SelectFieldsResponse,
+    ConfluenceConnectionRequest,
+    ConfluenceConnectionResponse
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
@@ -34,6 +36,7 @@ from app.modules.internal_api.services.itsm_connection_service import ItsmConnec
 from app.modules.internal_api.services.itsm_project_onboarding_service import ItsmProjectOnboardingService
 from app.modules.internal_api.services.itsm_status_mapping_service import ItsmStatusMappingService
 from app.modules.internal_api.repositories.country_repository import CountryRepository
+from app.modules.internal_api.services.confluence_connection_service import ConfluenceConnectionService
 
 router = APIRouter(tags=["InternalAPI"])
 
@@ -44,6 +47,7 @@ _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
+_confluence_connection_service = ConfluenceConnectionService()
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -230,3 +234,21 @@ async def configure_priority_mapping(project_key: str, request: ConfigurePriorit
         raise HTTPException(status_code=503, detail="No se pudo configurar el mapeo de prioridades")
 
     return ConfigurePriorityMappingResponse(status="ok", mappings_configured=mappings_configured)
+
+#CONFLUENCE KB
+
+# configura la conexion con confluence, valida las credenciales antes de guardarlas
+@router.post("/api/config/knowledge-base", response_model=ConfluenceConnectionResponse)
+async def configure_confluence_connection(request: ConfluenceConnectionRequest):
+    try:
+        await _confluence_connection_service.configure_connection(
+            request.base_url, request.user_email, request.api_token
+        )
+    except httpx.HTTPStatusError:
+        raise HTTPException(status_code=400, detail="Las credenciales de Confluence no son validas")
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="No se pudo conectar con Confluence")
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo guardar la configuracion")
+
+    return ConfluenceConnectionResponse(status="ok")
