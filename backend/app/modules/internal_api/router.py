@@ -2,6 +2,7 @@
 #Endpoints de configuracion de proyectos, consumidos por el dashboard
 
 
+
 import httpx
 from fastapi import APIRouter, HTTPException
 from app.modules.internal_api.schemas import (
@@ -23,18 +24,16 @@ from app.modules.internal_api.schemas import (
     ConfigurePriorityMappingRequest,
     ConfigurePriorityMappingResponse,
     PrioritiesWithSuggestionResponse,
-    
-    
+    OnboardProjectsRequest,
+    OnboardProjectsResponse,
+    SelectFieldsResponse,
 )
-from app.modules.internal_api.service import ProjectConfigService
-from app.modules.internal_api.interaction_review_service import InteractionReviewService
-from app.modules.internal_api.itsm_connection_service import ItsmConnectionService
-from app.modules.internal_api.itsm_project_onboarding_service import ItsmProjectOnboardingService
-from app.modules.internal_api.schemas import OnboardProjectsRequest, OnboardProjectsResponse
-from app.modules.internal_api.country_repository import CountryRepository
-from app.modules.internal_api.itsm_status_mapping_service import ItsmStatusMappingService
-from app.modules.internal_api.schemas import SelectFieldsResponse
-
+from app.modules.internal_api.services.project_config_service import ProjectConfigService
+from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
+from app.modules.internal_api.services.itsm_connection_service import ItsmConnectionService
+from app.modules.internal_api.services.itsm_project_onboarding_service import ItsmProjectOnboardingService
+from app.modules.internal_api.services.itsm_status_mapping_service import ItsmStatusMappingService
+from app.modules.internal_api.repositories.country_repository import CountryRepository
 
 router = APIRouter(tags=["InternalAPI"])
 
@@ -45,7 +44,6 @@ _itsm_connection_service = ItsmConnectionService()
 _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
-
 
 
 # configura los umbrales y el mapeo de estados de un proyecto

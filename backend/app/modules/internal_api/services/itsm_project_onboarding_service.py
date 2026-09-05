@@ -2,13 +2,13 @@
 # CU27
 
 
-from app.modules.internal_api.jsm_credentials_repository import JsmCredentialsRepository
-from app.modules.internal_api.jsm_project_client import JsmProjectClient
-from app.modules.internal_api.project_onboarding_repository import ProjectOnboardingRepository
-from app.modules.internal_api.request_type_configuration_repository import RequestTypeConfigurationRepository
+from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
+from app.modules.internal_api.clients.jsm_project_client import JsmProjectClient
+from app.modules.internal_api.repositories.project_onboarding_repository import ProjectOnboardingRepository
+from app.modules.internal_api.repositories.request_type_configuration_repository import RequestTypeConfigurationRepository
 from app.modules.internal_api.priority_mapping_suggester import PriorityMappingSuggester
-from app.modules.internal_api.priority_mapping_repository import PriorityMappingRepository
-from app.modules.internal_api.category_configuration_repository import CategoryConfigurationRepository
+from app.modules.internal_api.repositories.priority_mapping_repository import PriorityMappingRepository
+from app.modules.internal_api.repositories.category_configuration_repository import CategoryConfigurationRepository
 
 class ItsmProjectOnboardingService:
 

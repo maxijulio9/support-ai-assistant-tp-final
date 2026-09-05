@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import text
 from app.core.database import get_db
 from app.core.encryption import SecretCipher
-from app.modules.internal_api.jsm_connection_checker import JsmConnectionChecker
+from app.modules.internal_api.clients.jsm_connection_checker import JsmConnectionChecker
 
 logger = logging.getLogger(__name__)
 

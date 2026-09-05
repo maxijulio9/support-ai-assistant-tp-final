@@ -4,8 +4,7 @@
 import logging
 from sqlalchemy import text
 from app.core.database import get_db
-from app.modules.internal_api.interaction_repository import InteractionRepository
-from app.modules.ticket_analyzer.schemas import TicketAnalysis
+from app.modules.internal_api.repositories.interaction_repository import InteractionRepository
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.response_generator.service import ResponseGenerator
 from app.modules.response_generator.schemas import ACTION_AUTO_PUBLISH
