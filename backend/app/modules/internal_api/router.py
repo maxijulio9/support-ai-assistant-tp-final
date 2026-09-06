@@ -31,7 +31,9 @@ from app.modules.internal_api.schemas import (
     ConfluenceConnectionResponse,
     ConfigureSpacesRequest,
     AvailableSpacesResponse,
-    ConfigureSpacesResponse
+    ConfigureSpacesResponse,
+    StartIndexingRequest,
+    StartIndexingResponse,
     
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
@@ -287,3 +289,14 @@ async def configure_spaces(project_key: str, request: ConfigureSpacesRequest):
         raise HTTPException(status_code=503, detail="No se pudo configurar los spaces")
 
     return ConfigureSpacesResponse(status="ok", spaces_configured=spaces_configured)
+
+
+# dispara la indexacion de los spaces elegidos, corre en background via el worker
+@router.post("/api/indexing/start", response_model=StartIndexingResponse, status_code=202)
+async def start_indexing(request: StartIndexingRequest):
+    try:
+        await _indexing_trigger_service.start_indexing(request.space_keys)
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo encolar la indexacion")
+
+    return StartIndexingResponse(status="queued")

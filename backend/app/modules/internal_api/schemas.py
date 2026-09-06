@@ -175,3 +175,12 @@ class ConfigureSpacesRequest(BaseModel):
 class ConfigureSpacesResponse(BaseModel):
     status: str
     spaces_configured: int
+    
+# request para disparar la indexacion de los spaces ya vinculados a un proyecto (CU30)
+class StartIndexingRequest(BaseModel):
+    space_keys: list[str]
+
+
+# response de confirmacion, la indexacion corre en background
+class StartIndexingResponse(BaseModel):
+    status: str
