@@ -34,6 +34,7 @@ from app.modules.internal_api.schemas import (
     ConfigureSpacesResponse,
     StartIndexingRequest,
     StartIndexingResponse,
+    IndexingStatusResponse
     
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
@@ -45,6 +46,7 @@ from app.modules.internal_api.repositories.country_repository import CountryRepo
 from app.modules.internal_api.services.confluence_connection_service import ConfluenceConnectionService
 from app.modules.internal_api.services.space_config_service import SpaceConfigurationService
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
+from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 
 
 router = APIRouter(tags=["InternalAPI"])
@@ -59,7 +61,7 @@ _status_mapping_service = ItsmStatusMappingService()
 _confluence_connection_service = ConfluenceConnectionService()
 _space_config_service = SpaceConfigurationService()
 _indexing_trigger_service = IndexingTriggerService()
-
+_kb_indexing_status_repository = KbIndexingStatusRepository()
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -302,3 +304,13 @@ async def start_indexing(request: StartIndexingRequest):
         raise HTTPException(status_code=503, detail="No se pudo encolar la indexacion")
 
     return StartIndexingResponse(status="queued")
+
+# consulta el estado del ultimo trabajo de indexacion
+@router.get("/api/indexing/status", response_model=IndexingStatusResponse)
+async def get_indexing_status():
+    status = _kb_indexing_status_repository.get_latest_status()
+
+    if status is None:
+        raise HTTPException(status_code=404, detail="Todavia no se disparo ninguna indexacion")
+
+    return IndexingStatusResponse(**status)
