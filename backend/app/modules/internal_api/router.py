@@ -44,6 +44,7 @@ from app.modules.internal_api.services.itsm_status_mapping_service import ItsmSt
 from app.modules.internal_api.repositories.country_repository import CountryRepository
 from app.modules.internal_api.services.confluence_connection_service import ConfluenceConnectionService
 from app.modules.internal_api.services.space_config_service import SpaceConfigurationService
+from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 
 
 router = APIRouter(tags=["InternalAPI"])
@@ -57,6 +58,7 @@ _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
 _confluence_connection_service = ConfluenceConnectionService()
 _space_config_service = SpaceConfigurationService()
+_indexing_trigger_service = IndexingTriggerService()
 
 
 
