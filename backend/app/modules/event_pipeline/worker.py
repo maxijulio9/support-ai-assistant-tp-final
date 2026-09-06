@@ -85,3 +85,14 @@ async def process_kb_indexing(arq_context, space_keys: list[str]):
         status_repo.mark_failed(job_id, str(e))
         logger.error(f"worker: fallo la indexacion de spaces {space_keys}: {e}")
         raise
+    
+# tarea para reindexar una sola pagina puntual de confluence, disparada por el webhook cuando la pagina cambia
+async def process_page_reindex(arq_context, page_id: str, space_key: str):
+    logger.info(f"worker: reindexando pagina {page_id} del space {space_key}")
+
+    from app.modules.knowledge_indexer.service import KnowledgeIndexer
+    indexer = KnowledgeIndexer()
+    indexer.index_single_page(page_id, space_key)
+
+    logger.info(f"worker: pagina {page_id} reindexada")
+    return {"status": "completed", "page_id": page_id, "space_key": space_key}
