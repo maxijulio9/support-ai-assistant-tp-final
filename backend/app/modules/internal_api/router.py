@@ -28,7 +28,11 @@ from app.modules.internal_api.schemas import (
     OnboardProjectsResponse,
     SelectFieldsResponse,
     ConfluenceConnectionRequest,
-    ConfluenceConnectionResponse
+    ConfluenceConnectionResponse,
+    ConfigureSpacesRequest,
+    AvailableSpacesResponse,
+    ConfigureSpacesResponse
+    
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
@@ -37,6 +41,8 @@ from app.modules.internal_api.services.itsm_project_onboarding_service import It
 from app.modules.internal_api.services.itsm_status_mapping_service import ItsmStatusMappingService
 from app.modules.internal_api.repositories.country_repository import CountryRepository
 from app.modules.internal_api.services.confluence_connection_service import ConfluenceConnectionService
+from app.modules.internal_api.services.space_config_service import SpaceConfigurationService
+
 
 router = APIRouter(tags=["InternalAPI"])
 
@@ -48,6 +54,8 @@ _project_onboarding_service = ItsmProjectOnboardingService()
 _country_repository = CountryRepository()
 _status_mapping_service = ItsmStatusMappingService()
 _confluence_connection_service = ConfluenceConnectionService()
+_space_config_service = SpaceConfigurationService()
+
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -252,3 +260,30 @@ async def configure_confluence_connection(request: ConfluenceConnectionRequest):
         raise HTTPException(status_code=503, detail="No se pudo guardar la configuracion")
 
     return ConfluenceConnectionResponse(status="ok")
+
+
+# lista los spaces reales disponibles en confluence
+@router.get("/api/config/knowledge-base/spaces/available", response_model=AvailableSpacesResponse)
+async def list_available_spaces():
+    try:
+        spaces = await _space_config_service.list_available_spaces()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar Confluence")
+
+    return AvailableSpacesResponse(spaces=spaces)
+
+
+# vincula los spaces que el admin eligio a un proyecto
+@router.post("/api/config/itsm/projects/{project_key}/spaces", response_model=ConfigureSpacesResponse)
+async def configure_spaces(project_key: str, request: ConfigureSpacesRequest):
+    try:
+        spaces_dicts = [s.model_dump() for s in request.spaces]
+        spaces_configured = _space_config_service.configure_spaces(project_key, spaces_dicts)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo configurar los spaces")
+
+    return ConfigureSpacesResponse(status="ok", spaces_configured=spaces_configured)
