@@ -186,3 +186,17 @@ CREATE TABLE IF NOT EXISTS project_space (
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE (project_id, space_id)
 );
+
+-- registro historico de cada trabajo de indexacion disparado (CU30 y CU31)
+-- space_keys es referencia logica a kb_spaces.space_key, sin FK real, un trabajo puede cubrir varios spaces a la vez
+CREATE TABLE IF NOT EXISTS kb_indexing_status (
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    space_keys          TEXT[] NOT NULL,
+    status              VARCHAR(20) NOT NULL DEFAULT 'running',
+    total_documents     INTEGER,
+    documents_processed INTEGER NOT NULL DEFAULT 0,
+    chunks_generated    INTEGER NOT NULL DEFAULT 0,
+    error_detail        TEXT,
+    started_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
