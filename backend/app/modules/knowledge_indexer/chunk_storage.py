@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class ChunkStorage:
 
     # almacanea un chunk ya vectorizado en la bd
+    # si la pagina ya se indexo antes (mismo page_id y chunk_index), actualiza en vez de duplicar
     def save_chunk(self, db, pagina: ExtractedPage, chunk_texto: str, embedding: list[float], chunk_index: int, total_chunks: int):
         query = text("""
         INSERT INTO knowledge_chunk (
@@ -20,8 +21,16 @@ class ChunkStorage:
             :content, :embedding, :source, :space_key, :page_id, :page_title,
             :chunk_index, :total_chunks, :category, :country, :doc_type
         )
+        ON CONFLICT (page_id, chunk_index)
+        DO UPDATE SET
+            content = :content,
+            embedding = :embedding,
+            total_chunks = :total_chunks,
+            category = :category,
+            country = :country,
+            doc_type = :doc_type,
+            updated_at = NOW()
         """)
-
         db.execute(query, {
             "content": chunk_texto,
             "embedding": embedding,
