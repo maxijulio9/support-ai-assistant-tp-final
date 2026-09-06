@@ -62,15 +62,26 @@ async def process_comment_created(arq_context, issue_key: str):
     return result
 
 
-
 # tarea para disparar la indexacion de spaces de confluence desde m7
 # recibe la lista de space_keys que el admin selecciono desde la ui
 async def process_kb_indexing(arq_context, space_keys: list[str]):
     logger.info(f"worker: iniciando indexacion de spaces {space_keys}")
-    
+
     from app.modules.knowledge_indexer.service import KnowledgeIndexer
-    indexer = KnowledgeIndexer()
-    indexer.index_spaces(space_keys)
-    
-    logger.info(f"worker: indexacion completada para spaces {space_keys}")
-    return {"status": "completed", "space_keys": space_keys}
+    from app.modules.event_pipeline.indexing_status_repository import IndexingStatusRepository
+
+    status_repo = IndexingStatusRepository()
+    job_id = status_repo.create_job(space_keys)
+
+    try:
+        indexer = KnowledgeIndexer()
+        indexer.index_spaces(space_keys)
+
+        status_repo.mark_completed(job_id)
+        logger.info(f"worker: indexacion completada para spaces {space_keys}")
+        return {"status": "completed", "space_keys": space_keys}
+
+    except Exception as e:
+        status_repo.mark_failed(job_id, str(e))
+        logger.error(f"worker: fallo la indexacion de spaces {space_keys}: {e}")
+        raise
