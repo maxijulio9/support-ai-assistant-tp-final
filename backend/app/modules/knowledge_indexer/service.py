@@ -109,3 +109,44 @@ class KnowledgeIndexer:
             
         logger.info(f"extraccion completa, total de paginas: {len(paginas_extraidas)}")
         return paginas_extraidas
+    
+    
+        # indexa una sola pagina puntual, disparado por el webhook cuando la pagina cambia
+    def index_single_page(self, page_id: str, space_key: str):
+        db = next(get_db())
+
+        try:
+            country_code = self.space_repo.get_country_code(db, space_key)
+            content = self.client.get_page_content(page_id)
+
+            html = content["body"]["storage"]["value"]
+            texto_plano = self.cleaner.clean_html(html)
+            metadata = self._extract_metadata_from_labels(content)
+
+            pagina = ExtractedPage(
+                page_id=page_id,
+                page_title=content["title"],
+                space_key=space_key,
+                content=texto_plano,
+                category=metadata["category"],
+                doc_type=metadata["doc_type"],
+                country=country_code,
+            )
+
+            chunks = self.chunker.chunk_text(pagina.content)
+            total_chunks = len(chunks)
+
+            for i, chunk_texto in enumerate(chunks):
+                embedding = self.embedding_client.generate_embedding(chunk_texto)
+                self.storage.save_chunk(db, pagina, chunk_texto, embedding, i, total_chunks)
+
+            db.commit()
+            logger.info(f"pagina {page_id} reindexada correctamente")
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al reindexar pagina {page_id}: {e}")
+            raise
+
+        finally:
+            db.close()
