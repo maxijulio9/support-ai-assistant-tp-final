@@ -184,3 +184,15 @@ class StartIndexingRequest(BaseModel):
 # response de confirmacion, la indexacion corre en background
 class StartIndexingResponse(BaseModel):
     status: str
+    
+
+# response con el estado del ultimo trabajo de indexacion, para el polling del dashboard (CU31)
+class IndexingStatusResponse(BaseModel):
+    space_keys: list[str]
+    status: str
+    total_documents: int | None = None
+    documents_processed: int
+    chunks_generated: int
+    error_detail: str | None = None
+    started_at: str
+    updated_at: str
