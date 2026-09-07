@@ -1,7 +1,6 @@
-"""
-Modulo 1: Webhook Receiver
-Contiene la clase WebhookReceiver, responsable de la validación, normalización y despacho de eventos recibidos desde JSM vía webhook
-"""
+#Modulo 1
+# Contiene la clase WebhookReceiver, responsable de la validación, normalización y despacho de eventos recibidos desde JSM vía webhook
+
 import time
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
 from app.core.redis_client import get_redis
@@ -162,3 +161,9 @@ class WebhookReceiver:
         texto_completo = " ".join(texts)
 
         return texto_completo.strip()
+    
+    
+    # encola la reindexacion puntual de una pagina de confluence
+    async def dispatch_confluence_event(self, page_id: str, space_key: str):
+        pool = await get_arq_pool()
+        await pool.enqueue_job("process_page_reindex", page_id, space_key)

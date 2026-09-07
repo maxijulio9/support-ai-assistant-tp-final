@@ -1,11 +1,12 @@
-"""
-Modulo 1: Webhook receiver
-es el endpoint único de entrada para eventos de JSM vía webhook.
-"""
+#Modulo 1 Webhook receiver
+# es el endpoint único de entrada para eventos de JSM vía webhook.
+
 
 from fastapi import APIRouter, HTTPException
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload
 from app.modules.webhook_receiver.service import WebhookReceiver
+from app.modules.webhook_receiver.schemas import JsmWebhookPayload, ConfluenceWebhookPayload
+
 
 router = APIRouter(tags=["Webhook"])
 
@@ -24,3 +25,10 @@ async def receive_jsm_webhook(payload: JsmWebhookPayload):
 
     result = await _receiver.dispatch_event(event)
     return result
+
+
+# punto de entrada para eventos de confluence, disparados por una regla de automation cuando una pagina cambia
+@router.post("/webhook/confluence")
+async def receive_confluence_webhook(payload: ConfluenceWebhookPayload):
+    await _receiver.dispatch_confluence_event(payload.page_id, payload.space_key)
+    return {"status": "dispatched", "route": "knowledge_indexer", "page_id": payload.page_id}

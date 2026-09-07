@@ -83,3 +83,11 @@ class NormalizedEvent(BaseModel):
     created_at: Optional[str] = None
     comment_body: Optional[str] = None
     comment_author_id: Optional[str] = None
+    
+    
+    
+#CONFLUECNE
+# payload que confluence automation manda al webhook, via smart values configurados en la regla
+class ConfluenceWebhookPayload(BaseModel):
+    page_id: str
+    space_key: str
