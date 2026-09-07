@@ -167,3 +167,4 @@ class WebhookReceiver:
     async def dispatch_confluence_event(self, page_id: str, space_key: str):
         pool = await get_arq_pool()
         await pool.enqueue_job("process_page_reindex", page_id, space_key)
+  
