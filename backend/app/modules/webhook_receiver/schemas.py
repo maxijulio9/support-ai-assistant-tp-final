@@ -91,3 +91,9 @@ class NormalizedEvent(BaseModel):
 class ConfluenceWebhookPayload(BaseModel):
     page_id: str
     space_key: str
+    
+    
+# payload que confluence automation manda al webhook, via smart values configurados en la regla
+class ConfluenceWebhookPayload(BaseModel):
+    page_id: str
+    space_key: str
