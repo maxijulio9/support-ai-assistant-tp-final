@@ -2,13 +2,12 @@
 
 from arq.connections import RedisSettings
 from app.core.config import settings
-from app.modules.event_pipeline.worker import process_issue_created, process_comment_created, process_kb_indexing   
+from app.modules.event_pipeline.worker import process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex
 
 
 class WorkerSettings:
     # funciones que este worker sabe ejecutar
-    functions = [process_issue_created, process_comment_created, process_kb_indexing]
-
+    functions = [process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex]
     # configuración de conexión a rexdis
     # RedisSettings.from_dsn("redis://redis:6379")
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
