@@ -55,6 +55,9 @@ class TicketAnalysis(BaseModel):
     # historial conversacional gestionado por CU9
     conversation_history: List[ConversationTurn] = []
     
+    status: Optional[str] = None
+    request_type: Optional[str] = None
+    
     
 class ProjectContext(BaseModel):
     project_id: Optional[str] = None
