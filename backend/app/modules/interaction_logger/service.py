@@ -85,10 +85,16 @@ class InteractionLogger:
         country_id = self._find_catalog_id(db, "country", analysis.country)
         priority_id = self._find_catalog_id(db, "ticket_priority", analysis.priority)
         category_id = self._find_catalog_id(db, "ticket_category", analysis.category)
+        # project_id ya viene resuelto desde m2, no hace falta buscarlo en ningun catalogo
+        project_id = analysis.project_id
+        # ticket_request_type usa un code tecnico distinto al name real que manda jsm, se busca por name
+        request_type_id = self._find_catalog_id(db, "ticket_request_type", analysis.request_type, search_column="name")
+        # ticket_status esta vacia todavia (TF-145), status_id queda en None hasta que se pueble
+        status_id = self._find_catalog_id(db, "ticket_status", analysis.status)
 
         insert_query = text("""
-            INSERT INTO ticket (issue_key, summary, country_id, priority_id, category_id)
-            VALUES (:issue_key, :summary, :country_id, :priority_id, :category_id)
+            INSERT INTO ticket (issue_key, summary, country_id, priority_id, category_id, project_id, request_type_id, status_id)
+            VALUES (:issue_key, :summary, :country_id, :priority_id, :category_id, :project_id, :request_type_id, :status_id)
             RETURNING id
         """)
 
@@ -98,6 +104,9 @@ class InteractionLogger:
             "country_id": country_id,
             "priority_id": priority_id,
             "category_id": category_id,
+            "project_id": project_id,
+            "request_type_id": request_type_id,
+            "status_id": status_id,
         }).fetchone()
 
         return str(row.id)
@@ -118,17 +127,19 @@ class InteractionLogger:
 
         return str(row.id)
 
-    # busca el id de un registro en una tabla de referencia (catalogo) por su code
+    # busca el id de un registro en una tabla de referencia (catalogo), por code o por name
+    # algunos catalogos (ticket_request_type) usan un code tecnico distinto al valor real de jsm,
+    # asi que hay que poder buscar por name en esos casos
     # devuelve None si no lo encuentra, sin romper el flujo
-    def _find_catalog_id(self, db, table_name: str, code: str) -> str | None:
-        if not code:
+    def _find_catalog_id(self, db, table_name: str, value: str, search_column: str = "code") -> str | None:
+        if not value:
             return None
 
-        query = text(f"SELECT id FROM {table_name} WHERE code = :code")
-        row = db.execute(query, {"code": code}).fetchone()
+        query = text(f"SELECT id FROM {table_name} WHERE {search_column} = :value")
+        row = db.execute(query, {"value": value}).fetchone()
 
         if not row:
-            logger.warning(f"code '{code}' no encontrado en tabla '{table_name}'")
+            logger.warning(f"{search_column} '{value}' no encontrado en tabla '{table_name}'")
             return None
 
         return str(row.id)
