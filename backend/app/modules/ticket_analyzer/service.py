@@ -94,7 +94,9 @@ class TicketAnalyzer:
             scope=classification.scope if classification else None,
             sentiment=classification.sentiment if classification else None,
             conversation_history=conversation_history,
-            info_sufficient=info_sufficient
+            info_sufficient=info_sufficient,
+            status=event.status,
+            request_type=event.request_type,
         )
         
 
