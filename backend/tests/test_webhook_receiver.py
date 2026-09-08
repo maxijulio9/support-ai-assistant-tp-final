@@ -1,6 +1,7 @@
-"""Tests unitarios para M1 - Webhook Receiver."""
+"""Tests unitarios para M1 Webhook Receiver"""
 
-
+import pytest
+from unittest.mock import patch, MagicMock, AsyncMock
 from app.modules.webhook_receiver.service import WebhookReceiver
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
 
@@ -130,12 +131,19 @@ def test_normalize_payload_sin_issue():
 
     
 #verifica que dispatch_event rutea issue_created al ticket_analyzer dle módilo 2
-def test_dispatch_event_issue_created():
+@patch("app.modules.webhook_receiver.service.get_arq_pool")
+@patch("app.modules.webhook_receiver.service.get_redis")
+@pytest.mark.asyncio
+async def test_dispatch_event_issue_created(mock_get_redis, mock_get_arq_pool):
+    mock_pool = MagicMock()
+    mock_pool.enqueue_job = AsyncMock()
+    mock_get_arq_pool.return_value = mock_pool
+
     event = NormalizedEvent(
         issue_key="TEST-101",
         event_type="jira:issue_created"
     )
-    result = receiver.dispatch_event(event)
+    result = await receiver.dispatch_event(event)
 
     assert result["status"] == "dispatched"
     assert result["route"] == "ticket_analyzer"
@@ -143,12 +151,26 @@ def test_dispatch_event_issue_created():
 
 
 #verifica que dispatch_event rutea comentario de usuario al conversation_handler
-def test_dispatch_event_comentario_usuario():
+@patch("app.modules.webhook_receiver.service.get_arq_pool")
+@patch("app.modules.webhook_receiver.service.get_redis")
+@pytest.mark.asyncio
+async def test_dispatch_event_comentario_usuario(mock_get_redis, mock_get_arq_pool):
+    mock_redis = MagicMock()
+    mock_redis.hget = AsyncMock(return_value=None)
+    mock_redis.hset = AsyncMock()
+    mock_redis.expire = AsyncMock()
+    mock_get_redis.return_value = mock_redis
+
+    mock_pool = MagicMock()
+    mock_pool.enqueue_job = AsyncMock()
+    mock_get_arq_pool.return_value = mock_pool
+
     event = NormalizedEvent(
         issue_key="TEST-101",
-        event_type="jira:issue_updated"
+        event_type="jira:issue_updated",
+        comment_body="hola"
     )
-    result = receiver.dispatch_event(event)
+    result = await receiver.dispatch_event(event)
 
     assert result["status"] == "dispatched"
     assert result["route"] == "conversation_handler"
@@ -156,11 +178,17 @@ def test_dispatch_event_comentario_usuario():
 
 
 # verifica que eventos no reconocidos retornan status ignored
-def test_dispatch_event_ignorado():
+@patch("app.modules.webhook_receiver.service.get_arq_pool")
+@patch("app.modules.webhook_receiver.service.get_redis")
+@pytest.mark.asyncio
+async def test_dispatch_event_ignorado(mock_get_redis, mock_get_arq_pool):
+    mock_get_arq_pool.return_value = MagicMock()
+    mock_get_redis.return_value = MagicMock()
+
     event = NormalizedEvent(
         issue_key="TEST-101",
         event_type="jira:unknown_event"
     )
-    result = receiver.dispatch_event(event)
+    result = await receiver.dispatch_event(event)
 
     assert result["status"] == "ignored"
