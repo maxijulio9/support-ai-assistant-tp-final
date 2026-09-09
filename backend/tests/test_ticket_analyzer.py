@@ -120,3 +120,53 @@ async def test_info_sufficient_true_por_defecto_si_falla_llm(mock_llm_class, moc
     result = await analyzer.analyze(_build_event())
 
     assert result.info_sufficient is True
+    
+# verifica que escalate_direct es True cuando el scope esta fuera de alcance
+@patch("app.modules.ticket_analyzer.service.ProjectRepository")
+@patch("app.modules.ticket_analyzer.service.ConversationHistory")
+@patch("app.modules.ticket_analyzer.service.LlmClient")
+@pytest.mark.asyncio
+async def test_escalate_direct_true_cuando_out_of_scope(mock_llm_class, mock_history_class, mock_repo_class):
+    mock_history = MagicMock()
+    mock_history.append = AsyncMock()
+    mock_history.get = AsyncMock(return_value=[])
+    mock_history_class.return_value = mock_history
+
+    mock_llm = MagicMock()
+    mock_llm.classify.return_value = _build_classification("L1")
+    mock_llm.classify.return_value.scope = "OUT_OF_SCOPE"
+    mock_llm_class.return_value = mock_llm
+
+    mock_repo = MagicMock()
+    mock_repo.get_project_context.return_value = _build_project_context()
+    mock_repo_class.return_value = mock_repo
+
+    analyzer = TicketAnalyzer()
+    result = await analyzer.analyze(_build_event())
+
+    assert result.escalate_direct is True
+
+
+# verifica que escalate_direct es False en el camino normal
+@patch("app.modules.ticket_analyzer.service.ProjectRepository")
+@patch("app.modules.ticket_analyzer.service.ConversationHistory")
+@patch("app.modules.ticket_analyzer.service.LlmClient")
+@pytest.mark.asyncio
+async def test_escalate_direct_false_en_camino_normal(mock_llm_class, mock_history_class, mock_repo_class):
+    mock_history = MagicMock()
+    mock_history.append = AsyncMock()
+    mock_history.get = AsyncMock(return_value=[])
+    mock_history_class.return_value = mock_history
+
+    mock_llm = MagicMock()
+    mock_llm.classify.return_value = _build_classification("L1")
+    mock_llm_class.return_value = mock_llm
+
+    mock_repo = MagicMock()
+    mock_repo.get_project_context.return_value = _build_project_context()
+    mock_repo_class.return_value = mock_repo
+
+    analyzer = TicketAnalyzer()
+    result = await analyzer.analyze(_build_event())
+
+    assert result.escalate_direct is False
