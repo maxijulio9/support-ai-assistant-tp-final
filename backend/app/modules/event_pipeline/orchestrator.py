@@ -38,22 +38,33 @@ class Orchestrator:
         
         logger.info(f"[{event.issue_key}] iniciando procesamiento del evento {event.event_type}")
 
-        #  m2 analisis y clasificaciòn del ticket
+                #  m2 analisis y clasificaciòn del ticket
         analysis = await self.ticket_analyzer.analyze(event)
 
         logger.info(f"[{event.issue_key}] M2 listorti, priority={analysis.priority}, country={analysis.country}")
 
-        # busca en la kb los chunks mas relevantes segun el analisis de M2 en M3
-        retrieval_result = self.knowledge_retriever.retrieve(analysis)   
-
         # persiste el resultado del analisis en la bd relacional
         self.interaction_logger.log_analysis(analysis)
-        
+
+        # si m2 ya determino que esto escala directo (out of scope o resolved_by l2),
+        # nos ahorramos la consulta a m3 y la generacion de m4, que igual terminarian escalando
+        if analysis.escalate_direct:
+            logger.warning(f"[{event.issue_key}] escalate_direct desde m2, sin asignacion automatica todavia")
+            return {
+                "status": "processed",
+                "issue_key": event.issue_key,
+                "analysis": analysis.model_dump(),
+                "retrieved_chunks": [],
+                "generated_response": {"action_type": ACTION_ESCALATE},
+            }
+
+        # busca en la kb los chunks mas relevantes segun el analisis de M2 en M3
+        retrieval_result = self.knowledge_retriever.retrieve(analysis)
+
         #m4 genera la respuesta en base al contexto recuperado por m3 y analisis de m2
         generated_response = self.response_generator.generate(analysis, retrieval_result)
 
         logger.info(f"[{event.issue_key}] M4 listo, action_type={generated_response.action_type}")
-
         
         #  cuando action_type es retry, hay que volver a llamar a m3 para reintentar la recup. Todacia no esta hecho
         # y a m4 de nuevo, con un limite de reintentos.
