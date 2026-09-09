@@ -100,3 +100,37 @@ async def test_get_transitions(mock_async_client_class):
 
     assert len(result["transitions"]) == 2
     mock_client.get.assert_called_once()
+
+# verifica que update_fields retorna True cuando JSM responde 204
+@patch("app.modules.jsm_executor.client.httpx.AsyncClient")
+@pytest.mark.asyncio
+async def test_update_fields_success(mock_async_client_class):
+    mock_response = MagicMock()
+    mock_response.status_code = 204
+
+    mock_client = MagicMock()
+    mock_client.put = AsyncMock(return_value=mock_response)
+    mock_async_client_class.return_value = mock_client
+
+    executor = JsmExecutor()
+    result = await executor.update_fields("TEST-1", {"priority": {"name": "High"}})
+
+    assert result is True
+    mock_client.put.assert_called_once()
+
+
+# verifica que update_fields retorna False si JSM no confirma con 204
+@patch("app.modules.jsm_executor.client.httpx.AsyncClient")
+@pytest.mark.asyncio
+async def test_update_fields_failure(mock_async_client_class):
+    mock_response = MagicMock()
+    mock_response.status_code = 400
+
+    mock_client = MagicMock()
+    mock_client.put = AsyncMock(return_value=mock_response)
+    mock_async_client_class.return_value = mock_client
+
+    executor = JsmExecutor()
+    result = await executor.update_fields("TEST-1", {"priority": {"name": "InvalidValue"}})
+
+    assert result is False
