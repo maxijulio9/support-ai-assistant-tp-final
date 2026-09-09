@@ -231,6 +231,77 @@ async def test_skips_m3_and_m4_when_escalate_direct(mock_analyzer_class, mock_lo
     mock_generator.generate.assert_not_called()
 
 
+# verifica que escalate resuelve el transition_id real y llama a transition_issue
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_escalate_resolves_transition_id_and_transitions(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class, mock_get_db):
+    analysis = _build_analysis()
+    retrieval = _build_retrieval()
+    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+    mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
+    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
+    mock_logger_class.return_value = MagicMock()
+
+    mock_db = MagicMock()
+    mock_row = MagicMock()
+    mock_row.name = "Escalated"
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_jsm = MagicMock()
+    mock_jsm.get_transitions = AsyncMock(return_value={"transitions": [{"id": "3", "to": {"name": "Escalated"}}]})
+    mock_jsm.transition_issue = AsyncMock(return_value=True)
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    mock_jsm.transition_issue.assert_called_once_with("TEST-1", "3")
+
+
+# verifica que si no hay mapeo configurado, no se llama a transition_issue
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_escalate_does_not_transition_when_no_mapping_configured(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class, mock_get_db):
+    analysis = _build_analysis()
+    retrieval = _build_retrieval()
+    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+    mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
+    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
+    mock_logger_class.return_value = MagicMock()
+
+    mock_db = MagicMock()
+    mock_db.execute.return_value.fetchone.return_value = None
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_jsm = MagicMock()
+    mock_jsm.transition_issue = AsyncMock()
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    mock_jsm.transition_issue.assert_not_called()
+    
+
 # verifica que aunque escale directo, la interaccion queda registrada en la bd
 @patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
 @patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
