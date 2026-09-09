@@ -201,3 +201,56 @@ async def test_does_not_crash_when_post_comment_fails(mock_analyzer_class, mock_
     result = await orchestrator.process_event(_build_event())
 
     assert result["status"] == "processed"
+    
+# verifica que si escalate_direct es true, se salta m3 y m4 por completo
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_skips_m3_and_m4_when_escalate_direct(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class):
+    analysis = TicketAnalysis(issue_key="TEST-1", event_type="issue_created", scope="OUT_OF_SCOPE", escalate_direct=True)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+
+    mock_retriever = MagicMock()
+    mock_retriever_class.return_value = mock_retriever
+
+    mock_generator = MagicMock()
+    mock_generator_class.return_value = mock_generator
+
+    mock_logger_class.return_value = MagicMock()
+
+    orchestrator = Orchestrator()
+    result = await orchestrator.process_event(_build_event())
+
+    assert result["generated_response"]["action_type"] == ACTION_ESCALATE
+    mock_retriever.retrieve.assert_not_called()
+    mock_generator.generate.assert_not_called()
+
+
+# verifica que aunque escale directo, la interaccion queda registrada en la bd
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_logs_analysis_even_when_escalate_direct(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class):
+    analysis = TicketAnalysis(issue_key="TEST-1", event_type="issue_created", scope="OUT_OF_SCOPE", escalate_direct=True)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+
+    mock_logger = MagicMock()
+    mock_logger_class.return_value = mock_logger
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    mock_logger.log_analysis.assert_called_once_with(analysis)
