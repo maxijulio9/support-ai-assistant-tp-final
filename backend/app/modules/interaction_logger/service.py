@@ -22,7 +22,7 @@ class InteractionLogger:
             system_event_id = self._log_system_event(db, ticket_id, analysis.event_type)
 
             # busca los ids de las tablas de referencia (catalogo)
-            category_id = self._find_catalog_id(db, "ticket_category", analysis.category)
+            category_id = self._find_catalog_id(db, "ticket_category", analysis.category, search_column="name")
             priority_id = self._find_catalog_id(db, "ticket_priority", analysis.priority)
             sentiment_id = self._find_catalog_id(db, "sentiment_type", analysis.sentiment)
 
@@ -84,13 +84,13 @@ class InteractionLogger:
         # el ticket no existe, busca los ids de los catalogos para crearlo
         country_id = self._find_catalog_id(db, "country", analysis.country)
         priority_id = self._find_catalog_id(db, "ticket_priority", analysis.priority)
-        category_id = self._find_catalog_id(db, "ticket_category", analysis.category)
+        # ticket_category, ticket_request_type y ticket_status usan un code tecnico distinto
+        # al name real que manda jsm, se buscan por name en los 3 casos
+        category_id = self._find_catalog_id(db, "ticket_category", analysis.category, search_column="name")
         # project_id ya viene resuelto desde m2, no hace falta buscarlo en ningun catalogo
         project_id = analysis.project_id
-        # ticket_request_type usa un code tecnico distinto al name real que manda jsm, se busca por name
         request_type_id = self._find_catalog_id(db, "ticket_request_type", analysis.request_type, search_column="name")
-        # ticket_status esta vacia todavia (TF-145), status_id queda en None hasta que se pueble
-        status_id = self._find_catalog_id(db, "ticket_status", analysis.status)
+        status_id = self._find_catalog_id(db, "ticket_status", analysis.status, search_column="name")
 
         insert_query = text("""
             INSERT INTO ticket (issue_key, summary, country_id, priority_id, category_id, project_id, request_type_id, status_id)
