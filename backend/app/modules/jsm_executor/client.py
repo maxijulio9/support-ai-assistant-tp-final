@@ -65,3 +65,10 @@ class JsmExecutor:
     
     async def close(self):
         await self._client.aclose()
+    
+    # actualiza campos custom o nativos de un ticket (categoria, prioridad, etc)
+    async def update_fields(self, issue_key: str, fields_dict: dict) -> bool:
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}"
+        payload = {"fields": fields_dict}
+        response = await self._client.put(url, json=payload)
+        return response.status_code == 204 
