@@ -7,6 +7,7 @@ from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.ticket_analyzer.llm_client import LlmClient
 from app.modules.ticket_analyzer.project_repository import ProjectRepository
+from app.modules.jsm_executor.client import JsmExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -41,8 +42,7 @@ class TicketAnalyzer:
         self.history = ConversationHistory()
         self.llm_client = LlmClient()
         self.project_repository = ProjectRepository()
-
-
+        self.jsm_executor = JsmExecutor()
 
     async def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
         # punto de entrada, por ahora arma el objeto base con lo que llega de M1
@@ -64,7 +64,7 @@ class TicketAnalyzer:
         classification = self._classify(texto_usuario, conversation_history, project_context.categories)
         
         
-        priority = self._determine_priority(
+        priority = await self._determine_priority(
             impact=classification.impact if classification else None,
             urgency=classification.urgency if classification else None,
             user_priority=event.priority,
@@ -107,7 +107,7 @@ class TicketAnalyzer:
     
 
     # si no hay clasificacion todavia, usa la prioridad del usuario, cu8
-    def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str) -> str:
+    async def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str) -> str:
         if not impact or not urgency:
             return user_priority or "Medium"
 
@@ -118,8 +118,12 @@ class TicketAnalyzer:
             return calculated
 
         logger.info(f"[{issue_key}] prioridad calculada '{calculated}' diferente a la elegida por usuario '{user_priority}'")
-        # aca invocaría a m5 para aplicar la prioridad en jsm
 
+        try:
+            await self.jsm_executor.update_fields(issue_key, {"priority": {"name": calculated}})
+            logger.info(f"[{issue_key}] prioridad actualizada en jsm a '{calculated}'")
+        except Exception as e:
+            logger.error(f"[{issue_key}] error al actualizar prioridad en jsm: {e}")
 
         return calculated
 
