@@ -116,4 +116,18 @@ def test_get_or_create_ticket_reusa_ticket_existente(mock_get_db):
     ticket_id = logger_service._get_or_create_ticket(mock_db, analysis)
 
     assert ticket_id == "ticket-existente"
-    assert mock_db.execute.call_count == 1
+    assert mock_db.execute.call_count == 1  
+
+# verifica que _to_semantic_event_name saca el prefijo jira: de los eventos crudos
+def test_to_semantic_event_name_saca_prefijo_jira():
+    logger_service = InteractionLogger()
+
+    assert logger_service._to_semantic_event_name("jira:issue_created") == "issue_created"
+    assert logger_service._to_semantic_event_name("jira:issue_updated") == "issue_updated"
+
+
+# verifica que un valor sin el prefijo jira: queda igual
+def test_to_semantic_event_name_sin_prefijo_queda_igual():
+    logger_service = InteractionLogger()
+
+    assert logger_service._to_semantic_event_name("issue_created") == "issue_created"
