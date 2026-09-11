@@ -111,7 +111,10 @@ class InteractionLogger:
 
         return str(row.id)
 
-    # crea un registro nuevo en system_event cada vez que llega un evento
+    # traduce el nombre crudo de jsm a un nombre interno, sacando el prefijo jira: que no aporta nada
+    def _to_semantic_event_name(self, event_type: str) -> str:
+        return event_type.replace("jira:", "", 1) if event_type else event_type
+
     def _log_system_event(self, db, ticket_id: str, event_type: str) -> str:
         query = text("""
             INSERT INTO system_event (ticket_id, webhook_event, processing_status)
@@ -121,7 +124,7 @@ class InteractionLogger:
 
         row = db.execute(query, {
             "ticket_id": ticket_id,
-            "webhook_event": event_type,
+            "webhook_event": self._to_semantic_event_name(event_type),
             "processing_status": "processed",
         }).fetchone()
 
