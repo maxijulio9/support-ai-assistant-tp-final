@@ -49,25 +49,26 @@ class SpaceConfigurationRepository:
         country_id = self._find_country_id(db, space.get("country_code")) if space.get("country_code") else None
 
         if existing:
-            if space.get("country_code") or space.get("description"):
+            if space.get("country_code") or space.get("description") or space.get("language_code"):
                 db.execute(
                     text("""
                         UPDATE kb_spaces
                         SET country_id = COALESCE(:country_id, country_id),
-                            description = COALESCE(:description, description)
+                            description = COALESCE(:description, description),
+                            language_code = COALESCE(:language_code, language_code)
                         WHERE id = :id
                     """),
-                    {"id": existing.id, "country_id": country_id, "description": space.get("description")},
+                    {"id": existing.id, "country_id": country_id, "description": space.get("description"), "language_code": space.get("language_code")},
                 )
             return existing.id
 
         row = db.execute(
             text("""
-                INSERT INTO kb_spaces (space_key, country_id, description)
-                VALUES (:space_key, :country_id, :description)
+                INSERT INTO kb_spaces (space_key, country_id, description, language_code)
+                VALUES (:space_key, :country_id, :description, :language_code)
                 RETURNING id
             """),
-            {"space_key": space["space_key"], "country_id": country_id, "description": space.get("description")},
+            {"space_key": space["space_key"], "country_id": country_id, "description": space.get("description"), "language_code": space.get("language_code")},
         ).fetchone()
         return row.id
 
