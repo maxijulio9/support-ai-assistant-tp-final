@@ -38,15 +38,6 @@ class ResponseGenerator:
         if not retrieval.chunks:
             logger.info(f"[{analysis.issue_key}] sin chunks relevantes en la kb, escalando")
             return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE)
-        
-        query = analysis.conversation_history[-1].content if analysis.conversation_history else analysis.summary
-        sufficiency_prompt = self.prompt_builder.build_sufficiency_prompt(retrieval, query)
-        is_sufficient = self.llm_client.check_context_sufficiency(sufficiency_prompt)
-
-        if not is_sufficient:
-            logger.info(f"[{analysis.issue_key}] contexto insuficiente segun chequeo previo, solicitando retry")
-            return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_RETRY)
-
 
         prompt = self.prompt_builder.build_prompt(analysis, retrieval)
         response_text = self.llm_client.generate_response(prompt)

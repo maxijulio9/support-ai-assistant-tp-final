@@ -6,7 +6,6 @@ from app.modules.response_generator.schemas import (
     ACTION_ESCALATE,
     ACTION_REQUEST_INFO,
     ACTION_NEEDS_REVIEW,
-    ACTION_RETRY,
 )
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.knowledge_retriever.schemas import RetrievalResult, RetrievedChunk
@@ -137,21 +136,7 @@ def test_escalates_when_confidence_is_low(mock_llm_class):
 
     assert result.action_type == ACTION_ESCALATE
     assert result.confidence_score == 0.20
-    
-# verifica que devuelve retry cuando el contexto no alcanza, sin llegar a generar la respuesta
-@patch("app.modules.response_generator.service.LlmClient")
-def test_retries_when_context_insufficient(mock_llm_class):
-    mock_llm = MagicMock()
-    mock_llm.check_context_sufficiency.return_value = False
-    mock_llm_class.return_value = mock_llm
-
-    generator = ResponseGenerator()
-    analysis = _build_analysis()
-    result = generator.generate(analysis, _build_retrieval())
-
-    assert result.action_type == ACTION_RETRY
-    mock_llm.generate_response.assert_not_called()
-    
+ 
     
 
 # verifica que usa los umbrales custom del proyecto en vez de los defaults, si vienen resueltos
