@@ -199,3 +199,64 @@ def test_regenerate_escalates_instead_of_second_needs_review(mock_llm_class):
     result = generator.regenerate(analysis, _build_retrieval(), rejection_reason="poco claro")
 
     assert result.action_type == ACTION_ESCALATE
+    
+# verifica que escalation_reason es out_of_scope cuando escala por scope
+def test_escalation_reason_out_of_scope():
+    generator = ResponseGenerator()
+    analysis = _build_analysis(scope="OUT_OF_SCOPE")
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.escalation_reason == "out_of_scope"
+
+
+# verifica que escalation_reason es no_context cuando no hay chunks
+def test_escalation_reason_no_context():
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.generate(analysis, _build_retrieval(chunks=[]))
+
+    assert result.escalation_reason == "no_context"
+
+
+# verifica que escalation_reason es llm_failure cuando falla la llamada
+@patch("app.modules.response_generator.service.LlmClient")
+def test_escalation_reason_llm_failure(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = None
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.escalation_reason == "llm_failure"
+
+
+# verifica que escalation_reason es low_confidence cuando escala por confianza baja
+@patch("app.modules.response_generator.service.LlmClient")
+def test_escalation_reason_low_confidence(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = "texto de respuesta generado"
+    mock_llm.evaluate_confidence.return_value = 0.20
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.escalation_reason == "low_confidence"
+
+
+# verifica que escalation_reason es None cuando auto_publish
+@patch("app.modules.response_generator.service.LlmClient")
+def test_escalation_reason_none_when_auto_publish(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = "texto de respuesta generado"
+    mock_llm.evaluate_confidence.return_value = 0.90
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis()
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.escalation_reason is None
