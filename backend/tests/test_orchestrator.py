@@ -12,9 +12,8 @@ from app.modules.response_generator.schemas import (
     GeneratedResponse,
     ACTION_AUTO_PUBLISH,
     ACTION_NEEDS_REVIEW,
-    ACTION_ESCALATE,
-    ACTION_RETRY,
-)
+    ACTION_ESCALATE,   
+ )
 
 
 def _build_event(issue_key="TEST-1") -> NormalizedEvent:
@@ -70,7 +69,7 @@ async def test_calls_generate_with_analysis_and_retrieval(mock_analyzer_class, m
 async def test_retries_and_publishes_when_needs_review_then_auto_publish(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
     analysis = _build_analysis()
     retrieval = _build_retrieval()
-    first_attempt = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_NEEDS_REVIEW, response_text="primera respuesta")
+    first_attempt  = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_NEEDS_REVIEW, response_text="primera respuesta", escalation_reason="low_confidence")    
     retried = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_AUTO_PUBLISH, response_text="respuesta regenerada")
 
     mock_analyzer = MagicMock()
@@ -104,7 +103,7 @@ async def test_retries_and_publishes_when_needs_review_then_auto_publish(mock_an
 async def test_retries_when_first_attempt_escalates(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
     analysis = _build_analysis()
     retrieval = _build_retrieval()
-    first_attempt = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
+    first_attempt = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE, escalation_reason="low_confidence")    
     retried = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
 
     mock_analyzer = MagicMock()
