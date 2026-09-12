@@ -80,6 +80,7 @@ class ProjectToOnboard(BaseModel):
     code: str
     name: str
     country_code: str
+    language_code: str | None = None
 
 
 # request para dar de alta los proyectos elegidos (CU27)
