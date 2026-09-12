@@ -60,57 +60,29 @@ async def test_calls_generate_with_analysis_and_retrieval(mock_analyzer_class, m
     assert result["generated_response"]["action_type"] == ACTION_AUTO_PUBLISH
 
 
-# verifica que el caso retry hoy solo logea, sin ejecutar ningun reintento real
+ # verifica que needs_review dispara el retry automatico, y si el retry da auto_publish, publica como comentario publico
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
 @patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
 @patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
 @patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
 @patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
 @pytest.mark.asyncio
-async def test_logs_warning_when_action_type_is_retry(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, caplog):
+async def test_retries_and_publishes_when_needs_review_then_auto_publish(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
     analysis = _build_analysis()
     retrieval = _build_retrieval()
-    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_RETRY)
+    first_attempt = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_NEEDS_REVIEW, response_text="primera respuesta")
+    retried = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_AUTO_PUBLISH, response_text="respuesta regenerada")
 
     mock_analyzer = MagicMock()
     mock_analyzer.analyze = AsyncMock(return_value=analysis)
     mock_analyzer_class.return_value = mock_analyzer
-
-    mock_retriever = MagicMock()
-    mock_retriever.retrieve.return_value = retrieval
-    mock_retriever_class.return_value = mock_retriever
+    mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
 
     mock_generator = MagicMock()
-    mock_generator.generate.return_value = generated
+    mock_generator.generate.return_value = first_attempt
+    mock_generator.regenerate.return_value = retried
     mock_generator_class.return_value = mock_generator
-    mock_logger_class.return_value = MagicMock()
 
-    orchestrator = Orchestrator()
-
-    with caplog.at_level("WARNING"):
-        result = await orchestrator.process_event(_build_event())
-
-    assert result["generated_response"]["action_type"] == ACTION_RETRY
-    mock_retriever.retrieve.assert_called_once()
-    assert any("retry" in record.message.lower() for record in caplog.records)
-    
-    
-# verifica que auto_publish publica el comentario como publico
-@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
-@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
-@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
-@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
-@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
-@pytest.mark.asyncio
-async def test_publishes_public_comment_when_auto_publish(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
-    analysis = _build_analysis()
-    retrieval = _build_retrieval()
-    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_AUTO_PUBLISH, response_text="respuesta al cliente")
-
-    mock_analyzer = MagicMock()
-    mock_analyzer.analyze = AsyncMock(return_value=analysis)
-    mock_analyzer_class.return_value = mock_analyzer
-    mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
-    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
     mock_logger_class.return_value = MagicMock()
     mock_jsm = MagicMock()
     mock_jsm_class.return_value = mock_jsm
@@ -118,35 +90,41 @@ async def test_publishes_public_comment_when_auto_publish(mock_analyzer_class, m
     orchestrator = Orchestrator()
     await orchestrator.process_event(_build_event())
 
-    mock_jsm.post_comment.assert_called_once_with("TEST-1", "respuesta al cliente", public=True)
+    mock_generator.regenerate.assert_called_once()
+    mock_jsm.post_comment.assert_called_once_with("TEST-1", "respuesta regenerada", public=True)
 
 
-# verifica que needs_review publica el comentario como nota interna
+# verifica que si el primer intento escala, tambien reintenta antes de dar por perdido el caso
 @patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
 @patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
 @patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
 @patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
 @patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
 @pytest.mark.asyncio
-async def test_publishes_internal_note_when_needs_review(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
+async def test_retries_when_first_attempt_escalates(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
     analysis = _build_analysis()
     retrieval = _build_retrieval()
-    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_NEEDS_REVIEW, response_text="respuesta para revisar")
+    first_attempt = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
+    retried = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
 
     mock_analyzer = MagicMock()
     mock_analyzer.analyze = AsyncMock(return_value=analysis)
     mock_analyzer_class.return_value = mock_analyzer
     mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
-    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
+
+    mock_generator = MagicMock()
+    mock_generator.generate.return_value = first_attempt
+    mock_generator.regenerate.return_value = retried
+    mock_generator_class.return_value = mock_generator
+
     mock_logger_class.return_value = MagicMock()
-    mock_jsm = MagicMock()
-    mock_jsm_class.return_value = mock_jsm
+    mock_jsm_class.return_value = MagicMock()
 
     orchestrator = Orchestrator()
-    await orchestrator.process_event(_build_event())
+    result = await orchestrator.process_event(_build_event())
 
-    mock_jsm.post_comment.assert_called_once_with("TEST-1", "respuesta para revisar", public=False)
-
+    mock_generator.regenerate.assert_called_once()
+    assert result["generated_response"]["action_type"] == ACTION_ESCALATE
 
 # verifica que escalate no publica ningun comentario, solo logea
 @patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
@@ -248,7 +226,12 @@ async def test_escalate_resolves_transition_id_and_transitions(mock_analyzer_cla
     mock_analyzer.analyze = AsyncMock(return_value=analysis)
     mock_analyzer_class.return_value = mock_analyzer
     mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
-    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
+
+    mock_generator = MagicMock()
+    mock_generator.generate.return_value = generated
+    mock_generator.regenerate.return_value = generated
+    mock_generator_class.return_value = mock_generator
+
     mock_logger_class.return_value = MagicMock()
 
     mock_db = MagicMock()
@@ -266,7 +249,6 @@ async def test_escalate_resolves_transition_id_and_transitions(mock_analyzer_cla
     await orchestrator.process_event(_build_event())
 
     mock_jsm.transition_issue.assert_called_once_with("TEST-1", "3")
-
 
 # verifica que si no hay mapeo configurado, no se llama a transition_issue
 @patch("app.modules.event_pipeline.orchestrator.get_db")
