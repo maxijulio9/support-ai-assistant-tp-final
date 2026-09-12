@@ -16,6 +16,8 @@ from app.modules.response_generator.schemas import (
     ACTION_NEEDS_REVIEW,
     ACTION_REQUEST_INFO,
     ACTION_ESCALATE,
+    ESCALATION_REASON_LOW_CONFIDENCE,
+
 )
 from app.modules.jsm_executor.client import JsmExecutor
 
@@ -77,15 +79,16 @@ class Orchestrator:
 
         logger.info(f"[{event.issue_key}] M4 listo, action_type={generated_response.action_type}")
 
-        # si la primera respuesta no alcanzo confianza suficiente, reintenta una sola vez
+        # reintenta una sola vez, solo si la razon de escalar es confianza baja
+        # (out_of_scope, no_context o llm_failure no mejoran reintentando con el mismo contexto)
         # regenerate() ya limita el resultado a auto_publish o escalate, nunca un segundo needs_review
-        if generated_response.action_type in (ACTION_NEEDS_REVIEW, ACTION_ESCALATE):
+        if generated_response.escalation_reason == ESCALATION_REASON_LOW_CONFIDENCE:
             logger.info(f"[{event.issue_key}] confianza baja en el primer intento, reintentando una vez")
             generated_response = self.response_generator.regenerate(
                 analysis, retrieval_result, rejection_reason="la respuesta generada no esta suficientemente respaldada por el contexto"
             )
             logger.info(f"[{event.issue_key}] reintento completo, action_type={generated_response.action_type}")
-
+            
         # m5 ejecuta la accion segun lo que decidio m4
         # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
         # escalate por ahora solo logea, la asignacion depende de m7
