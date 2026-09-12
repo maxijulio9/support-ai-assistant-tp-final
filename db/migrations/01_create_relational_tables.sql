@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS project (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     threshold_auto_publish NUMERIC(4,3) DEFAULT 0.85,
     threshold_needs_review NUMERIC(4,3) DEFAULT 0.60,
-    similarity_threshold    NUMERIC(4,3) DEFAULT 0.40
+    similarity_threshold    NUMERIC(4,3) DEFAULT 0.40,
+    language_code VARCHAR(10)
 );
 
 -- categorias de soporte que usa cada proyecto/organizacion
@@ -174,7 +175,8 @@ CREATE TABLE IF NOT EXISTS kb_spaces (
     country_id      UUID         REFERENCES country(id),
     description     VARCHAR(200),
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
-    last_indexed_at TIMESTAMPTZ
+    last_indexed_at TIMESTAMPTZ,
+    language_code   VARCHAR(10)
 );
 
 -- tabla intermedia que asocia proyectos con spaces
