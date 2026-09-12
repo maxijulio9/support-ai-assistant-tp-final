@@ -20,7 +20,7 @@ class ProjectOnboardingRepository:
                 if country_id is None:
                     raise ValueError(f"country_code '{proyecto.country_code}' no existe")
 
-                self._insert_project(db, proyecto.code, proyecto.name, country_id)
+                self._insert_project(db, proyecto.code, proyecto.name, country_id, proyecto.language_code)
                 creados += 1
 
             db.commit()
@@ -41,11 +41,11 @@ class ProjectOnboardingRepository:
         return row.id if row else None
 
     # inserta un proyecto nuevo, o lo actualiza si el code ya existia
-    def _insert_project(self, db, code: str, name: str, country_id: str):
+    def _insert_project(self, db, code: str, name: str, country_id: str, language_code: str | None = None):
         query = text("""
-            INSERT INTO project (code, name, country_id)
-            VALUES (:code, :name, :country_id)
+            INSERT INTO project (code, name, country_id, language_code)
+            VALUES (:code, :name, :country_id, :language_code)
             ON CONFLICT (code)
-            DO UPDATE SET name = :name, country_id = :country_id
+            DO UPDATE SET name = :name, country_id = :country_id, language_code = COALESCE(:language_code, project.language_code)
         """)
-        db.execute(query, {"code": code, "name": name, "country_id": country_id})
+        db.execute(query, {"code": code, "name": name, "country_id": country_id, "language_code": language_code})
