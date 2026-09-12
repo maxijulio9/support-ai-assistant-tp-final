@@ -159,6 +159,7 @@ class SpaceToLink(BaseModel):
     space_key: str
     country_code: str | None = None
     description: str | None = None
+    language_code: str | None = None
 
 
 # response con la lista de spaces disponibles en confluence, para que el admin elija (CU29)
