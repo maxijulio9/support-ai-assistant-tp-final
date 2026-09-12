@@ -16,7 +16,6 @@ from app.modules.response_generator.schemas import (
     ACTION_NEEDS_REVIEW,
     ACTION_REQUEST_INFO,
     ACTION_ESCALATE,
-    ACTION_RETRY,
 )
 from app.modules.jsm_executor.client import JsmExecutor
 
@@ -77,13 +76,15 @@ class Orchestrator:
         generated_response = self.response_generator.generate(analysis, retrieval_result)
 
         logger.info(f"[{event.issue_key}] M4 listo, action_type={generated_response.action_type}")
-        
-        #  cuando action_type es retry, hay que volver a llamar a m3 para reintentar la recup. Todacia no esta hecho
-        # y a m4 de nuevo, con un limite de reintentos.
-        # por ahora solo log y se corta el flujo aca, sin ejecutar el reintento real
-        if generated_response.action_type == ACTION_RETRY:
-            logger.warning(f"[{event.issue_key}] contexto insuficiente, requeriria retry, no implementado todavia")
 
+        # si la primera respuesta no alcanzo confianza suficiente, reintenta una sola vez
+        # regenerate() ya limita el resultado a auto_publish o escalate, nunca un segundo needs_review
+        if generated_response.action_type in (ACTION_NEEDS_REVIEW, ACTION_ESCALATE):
+            logger.info(f"[{event.issue_key}] confianza baja en el primer intento, reintentando una vez")
+            generated_response = self.response_generator.regenerate(
+                analysis, retrieval_result, rejection_reason="la respuesta generada no esta suficientemente respaldada por el contexto"
+            )
+            logger.info(f"[{event.issue_key}] reintento completo, action_type={generated_response.action_type}")
 
         # m5 ejecuta la accion segun lo que decidio m4
         # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
@@ -106,10 +107,6 @@ class Orchestrator:
                     logger.error(f"[{event.issue_key}] falló al transicionar en jsm: {e}")
             else:
                 logger.warning(f"[{event.issue_key}] ticket va para escalamiento, sin transicion configurada o disponible")
-
-
-        elif generated_response.action_type == ACTION_RETRY:
-            logger.warning(f"[{event.issue_key}] contexto insuficiente, necesita retry, no implementado todavia")
 
 
         return {
