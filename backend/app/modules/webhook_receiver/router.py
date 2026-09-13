@@ -1,29 +1,26 @@
 #Modulo 1 Webhook receiver
 # es el endpoint único de entrada para eventos de JSM vía webhook.
 
-
 from fastapi import APIRouter, HTTPException
-from app.modules.webhook_receiver.schemas import JsmWebhookPayload
-from app.modules.webhook_receiver.service import WebhookReceiver
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, ConfluenceWebhookPayload
-
+from app.modules.webhook_receiver.service import WebhookReceiver
 
 router = APIRouter(tags=["Webhook"])
 
 # instancia única del servicio para toda la aplicación
 _receiver = WebhookReceiver()
 
-# unico punto de entrada  para todos los eventos de JSM
+# unico punto de entrada para todos los eventos de JSM, tickets y comentarios (de cliente o de agente)
 # valida, normaliza y despacha el evento al módulo que lo consuma
 @router.post("/webhook/jsm")
 async def receive_jsm_webhook(payload: JsmWebhookPayload):
-  
+
     event = _receiver.normalize_payload(payload)
 
     if event is None:
         raise HTTPException(status_code=400, detail="Payload invalido o sin issue asociado")
 
-    result = await _receiver.dispatch_event(event)
+    result = await _receiver.dispatch_event(event, comment_raw=payload.comment)
     return result
 
 
@@ -32,16 +29,3 @@ async def receive_jsm_webhook(payload: JsmWebhookPayload):
 async def receive_confluence_webhook(payload: ConfluenceWebhookPayload):
     await _receiver.dispatch_confluence_event(payload.page_id, payload.space_key)
     return {"status": "dispatched", "route": "knowledge_indexer", "page_id": payload.page_id}
-
-
-# punto de entrada para cuando un agente resuelve un ticket directo en jsm, sin pasar por el sistema
-# la regla de automation en jsm filtra que sea un comentario publico de un agente, no del customer
-@router.post("/webhook/agent-resolution")
-async def receive_agent_resolution_webhook(payload: JsmWebhookPayload):
-    event = _receiver.normalize_payload(payload)
-
-    if event is None:
-        raise HTTPException(status_code=400, detail="Payload invalido o sin issue asociado")
-
-    await _receiver.dispatch_agent_resolution_event(event.issue_key)
-    return {"status": "dispatched", "route": "agent_resolution", "issue_key": event.issue_key}
