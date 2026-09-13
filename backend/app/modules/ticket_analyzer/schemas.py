@@ -51,6 +51,7 @@ class TicketAnalysis(BaseModel):
     threshold_auto_publish: Optional[float] = None
     threshold_needs_review: Optional[float] = None
     similarity_threshold: Optional[float] = None
+    language_code: Optional[str] = None
 
     # historial conversacional gestionado por CU9
     conversation_history: List[ConversationTurn] = []
@@ -68,3 +69,4 @@ class ProjectContext(BaseModel):
     threshold_auto_publish: float = 0.85
     threshold_needs_review: float = 0.60
     similarity_threshold: float = 0.40
+    language_code: Optional[str] = None
