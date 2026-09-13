@@ -376,3 +376,41 @@ async def test_updates_interaction_result_when_escalate_direct(mock_analyzer_cla
         confidence_score=None,
         decision=ACTION_ESCALATE,
     )
+
+# verifica que al escalar directo se publica el acknowledgment publico y la nota interna
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_posts_acknowledgment_and_internal_note_when_escalate_direct(mock_analyzer_class, mock_get_db, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
+    analysis = TicketAnalysis(issue_key="TEST-1", event_type="issue_created", scope="OUT_OF_SCOPE", escalate_direct=True, summary="no puedo comprar cripto")
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer.llm_client.generate_escalation_acknowledgment.return_value = "Hola,\nRecibimos tu consulta.\nGracias"
+    mock_analyzer_class.return_value = mock_analyzer
+
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_logger_class.return_value = MagicMock()
+
+    mock_db = MagicMock()
+    mock_row = MagicMock()
+    mock_row.name = "Escalated"
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_jsm = MagicMock()
+    mock_jsm.get_transitions = AsyncMock(return_value={"transitions": [{"id": "3", "to": {"name": "Escalated"}}]})
+    mock_jsm.transition_issue = AsyncMock(return_value=True)
+    mock_jsm.post_comment = AsyncMock()
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    assert mock_jsm.post_comment.call_count == 2
+    mock_jsm.post_comment.assert_any_call("TEST-1", "Hola,\nRecibimos tu consulta.\nGracias", public=True)
