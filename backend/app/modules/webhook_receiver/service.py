@@ -6,9 +6,14 @@ from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEv
 from app.core.redis_client import get_redis
 from app.core.config import settings
 from app.core.arq_pool import get_arq_pool
+from app.modules.webhook_receiver.ticket_lookup_repository import TicketLookupRepository
+
 
 
 class WebhookReceiver:
+    
+    def __init__(self):
+        self.ticket_lookup_repository = TicketLookupRepository()
 
     # convierte el payload que viene desde JSM a un evento normalizado para uso interno
     # retorna None si el evento no es procesable
@@ -57,7 +62,7 @@ class WebhookReceiver:
 
     #determina la ruta del evento y lo despacha al módulo que corresponda
     # encola en arq para que el worker lo procese
-    async def dispatch_event(self, event: NormalizedEvent) -> dict:
+    async def dispatch_event(self, event: NormalizedEvent, comment_raw=None) -> dict:
 
         redis = get_redis()
         pool = await get_arq_pool()
@@ -68,6 +73,10 @@ class WebhookReceiver:
             await pool.enqueue_job("process_issue_created", event.model_dump())
             return {"status": "dispatched", "route": "ticket_analyzer", "issue_key": event.issue_key}
 
+        if event.event_type == "comment_created" and comment_raw:
+            return await self._dispatch_comment(event, comment_raw, redis, pool)
+
+        
         if event.event_type == "jira:issue_updated":
             # comentario: acumula en hash de debouncing y agenda el job 
             print(f"M1 comment_created recibido {event.issue_key}")
@@ -170,7 +179,40 @@ class WebhookReceiver:
         pool = await get_arq_pool()
         await pool.enqueue_job("process_page_reindex", page_id, space_key, _queue_name=KB_QUEUE_NAME)
     
-    # encola la revision de una interaccion pendiente, cuando un agente resuelve el ticket directo en jsm
-    async def dispatch_agent_resolution_event(self, issue_key: str):
-        pool = await get_arq_pool()
-        await pool.enqueue_job("process_agent_resolution", issue_key)
+   
+        
+    # distingue si el comentario publico es del cliente o de un agente, y despacha al flujo correspondiente
+    async def _dispatch_comment(self, event, comment_raw, redis, pool) -> dict:
+        if not comment_raw.jsdPublic:
+            print(f"M1 comentario interno ignorado {event.issue_key}")
+            return {"status": "ignored", "event_type": "comment_created"}
+
+        author_id = comment_raw.author.accountId if comment_raw.author else None
+        reporter_id = self.ticket_lookup_repository.get_reporter_account_id(event.issue_key)
+
+        if reporter_id and author_id == reporter_id:
+            # comentario del cliente, mismo flujo de siempre con debouncing
+            print(f"M1 comentario de cliente recibido {event.issue_key}")
+
+            debounce_key = f"debounce:{event.issue_key}"
+            existing = await redis.hget(debounce_key, "body")
+            nuevo_body = comment_raw.body or ""
+            if existing:
+                nuevo_body = f"{existing}\n{nuevo_body}"
+
+            await redis.hset(debounce_key, "body", nuevo_body)
+            await redis.expire(debounce_key, settings.debounce_ttl_seconds + 5)
+
+            await pool.enqueue_job(
+                "process_comment_created",
+                event.issue_key,
+                _job_id=f"comment:{event.issue_key}:{int(time.time() // 60)}",
+                _defer_by=settings.debounce_ttl_seconds,
+            )
+
+            return {"status": "dispatched", "route": "conversation_handler", "issue_key": event.issue_key}
+
+        # comentario publico de alguien que no es el reporter: un agente resolviendo directo
+        print(f"M1 comentario de agente detectado {event.issue_key}")
+        await pool.enqueue_job("process_agent_resolution", event.issue_key)
+        return {"status": "dispatched", "route": "agent_resolution", "issue_key": event.issue_key}
