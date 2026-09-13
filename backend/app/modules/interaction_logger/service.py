@@ -45,9 +45,10 @@ class InteractionLogger:
                     :ticket_id, :system_event_id, :category_id, :priority_id, :sentiment_id,
                     :text_input, :detected_intent, :info_sufficient
                 )
+                RETURNING id
             """)
 
-            db.execute(query, {
+            row = db.execute(query, {
                 "ticket_id": ticket_id,
                 "system_event_id": system_event_id,
                 "category_id": category_id,
@@ -57,16 +58,19 @@ class InteractionLogger:
                 "text_input": text_input,
                 "detected_intent": analysis.intent,
                 "info_sufficient": analysis.info_sufficient,
-            })
+            }).fetchone()
 
             # confirma todos los cambios juntos
             db.commit()
             logger.info(f"[{analysis.issue_key}] interaccion guardada correctamente")
+            return str(row.id)
+
 
         except Exception as e:
             # si algo fallo, deshace todos los cambios de este intento
             db.rollback()
             logger.error(f"[{analysis.issue_key}] error al guardar interaccion: {e}")
+            return None
 
         finally:
             # cierra la conexion siempre, haya funcionado o no
@@ -146,3 +150,37 @@ class InteractionLogger:
             return None
 
         return str(row.id)
+    
+    # completa la interaccion con el resultado de m3/m4, una vez que ya se genero (o se decidio no generar) una respuesta
+    def update_interaction_result(self, interaction_id: str, chunks_retrieved_count: int,
+                                    generated_response: str | None, confidence_score: float | None, decision: str):
+        if not interaction_id:
+            return
+
+        db = next(get_db())
+        try:
+            query = text("""
+                UPDATE interaction
+                SET chunks_retrieved_count = :chunks_retrieved_count,
+                    generated_response = :generated_response,
+                    confidence_score = :confidence_score,
+                    decision = :decision
+                WHERE id = :interaction_id
+            """)
+
+            db.execute(query, {
+                "interaction_id": interaction_id,
+                "chunks_retrieved_count": chunks_retrieved_count,
+                "generated_response": generated_response,
+                "confidence_score": confidence_score,
+                "decision": decision,
+            })
+            db.commit()
+            logger.info(f"interaccion {interaction_id} actualizada con el resultado de m3/m4")
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al actualizar interaccion {interaction_id}: {e}")
+
+        finally:
+            db.close()
