@@ -155,6 +155,9 @@ class WebhookReceiver:
         if not adf_node:
             return ""
 
+        if isinstance(adf_node, str):
+            return adf_node.strip()
+
         texts = []
 
         #funcion recursiva para recorrer el arbol ADF,si hay, y extraer los textos de los nodos de tipo text
