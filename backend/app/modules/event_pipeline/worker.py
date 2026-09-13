@@ -96,3 +96,15 @@ async def process_page_reindex(arq_context, page_id: str, space_key: str):
 
     logger.info(f"worker: pagina {page_id} reindexada")
     return {"status": "completed", "page_id": page_id, "space_key": space_key}
+
+# tarea para descartar una interaccion pendiente cuando un agente resuelve el ticket directo en jsm
+async def process_agent_resolution(arq_context, issue_key: str):
+    logger.info(f"worker: procesando resolucion externa para {issue_key}")
+
+    from app.modules.event_pipeline.agent_resolution_repository import AgentResolutionRepository
+
+    repo = AgentResolutionRepository()
+    discarded = repo.discard_pending_interaction(issue_key)
+
+    logger.info(f"worker: resolucion externa procesada para {issue_key}, descartada={discarded}")
+    return {"status": "completed", "issue_key": issue_key, "discarded": discarded}
