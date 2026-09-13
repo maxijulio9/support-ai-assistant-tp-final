@@ -58,12 +58,22 @@ class JsmIssueRaw(BaseModel):
     key: str
     fields: Optional[JsmFieldsRaw] = None
 
+class JsmCommentAuthorRaw(BaseModel):
+    accountId: str
 
+
+class JsmCommentRaw(BaseModel):
+    id: str
+    body: Optional[str] = None
+    author: Optional[JsmCommentAuthorRaw] = None
+    jsdPublic: Optional[bool] = None
+    
 class JsmWebhookPayload(BaseModel):
-    # modelo del payload raw que JSM envía al webhook
+   # modelo del payload raw que JSM envía al webhook
     webhookEvent: str
     timestamp: Optional[int] = None
     issue: Optional[JsmIssueRaw] = None
+    comment: Optional[JsmCommentRaw] = None
 
 
 # evento normalizado para consumo interno
@@ -83,8 +93,8 @@ class NormalizedEvent(BaseModel):
     created_at: Optional[str] = None
     comment_body: Optional[str] = None
     comment_author_id: Optional[str] = None
-    
-    
+
+
     
 #CONFLUECNE
 # payload que confluence automation manda al webhook, via smart values configurados en la regla
