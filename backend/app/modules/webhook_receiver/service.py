@@ -169,4 +169,8 @@ class WebhookReceiver:
 
         pool = await get_arq_pool()
         await pool.enqueue_job("process_page_reindex", page_id, space_key, _queue_name=KB_QUEUE_NAME)
-  
+    
+    # encola la revision de una interaccion pendiente, cuando un agente resuelve el ticket directo en jsm
+    async def dispatch_agent_resolution_event(self, issue_key: str):
+        pool = await get_arq_pool()
+        await pool.enqueue_job("process_agent_resolution", issue_key)
