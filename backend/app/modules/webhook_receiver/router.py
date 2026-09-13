@@ -32,3 +32,16 @@ async def receive_jsm_webhook(payload: JsmWebhookPayload):
 async def receive_confluence_webhook(payload: ConfluenceWebhookPayload):
     await _receiver.dispatch_confluence_event(payload.page_id, payload.space_key)
     return {"status": "dispatched", "route": "knowledge_indexer", "page_id": payload.page_id}
+
+
+# punto de entrada para cuando un agente resuelve un ticket directo en jsm, sin pasar por el sistema
+# la regla de automation en jsm filtra que sea un comentario publico de un agente, no del customer
+@router.post("/webhook/agent-resolution")
+async def receive_agent_resolution_webhook(payload: JsmWebhookPayload):
+    event = _receiver.normalize_payload(payload)
+
+    if event is None:
+        raise HTTPException(status_code=400, detail="Payload invalido o sin issue asociado")
+
+    await _receiver.dispatch_agent_resolution_event(event.issue_key)
+    return {"status": "dispatched", "route": "agent_resolution", "issue_key": event.issue_key}
