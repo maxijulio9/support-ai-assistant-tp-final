@@ -47,8 +47,8 @@ class Orchestrator:
 
         logger.info(f"[{event.issue_key}] M2 listorti, priority={analysis.priority}, country={analysis.country}")
 
-        # persiste el resultado del analisis en la bd relacional
-        self.interaction_logger.log_analysis(analysis)
+        # persiste el resultado del analisis en la bd relacional, guarda el id para completarlo despues
+        interaction_id = self.interaction_logger.log_analysis(analysis)
 
         # si m2 ya determino que esto escala directo (out of scope o resolved_by l2),
         # nos ahorramos la consulta a m3 y la generacion de m4, que igual terminarian escalando
@@ -88,7 +88,16 @@ class Orchestrator:
                 analysis, retrieval_result, rejection_reason="la respuesta generada no esta suficientemente respaldada por el contexto"
             )
             logger.info(f"[{event.issue_key}] reintento completo, action_type={generated_response.action_type}")
-            
+        
+        # completa la interaccion con el resultado final de m3/m4
+        self.interaction_logger.update_interaction_result(
+            interaction_id,
+            chunks_retrieved_count=len(retrieval_result.chunks),
+            generated_response=generated_response.response_text,
+            confidence_score=generated_response.confidence_score,
+            decision=generated_response.action_type,
+        )
+        
         # m5 ejecuta la accion segun lo que decidio m4
         # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
         # escalate por ahora solo logea, la asignacion depende de m7
