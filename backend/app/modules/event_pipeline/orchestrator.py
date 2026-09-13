@@ -53,15 +53,23 @@ class Orchestrator:
         # si m2 ya determino que esto escala directo (out of scope o resolved_by l2),
         # nos ahorramos la consulta a m3 y la generacion de m4, que igual terminarian escalando
         if analysis.escalate_direct:
+            self.interaction_logger.update_interaction_result(
+                interaction_id,
+                chunks_retrieved_count=0,
+                generated_response=None,
+                confidence_score=None,
+                decision=ACTION_ESCALATE,
+            )
+
             transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
                     logger.info(f"[{event.issue_key}] escalate_direct desde m2, transicionado en jsm")
                 except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar en jsm: {e}")
+                    logger.error(f"[{event.issue_key}] falló al transicionar en jsm: {e}")
             else:
-                logger.warning(f"[{event.issue_key}] escalate_direct desde m2, sin transicion configurada o disponible")
+                logger.warning(f"[{event.issue_key}] escalate_direct desde m2, sin transicion disponible")
 
             return {
                 "status": "processed",
