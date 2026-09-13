@@ -42,7 +42,7 @@ class ChunkRetriever:
 
         # agrega filtros opcionales segun lo que detectó m2
         if country:
-            query_sql += " AND country = :country"
+            query_sql += " AND (country = :country OR country IS NULL)"
             params["country"] = country
 
         if doc_type:
