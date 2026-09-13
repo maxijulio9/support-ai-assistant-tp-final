@@ -4,7 +4,7 @@ Esquemas de entrada del payload raw de JSM y salida dekl evento normalizado).
 """
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
 
 # payload raw que manda JSM 
@@ -42,7 +42,7 @@ class JsmCustomField10010Raw(BaseModel):
 
 class JsmFieldsRaw(BaseModel):
     summary: Optional[str] = None
-    description: Optional[dict] = None
+    description: Optional[Union[dict, str]] = None
     issuetype: Optional[JsmIssueTypeRaw] = None
     priority: Optional[JsmPriorityRaw] = None
     status: Optional[JsmStatusRaw] = None
