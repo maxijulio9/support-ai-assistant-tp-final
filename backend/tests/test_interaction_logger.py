@@ -131,3 +131,41 @@ def test_to_semantic_event_name_sin_prefijo_queda_igual():
     logger_service = InteractionLogger()
 
     assert logger_service._to_semantic_event_name("issue_created") == "issue_created"
+    
+    
+# verifica que update_interaction_result actualiza los campos correctos
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_interaction_result_actualiza_campos(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+
+    logger_service = InteractionLogger()
+    logger_service.update_interaction_result(
+        interaction_id="int-1",
+        chunks_retrieved_count=3,
+        generated_response="respuesta generada",
+        confidence_score=0.92,
+        decision="AUTO_PUBLISH",
+    )
+
+    update_call = mock_db.execute.call_args
+    update_params = update_call[0][1]
+    assert update_params["interaction_id"] == "int-1"
+    assert update_params["chunks_retrieved_count"] == 3
+    assert update_params["decision"] == "AUTO_PUBLISH"
+    mock_db.commit.assert_called_once()
+
+
+# verifica que no hace nada si no hay interaction_id
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_interaction_result_sin_id_no_hace_nada(mock_get_db):
+    logger_service = InteractionLogger()
+    logger_service.update_interaction_result(
+        interaction_id=None,
+        chunks_retrieved_count=0,
+        generated_response=None,
+        confidence_score=None,
+        decision="ESCALATE",
+    )
+
+    mock_get_db.assert_not_called()
