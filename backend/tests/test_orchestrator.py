@@ -342,3 +342,37 @@ async def test_updates_interaction_result_after_generation(mock_analyzer_class, 
         confidence_score=0.90,
         decision=ACTION_AUTO_PUBLISH,
     )
+    
+
+# verifica que decision quede seteado en escalate aunque pase por el camino de escalate_direct
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_updates_interaction_result_when_escalate_direct(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
+    analysis = TicketAnalysis(issue_key="TEST-1", event_type="issue_created", scope="OUT_OF_SCOPE", escalate_direct=True)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_jsm_class.return_value = MagicMock()
+
+    mock_logger = MagicMock()
+    mock_logger.log_analysis.return_value = "interaction-456"
+    mock_logger_class.return_value = mock_logger
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    mock_logger.update_interaction_result.assert_called_once_with(
+        "interaction-456",
+        chunks_retrieved_count=0,
+        generated_response=None,
+        confidence_score=None,
+        decision=ACTION_ESCALATE,
+    )
