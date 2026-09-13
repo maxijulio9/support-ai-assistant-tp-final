@@ -8,7 +8,7 @@ from app.modules.event_pipeline.worker import process_issue_created, process_com
 KB_QUEUE_NAME = "kb_queue"
 class WorkerSettings:
     # funciones que este worker sabe ejecutar
-    functions = [process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex]
+    functions = [process_issue_created, process_comment_created]
     # configuración de conexión a rexdis
     # RedisSettings.from_dsn("redis://redis:6379")
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
