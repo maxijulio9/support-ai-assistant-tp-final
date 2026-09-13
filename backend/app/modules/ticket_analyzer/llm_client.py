@@ -153,7 +153,7 @@ class LlmClient:
         return None
     
     
-        # traduce un texto a un idioma destino, para buscar contra kb en otro idioma
+    # traduce un texto a un idioma destino, para buscar contra kb en otro idioma
     # reintenta hasta 2 veces si la llamada falla
     def translate(self, text: str, target_language: str) -> str | None:
         prompt = f"Traduci el siguiente texto al idioma con codigo '{target_language}'. Devolve UNICAMENTE el texto traducido, sin comillas ni texto adicional.\n\nTexto:\n{text}"
@@ -176,3 +176,31 @@ class LlmClient:
 
         logger.error(f"no se pudo traducir despues de 3 intentos")
         return None
+    
+    # genera un acknowledgment corto para el cliente cuando el ticket escala, prompt restrictivo para gastar pocos tokens
+    def generate_escalation_acknowledgment(self, summary: str, description: str | None = None) -> str | None:
+        texto = f"{summary} {description or ''}".strip()
+        prompt = (
+            "Sos un agente de soporte. Escribi una respuesta breve confirmando al cliente que recibimos su consulta "
+            "y que la vamos a revisar a la brevedad. Menciona brevemente el tema puntual de su consulta, sin inventar "
+            "detalles que no esten en el texto. No menciones agentes, humanos, ni el proceso interno de resolucion.\n\n"
+            "Formato exacto, cada linea separada por un salto de linea:\n"
+            "Hola,\n"
+            "[una oracion mencionando el tema puntual de la consulta]\n"
+            "[una oracion confirmando que lo van a revisar a la brevedad]\n"
+            "Gracias\n\n"
+            f"Consulta del cliente:\n{texto}"
+        )
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=100,
+            )
+            return response.choices[0].message.content.strip()
+
+        except Exception as e:
+            logger.error(f"error al generar acknowledgment de escalamiento: {e}")
+            return None
