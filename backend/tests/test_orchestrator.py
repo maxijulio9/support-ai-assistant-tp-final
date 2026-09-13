@@ -306,3 +306,39 @@ async def test_logs_analysis_even_when_escalate_direct(mock_analyzer_class, mock
     await orchestrator.process_event(_build_event())
 
     mock_logger.log_analysis.assert_called_once_with(analysis)
+    
+
+# verifica que se completa la interaccion con el resultado de m3/m4 despues de generar la respuesta
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_updates_interaction_result_after_generation(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
+    analysis = _build_analysis()
+    retrieval = _build_retrieval()
+    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_AUTO_PUBLISH, response_text="respuesta", confidence_score=0.90)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+    mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
+    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
+
+    mock_logger = MagicMock()
+    mock_logger.log_analysis.return_value = "interaction-123"
+    mock_logger_class.return_value = mock_logger
+
+    mock_jsm_class.return_value = MagicMock()
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    mock_logger.update_interaction_result.assert_called_once_with(
+        "interaction-123",
+        chunks_retrieved_count=1,
+        generated_response="respuesta",
+        confidence_score=0.90,
+        decision=ACTION_AUTO_PUBLISH,
+    )
