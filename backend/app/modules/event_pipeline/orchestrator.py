@@ -20,7 +20,7 @@ from app.modules.response_generator.schemas import (
 
 )
 from app.modules.jsm_executor.client import JsmExecutor
-
+from app.modules.ticket_analyzer.schemas import TicketAnalysis
 
 logger = logging.getLogger(__name__)
 
@@ -62,15 +62,23 @@ class Orchestrator:
             )
 
             transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
+            
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
                     logger.info(f"[{event.issue_key}] escalate_direct desde m2, transicionado en jsm")
-                except Exception as e:
-                    logger.error(f"[{event.issue_key}] falló al transicionar en jsm: {e}")
-            else:
-                logger.warning(f"[{event.issue_key}] escalate_direct desde m2, sin transicion disponible")
 
+                    acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
+                    if acknowledgment:
+                        await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
+
+                    internal_note = self._build_internal_escalation_note(analysis, "out_of_scope_o_l2")
+                    await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
+
+                except Exception as e:
+                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {e}")
+                    
+                    
             return {
                 "status": "processed",
                 "issue_key": event.issue_key,
@@ -117,17 +125,25 @@ class Orchestrator:
             except Exception as e:
                 logger.error(f"[{event.issue_key}] fallo al publicar comentario en jsm: {e}")
 
+        
         elif generated_response.action_type == ACTION_ESCALATE:
             transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
                     logger.info(f"[{event.issue_key}] transicionado en jsm")
+
+                    acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
+                    if acknowledgment:
+                        await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
+
+                    internal_note = self._build_internal_escalation_note(analysis, generated_response.escalation_reason)
+                    await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
+
                 except Exception as e:
-                    logger.error(f"[{event.issue_key}] falló al transicionar en jsm: {e}")
+                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {e}")
             else:
                 logger.warning(f"[{event.issue_key}] ticket va para escalamiento, sin transicion configurada o disponible")
-
 
         return {
             "status": "processed",
@@ -171,3 +187,14 @@ class Orchestrator:
             return row.name if row else None
         finally:
             db.close()
+    
+    # arma el texto de la nota interna para el agente, resumen de lo que detecto el sistema antes de escalar
+    def _build_internal_escalation_note(self, analysis: TicketAnalysis, escalation_reason: str | None) -> str:
+        return (
+            f"Resumen automatico del analisis:\n"
+            f"Categoria: {analysis.category or 'sin clasificar'}\n"
+            f"Prioridad: {analysis.priority or 'sin clasificar'}\n"
+            f"Intent: {analysis.intent or 'sin clasificar'}\n"
+            f"Sentimiento: {analysis.sentiment or 'sin clasificar'}\n"
+            f"Motivo de escalamiento: {escalation_reason or 'no especificado'}"
+        )
