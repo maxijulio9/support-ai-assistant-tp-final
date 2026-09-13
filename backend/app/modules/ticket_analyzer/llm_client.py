@@ -151,3 +151,28 @@ class LlmClient:
 
         logger.error(f"no se pudo clasificar despues de 3 intentos")
         return None
+    
+    
+        # traduce un texto a un idioma destino, para buscar contra kb en otro idioma
+    # reintenta hasta 2 veces si la llamada falla
+    def translate(self, text: str, target_language: str) -> str | None:
+        prompt = f"Traduci el siguiente texto al idioma con codigo '{target_language}'. Devolve UNICAMENTE el texto traducido, sin comillas ni texto adicional.\n\nTexto:\n{text}"
+
+        for attempt in range(3):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.1,
+                )
+
+                translated = response.choices[0].message.content.strip()
+                logger.info(f"traduccion exitosa a '{target_language}'")
+                return translated
+
+            except Exception as e:
+                logger.error(f"error al traducir con el llm, intento {attempt + 1}/3: {e}")
+                continue
+
+        logger.error(f"no se pudo traducir despues de 3 intentos")
+        return None
