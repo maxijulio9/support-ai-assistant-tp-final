@@ -5,7 +5,7 @@
 import logging
 from sqlalchemy import text
 from app.core.database import get_db
-from app.core.jsm_status_actions import JSM_STATUS_ACTION_ESCALATE
+from app.core.jsm_status_actions import JSM_STATUS_ACTION_ESCALATE, JSM_STATUS_ACTION_AWAITING_CUSTOMER
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.service import TicketAnalyzer
 from app.modules.interaction_logger.service import InteractionLogger
@@ -122,8 +122,18 @@ class Orchestrator:
             try:
                 await self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
                 logger.info(f"[{event.issue_key}] m5 publico el comentario,es public={is_public}")
+
+                # si ya se le respondio al cliente (o se le pidio mas info), transiciona a un estado de espera
+                if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_REQUEST_INFO):
+                    transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER)
+                    if transition_id:
+                        await self.jsm_executor.transition_issue(event.issue_key, transition_id)
+                        logger.info(f"[{event.issue_key}] transicionado a awaiting_customer en jsm")
+                    else:
+                        logger.warning(f"[{event.issue_key}] sin transicion configurada para awaiting_customer")
+
             except Exception as e:
-                logger.error(f"[{event.issue_key}] fallo al publicar comentario en jsm: {e}")
+                logger.error(f"[{event.issue_key}] fallo al publicar comentario o transicionar en jsm: {e}")
 
         
         elif generated_response.action_type == ACTION_ESCALATE:
