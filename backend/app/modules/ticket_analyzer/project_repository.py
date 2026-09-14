@@ -52,10 +52,10 @@ class ProjectRepository:
     # busca las categorias activas configuradas para este proyecto
     def _fetch_active_categories_for_project(self, db, project_id: str) -> list[str]:
         query = text("""
-            SELECT tc.code
+            SELECT tc.name
             FROM project_category pc
             JOIN ticket_category tc ON pc.category_id = tc.id
             WHERE pc.project_id = :project_id AND pc.is_active = TRUE
         """)
         rows = db.execute(query, {"project_id": project_id}).fetchall()
-        return [row.code for row in rows]
+        return [row.name for row in rows]
