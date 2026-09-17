@@ -111,6 +111,8 @@ class InteractionLogger:
             "project_id": project_id,
             "request_type_id": request_type_id,
             "status_id": status_id,
+            "reporter_account_id": analysis.reporter_account_id,
+
         }).fetchone()
 
         return str(row.id)
