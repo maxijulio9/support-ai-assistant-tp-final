@@ -98,6 +98,7 @@ class TicketAnalyzer:
             info_sufficient=info_sufficient,
             status=event.status,
             request_type=event.request_type,
+            reporter_account_id=event.reporter_id,
             escalate_direct=(classification.scope == "OUT_OF_SCOPE" or classification.resolved_by == "L2") if classification else False,
         )
         
