@@ -113,6 +113,9 @@ class Orchestrator:
             confidence_score=generated_response.confidence_score,
             decision=generated_response.action_type,
         )
+
+        # persiste el detalle de cada chunk recuperado, para poder auditar el contexto real usado despues
+        self.interaction_logger.save_retrieved_chunks(interaction_id, retrieval_result.chunks)
         
         # m5 ejecuta la accion segun lo que decidio m4
         # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
