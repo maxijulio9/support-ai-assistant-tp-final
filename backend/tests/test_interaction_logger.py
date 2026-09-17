@@ -169,3 +169,32 @@ def test_update_interaction_result_sin_id_no_hace_nada(mock_get_db):
     )
 
     mock_get_db.assert_not_called()
+    
+# verifica que save_retrieved_chunks inserta una fila por chunk, con el rank_position correcto
+@patch("app.modules.interaction_logger.service.get_db")
+def test_save_retrieved_chunks_inserta_una_fila_por_chunk(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+
+    chunk1 = MagicMock(chunk_id="chunk-1", similarity_score=0.8, page_title="Titulo 1")
+    chunk2 = MagicMock(chunk_id="chunk-2", similarity_score=0.6, page_title="Titulo 2")
+
+    logger_service = InteractionLogger()
+    logger_service.save_retrieved_chunks("int-1", [chunk1, chunk2])
+
+    assert mock_db.execute.call_count == 2
+    first_call_params = mock_db.execute.call_args_list[0][0][1]
+    assert first_call_params["chunk_id"] == "chunk-1"
+    assert first_call_params["rank_position"] == 1
+    second_call_params = mock_db.execute.call_args_list[1][0][1]
+    assert second_call_params["rank_position"] == 2
+    mock_db.commit.assert_called_once()
+
+
+# verifica que no hace nada si no hay chunks o no hay interaction_id
+@patch("app.modules.interaction_logger.service.get_db")
+def test_save_retrieved_chunks_sin_chunks_no_hace_nada(mock_get_db):
+    logger_service = InteractionLogger()
+    logger_service.save_retrieved_chunks("int-1", [])
+
+    mock_get_db.assert_not_called()
