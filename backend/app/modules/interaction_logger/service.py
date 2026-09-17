@@ -184,3 +184,31 @@ class InteractionLogger:
 
         finally:
             db.close()
+        
+    # persiste cada chunk recuperado por m3, para poder auditar despues que contexto se uso (o no alcanzo) en una interaccion
+    def save_retrieved_chunks(self, interaction_id: str, chunks: list):
+        if not interaction_id or not chunks:
+            return
+
+        db = next(get_db())
+        try:
+            for rank, chunk in enumerate(chunks, start=1):
+                db.execute(text("""
+                    INSERT INTO retrieved_chunk (interaction_id, chunk_id, similarity_score, rank_position, page_title)
+                    VALUES (:interaction_id, :chunk_id, :similarity_score, :rank_position, :page_title)
+                """), {
+                    "interaction_id": interaction_id,
+                    "chunk_id": chunk.chunk_id,
+                    "similarity_score": chunk.similarity_score,
+                    "rank_position": rank,
+                    "page_title": chunk.page_title,
+                })
+            db.commit()
+            logger.info(f"guardados {len(chunks)} chunks recuperados para la interaccion {interaction_id}")
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al guardar chunks recuperados para {interaction_id}: {e}")
+
+        finally:
+            db.close()
