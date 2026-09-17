@@ -58,6 +58,8 @@ class TicketAnalysis(BaseModel):
     
     status: Optional[str] = None
     request_type: Optional[str] = None
+    reporter_account_id: Optional[str] = None
+
     
     escalate_direct: bool = False
     
