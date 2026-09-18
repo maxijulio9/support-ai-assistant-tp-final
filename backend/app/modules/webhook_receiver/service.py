@@ -190,6 +190,15 @@ class WebhookReceiver:
             print(f"M1 comentario interno ignorado {event.issue_key}")
             return {"status": "ignored", "event_type": "comment_created"}
 
+        # si el ticket ya salio del ciclo automatico (escalado, resuelto, etc), no reprocesar
+        project_key = event.issue_key.split("-")[0] if "-" in event.issue_key else ""
+        project_id = self.ticket_lookup_repository.get_project_id_by_key(project_key)
+        reprocessable_statuses = self.ticket_lookup_repository.get_reprocessable_status_names(project_id) if project_id else []
+
+        if reprocessable_statuses and event.status not in reprocessable_statuses:
+            print(f"M1 comentario ignorado, ticket {event.issue_key} en estado '{event.status}', no reprocesable")
+            return {"status": "ignored", "event_type": "comment_created", "reason": "estado_no_reprocesable"}
+
         author_id = comment_raw.author.accountId if comment_raw.author else None
         reporter_id = self.ticket_lookup_repository.get_reporter_account_id(event.issue_key)
 
