@@ -78,6 +78,7 @@ class InteractionLogger:
 
     # busca el ticket por issue_key, si no existe lo crea
     def _get_or_create_ticket(self, db, analysis: TicketAnalysis) -> str:
+       # logger.warning(f"DEBUG reporter_account_id recibido: {analysis.reporter_account_id}")
         query = text("SELECT id FROM ticket WHERE issue_key = :issue_key")
         row = db.execute(query, {"issue_key": analysis.issue_key}).fetchone()
 
@@ -97,14 +98,15 @@ class InteractionLogger:
         status_id = self._find_catalog_id(db, "ticket_status", analysis.status, search_column="name")
 
         insert_query = text("""
-            INSERT INTO ticket (issue_key, summary, country_id, priority_id, category_id, project_id, request_type_id, status_id)
-            VALUES (:issue_key, :summary, :country_id, :priority_id, :category_id, :project_id, :request_type_id, :status_id)
+            INSERT INTO ticket (issue_key, summary, description, country_id, priority_id, category_id, project_id, request_type_id, status_id, reporter_account_id)
+            VALUES (:issue_key, :summary, :description, :country_id, :priority_id, :category_id, :project_id, :request_type_id, :status_id, :reporter_account_id)
             RETURNING id
         """)
 
         row = db.execute(insert_query, {
             "issue_key": analysis.issue_key,
             "summary": analysis.summary,
+            "description": analysis.description,
             "country_id": country_id,
             "priority_id": priority_id,
             "category_id": category_id,
@@ -112,7 +114,6 @@ class InteractionLogger:
             "request_type_id": request_type_id,
             "status_id": status_id,
             "reporter_account_id": analysis.reporter_account_id,
-
         }).fetchone()
 
         return str(row.id)
