@@ -43,6 +43,7 @@ class TicketAnalysis(BaseModel):
     # metadatos que M3 necesita para filtrar chunks por país y categoría
     country: Optional[str] = None
     summary: Optional[str] = None
+    description: Optional[str] = None
     
     # id del proyecto, lo necesita m4 para leer sus umbrales de decision
     project_id: Optional[str] = None
