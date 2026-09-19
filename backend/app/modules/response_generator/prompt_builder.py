@@ -4,6 +4,13 @@
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.knowledge_retriever.schemas import RetrievalResult
 
+# nombres legibles para cada codigo de idioma soportado, usados en la instruccion del prompt
+LANGUAGE_NAMES = {
+    "es": "español",
+    "pt": "portugués",
+    "en": "inglés",
+}
+
 
 SYSTEM_PROMPT = """Sos un agente de soporte nivel 1 de una plataforma financiera. Tu tarea es responder la consulta del usuario basandote UNICAMENTE en el contexto de la base de conocimiento que se te provee abajo.
 
@@ -13,7 +20,7 @@ SYSTEM_PROMPT = """Sos un agente de soporte nivel 1 de una plataforma financiera
                 - Si dos fragmentos del contexto se contradicen entre si, priorizá el mas especifico a la categoria del ticket y avisá de la ambiguedad en tu respuesta.
                 - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos, escribi como si supieras la respuesta directamente.
                 - Se conciso, una respuesta de soporte no deberia superar los 3 parrafos cortos.
-                - Respondé siempre en español, con un tono profesional y cordial."""
+                - Respondé siempre en {language}, con un tono profesional y cordial."""
 
 
 
@@ -60,9 +67,10 @@ class PromptBuilder:
     def build_prompt(self, analysis: TicketAnalysis, retrieval: RetrievalResult, rejection_reason: str | None = None) -> str:
         context_text = self._format_chunks(retrieval.chunks)
         history_text = self._format_history(analysis.conversation_history)
+        language_name = LANGUAGE_NAMES.get(analysis.language_code, "español")
 
         sections = [
-        SYSTEM_PROMPT,
+            SYSTEM_PROMPT.format(language=language_name),
             f"Contexto recuperado de la base de conocimiento:\n{context_text}",
             f"Historial de la conversacion:\n{history_text}",
         ]
@@ -71,7 +79,6 @@ class PromptBuilder:
             sections.append(f"Un agente humano rechazo tu respuesta anterior por el siguiente motivo, tenelo en cuenta:\n{rejection_reason}")
 
         return "\n\n".join(sections)
-    
     # arma el prompt para evaluar que tan bien fundamentada esta la respuesta generada
     def build_confidence_prompt(self, retrieval: RetrievalResult, response_text: str) -> str:
         context_text = self._format_chunks(retrieval.chunks)
