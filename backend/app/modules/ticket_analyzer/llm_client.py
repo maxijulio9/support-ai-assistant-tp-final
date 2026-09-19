@@ -18,6 +18,7 @@ VALID_INTENTS = [
     "solicitud_accion",
     "reclamo",
     "cancelacion",
+    "cierre_conversacion",
 ]
 
 # niveles de impacto y urgencia segun ITIL, universales, no dependen del negocio
@@ -29,7 +30,7 @@ CLASSIFICATION_PROMPT = """Sos un agente de soporte nivel 1. Tu tarea es clasifi
 Devolvé UNICAMENTE un JSON con estos 7 campos, sin texto adicional:
 {{
   "category": una de estas categorias: {categories},
-  "intent": uno de estos intents: {intents},
+  "intent": uno de estos intents: {intents}. Usá cierre_conversacion cuando el mensaje es un agradecimiento o una confirmacion de que el cliente ya resolvio su consulta, sin pedir nada nuevo,
   "resolved_by": "L1" si se puede resolver con informacion de la base de conocimiento, "L2" si requiere intervencion humana especializada, "MISSING_INFO" si falta informacion para resolver,
   "scope": "IN_SCOPE" si la consulta esta dentro del alcance del soporte, "OUT_OF_SCOPE" si no tiene relacion con los servicios,
   "sentiment": "positivo", "negativo" o "neutro" segun el tono del usuario,
