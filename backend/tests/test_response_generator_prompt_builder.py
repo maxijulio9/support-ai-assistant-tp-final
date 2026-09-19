@@ -83,3 +83,26 @@ def test_build_confidence_prompt_includes_context_and_response():
 
     assert "contenido del chunk" in prompt
     assert "una respuesta cualquiera" in prompt
+
+# verifica que el prompt pide responder en portugues cuando el ticket esta en ese idioma
+def test_prompt_incluye_idioma_portugues():
+    analysis = _build_analysis(language_code="pt", conversation_history=[ConversationTurn(role="user", content="consulta")])
+    retrieval = RetrievalResult(issue_key="TEST-1", chunks=[
+        RetrievedChunk(chunk_id="1", content="algun contenido", similarity_score=0.5)
+    ])
+
+    prompt = builder.build_prompt(analysis, retrieval)
+
+    assert "portugués" in prompt
+
+
+# verifica que por defecto pide responder en español si no hay language_code
+def test_prompt_usa_espanol_por_defecto():
+    analysis = _build_analysis(language_code=None, conversation_history=[ConversationTurn(role="user", content="consulta")])
+    retrieval = RetrievalResult(issue_key="TEST-1", chunks=[
+        RetrievedChunk(chunk_id="1", content="algun contenido", similarity_score=0.5)
+    ])
+
+    prompt = builder.build_prompt(analysis, retrieval)
+
+    assert "español" in prompt
