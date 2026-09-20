@@ -32,7 +32,7 @@ Devolvé UNICAMENTE un JSON con estos 7 campos, sin texto adicional:
   "category": una de estas categorias: {categories},
   "intent": uno de estos intents: {intents}. Usá cierre_conversacion UNICAMENTE si el mensaje completo es un agradecimiento o confirmacion de cierre, sin absolutamente ninguna pregunta, duda o pedido adicional, ni siquiera implicito. Si el mensaje contiene cualquier pregunta, aunque venga despues de un agradecimiento, NO uses cierre_conversacion, clasificalo segun esa pregunta,
   "resolved_by": "L1" si se puede resolver con informacion de la base de conocimiento, "L2" si requiere intervencion humana especializada, "MISSING_INFO" si falta informacion para resolver,
-  "scope": "IN_SCOPE" si la consulta esta dentro del alcance del soporte, "OUT_OF_SCOPE" si no tiene relacion con los servicios,
+  "scope": "IN_SCOPE" si la consulta es sobre el uso, funcionamiento u operativa de la plataforma (depositos, retiros, comisiones, kyc, seguridad de la cuenta, errores tecnicos, etc). "OUT_OF_SCOPE" si la consulta no tiene relacion con los servicios de la plataforma. Esto incluye, sin limitarse a, preguntas sobre quien o que es el sistema que esta respondiendo (si es un bot, un humano, un agente, o quien esta del otro lado), temas ajenos a la plataforma (clima, deportes, noticias), saludos o charla informal sin ninguna consulta real, o pedidos que no correspondan a un servicio de la plataforma,  
   "sentiment": "positivo", "negativo" o "neutro" segun el tono del usuario,
   "impact": uno de estos niveles: {impact_levels}, segun cuanto del negocio afecta este problema (cuantos usuarios, si es un servicio critico, riesgo financiero o de seguridad),
   "urgency": uno de estos niveles: {urgency_levels}, segun que tan rapido hay que resolverlo
