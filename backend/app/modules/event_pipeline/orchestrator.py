@@ -5,7 +5,7 @@
 import logging
 from sqlalchemy import text
 from app.core.database import get_db
-from app.core.jsm_status_actions import JSM_STATUS_ACTION_ESCALATE, JSM_STATUS_ACTION_AWAITING_CUSTOMER
+from app.core.jsm_status_actions import JSM_STATUS_ACTION_ESCALATE, JSM_STATUS_ACTION_AWAITING_CUSTOMER, JSM_STATUS_ACTION_RESOLVED
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.service import TicketAnalyzer
 from app.modules.interaction_logger.service import InteractionLogger
@@ -77,14 +77,41 @@ class Orchestrator:
 
                 except Exception as e:
                     logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {e}")
-                    
-                    
+                          
             return {
                 "status": "processed",
                 "issue_key": event.issue_key,
                 "analysis": analysis.model_dump(),
                 "retrieved_chunks": [],
                 "generated_response": {"action_type": ACTION_ESCALATE},
+            }
+
+        # el cliente esta confirmando que ya resolvio su consulta, no hace falta generar nada nuevo
+        if analysis.intent == "cierre_conversacion":
+            self.interaction_logger.update_interaction_result(
+                interaction_id,
+                chunks_retrieved_count=0,
+                generated_response=None,
+                confidence_score=None,
+                decision="RESOLVED",
+            )
+
+            transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED)
+            if transition_id:
+                try:
+                    await self.jsm_executor.transition_issue(event.issue_key, transition_id)
+                    logger.info(f"[{event.issue_key}] cierre de conversacion detectado, transicionado a resolved")
+                except Exception as e:
+                    logger.error(f"[{event.issue_key}] fallo al transicionar a resolved: {e}")
+            else:
+                logger.warning(f"[{event.issue_key}] cierre de conversacion detectado, sin transicion configurada para resolved")
+
+            return {
+                "status": "processed",
+                "issue_key": event.issue_key,
+                "analysis": analysis.model_dump(),
+                "retrieved_chunks": [],
+                "generated_response": {"action_type": "RESOLVED"},
             }
 
         # busca en la kb los chunks mas relevantes segun el analisis de M2 en M3
