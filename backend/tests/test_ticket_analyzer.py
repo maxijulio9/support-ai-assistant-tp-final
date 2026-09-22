@@ -170,3 +170,60 @@ async def test_escalate_direct_false_en_camino_normal(mock_llm_class, mock_histo
     result = await analyzer.analyze(_build_event())
 
     assert result.escalate_direct is False
+    
+# verifica que la prioridad no baja si la calculada es menor a la actual
+@pytest.mark.asyncio
+async def test_determine_priority_no_baja_de_high_a_low():
+    analyzer = TicketAnalyzer()
+    analyzer.jsm_executor = MagicMock()
+    analyzer.jsm_executor.update_fields = AsyncMock()
+
+    resultado = await analyzer._determine_priority(impact="Low", urgency="Low", user_priority="High", issue_key="TEST-1")
+
+    assert resultado == "High"
+    analyzer.jsm_executor.update_fields.assert_not_called()
+
+
+# verifica que la prioridad si escala cuando la calculada es mayor a la actual
+@pytest.mark.asyncio
+async def test_determine_priority_escala_de_low_a_highest():
+    analyzer = TicketAnalyzer()
+    analyzer.jsm_executor = MagicMock()
+    analyzer.jsm_executor.update_fields = AsyncMock()
+
+    resultado = await analyzer._determine_priority(impact="Critical", urgency="Critical", user_priority="Low", issue_key="TEST-1")
+
+    assert resultado == "Highest"
+    analyzer.jsm_executor.update_fields.assert_called_once()
+
+
+# verifica que un cierre de conversacion no recalcula la prioridad, mantiene la actual
+@patch("app.modules.ticket_analyzer.service.ProjectRepository")
+@patch("app.modules.ticket_analyzer.service.ConversationHistory")
+@patch("app.modules.ticket_analyzer.service.LlmClient")
+@pytest.mark.asyncio
+async def test_cierre_conversacion_no_recalcula_prioridad(mock_llm_class, mock_history_class, mock_repo_class):
+    mock_history = MagicMock()
+    mock_history.append = AsyncMock()
+    mock_history.get = AsyncMock(return_value=[])
+    mock_history_class.return_value = mock_history
+
+    mock_llm = MagicMock()
+    mock_llm.classify.return_value = _build_classification("L1")
+    mock_llm.classify.return_value.intent = "cierre_conversacion"
+    mock_llm_class.return_value = mock_llm
+
+    mock_repo = MagicMock()
+    mock_repo.get_project_context.return_value = _build_project_context()
+    mock_repo_class.return_value = mock_repo
+
+    analyzer = TicketAnalyzer()
+    analyzer.jsm_executor.update_fields = AsyncMock()
+
+    event = _build_event()
+    event.priority = "High"
+
+    result = await analyzer.analyze(event)
+
+    assert result.priority == "High"
+    analyzer.jsm_executor.update_fields.assert_not_called()
