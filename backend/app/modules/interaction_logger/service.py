@@ -215,3 +215,27 @@ class InteractionLogger:
 
         finally:
             db.close()
+            
+    # actualiza el status_id del ticket despues de una transicion real ejecutada en jsm
+    # se llama solo cuando transition_issue confirmo exito, para mantener la bd sincronizada con el estado real
+    def update_ticket_status(self, issue_key: str, status_name: str):
+        db = next(get_db())
+        try:
+            status_id = self._find_catalog_id(db, "ticket_status", status_name, search_column="name")
+            if not status_id:
+                logger.warning(f"[{issue_key}] no se pudo resolver status_id para '{status_name}', no se actualiza")
+                return
+
+            db.execute(text("UPDATE ticket SET status_id = :status_id WHERE issue_key = :issue_key"), {
+                "status_id": status_id,
+                "issue_key": issue_key,
+            })
+            db.commit()
+            logger.info(f"[{issue_key}] status_id actualizado a '{status_name}' en la bd")
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"[{issue_key}] error al actualizar status_id: {e}")
+
+        finally:
+            db.close()
