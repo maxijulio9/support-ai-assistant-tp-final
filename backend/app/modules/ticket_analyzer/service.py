@@ -64,12 +64,16 @@ class TicketAnalyzer:
         classification = self._classify(texto_usuario, conversation_history, project_context.categories)
         
         
-        priority = await self._determine_priority(
-            impact=classification.impact if classification else None,
-            urgency=classification.urgency if classification else None,
-            user_priority=event.priority,
-            issue_key=event.issue_key
-        )
+        # un cierre de conversacion no tiene contenido real que evaluar, se mantiene la prioridad actual sin tocarla
+        if classification and classification.intent == "cierre_conversacion":
+            priority = event.priority or "Medium"
+        else:
+            priority = await self._determine_priority(
+                impact=classification.impact if classification else None,
+                urgency=classification.urgency if classification else None,
+                user_priority=event.priority,
+                issue_key=event.issue_key
+            )
         
         # si el llm no pudo clasificar, asumimos que hay info suficiente
         if classification is None:
@@ -110,18 +114,24 @@ class TicketAnalyzer:
         return self.llm_client.classify(text, conversation_history, categories)
     
 
-    # si no hay clasificacion todavia, usa la prioridad del usuario, cu8
+    # orden de severidad de prioridad, para saber si un valor nuevo es una escalada real o no
+    PRIORITY_ORDER = {"Low": 0, "Medium": 1, "High": 2, "Highest": 3}
+
+    # solo escala la prioridad hacia arriba, nunca la baja por un mensaje aislado
+    # un problema urgente sigue siendo urgente aunque un comentario puntual suene neutro
     async def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str) -> str:
+        current_priority = user_priority or "Medium"
+
         if not impact or not urgency:
-            return user_priority or "Medium"
+            return current_priority
 
         calculated = self._calculate_priority(impact, urgency)
 
-        if calculated == user_priority:
-            logger.info(f"[{issue_key}] prioridad ok con la del usuario: {calculated}")
-            return calculated
+        if self.PRIORITY_ORDER.get(calculated, 0) <= self.PRIORITY_ORDER.get(current_priority, 0):
+            logger.info(f"[{issue_key}] prioridad calculada '{calculated}' no supera la actual '{current_priority}', se mantiene")
+            return current_priority
 
-        logger.info(f"[{issue_key}] prioridad calculada '{calculated}' diferente a la elegida por usuario '{user_priority}'")
+        logger.info(f"[{issue_key}] prioridad escala de '{current_priority}' a '{calculated}'")
 
         try:
             await self.jsm_executor.update_fields(issue_key, {"priority": {"name": calculated}})
