@@ -61,11 +61,12 @@ class Orchestrator:
                 decision=ACTION_ESCALATE,
             )
 
-            transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
+            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
             
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
+                    self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
                     logger.info(f"[{event.issue_key}] escalate_direct desde m2, transicionado en jsm")
 
                     acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
@@ -96,10 +97,11 @@ class Orchestrator:
                 decision="RESOLVED",
             )
 
-            transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED)
+            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED)
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
+                    self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
                     logger.info(f"[{event.issue_key}] cierre de conversacion detectado, transicionado a resolved")
                 except Exception as e:
                     logger.error(f"[{event.issue_key}] fallo al transicionar a resolved: {e}")
@@ -155,9 +157,10 @@ class Orchestrator:
 
                 # si ya se le respondio al cliente (o se le pidio mas info), transiciona a un estado de espera
                 if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_REQUEST_INFO):
-                    transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER)
+                    transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER)
                     if transition_id:
                         await self.jsm_executor.transition_issue(event.issue_key, transition_id)
+                        self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
                         logger.info(f"[{event.issue_key}] transicionado a awaiting_customer en jsm")
                     else:
                         logger.warning(f"[{event.issue_key}] sin transicion configurada para awaiting_customer")
@@ -167,10 +170,11 @@ class Orchestrator:
 
         
         elif generated_response.action_type == ACTION_ESCALATE:
-            transition_id = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
+            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
+                    self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
                     logger.info(f"[{event.issue_key}] transicionado en jsm")
 
                     acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
@@ -184,7 +188,7 @@ class Orchestrator:
                     logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {e}")
             else:
                 logger.warning(f"[{event.issue_key}] ticket va para escalamiento, sin transicion configurada o disponible")
-
+                
         return {
             "status": "processed",
             "issue_key": event.issue_key,
@@ -196,22 +200,22 @@ class Orchestrator:
     # resuelve el transition_id real de jsm para una accion generica (escalate, resolve, etc)
     # busca el system_action(en jsm_status_actions)configurado para ese proyecto y lo matchea contra
     # las transiciones disponibles para ese ticket puntual en su estado actual
-    async def _resolve_transition_id(self, issue_key: str, project_id: str, system_action: str) -> str | None:
+    async def _resolve_transition_id(self, issue_key: str, project_id: str, system_action: str) -> tuple[str | None, str | None]:
         target_status_name = self._get_target_status_name(project_id, system_action)
 
         if target_status_name is None:
             logger.warning(f"[{issue_key}] no hay mapeo configurado para la accion '{system_action}' en este proyecto")
-            return None
+            return None, None
 
         transitions_data = await self.jsm_executor.get_transitions(issue_key)
         transitions = transitions_data.get("transitions", [])
 
         for transition in transitions:
             if transition.get("to", {}).get("name") == target_status_name:
-                return transition["id"]
+                return transition["id"], target_status_name
 
         logger.warning(f"[{issue_key}] no se encontro una transicion disponible hacia '{target_status_name}'")
-        return None
+        return None, target_status_name
 
     # busca en project_config el nombre del estado configurado para una accion, en un proyecto puntual
     def _get_target_status_name(self, project_id: str, system_action: str) -> str | None:
