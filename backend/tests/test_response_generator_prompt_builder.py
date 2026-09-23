@@ -106,3 +106,14 @@ def test_prompt_usa_espanol_por_defecto():
     prompt = builder.build_prompt(analysis, retrieval)
 
     assert "español" in prompt
+
+# verifica que el prompt incluye el pais del cliente
+def test_prompt_incluye_pais_del_cliente():
+    analysis = _build_analysis(country="AR", conversation_history=[ConversationTurn(role="user", content="consulta")])
+    retrieval = RetrievalResult(issue_key="TEST-1", chunks=[
+        RetrievedChunk(chunk_id="1", content="algun contenido", similarity_score=0.5)
+    ])
+
+    prompt = builder.build_prompt(analysis, retrieval)
+
+    assert "AR" in prompt
