@@ -480,3 +480,43 @@ async def test_saves_retrieved_chunks_after_generation(mock_analyzer_class, mock
     await orchestrator.process_event(_build_event())
 
     mock_logger.save_retrieved_chunks.assert_called_once_with("interaction-789", retrieval.chunks)
+    
+
+# verifica que update_ticket_status se llama con el nombre real del estado tras una transicion exitosa
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_updates_ticket_status_after_successful_transition(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class, mock_get_db):
+    analysis = _build_analysis()
+    retrieval = _build_retrieval()
+    generated = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_AUTO_PUBLISH, response_text="respuesta")
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+    mock_retriever_class.return_value = MagicMock(retrieve=MagicMock(return_value=retrieval))
+    mock_generator_class.return_value = MagicMock(generate=MagicMock(return_value=generated))
+
+    mock_logger = MagicMock()
+    mock_logger_class.return_value = mock_logger
+
+    mock_db = MagicMock()
+    mock_row = MagicMock()
+    mock_row.name = "Waiting for customer"
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_jsm = MagicMock()
+    mock_jsm.post_comment = AsyncMock()
+    mock_jsm.get_transitions = AsyncMock(return_value={"transitions": [{"id": "5", "to": {"name": "Waiting for customer"}}]})
+    mock_jsm.transition_issue = AsyncMock(return_value=True)
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    mock_logger.update_ticket_status.assert_called_once_with("TEST-1", "Waiting for customer")
