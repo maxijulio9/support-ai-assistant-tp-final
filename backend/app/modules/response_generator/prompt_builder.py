@@ -11,6 +11,11 @@ LANGUAGE_NAMES = {
     "en": "inglés",
 }
 
+# nombres legibles para cada codigo de pais soportado, usados en la instruccion del prompt
+COUNTRY_NAMES = {
+    "AR": "Argentina",
+    "BR": "Brasil",
+}
 
 SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera, respondiendo directamente al cliente de {country}. Tu tarea es responder la consulta del usuario basandote UNICAMENTE en el contexto de la base de conocimiento que se te provee abajo.
 
@@ -69,12 +74,14 @@ class PromptBuilder:
         context_text = self._format_chunks(retrieval.chunks)
         history_text = self._format_history(analysis.conversation_history)
         language_name = LANGUAGE_NAMES.get(analysis.language_code, "español")
+            
+        country_name = COUNTRY_NAMES.get(analysis.country, analysis.country or "el pais del cliente")
 
         sections = [
-            SYSTEM_PROMPT.format(language=language_name, country=analysis.country or "el pais del cliente"),
+            SYSTEM_PROMPT.format(language=language_name, country=country_name),
             f"Contexto recuperado de la base de conocimiento:\n{context_text}",
             f"Historial de la conversacion:\n{history_text}",
-        ]
+        ] 
 
         if rejection_reason:
             sections.append(f"Un agente humano rechazo tu respuesta anterior por el siguiente motivo, tenelo en cuenta:\n{rejection_reason}")
