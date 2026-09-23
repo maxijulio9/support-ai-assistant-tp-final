@@ -116,4 +116,4 @@ def test_prompt_incluye_pais_del_cliente():
 
     prompt = builder.build_prompt(analysis, retrieval)
 
-    assert "AR" in prompt
+    assert "Argentina" in prompt
