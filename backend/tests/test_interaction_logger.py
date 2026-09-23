@@ -198,3 +198,34 @@ def test_save_retrieved_chunks_sin_chunks_no_hace_nada(mock_get_db):
     logger_service.save_retrieved_chunks("int-1", [])
 
     mock_get_db.assert_not_called()
+    
+# verifica que update_ticket_status actualiza el status_id correcto
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_ticket_status_actualiza_status_id(mock_get_db):
+    mock_db = MagicMock()
+    mock_row = MagicMock()
+    mock_row.id = "status-resolved-id"
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    logger_service = InteractionLogger()
+    logger_service.update_ticket_status("TEST-1", "Resolved")
+
+    update_call = mock_db.execute.call_args_list[-1]
+    update_params = update_call[0][1]
+    assert update_params["status_id"] == "status-resolved-id"
+    assert update_params["issue_key"] == "TEST-1"
+    mock_db.commit.assert_called_once()
+
+
+# verifica que no rompe si no encuentra el status_id, solo loguea
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_ticket_status_sin_status_encontrado_no_actualiza(mock_get_db):
+    mock_db = MagicMock()
+    mock_db.execute.return_value.fetchone.return_value = None
+    mock_get_db.return_value = iter([mock_db])
+
+    logger_service = InteractionLogger()
+    logger_service.update_ticket_status("TEST-1", "EstadoInexistente")
+
+    mock_db.commit.assert_not_called()
