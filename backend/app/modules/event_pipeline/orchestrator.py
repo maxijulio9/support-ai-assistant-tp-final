@@ -126,13 +126,17 @@ class Orchestrator:
 
         # reintenta una sola vez, solo si la razon de escalar es confianza baja
         # (out_of_scope, no_context o llm_failure no mejoran reintentando con el mismo contexto)
+        # amplia la busqueda a 10 chunks (el doble del default) para darle al segundo intento la chance
+        # de encontrar contexto relevante que no haya entrado en el top 5 original
         # regenerate() ya limita el resultado a auto_publish o escalate, nunca un segundo needs_review
         if generated_response.escalation_reason == ESCALATION_REASON_LOW_CONFIDENCE:
-            logger.info(f"[{event.issue_key}] confianza baja en el primer intento, reintentando una vez")
+            logger.info(f"[{event.issue_key}] confianza baja en el primer intento, ampliando busqueda y reintentando")
+            retrieval_result = self.knowledge_retriever.retrieve(analysis, top_k=10)
             generated_response = self.response_generator.regenerate(
                 analysis, retrieval_result, rejection_reason="la respuesta generada no esta suficientemente respaldada por el contexto"
             )
             logger.info(f"[{event.issue_key}] reintento completo, action_type={generated_response.action_type}")
+            
         
         # completa la interaccion con el resultado final de m3/m4
         self.interaction_logger.update_interaction_result(
