@@ -31,8 +31,9 @@ class KnowledgeRetriever:
 
     # punto de entrada del modulo
     # recibe el analisis de m2 y devuelve los chunks mas relevantes de la kb
-    def retrieve(self, analysis: TicketAnalysis) -> RetrievalResult:
-        logger.info(f"[{analysis.issue_key}] iniciando busqueda en kb")
+    # top_k permite traer mas candidatos de lo normal, usado en el retry para darle mas material al segundo intento
+    def retrieve(self, analysis: TicketAnalysis, top_k: int = 5) -> RetrievalResult:
+        logger.info(f"[{analysis.issue_key}] iniciando busqueda en kb, top_k={top_k}")
 
         # arma el texto de consulta desde el ultimo turno del historial
         if analysis.conversation_history:
@@ -41,10 +42,10 @@ class KnowledgeRetriever:
             query_text = analysis.summary or ""
 
         # busca con el idioma original del ticket
-        candidates = self._search_in_language(query_text, analysis.country)
+        candidates = self._search_in_language(query_text, analysis.country, top_k)
 
         # si hay spaces en otros idiomas para este proyecto, busca tambien traduciendo
-        candidates += self._search_in_other_languages(analysis, query_text)
+        candidates += self._search_in_other_languages(analysis, query_text, top_k)
 
         # aplica el boost: suma puntos a los chunks cuya categoria coincide con la del ticket
         for chunk in candidates:
@@ -57,7 +58,7 @@ class KnowledgeRetriever:
         # ordena de mayor a menor por score, sin duplicar el mismo chunk si aparecio en ambas busquedas
         candidates = self._deduplicate(candidates)
         candidates.sort(key=get_score, reverse=True)
-        chunks = candidates[:5]
+        chunks = candidates[:top_k]
 
         # si no hay chunks o el mejor no supera el umbral, no hay contexto suficiente
         threshold = analysis.similarity_threshold if analysis.similarity_threshold is not None else SIMILARITY_THRESHOLD
@@ -81,12 +82,12 @@ class KnowledgeRetriever:
         )
 
     # busca chunks con el texto tal cual, en su idioma original
-    def _search_in_language(self, query_text: str, country: str | None) -> list:
+    def _search_in_language(self, query_text: str, country: str | None, top_k: int) -> list:
         query_embedding = self.embedding_client.generate_embedding(query_text)
-        return self.chunk_retriever.find_similar_chunks(query_embedding=query_embedding, country=country)
+        return self.chunk_retriever.find_similar_chunks(query_embedding=query_embedding, country=country, top_k=top_k)
 
     # si el proyecto tiene spaces en idiomas distintos al del ticket, traduce y busca tambien ahi
-    def _search_in_other_languages(self, analysis: TicketAnalysis, query_text: str) -> list:
+    def _search_in_other_languages(self, analysis: TicketAnalysis, query_text: str, top_k: int) -> list:
         if not analysis.project_id or not analysis.language_code:
             return []
 
@@ -101,7 +102,7 @@ class KnowledgeRetriever:
                 continue
 
             translated_embedding = self.embedding_client.generate_embedding(translated_text)
-            extra_candidates += self.chunk_retriever.find_similar_chunks(query_embedding=translated_embedding, country=analysis.country)
+            extra_candidates += self.chunk_retriever.find_similar_chunks(query_embedding=translated_embedding, country=analysis.country, top_k=top_k)
 
         return extra_candidates
 
