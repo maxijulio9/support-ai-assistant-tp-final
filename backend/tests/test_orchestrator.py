@@ -520,3 +520,43 @@ async def test_updates_ticket_status_after_successful_transition(mock_analyzer_c
     await orchestrator.process_event(_build_event())
 
     mock_logger.update_ticket_status.assert_called_once_with("TEST-1", "Waiting for customer")
+    
+    
+# verifica que el retry vuelve a llamar a retrieve con top_k ampliado
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_retry_calls_retrieve_again_with_wider_top_k(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
+    analysis = _build_analysis()
+    first_retrieval = _build_retrieval()
+    second_retrieval = _build_retrieval()
+    first_attempt = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE, escalation_reason="low_confidence")
+    retried = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
+
+    mock_analyzer = MagicMock()
+    mock_analyzer.analyze = AsyncMock(return_value=analysis)
+    mock_analyzer_class.return_value = mock_analyzer
+
+    mock_retriever = MagicMock()
+    mock_retriever.retrieve.side_effect = [first_retrieval, second_retrieval]
+    mock_retriever_class.return_value = mock_retriever
+
+    mock_generator = MagicMock()
+    mock_generator.generate.return_value = first_attempt
+    mock_generator.regenerate.return_value = retried
+    mock_generator_class.return_value = mock_generator
+
+    mock_logger_class.return_value = MagicMock()
+    mock_jsm_class.return_value = MagicMock()
+
+    orchestrator = Orchestrator()
+    await orchestrator.process_event(_build_event())
+
+    assert mock_retriever.retrieve.call_count == 2
+    mock_retriever.retrieve.assert_called_with(analysis, top_k=10)
+    mock_generator.regenerate.assert_called_once_with(
+        analysis, second_retrieval, rejection_reason="la respuesta generada no esta suficientemente respaldada por el contexto"
+    )
