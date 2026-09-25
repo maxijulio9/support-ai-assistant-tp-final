@@ -34,7 +34,8 @@ from app.modules.internal_api.schemas import (
     ConfigureSpacesResponse,
     StartIndexingRequest,
     StartIndexingResponse,
-    IndexingStatusResponse
+    IndexingStatusResponse,
+    MetricsSummaryResponse,
     
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
@@ -47,6 +48,7 @@ from app.modules.internal_api.services.confluence_connection_service import Conf
 from app.modules.internal_api.services.space_config_service import SpaceConfigurationService
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
+from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 
 
 router = APIRouter(tags=["InternalAPI"])
@@ -62,6 +64,7 @@ _confluence_connection_service = ConfluenceConnectionService()
 _space_config_service = SpaceConfigurationService()
 _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
+_metrics_service = InteractionMetricsService()
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -314,3 +317,10 @@ async def get_indexing_status():
         raise HTTPException(status_code=404, detail="Todavia no se disparo ninguna indexacion")
 
     return IndexingStatusResponse(**status)
+
+
+# resumen agregado de metricas de interacciones, para el dashboard (TF-160)
+@router.get("/api/metrics/summary", response_model=MetricsSummaryResponse)
+async def get_metrics_summary(project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
+    result = _metrics_service.get_summary(project_id, from_date, to_date)
+    return MetricsSummaryResponse(**result)
