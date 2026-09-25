@@ -36,6 +36,7 @@ from app.modules.internal_api.schemas import (
     StartIndexingResponse,
     IndexingStatusResponse,
     MetricsSummaryResponse,
+    MetricsByCategoryResponse,
     
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
@@ -324,3 +325,9 @@ async def get_indexing_status():
 async def get_metrics_summary(project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
     result = _metrics_service.get_summary(project_id, from_date, to_date)
     return MetricsSummaryResponse(**result)
+
+# desglose de metricas por categoria, para el dashboard (TF-160)
+@router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
+async def get_metrics_by_category(project_id: str | None = None):
+    result = _metrics_service.get_by_category(project_id)
+    return MetricsByCategoryResponse(categories=result)
