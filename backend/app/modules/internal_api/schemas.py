@@ -211,3 +211,16 @@ class MetricsSummaryResponse(BaseModel):
     resolved_externally_count: int
     automatic_resolution_rate: float
     avg_confidence_score: float | None
+
+# un item del desglose por categoria
+class CategoryMetric(BaseModel):
+    category: str
+    total_interactions: int
+    auto_publish_count: int
+    automatic_resolution_rate: float
+
+
+
+# sugerencia de respuesta del desglose por categoria
+class MetricsByCategoryResponse(BaseModel):
+    categories: list[CategoryMetric]
