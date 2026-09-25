@@ -38,6 +38,7 @@ from app.modules.internal_api.schemas import (
     MetricsSummaryResponse,
     MetricsByCategoryResponse,
     InteractionListResponse,
+    InteractionDetailResponse,
     
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
@@ -349,3 +350,14 @@ async def list_interactions(
 ):
     result = _listing_service.list_interactions(project_id, category, decision, from_date, to_date, limit, offset)
     return InteractionListResponse(interactions=result)
+
+
+# detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)
+@router.get("/api/interactions/{interaction_id}", response_model=InteractionDetailResponse)
+async def get_interaction_detail(interaction_id: str):
+    result = _listing_service.get_detail(interaction_id)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Interaccion no encontrada")
+
+    return InteractionDetailResponse(**result)
