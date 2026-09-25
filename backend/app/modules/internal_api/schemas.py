@@ -198,3 +198,16 @@ class IndexingStatusResponse(BaseModel):
     error_detail: str | None = None
     started_at: str
     updated_at: str
+    
+    
+#respuesta del resumen de metricas
+class MetricsSummaryResponse(BaseModel):
+    total_interactions: int
+    auto_publish_count: int
+    needs_review_count: int
+    escalate_count: int
+    request_info_count: int
+    resolved_count: int
+    resolved_externally_count: int
+    automatic_resolution_rate: float
+    avg_confidence_score: float | None
