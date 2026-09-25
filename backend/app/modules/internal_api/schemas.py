@@ -224,3 +224,20 @@ class CategoryMetric(BaseModel):
 # sugerencia de respuesta del desglose por categoria
 class MetricsByCategoryResponse(BaseModel):
     categories: list[CategoryMetric]
+    
+
+# un item del listado de interacciones
+class InteractionListItem(BaseModel):
+    interaction_id: str
+    issue_key: str
+    summary: str | None
+    category: str | None
+    priority: str | None
+    decision: str | None
+    confidence_score: float | None
+    created_at: str | None
+
+
+# respuesta del listado paginado de interacciones
+class InteractionListResponse(BaseModel):
+    interactions: list[InteractionListItem]
