@@ -37,6 +37,7 @@ from app.modules.internal_api.schemas import (
     IndexingStatusResponse,
     MetricsSummaryResponse,
     MetricsByCategoryResponse,
+    InteractionListResponse,
     
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
@@ -50,6 +51,7 @@ from app.modules.internal_api.services.space_config_service import SpaceConfigur
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
+from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
 
 router = APIRouter(tags=["InternalAPI"])
@@ -66,6 +68,7 @@ _space_config_service = SpaceConfigurationService()
 _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
 _metrics_service = InteractionMetricsService()
+_listing_service = InteractionListingService()
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
@@ -320,14 +323,29 @@ async def get_indexing_status():
     return IndexingStatusResponse(**status)
 
 
-# resumen agregado de metricas de interacciones, para el dashboard (TF-160)
+# resumen agregado de metricas de interacciones, para el dashboard 
+#
 @router.get("/api/metrics/summary", response_model=MetricsSummaryResponse)
 async def get_metrics_summary(project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
     result = _metrics_service.get_summary(project_id, from_date, to_date)
     return MetricsSummaryResponse(**result)
 
-# desglose de metricas por categoria, para el dashboard (TF-160)
+# desglose de metricas por categoria, para el dashboard
 @router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
 async def get_metrics_by_category(project_id: str | None = None):
     result = _metrics_service.get_by_category(project_id)
     return MetricsByCategoryResponse(categories=result)
+
+# lista interacciones paginadas, con filtros, para el dashboard
+@router.get("/api/interactions", response_model=InteractionListResponse)
+async def list_interactions(
+    project_id: str | None = None,
+    category: str | None = None,
+    decision: str | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    limit: int = 20,
+    offset: int = 0,
+):
+    result = _listing_service.list_interactions(project_id, category, decision, from_date, to_date, limit, offset)
+    return InteractionListResponse(interactions=result)
