@@ -80,3 +80,46 @@ class InteractionMetricsRepository:
             }
         finally:
             db.close()
+            
+    # desglosa la tasa de resolucion automatica por categoria, para ver en que temas el sistema resuelve mejor
+    def get_by_category(self, project_id: str | None = None) -> list[dict]:
+        db = next(get_db())
+        try:
+            query = """
+                SELECT tc.name AS category, i.decision
+                FROM interaction i
+                JOIN ticket t ON i.ticket_id = t.id
+                JOIN ticket_category tc ON i.category_id = tc.id
+                WHERE i.decision IS NOT NULL
+            """
+            params = {}
+
+            if project_id:
+                query += " AND t.project_id = :project_id"
+                params["project_id"] = project_id
+
+            rows = db.execute(text(query), params).fetchall()
+
+            totals_by_category = {}
+            auto_publish_by_category = {}
+
+            for row in rows:
+                category = row.category
+                totals_by_category[category] = totals_by_category.get(category, 0) + 1
+                if row.decision == "AUTO_PUBLISH":
+                    auto_publish_by_category[category] = auto_publish_by_category.get(category, 0) + 1
+
+            result = []
+            for category, total in totals_by_category.items():
+                auto_publish = auto_publish_by_category.get(category, 0)
+                result.append({
+                    "category": category,
+                    "total_interactions": total,
+                    "auto_publish_count": auto_publish,
+                    "automatic_resolution_rate": round(auto_publish / total, 4),
+                })
+
+            result.sort(key=lambda r: r["total_interactions"], reverse=True)
+            return result
+        finally:
+            db.close()
