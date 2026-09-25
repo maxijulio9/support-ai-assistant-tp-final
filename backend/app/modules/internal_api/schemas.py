@@ -241,3 +241,25 @@ class InteractionListItem(BaseModel):
 # respuesta del listado paginado de interacciones
 class InteractionListResponse(BaseModel):
     interactions: list[InteractionListItem]
+    
+
+# un chunk recuperado, para el detalle de una interaccion
+class RetrievedChunkDetail(BaseModel):
+    page_title: str | None
+    similarity_score: float
+    rank_position: int
+
+
+# detalle completo de una interaccion puntual
+class InteractionDetailResponse(BaseModel):
+    interaction_id: str
+    issue_key: str
+    summary: str | None
+    category: str | None
+    priority: str | None
+    decision: str | None
+    confidence_score: float | None
+    text_input: str | None
+    generated_response: str | None
+    created_at: str | None
+    chunks: list[RetrievedChunkDetail]
