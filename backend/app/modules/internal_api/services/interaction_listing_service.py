@@ -21,3 +21,7 @@ class InteractionListingService:
         offset: int = 0,
     ) -> list[dict]:
         return self.listing_repository.list_interactions(project_id, category, decision, from_date, to_date, limit, offset)
+
+    # trae el detalle completo de una interaccion puntual, o none si no existe
+    def get_detail(self, interaction_id: str) -> dict | None:
+        return self.listing_repository.get_detail(interaction_id)
