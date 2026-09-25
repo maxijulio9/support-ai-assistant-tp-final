@@ -73,3 +73,59 @@ class InteractionListingRepository:
             ]
         finally:
             db.close()
+        
+    # trae el detalle completo de una interaccion puntual, incluyendo los chunks recuperados
+    def get_detail(self, interaction_id: str) -> dict | None:
+        db = next(get_db())
+        try:
+            row = db.execute(text("""
+                SELECT
+                    i.id,
+                    t.issue_key,
+                    t.summary,
+                    tc.name AS category,
+                    tp.name AS priority,
+                    i.decision,
+                    i.confidence_score,
+                    i.text_input,
+                    i.generated_response,
+                    i.created_at
+                FROM interaction i
+                JOIN ticket t ON i.ticket_id = t.id
+                LEFT JOIN ticket_category tc ON i.category_id = tc.id
+                LEFT JOIN ticket_priority tp ON i.priority_id = tp.id
+                WHERE i.id = :interaction_id
+            """), {"interaction_id": interaction_id}).fetchone()
+
+            if row is None:
+                return None
+
+            chunks = db.execute(text("""
+                SELECT page_title, similarity_score, rank_position
+                FROM retrieved_chunk
+                WHERE interaction_id = :interaction_id
+                ORDER BY rank_position
+            """), {"interaction_id": interaction_id}).fetchall()
+
+            return {
+                "interaction_id": str(row.id),
+                "issue_key": row.issue_key,
+                "summary": row.summary,
+                "category": row.category,
+                "priority": row.priority,
+                "decision": row.decision,
+                "confidence_score": row.confidence_score,
+                "text_input": row.text_input,
+                "generated_response": row.generated_response,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+                "chunks": [
+                    {
+                        "page_title": c.page_title,
+                        "similarity_score": c.similarity_score,
+                        "rank_position": c.rank_position,
+                    }
+                    for c in chunks
+                ],
+            }
+        finally:
+            db.close()
