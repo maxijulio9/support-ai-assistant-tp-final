@@ -39,6 +39,11 @@ class Settings(BaseSettings):
 
     # secret key para encriptar credenciales externas
     app_secret_key: str = ""
+    
+    
+    # JWT
+    jwt_secret_key: str = ""
+    jwt_expiration_minutes: int = 60
 
     class Config:
         env_file = ".env"
