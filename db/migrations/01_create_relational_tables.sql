@@ -202,3 +202,18 @@ CREATE TABLE IF NOT EXISTS kb_indexing_status (
     started_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- usuarios que se autentican en el sistema (admins y agentes que revisan interacciones)
+CREATE TABLE IF NOT EXISTS app_user (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email           VARCHAR(255) NOT NULL,
+    password_hash   TEXT         NOT NULL,
+    full_name       VARCHAR(150) NOT NULL,
+    role            VARCHAR(20)  NOT NULL CHECK (role IN ('admin', 'agent')),
+    is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- evita duplicados de email por mayusculas/minusculas (Test@x.com y test@x.com son el mismo usuario)
+CREATE UNIQUE INDEX IF NOT EXISTS app_user_email_lower_idx ON app_user (LOWER(email));

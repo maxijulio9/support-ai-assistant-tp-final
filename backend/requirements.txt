@@ -12,3 +12,5 @@ arq==0.26.1
 beautifulsoup4==4.12.3
 langchain-text-splitters==0.3.0
 cryptography
+PyJWT==2.15.0
+bcrypt==5.0.0
