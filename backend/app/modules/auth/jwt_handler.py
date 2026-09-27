@@ -1,5 +1,5 @@
 # M9 AuthModule: generacion de JWT para el login
-# decode_token se agrega en TF-76, cuando exista el middleware que lo necesita
+#
 
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -21,3 +21,14 @@ def create_access_token(user_id: str, role: str) -> str:
         "exp": now + timedelta(minutes=settings.jwt_expiration_minutes),
     }
     return jwt.encode(payload, settings.jwt_secret_key, algorithm="HS256")
+
+
+# valida firma y expiracion, devuelve el payload decodificado
+# mismo criterio de error que AuthService.login, ValueError generico para no filtrar el motivo exacto
+def decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, settings.jwt_secret_key, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise ValueError("token invalido")
+    except jwt.InvalidTokenError:
+        raise ValueError("token invalido")
