@@ -3,7 +3,7 @@
 from app.modules.auth.repositories.app_user_repository import AppUserRepository
 from app.modules.auth.password_hasher import verify_password
 from app.modules.auth.jwt_handler import create_access_token
-
+from app.modules.auth.token_denylist import add_to_denylist
 
 class AuthService:
 
@@ -25,3 +25,7 @@ class AuthService:
         token = create_access_token(user.id, user.role)
 
         return {"access_token": token, "role": user.role}
+    
+    # invalida el token actual agregando su jti a la denylist
+    async def logout(self, jti: str, exp: int) -> None:
+        await add_to_denylist(jti, exp)
