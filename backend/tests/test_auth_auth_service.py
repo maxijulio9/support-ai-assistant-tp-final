@@ -2,7 +2,7 @@
 Se mockea AppUserRepository para verificar la logica de login sin tocar la bd real.
 El hashing de password corre real (bcrypt), no se mockea, para probar el flujo completo."""
 
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 import pytest
 from app.modules.auth.services.auth_service import AuthService
 from app.modules.auth.schemas import AppUser
@@ -67,3 +67,14 @@ def test_login_inactive_user(mock_repository_class):
 
     with pytest.raises(ValueError, match="credenciales invalidas"):
         service.login("test@tokenia.com", "Test1234!")
+
+
+# verifica que logout delega en add_to_denylist con el jti y el exp del token
+@patch("app.modules.auth.services.auth_service.add_to_denylist", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_logout_calls_add_to_denylist(mock_add_to_denylist):
+    service = AuthService()
+
+    await service.logout("jti-1", 1790520478)
+
+    mock_add_to_denylist.assert_called_once_with("jti-1", 1790520478)
