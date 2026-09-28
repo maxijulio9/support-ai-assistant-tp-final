@@ -48,6 +48,51 @@ class AppUserRepository:
 
         finally:
             db.close()
+    
+        # trae todos los usuarios, ordenados por fecha de creacion
+    def list_all(self) -> list[AppUser]:
+        db = next(get_db())
+
+        try:
+            query = text("""
+                SELECT id, email, password_hash, full_name, role, is_active, created_at, updated_at
+                FROM app_user
+                ORDER BY created_at
+            """)
+            rows = db.execute(query).fetchall()
+
+            return [self._row_to_app_user(row) for row in rows]
+
+        finally:
+            db.close()
+
+    # inserta un usuario nuevo y devuelve la fila creada
+    # el password_hash ya viene hasheado, el repositorio no hashea nada
+    def create(self, email: str, password_hash: str, full_name: str, role: str) -> AppUser:
+        db = next(get_db())
+
+        try:
+            query = text("""
+                INSERT INTO app_user (email, password_hash, full_name, role)
+                VALUES (:email, :password_hash, :full_name, :role)
+                RETURNING id, email, password_hash, full_name, role, is_active, created_at, updated_at
+            """)
+            row = db.execute(query, {
+                "email": email,
+                "password_hash": password_hash,
+                "full_name": full_name,
+                "role": role,
+            }).fetchone()
+            db.commit()
+
+            return self._row_to_app_user(row)
+
+        except Exception:
+            db.rollback()
+            raise
+
+        finally:
+            db.close()
 
     # arma un AppUser a partir de una fila de la query, evita repetir el mismo mapeo en cada metodo
     def _row_to_app_user(self, row) -> AppUser:
