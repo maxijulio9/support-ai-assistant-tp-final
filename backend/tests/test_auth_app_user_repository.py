@@ -1,4 +1,4 @@
-"""Tests unitarios para AppUserRepository (M9).
+"""Tests unitarios para AppUserRepository de M9
 Se mockea la sesion de base de datos para verificar que arma AppUser correctamente,
 sin tocar la bd real."""
 
@@ -65,3 +65,56 @@ def test_get_by_email_returns_inactive_user_too(mock_get_db):
 
     assert result is not None
     assert result.is_active is False
+
+
+# verifica que list_all devuelve una lista de AppUser a partir de varias filas
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_list_all_returns_all_users(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.fetchall.return_value = [
+        _build_app_user_row(id="user-1", email="admin@tokenia.com", role="admin"),
+        _build_app_user_row(id="user-2", email="agent@tokenia.com", role="agent"),
+    ]
+
+    repo = AppUserRepository()
+    result = repo.list_all()
+
+    assert len(result) == 2
+    assert result[0].email == "admin@tokenia.com"
+    assert result[1].role == "agent"
+
+
+# verifica que create inserta y devuelve el AppUser creado, con commit
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_create_inserts_and_returns_user(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.fetchone.return_value = _build_app_user_row(
+        email="nuevo@tokenia.com", role="agent"
+    )
+
+    repo = AppUserRepository()
+    result = repo.create("nuevo@tokenia.com", "$2b$12$hasheado", "Usuario Nuevo", "agent")
+
+    assert result.email == "nuevo@tokenia.com"
+    assert result.role == "agent"
+    mock_db.commit.assert_called_once()
+
+
+# verifica que create hace rollback si la insercion falla
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_create_rolls_back_on_error(mock_get_db):
+    mock_db = MagicMock()
+    mock_db.execute.side_effect = Exception("email duplicado")
+    mock_get_db.return_value = iter([mock_db])
+
+    repo = AppUserRepository()
+
+    try:
+        repo.create("duplicado@tokenia.com", "$2b$12$hasheado", "Usuario", "agent")
+        assert False, "deberia haber lanzado una excepcion"
+    except Exception:
+        pass
+
+    mock_db.rollback.assert_called_once()
