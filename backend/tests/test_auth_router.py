@@ -5,7 +5,8 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from app.modules.auth.router import router
-from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.dependencies import get_current_user, require_admin
+from app.modules.auth.schemas import AppUser
 
 app = FastAPI()
 app.include_router(router)
@@ -58,3 +59,97 @@ def test_logout_success(mock_auth_service, mock_decode_token):
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
+
+
+# verifica que admin puede listar usuarios
+@patch("app.modules.auth.router.require_admin")
+@patch("app.modules.auth.router._user_management_service")
+def test_list_users_as_admin(mock_service, mock_require_admin):
+    mock_service.list_users.return_value = [
+        AppUser(
+            id="user-1", email="admin@tokenia.com", password_hash="$2b$12$x",
+            full_name="Admin", role="admin", is_active=True,
+            created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+        )
+    ]
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.get("/api/users")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert len(response.json()["users"]) == 1
+    assert "password_hash" not in response.json()["users"][0]
+
+
+# verifica que crear un usuario devuelve 201 con los datos publicos
+@patch("app.modules.auth.router.require_admin")
+@patch("app.modules.auth.router._user_management_service")
+def test_create_user_success(mock_service, mock_require_admin):
+    mock_service.create_user.return_value = AppUser(
+        id="user-2", email="nuevo@tokenia.com", password_hash="$2b$12$x",
+        full_name="Usuario Nuevo", role="agent", is_active=True,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.post("/api/users", json={
+        "email": "nuevo@tokenia.com", "password": "Password123!",
+        "full_name": "Usuario Nuevo", "role": "agent",
+    })
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 201
+    assert response.json()["email"] == "nuevo@tokenia.com"
+
+
+# verifica que email duplicado devuelve 409
+@patch("app.modules.auth.router.require_admin")
+@patch("app.modules.auth.router._user_management_service")
+def test_create_user_duplicate_email(mock_service, mock_require_admin):
+    mock_service.create_user.side_effect = ValueError("el email ya esta registrado")
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.post("/api/users", json={
+        "email": "existente@tokenia.com", "password": "Password123!",
+        "full_name": "Usuario", "role": "agent",
+    })
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 409
+
+
+# verifica que un role invalido es rechazado por pydantic antes de llegar al service
+@patch("app.modules.auth.router.require_admin")
+def test_create_user_invalid_role(mock_require_admin):
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.post("/api/users", json={
+        "email": "nuevo@tokenia.com", "password": "Password123!",
+        "full_name": "Usuario", "role": "superadmin",
+    })
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 422
+
+
+# verifica que una password de menos de 8 caracteres es rechazada por pydantic
+@patch("app.modules.auth.router.require_admin")
+def test_create_user_password_too_short(mock_require_admin):
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.post("/api/users", json={
+        "email": "nuevo@tokenia.com", "password": "corta",
+        "full_name": "Usuario", "role": "agent",
+    })
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 422
