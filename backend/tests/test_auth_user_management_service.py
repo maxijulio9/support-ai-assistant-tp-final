@@ -87,3 +87,35 @@ def test_update_user_raises_when_not_found(mock_repository_class):
 
     with pytest.raises(ValueError, match="usuario no encontrado"):
         service.update_user("id-inexistente", "Nombre", "agent")
+
+# verifica que deactivate_user delega en el repositorio cuando el admin desactiva a otro usuario
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_deactivate_user_success(mock_repository_class):
+    mock_repository_class.return_value.deactivate.return_value = _build_app_user(is_active=False)
+
+    service = UserManagementService()
+    result = service.deactivate_user("user-1", "admin-1")
+
+    assert result.is_active is False
+
+
+# verifica que rechaza con PermissionError si el admin intenta autodesactivarse
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_deactivate_user_rejects_self_deactivation(mock_repository_class):
+    service = UserManagementService()
+
+    with pytest.raises(PermissionError, match="no podes desactivarte a vos mismo"):
+        service.deactivate_user("admin-1", "admin-1")
+
+    mock_repository_class.return_value.deactivate.assert_not_called()
+
+
+# verifica que rechaza con ValueError si el id no existe
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_deactivate_user_raises_when_not_found(mock_repository_class):
+    mock_repository_class.return_value.deactivate.return_value = None
+
+    service = UserManagementService()
+
+    with pytest.raises(ValueError, match="usuario no encontrado"):
+        service.deactivate_user("id-inexistente", "admin-1")
