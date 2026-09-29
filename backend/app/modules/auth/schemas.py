@@ -45,3 +45,7 @@ class UserResponse(BaseModel):
 
 class UserListResponse(BaseModel):
     users: list[UserResponse]
+    
+class UpdateUserRequest(BaseModel):
+    full_name: str
+    role: Literal["admin", "agent"]
