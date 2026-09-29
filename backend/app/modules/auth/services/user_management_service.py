@@ -34,3 +34,15 @@ class UserManagementService:
             raise ValueError("usuario no encontrado")
 
         return usuario_actualizado
+    
+    # desactiva un usuario, rechaza si el admin intenta desactivarse a si mismo
+    def deactivate_user(self, user_id: str, admin_id: str) -> AppUser:
+        if user_id == admin_id:
+            raise PermissionError("no podes desactivarte a vos mismo")
+
+        usuario_desactivado = self.app_user_repository.deactivate(user_id)
+
+        if usuario_desactivado is None:
+            raise ValueError("usuario no encontrado")
+
+        return usuario_desactivado
