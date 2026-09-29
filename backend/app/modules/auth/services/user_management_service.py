@@ -46,3 +46,14 @@ class UserManagementService:
             raise ValueError("usuario no encontrado")
 
         return usuario_desactivado
+    
+    # actualiza el nombre del propio usuario logueado, el rol no se toca aca
+    # se mantiene separado de update_user (que es admin editando a otro) para no acoplar
+    # dos casos de uso conceptualmente distintos en un solo metodo
+    def update_profile(self, user_id: str, full_name: str, role_actual: str) -> AppUser:
+        usuario_actualizado = self.app_user_repository.update(user_id, full_name, role_actual)
+
+        if usuario_actualizado is None:
+            raise ValueError("usuario no encontrado")
+
+        return usuario_actualizado    
