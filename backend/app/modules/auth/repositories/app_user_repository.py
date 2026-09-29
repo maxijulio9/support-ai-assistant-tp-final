@@ -94,6 +94,38 @@ class AppUserRepository:
         finally:
             db.close()
 
+    
+    # actualiza full_name y role de un usuario existente, devuelve None si el id no existe
+    def update(self, user_id: str, full_name: str, role: str) -> AppUser | None:
+        db = next(get_db())
+
+        try:
+            query = text("""
+                UPDATE app_user
+                SET full_name = :full_name, role = :role, updated_at = NOW()
+                WHERE id = :user_id
+                RETURNING id, email, password_hash, full_name, role, is_active, created_at, updated_at
+            """)
+            row = db.execute(query, {
+                "user_id": user_id,
+                "full_name": full_name,
+                "role": role,
+            }).fetchone()
+            db.commit()
+
+            if row is None:
+                return None
+
+            return self._row_to_app_user(row)
+
+        except Exception:
+            db.rollback()
+            raise
+
+        finally:
+            db.close()
+            
+            
     # arma un AppUser a partir de una fila de la query, evita repetir el mismo mapeo en cada metodo
     def _row_to_app_user(self, row) -> AppUser:
         return AppUser(
