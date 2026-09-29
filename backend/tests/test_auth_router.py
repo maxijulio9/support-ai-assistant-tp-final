@@ -199,3 +199,52 @@ def test_update_user_invalid_role(mock_require_admin):
     app.dependency_overrides.clear()
 
     assert response.status_code == 422
+
+# verifica que un admin puede desactivar a otro usuario
+@patch("app.modules.auth.router.require_admin")
+@patch("app.modules.auth.router._user_management_service")
+def test_deactivate_user_success(mock_service, mock_require_admin):
+    mock_service.deactivate_user.return_value = AppUser(
+        id="user-1", email="desactivado@tokenia.com", password_hash="$2b$12$x",
+        full_name="Usuario Desactivado", role="agent", is_active=False,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.patch("/api/users/user-1/deactivate")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is False
+
+
+# verifica que autodesactivarse devuelve 400
+@patch("app.modules.auth.router.require_admin")
+@patch("app.modules.auth.router._user_management_service")
+def test_deactivate_user_self_rejected(mock_service, mock_require_admin):
+    mock_service.deactivate_user.side_effect = PermissionError("no podes desactivarte a vos mismo")
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.patch("/api/users/admin-1/deactivate")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 400
+
+
+# verifica que un id inexistente devuelve 404
+@patch("app.modules.auth.router.require_admin")
+@patch("app.modules.auth.router._user_management_service")
+def test_deactivate_user_not_found(mock_service, mock_require_admin):
+    mock_service.deactivate_user.side_effect = ValueError("usuario no encontrado")
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.patch("/api/users/id-inexistente/deactivate")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 404
