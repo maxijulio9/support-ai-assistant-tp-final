@@ -138,3 +138,29 @@ class AppUserRepository:
             created_at=row.created_at,
             updated_at=row.updated_at,
         )
+
+    # desactiva un usuario, devuelve None si el id no existe
+    def deactivate(self, user_id: str) -> AppUser | None:
+        db = next(get_db())
+
+        try:
+            query = text("""
+                UPDATE app_user
+                SET is_active = FALSE, updated_at = NOW()
+                WHERE id = :user_id
+                RETURNING id, email, password_hash, full_name, role, is_active, created_at, updated_at
+            """)
+            row = db.execute(query, {"user_id": user_id}).fetchone()
+            db.commit()
+
+            if row is None:
+                return None
+
+            return self._row_to_app_user(row)
+
+        except Exception:
+            db.rollback()
+            raise
+
+        finally:
+            db.close()
