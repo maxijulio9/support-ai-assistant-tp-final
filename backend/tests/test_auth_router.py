@@ -248,3 +248,50 @@ def test_deactivate_user_not_found(mock_service, mock_require_admin):
     app.dependency_overrides.clear()
 
     assert response.status_code == 404
+
+# verifica que get_profile devuelve los datos del usuario logueado
+@patch("app.modules.auth.router._user_management_service")
+def test_get_profile_success(mock_service):
+    app.dependency_overrides[get_current_user] = lambda: AppUser(
+        id="user-1", email="test@tokenia.com", password_hash="$2b$12$x",
+        full_name="Usuario de Prueba", role="admin", is_active=True,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    response = client.get("/auth/profile")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["email"] == "test@tokenia.com"
+    assert "password_hash" not in response.json()
+
+
+# verifica que update_profile actualiza el nombre propio
+@patch("app.modules.auth.router._user_management_service")
+def test_update_profile_success(mock_service):
+    mock_service.update_profile.return_value = AppUser(
+        id="user-1", email="test@tokenia.com", password_hash="$2b$12$x",
+        full_name="Nombre Actualizado", role="admin", is_active=True,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    app.dependency_overrides[get_current_user] = lambda: AppUser(
+        id="user-1", email="test@tokenia.com", password_hash="$2b$12$x",
+        full_name="Usuario de Prueba", role="admin", is_active=True,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    response = client.put("/auth/profile", json={"full_name": "Nombre Actualizado"})
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["full_name"] == "Nombre Actualizado"
+
+
+# verifica que sin token, get_profile devuelve 403 (comportamiento default de HTTPBearer)
+def test_get_profile_without_token():
+    response = client.get("/auth/profile")
+
+    assert response.status_code == 403
