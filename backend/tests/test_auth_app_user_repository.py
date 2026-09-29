@@ -118,3 +118,52 @@ def test_create_rolls_back_on_error(mock_get_db):
         pass
 
     mock_db.rollback.assert_called_once()
+    
+
+
+# verifica que update modifica y devuelve el usuario, con commit
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_update_returns_updated_user(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.fetchone.return_value = _build_app_user_row(
+        full_name="Nombre Actualizado", role="agent"
+    )
+
+    repo = AppUserRepository()
+    result = repo.update("user-1", "Nombre Actualizado", "agent")
+
+    assert result.full_name == "Nombre Actualizado"
+    assert result.role == "agent"
+    mock_db.commit.assert_called_once()
+
+
+# verifica que update devuelve None si el id no existe, sin lanzar excepcion
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_update_returns_none_when_not_found(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.fetchone.return_value = None
+
+    repo = AppUserRepository()
+    result = repo.update("id-inexistente", "Nombre", "agent")
+
+    assert result is None
+
+
+# verifica que update hace rollback si la query falla
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_update_rolls_back_on_error(mock_get_db):
+    mock_db = MagicMock()
+    mock_db.execute.side_effect = Exception("fallo de conexion")
+    mock_get_db.return_value = iter([mock_db])
+
+    repo = AppUserRepository()
+
+    try:
+        repo.update("user-1", "Nombre", "agent")
+        assert False, "deberia haber lanzado una excepcion"
+    except Exception:
+        pass
+
+    mock_db.rollback.assert_called_once()
