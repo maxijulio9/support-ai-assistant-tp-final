@@ -61,3 +61,29 @@ def test_create_user_rejects_duplicate_email(mock_repository_class):
         service.create_user("existente@tokenia.com", "Password123!", "Otro Nombre", "agent")
 
     mock_repository_class.return_value.create.assert_not_called()
+
+
+
+# verifica que update_user delega en el repositorio y devuelve el usuario actualizado
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_update_user_success(mock_repository_class):
+    mock_repository_class.return_value.update.return_value = _build_app_user(
+        full_name="Nombre Actualizado", role="agent"
+    )
+
+    service = UserManagementService()
+    result = service.update_user("user-1", "Nombre Actualizado", "agent")
+
+    assert result.full_name == "Nombre Actualizado"
+    assert result.role == "agent"
+
+
+# verifica que update_user lanza ValueError si el repositorio devuelve None
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_update_user_raises_when_not_found(mock_repository_class):
+    mock_repository_class.return_value.update.return_value = None
+
+    service = UserManagementService()
+
+    with pytest.raises(ValueError, match="usuario no encontrado"):
+        service.update_user("id-inexistente", "Nombre", "agent")
