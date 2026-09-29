@@ -9,7 +9,8 @@ from app.modules.auth.schemas import (
     CreateUserRequest,
     UserResponse,
     UserListResponse,
-    UpdateUserRequest
+    UpdateUserRequest,
+    UpdateProfileRequest,
 )
 from app.modules.auth.services.auth_service import AuthService
 from app.modules.auth.services.user_management_service import UserManagementService
@@ -84,3 +85,13 @@ def deactivate_user(user_id: str, admin: AppUser = Depends(require_admin)):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return UserResponse(**usuario.model_dump())
+
+@router.get("/auth/profile", response_model=UserResponse)
+def get_profile(usuario: AppUser = Depends(get_current_user)):
+    return UserResponse(**usuario.model_dump())
+
+
+@router.put("/auth/profile", response_model=UserResponse)
+def update_profile(request: UpdateProfileRequest, usuario: AppUser = Depends(get_current_user)):
+    actualizado = _user_management_service.update_profile(usuario.id, request.full_name, usuario.role)
+    return UserResponse(**actualizado.model_dump())
