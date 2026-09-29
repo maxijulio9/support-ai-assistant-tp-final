@@ -49,3 +49,6 @@ class UserListResponse(BaseModel):
 class UpdateUserRequest(BaseModel):
     full_name: str
     role: Literal["admin", "agent"]
+    
+class UpdateProfileRequest(BaseModel):
+    full_name: str
