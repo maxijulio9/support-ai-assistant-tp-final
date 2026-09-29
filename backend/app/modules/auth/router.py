@@ -9,6 +9,7 @@ from app.modules.auth.schemas import (
     CreateUserRequest,
     UserResponse,
     UserListResponse,
+    UpdateUserRequest
 )
 from app.modules.auth.services.auth_service import AuthService
 from app.modules.auth.services.user_management_service import UserManagementService
@@ -58,5 +59,16 @@ def create_user(request: CreateUserRequest, admin: AppUser = Depends(require_adm
         )
     except ValueError:
         raise HTTPException(status_code=409, detail="El email ya esta registrado")
+
+    return UserResponse(**usuario.model_dump())
+
+
+
+@router.put("/api/users/{user_id}", response_model=UserResponse)
+def update_user(user_id: str, request: UpdateUserRequest, admin: AppUser = Depends(require_admin)):
+    try:
+        usuario = _user_management_service.update_user(user_id, request.full_name, request.role)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return UserResponse(**usuario.model_dump())
