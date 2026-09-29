@@ -72,3 +72,15 @@ def update_user(user_id: str, request: UpdateUserRequest, admin: AppUser = Depen
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return UserResponse(**usuario.model_dump())
+
+
+@router.patch("/api/users/{user_id}/deactivate", response_model=UserResponse)
+def deactivate_user(user_id: str, admin: AppUser = Depends(require_admin)):
+    try:
+        usuario = _user_management_service.deactivate_user(user_id, admin.id)
+    except PermissionError:
+        raise HTTPException(status_code=400, detail="No podes desactivarte a vos mismo")
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    return UserResponse(**usuario.model_dump())
