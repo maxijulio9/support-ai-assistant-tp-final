@@ -119,3 +119,16 @@ def test_deactivate_user_raises_when_not_found(mock_repository_class):
 
     with pytest.raises(ValueError, match="usuario no encontrado"):
         service.deactivate_user("id-inexistente", "admin-1")
+
+# verifica que update_profile mantiene el role actual sin cambiarlo
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_update_profile_keeps_current_role(mock_repository_class):
+    mock_repository_class.return_value.update.return_value = _build_app_user(
+        full_name="Nombre Nuevo", role="admin"
+    )
+
+    service = UserManagementService()
+    result = service.update_profile("user-1", "Nombre Nuevo", "admin")
+
+    mock_repository_class.return_value.update.assert_called_once_with("user-1", "Nombre Nuevo", "admin")
+    assert result.full_name == "Nombre Nuevo"
