@@ -32,3 +32,11 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(_
         raise HTTPException(status_code=401, detail="Credenciales invalidas")
 
     return user
+
+# variante de get_current_user que ademas exige rol admin
+# se usa en endpoints donde solo un admin puede operar, como crear o listar usuarios
+async def require_admin(usuario: AppUser = Depends(get_current_user)) -> AppUser:
+    if usuario.role != "admin":
+        raise HTTPException(status_code=403, detail="Requiere rol admin")
+
+    return usuario

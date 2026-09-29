@@ -2,15 +2,18 @@
 Se prueba a traves del ciclo completo de FastAPI (headers, Depends, HTTPException),
 no llamando a la corutina directo. Se mockea decode_token, is_denylisted y el repositorio,
 sin tocar Redis ni Supabase reales."""
-
+import pytest
 from unittest.mock import patch, AsyncMock
 from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.dependencies import get_current_user, require_admin
 from app.modules.auth.schemas import AppUser
 
 app = FastAPI()
 
+@app.get("/admin-de-prueba")
+async def ruta_admin(usuario: AppUser = Depends(require_admin)):
+    return {"email": usuario.email, "role": usuario.role}
 
 @app.get("/proteccion-de-prueba")
 async def ruta_protegida(usuario: AppUser = Depends(get_current_user)):
@@ -93,3 +96,32 @@ def test_ruta_protegida_success(mock_decode_token, mock_is_denylisted, mock_repo
     assert response.status_code == 200
     assert response.json()["email"] == "test@tokenia.com"
     assert response.json()["role"] == "admin"
+    
+    
+# verifica que un admin puede acceder a una ruta que requiere rol admin
+@patch("app.modules.auth.dependencies._app_user_repository")
+@patch("app.modules.auth.dependencies.is_denylisted", new_callable=AsyncMock)
+@patch("app.modules.auth.dependencies.decode_token")
+def test_ruta_admin_permite_admin(mock_decode_token, mock_is_denylisted, mock_repository):
+    mock_decode_token.return_value = {"sub": "user-1", "jti": "jti-1"}
+    mock_is_denylisted.return_value = False
+    mock_repository.get_by_id.return_value = _build_app_user(role="admin")
+
+    response = client.get("/admin-de-prueba", headers={"Authorization": "Bearer token-valido"})
+
+    assert response.status_code == 200
+    assert response.json()["role"] == "admin"
+
+
+# verifica que un agent recibe 403 al intentar acceder a una ruta que requiere rol admin
+@patch("app.modules.auth.dependencies._app_user_repository")
+@patch("app.modules.auth.dependencies.is_denylisted", new_callable=AsyncMock)
+@patch("app.modules.auth.dependencies.decode_token")
+def test_ruta_admin_rechaza_agent(mock_decode_token, mock_is_denylisted, mock_repository):
+    mock_decode_token.return_value = {"sub": "user-1", "jti": "jti-1"}
+    mock_is_denylisted.return_value = False
+    mock_repository.get_by_id.return_value = _build_app_user(role="agent")
+
+    response = client.get("/admin-de-prueba", headers={"Authorization": "Bearer token-valido"})
+
+    assert response.status_code == 403
