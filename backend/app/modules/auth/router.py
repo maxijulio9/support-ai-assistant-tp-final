@@ -11,6 +11,8 @@ from app.modules.auth.schemas import (
     UserListResponse,
     UpdateUserRequest,
     UpdateProfileRequest,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
 )
 from app.modules.auth.services.auth_service import AuthService
 from app.modules.auth.services.user_management_service import UserManagementService
@@ -63,8 +65,6 @@ def create_user(request: CreateUserRequest, admin: AppUser = Depends(require_adm
 
     return UserResponse(**usuario.model_dump())
 
-
-
 @router.put("/api/users/{user_id}", response_model=UserResponse)
 def update_user(user_id: str, request: UpdateUserRequest, admin: AppUser = Depends(require_admin)):
     try:
@@ -95,3 +95,18 @@ def get_profile(usuario: AppUser = Depends(get_current_user)):
 def update_profile(request: UpdateProfileRequest, usuario: AppUser = Depends(get_current_user)):
     actualizado = _user_management_service.update_profile(usuario.id, request.full_name, usuario.role)
     return UserResponse(**actualizado.model_dump())
+
+@router.post("/auth/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    await _auth_service.forgot_password(request.email)
+    return {"status": "ok"}
+
+
+@router.post("/auth/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    try:
+        await _auth_service.reset_password(request.token, request.new_password)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Token invalido o vencido")
+
+    return {"status": "ok"}

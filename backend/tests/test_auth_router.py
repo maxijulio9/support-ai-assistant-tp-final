@@ -295,3 +295,38 @@ def test_get_profile_without_token():
     response = client.get("/auth/profile")
 
     assert response.status_code == 403
+
+# verifica que forgot-password siempre responde 200 con status ok, exista o no el usuario
+@patch("app.modules.auth.router._auth_service")
+def test_forgot_password_always_returns_ok(mock_auth_service):
+    mock_auth_service.forgot_password = AsyncMock(return_value=None)
+
+    response = client.post("/auth/forgot-password", json={"email": "cualquiera@tokenia.com"})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+# verifica que reset-password exitoso devuelve 200
+@patch("app.modules.auth.router._auth_service")
+def test_reset_password_success(mock_auth_service):
+    mock_auth_service.reset_password = AsyncMock(return_value=None)
+
+    response = client.post("/auth/reset-password", json={"token": "token-valido", "new_password": "NuevaClave123!"})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+# verifica que un token invalido devuelve 400
+@patch("app.modules.auth.router._auth_service")
+def test_reset_password_invalid_token(mock_auth_service):
+    mock_auth_service.reset_password = AsyncMock(side_effect=ValueError("token invalido o vencido"))
+
+    response = client.post("/auth/reset-password", json={"token": "token-invalido", "new_password": "NuevaClave123!"})
+
+    assert response.status_code == 400
+
+# verifica que una password de menos de 8 caracteres es rechazada por pydantic
+def test_reset_password_too_short():
+    response = client.post("/auth/reset-password", json={"token": "token-valido", "new_password": "corta"})
+
+    assert response.status_code == 422
