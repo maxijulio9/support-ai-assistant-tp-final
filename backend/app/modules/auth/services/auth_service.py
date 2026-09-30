@@ -2,6 +2,7 @@
 
 from app.modules.auth.repositories.app_user_repository import AppUserRepository
 from app.modules.auth.password_hasher import verify_password, hash_password
+from app.modules.auth.jwt_handler import create_access_token
 from app.modules.auth.token_denylist import add_to_denylist
 from app.modules.auth.password_reset_token import create_reset_token, get_user_id_from_token, consume_reset_token
 from app.modules.auth.sendgrid_client import SendGridClient
