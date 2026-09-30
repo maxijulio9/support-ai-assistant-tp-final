@@ -1,4 +1,5 @@
-# M9 AuthModule: tokens de un solo uso para el flujo de restablecimiento de contraseña
+# M9 AuthModule
+# tokens de un solo uso para el flujo de restablecimiento de contraseña
 # se guardan en Redis con TTL, el token en si funciona como clave (opaco, no es un JWT)
 
 import secrets
@@ -21,7 +22,7 @@ async def get_user_id_from_token(token: str) -> str | None:
     return await redis.get(f"password_reset:{token}")
 
 
-# elimina el token despues de usarlo, para que no se pueda reusar
+# elimina el token despues de usarlo, para que no se pueda reusarss
 async def consume_reset_token(token: str) -> None:
     redis = get_redis()
     await redis.delete(f"password_reset:{token}")
