@@ -24,6 +24,8 @@ class SendGridClient:
             "from": {"email": self.from_email},
             "subject": subject,
             "content": [{"type": "text/plain", "value": body}],
+            "tracking_settings": {"click_tracking": {"enable": False}},
+
         }
         response = await self._client.post(url, json=payload)
         response.raise_for_status()
