@@ -190,3 +190,14 @@ class AppUserRepository:
 
         finally:
             db.close()
+            
+    # cuenta cuantos usuarios existen, usado por el bootstrap del primer admin
+    def count_users(self) -> int:
+        db = next(get_db())
+
+        try:
+            query = text("SELECT COUNT(*) FROM app_user")
+            return db.execute(query).scalar()
+
+        finally:
+            db.close()
