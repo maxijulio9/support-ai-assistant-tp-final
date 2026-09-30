@@ -45,7 +45,11 @@ class Settings(BaseSettings):
     jwt_secret_key: str = ""
     jwt_expiration_minutes: int = 60
 
+    # SendGrid, para el flujo de restablecimiento de contraseña
+    sendgrid_api_key: str = ""
+    sendgrid_from_email: str = ""
     class Config:
         env_file = ".env"
+    
 
 settings = Settings()
