@@ -27,7 +27,9 @@ SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera,
                 - Si dos fragmentos del contexto se contradicen entre si, priorizá el mas especifico a la categoria del ticket y avisá de la ambiguedad en tu respuesta.
                 - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos, escribi como si supieras la respuesta directamente.
                 - Se conciso, una respuesta de soporte no deberia superar los 3 parrafos cortos.
-                - Respondé siempre en {language}, con un tono profesional y cordial, sin importar en que idioma este el contexto de arriba."""
+                - Respondé siempre en {language}, con un tono profesional y cordial, sin importar en que idioma este el contexto de arriba.
+                - Abrí la respuesta con un saludo breve y natural, y mantené un tono cálido y cercano en todo el texto, como lo haría una persona real atendiendo a otra, sin sonar robótico.
+                """
 
 
 
@@ -43,7 +45,7 @@ CONFIDENCE_PROMPT = """Tu tarea es evaluar si la respuesta generada esta fundame
 
                     Asigná un confidence_score entre 0 y 1 que represente que tan correctamente esta respaldada la respuesta por el contexto.
 
-                    Criterio de evaluacion:
+                    Criterio de evaluación:
                     - 1.0: toda la informacion relevante esta explicitamente respaldada por el contexto, sin afirmaciones contradictorias.
                     - 0.8-0.99: practicamente toda respaldada, con alguna formulacion menor que no afecta la exactitud.
                     - 0.5-0.79: parcialmente respaldada, contiene informacion relevante que no puede verificarse del todo con el contexto.
