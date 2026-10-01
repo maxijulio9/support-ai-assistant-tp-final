@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
       - ./backend/app:/app/app
     depends_on:
@@ -20,7 +20,7 @@ services:
     container_name: support-ai-worker
     command: arq app.modules.event_pipeline.settings.WorkerSettings --watch /app/app
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
       - ./backend/app:/app/app
     depends_on:
@@ -32,7 +32,7 @@ services:
     container_name: support-ai-kb-worker
     command: arq app.modules.event_pipeline.settings.KbWorkerSettings --watch /app/app
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
       - ./backend/app:/app/app
     depends_on:
