@@ -17,6 +17,10 @@ COUNTRY_NAMES = {
     "BR": "Brasil",
 }
 
+# paises donde corresponde usar voseo en vez de tuteo, por convencion regional del espanol
+# si un pais no esta aca, se usa tuteo estandar por default (o la convencion natural del idioma, para pt)
+VOSEO_COUNTRIES = {"AR"}
+
 SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera, respondiendo directamente al cliente de {country}. Tu tarea es responder la consulta del usuario basandote UNICAMENTE en el contexto de la base de conocimiento que se te provee abajo.
 
                 Reglas estrictas:
@@ -27,9 +31,9 @@ SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera,
                 - Si dos fragmentos del contexto se contradicen entre si, priorizá el mas especifico a la categoria del ticket y avisá de la ambiguedad en tu respuesta.
                 - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos, escribi como si supieras la respuesta directamente.
                 - Se conciso, una respuesta de soporte no deberia superar los 3 parrafos cortos.
-                - Respondé siempre en {language}, con un tono profesional y cordial, sin importar en que idioma este el contexto de arriba.
-                - Abrí la respuesta con un saludo breve y natural, y mantené un tono cálido y cercano en todo el texto, como lo haría una persona real atendiendo a otra, sin sonar robótico.
-                """
+                - Abrí con un saludo breve y natural, y mantené un tono calido y cercano en todo el texto, como lo haria una persona real atendiendo a otra, sin sonar robotico.
+                - Separá la respuesta en lineas claras: el saludo en su propia linea, el cuerpo de la respuesta despues, y una frase de cierre breve al final en su propia linea.{register_instruction}
+                - Respondé siempre en {language}, con un tono profesional y cordial, sin importar en que idioma este el contexto de arriba."""
 
 
 
@@ -45,7 +49,7 @@ CONFIDENCE_PROMPT = """Tu tarea es evaluar si la respuesta generada esta fundame
 
                     Asigná un confidence_score entre 0 y 1 que represente que tan correctamente esta respaldada la respuesta por el contexto.
 
-                    Criterio de evaluación:
+                    Criterio de evaluacion:
                     - 1.0: toda la informacion relevante esta explicitamente respaldada por el contexto, sin afirmaciones contradictorias.
                     - 0.8-0.99: practicamente toda respaldada, con alguna formulacion menor que no afecta la exactitud.
                     - 0.5-0.79: parcialmente respaldada, contiene informacion relevante que no puede verificarse del todo con el contexto.
@@ -76,11 +80,12 @@ class PromptBuilder:
         context_text = self._format_chunks(retrieval.chunks)
         history_text = self._format_history(analysis.conversation_history)
         language_name = LANGUAGE_NAMES.get(analysis.language_code, "español")
-            
+
         country_name = COUNTRY_NAMES.get(analysis.country, analysis.country or "el pais del cliente")
+        register_instruction = self._build_register_instruction(analysis.country)
 
         sections = [
-            SYSTEM_PROMPT.format(language=language_name, country=country_name),
+            SYSTEM_PROMPT.format(language=language_name, country=country_name, register_instruction=register_instruction),
             f"Contexto recuperado de la base de conocimiento:\n{context_text}",
             f"Historial de la conversacion:\n{history_text}",
         ] 
@@ -98,8 +103,13 @@ class PromptBuilder:
     def build_sufficiency_prompt(self, retrieval: RetrievalResult, query: str) -> str:
         context_text = self._format_chunks(retrieval.chunks)
         return SUFFICIENCY_PROMPT.format(context=context_text, query=query)
-    
-    
+
+    # agrega la instruccion de voseo solo si el pais del cliente lo usa, sino no agrega nada
+    def _build_register_instruction(self, country: str | None) -> str:
+        if country in VOSEO_COUNTRIES:
+            return "\n                - Usá el registro de voseo argentino (vos, tenés, podés, necesitás), nunca tuteo (tú, tienes, puedes)."
+        return ""
+
     # concatena el contenido de los chunks recuperados, numerados
     def _format_chunks(self, chunks) -> str:
         if not chunks:
