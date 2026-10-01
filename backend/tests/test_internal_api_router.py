@@ -1,9 +1,10 @@
 """Tests unitarios para el router de M7 - InternalAPI (endpoint de CU27)."""
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 from app.modules.internal_api.router import router
+from app.modules.auth.dependencies import require_admin
 
 app = FastAPI()
 app.include_router(router)
@@ -31,7 +32,11 @@ def _build_request_body(**overrides):
 def test_configure_project_success(mock_service):
     mock_service.save_config.return_value = 1
 
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
     response = client.post("/api/config/itsm/projects", json=_build_request_body())
+
+    app.dependency_overrides.clear()
 
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
@@ -43,7 +48,11 @@ def test_configure_project_success(mock_service):
 def test_configure_project_invalid_mapping_returns_400(mock_service):
     mock_service.save_config.side_effect = ValueError("cada mapeo necesita project_id y status_id")
 
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
     response = client.post("/api/config/itsm/projects", json=_build_request_body())
+
+    app.dependency_overrides.clear()
 
     assert response.status_code == 400
 
@@ -53,6 +62,17 @@ def test_configure_project_invalid_mapping_returns_400(mock_service):
 def test_configure_project_db_failure_returns_503(mock_service):
     mock_service.save_config.side_effect = Exception("fallo de conexion")
 
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
     response = client.post("/api/config/itsm/projects", json=_build_request_body())
 
+    app.dependency_overrides.clear()
+
     assert response.status_code == 503
+
+
+# verifica que sin ser admin, el endpoint devuelve 403, sin llegar al service
+def test_configure_project_requires_admin():
+    response = client.post("/api/config/itsm/projects", json=_build_request_body())
+
+    assert response.status_code == 403
