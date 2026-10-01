@@ -210,3 +210,15 @@ def test_deactivate_rolls_back_on_error(mock_get_db):
         pass
 
     mock_db.rollback.assert_called_once()
+
+# verifica que count_users devuelve el numero correcto
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_count_users_returns_count(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.scalar.return_value = 3
+
+    repo = AppUserRepository()
+    result = repo.count_users()
+
+    assert result == 3

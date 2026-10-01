@@ -2,6 +2,7 @@ from fastapi import FastAPI
 # from app.modules.jsm_client.router import router as jsm_router
 from app.modules.webhook_receiver.router import router as webhook_router
 from app.modules.auth.router import router as auth_router
+from app.modules.auth.bootstrap import bootstrap_admin
 
 
 
@@ -14,6 +15,11 @@ app = FastAPI(
 # app.include_router(jsm_router) 
 app.include_router(webhook_router)
 app.include_router(auth_router)
+
+
+@app.on_event("startup")
+def startup_event():
+    bootstrap_admin()
 
 @app.get("/health")
 def health():
