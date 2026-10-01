@@ -3,7 +3,8 @@ Se mockea la sesion de base de datos para verificar que arma el contexto correct
 sin tocar la bd real."""
 
 from unittest.mock import patch, MagicMock
-from app.modules.internal_api.interaction_repository import InteractionRepository
+from app.modules.internal_api.repositories.interaction_repository import InteractionRepository
+
 
 
 # arma una fila simulada de interaction+ticket
@@ -38,7 +39,7 @@ def _build_chunk_row(**overrides):
 
 
 # verifica que arma el contexto completo cuando la interaccion existe, con chunks y umbrales reales
-@patch("app.modules.internal_api.interaction_repository.get_db")
+@patch("app.modules.internal_api.repositories.interaction_repository.get_db")
 def test_get_interaction_context_success(mock_get_db):
     mock_db = MagicMock()
     mock_get_db.return_value = iter([mock_db])
@@ -62,7 +63,7 @@ def test_get_interaction_context_success(mock_get_db):
 
 
 # verifica que devuelve None si la interaccion no existe
-@patch("app.modules.internal_api.interaction_repository.get_db")
+@patch("app.modules.internal_api.repositories.interaction_repository.get_db")
 def test_get_interaction_context_not_found(mock_get_db):
     mock_db = MagicMock()
     mock_get_db.return_value = iter([mock_db])
@@ -75,7 +76,7 @@ def test_get_interaction_context_not_found(mock_get_db):
 
 
 # verifica que usa los defaults si el proyecto no tiene umbrales configurados
-@patch("app.modules.internal_api.interaction_repository.get_db")
+@patch("app.modules.internal_api.repositories.interaction_repository.get_db")
 def test_get_interaction_context_uses_default_thresholds_when_project_not_found(mock_get_db):
     mock_db = MagicMock()
     mock_get_db.return_value = iter([mock_db])

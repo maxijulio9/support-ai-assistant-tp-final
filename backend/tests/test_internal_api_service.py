@@ -4,7 +4,7 @@ las queries correctas, sin tocar la bd real."""
 
 from unittest.mock import patch, MagicMock
 import pytest
-from app.modules.internal_api.service import ProjectConfigService
+from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.schemas import ProjectThresholds, ProjectStatusMapping
 
 
@@ -31,7 +31,7 @@ def _build_mapping(**overrides):
 
 
 # verifica que save_config actualiza umbrales e inserta los mapeos, y confirma con commit
-@patch("app.modules.internal_api.service.get_db")
+@patch("app.modules.internal_api.services.project_config_service.get_db")
 def test_save_config_success(mock_get_db):
     mock_db = MagicMock()
     mock_get_db.return_value = iter([mock_db])
@@ -49,7 +49,7 @@ def test_save_config_success(mock_get_db):
 
 
 # verifica que si falta status_id en un mapeo, se levanta ValueError antes de tocar la bd
-@patch("app.modules.internal_api.service.get_db")
+@patch("app.modules.internal_api.services.project_config_service.get_db")
 def test_save_config_rejects_incomplete_mapping(mock_get_db):
     mock_db = MagicMock()
     mock_get_db.return_value = iter([mock_db])
@@ -65,7 +65,7 @@ def test_save_config_rejects_incomplete_mapping(mock_get_db):
 
 
 # verifica que si la bd falla al ejecutar, se hace rollback y se relanza la excepcion
-@patch("app.modules.internal_api.service.get_db")
+@patch("app.modules.internal_api.services.project_config_service.get_db")
 def test_save_config_rolls_back_on_db_error(mock_get_db):
     mock_db = MagicMock()
     mock_db.execute.side_effect = Exception("fallo de conexion")
