@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     # SendGrid, para el flujo de restablecimiento de contraseña
     sendgrid_api_key: str = ""
     sendgrid_from_email: str = ""
+    
+    
+    # bootstrap del primer admin, opcional, solo actua si app_user esta vacia
+    admin_email: str = ""
+    admin_password: str = ""
     class Config:
         env_file = ".env"
     
