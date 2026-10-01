@@ -1,10 +1,10 @@
 #Modulo 7: InternalAPI
 #Endpoints de configuracion de proyectos, consumidos por el dashboard
 
-
-
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.modules.auth.dependencies import get_current_user, require_admin
+from app.modules.auth.schemas import AppUser
 from app.modules.internal_api.schemas import (
     ProjectConfigRequest,
     ProjectConfigResponse,
@@ -74,7 +74,7 @@ _listing_service = InteractionListingService()
 
 # configura los umbrales y el mapeo de estados de un proyecto
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
-async def configure_project(request: ProjectConfigRequest):
+async def configure_project(request: ProjectConfigRequest, admin: AppUser = Depends(require_admin)):
     try:
         mappings_configured = _service.save_config(request.thresholds, request.status_mappings)
     except ValueError as e:
@@ -87,7 +87,7 @@ async def configure_project(request: ProjectConfigRequest):
 
 # aprueba una interaccion en needs_review, publica la respuesta tal cual esta
 @router.post("/api/interactions/{interaction_id}/approve", response_model=InteractionReviewResponse)
-async def approve_interaction(interaction_id: str, request: ApproveRequest):
+async def approve_interaction(interaction_id: str, request: ApproveRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         action_type = await _review_service.approve_interaction(interaction_id, request.reviewed_by)
     except ValueError as e:
@@ -100,7 +100,7 @@ async def approve_interaction(interaction_id: str, request: ApproveRequest):
 
 # regenera una interaccion rechazada, con el motivo del rechazo
 @router.post("/api/interactions/{interaction_id}/regenerate", response_model=InteractionReviewResponse)
-async def regenerate_interaction(interaction_id: str, request: RegenerateRequest):
+async def regenerate_interaction(interaction_id: str, request: RegenerateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         action_type = await _review_service.regenerate_interaction(interaction_id, request.rejection_reason, request.reviewed_by)
     except ValueError as e:
@@ -113,7 +113,7 @@ async def regenerate_interaction(interaction_id: str, request: RegenerateRequest
 
 # escala una interaccion directo a un humano, sin generar nada nuevo
 @router.post("/api/interactions/{interaction_id}/escalate", response_model=InteractionReviewResponse)
-async def escalate_interaction(interaction_id: str, request: EscalateRequest):
+async def escalate_interaction(interaction_id: str, request: EscalateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         action_type = _review_service.escalate_interaction(interaction_id, request.rejection_reason, request.reviewed_by)
     except ValueError as e:
@@ -125,7 +125,7 @@ async def escalate_interaction(interaction_id: str, request: EscalateRequest):
 
 # configura la conexion con jsm, valida las credenciales antes de guardarlas
 @router.post("/api/config/itsm", response_model=ItsmConnectionResponse)
-async def configure_itsm_connection(request: ItsmConnectionRequest):
+async def configure_itsm_connection(request: ItsmConnectionRequest, admin: AppUser = Depends(require_admin)):
     try:
         await _itsm_connection_service.configure_connection(
             request.base_url, request.user_email, request.api_token, request.webhook_secret
@@ -141,7 +141,7 @@ async def configure_itsm_connection(request: ItsmConnectionRequest):
 
 # lista los proyectos reales disponibles en jsm
 @router.get("/api/config/itsm/projects/available", response_model=AvailableProjectsResponse)
-async def list_available_projects():
+async def list_available_projects(admin: AppUser = Depends(require_admin)):
     try:
         projects = await _project_onboarding_service.list_available_projects()
     except ValueError as e:
@@ -154,7 +154,7 @@ async def list_available_projects():
 
 # da de alta los proyectos que el admin eligio de la lista disponible
 @router.post("/api/config/itsm/projects/onboard", response_model=OnboardProjectsResponse)
-async def onboard_projects(request: OnboardProjectsRequest):
+async def onboard_projects(request: OnboardProjectsRequest, admin: AppUser = Depends(require_admin)):
     try:
         projects_created = _project_onboarding_service.onboard_projects(request.projects)
     except ValueError as e:
@@ -166,13 +166,13 @@ async def onboard_projects(request: OnboardProjectsRequest):
 
 # lista los paises validos del catalogo, para el dropdown del frontend
 @router.get("/api/config/countries", response_model=CountriesResponse)
-async def list_countries():
+async def list_countries(admin: AppUser = Depends(require_admin)):
     countries = _country_repository.list_countries()
     return CountriesResponse(countries=countries)
 
 # trae los estados reales de un proyecto de jsm, para que el admin arme el mapeo
 @router.get("/api/config/itsm/projects/{project_key}/statuses", response_model=ProjectStatusesResponse)
-async def list_project_statuses(project_key: str):
+async def list_project_statuses(project_key: str, admin: AppUser = Depends(require_admin)):
     try:
         statuses = await _status_mapping_service.list_project_statuses(project_key)
     except ValueError as e:
@@ -184,7 +184,7 @@ async def list_project_statuses(project_key: str):
 
 # lista los campos custom de jsm de tipo lista de seleccion unica, para elegir cual representa categoria
 @router.get("/api/config/itsm/fields", response_model=SelectFieldsResponse)
-async def list_select_fields():
+async def list_select_fields(admin: AppUser = Depends(require_admin)):
     try:
         fields = await _project_onboarding_service.list_select_fields()
     except ValueError as e:
@@ -196,7 +196,7 @@ async def list_select_fields():
 
 # trae las opciones reales de un campo elegido por el admin
 @router.get("/api/config/itsm/fields/{field_id}/options", response_model=FieldOptionsResponse)
-async def list_field_options(field_id: str):
+async def list_field_options(field_id: str, admin: AppUser = Depends(require_admin)):
     try:
         options = await _project_onboarding_service.list_field_options(field_id)
     except ValueError as e:
@@ -209,7 +209,7 @@ async def list_field_options(field_id: str):
 
 # confirma las categorias que el admin eligio para su proyecto
 @router.post("/api/config/itsm/projects/{project_key}/categories", response_model=ConfigureCategoriesResponse)
-async def configure_categories(project_key: str, request: ConfigureCategoriesRequest):
+async def configure_categories(project_key: str, request: ConfigureCategoriesRequest, admin: AppUser = Depends(require_admin)):
     try:
         categories_configured = _project_onboarding_service.configure_categories(project_key, request.categories)
     except ValueError as e:
@@ -221,7 +221,7 @@ async def configure_categories(project_key: str, request: ConfigureCategoriesReq
 
 # trae y persiste automaticamente los tipos de solicitud reales de un proyecto, sin necesitar seleccion del admin
 @router.post("/api/config/itsm/projects/{project_key}/request-types", response_model=ConfigureRequestTypesResponse)
-async def configure_request_types(project_key: str):
+async def configure_request_types(project_key: str, admin: AppUser = Depends(require_admin)):
     try:
         request_types_configured = await _project_onboarding_service.configure_request_types(project_key)
     except ValueError as e:
@@ -234,7 +234,7 @@ async def configure_request_types(project_key: str):
 
 # trae las prioridades reales de un proyecto, con sugerencia automatica de mapeo
 @router.get("/api/config/itsm/projects/{project_key}/priorities", response_model=PrioritiesWithSuggestionResponse)
-async def list_priorities(project_key: str):
+async def list_priorities(project_key: str, admin: AppUser = Depends(require_admin)):
     try:
         result = await _project_onboarding_service.list_priorities_with_suggestion()
     except ValueError as e:
@@ -247,7 +247,7 @@ async def list_priorities(project_key: str):
 
 # confirma el mapeo de prioridades para un proyecto
 @router.post("/api/config/itsm/projects/{project_key}/priorities", response_model=ConfigurePriorityMappingResponse)
-async def configure_priority_mapping(project_key: str, request: ConfigurePriorityMappingRequest):
+async def configure_priority_mapping(project_key: str, request: ConfigurePriorityMappingRequest, admin: AppUser = Depends(require_admin)):
     try:
         mappings_configured = _project_onboarding_service.configure_priority_mapping(project_key, request.mapping)
     except ValueError as e:
@@ -261,7 +261,7 @@ async def configure_priority_mapping(project_key: str, request: ConfigurePriorit
 
 # configura la conexion con confluence, valida las credenciales antes de guardarlas
 @router.post("/api/config/knowledge-base", response_model=ConfluenceConnectionResponse)
-async def configure_confluence_connection(request: ConfluenceConnectionRequest):
+async def configure_confluence_connection(request: ConfluenceConnectionRequest, admin: AppUser = Depends(require_admin)):
     try:
         await _confluence_connection_service.configure_connection(
             request.base_url, request.user_email, request.api_token
@@ -278,7 +278,7 @@ async def configure_confluence_connection(request: ConfluenceConnectionRequest):
 
 # lista los spaces reales disponibles en confluence
 @router.get("/api/config/knowledge-base/spaces/available", response_model=AvailableSpacesResponse)
-async def list_available_spaces():
+async def list_available_spaces(admin: AppUser = Depends(require_admin)):
     try:
         spaces = await _space_config_service.list_available_spaces()
     except ValueError as e:
@@ -291,7 +291,7 @@ async def list_available_spaces():
 
 # vincula los spaces que el admin eligio a un proyecto
 @router.post("/api/config/itsm/projects/{project_key}/spaces", response_model=ConfigureSpacesResponse)
-async def configure_spaces(project_key: str, request: ConfigureSpacesRequest):
+async def configure_spaces(project_key: str, request: ConfigureSpacesRequest, admin: AppUser = Depends(require_admin)):
     try:
         spaces_dicts = [s.model_dump() for s in request.spaces]
         spaces_configured = _space_config_service.configure_spaces(project_key, spaces_dicts)
@@ -305,7 +305,7 @@ async def configure_spaces(project_key: str, request: ConfigureSpacesRequest):
 
 # dispara la indexacion de los spaces elegidos, corre en background via el worker
 @router.post("/api/indexing/start", response_model=StartIndexingResponse, status_code=202)
-async def start_indexing(request: StartIndexingRequest):
+async def start_indexing(request: StartIndexingRequest, admin: AppUser = Depends(require_admin)):
     try:
         await _indexing_trigger_service.start_indexing(request.space_keys)
     except Exception:
@@ -315,7 +315,7 @@ async def start_indexing(request: StartIndexingRequest):
 
 # consulta el estado del ultimo trabajo de indexacion
 @router.get("/api/indexing/status", response_model=IndexingStatusResponse)
-async def get_indexing_status():
+async def get_indexing_status(admin: AppUser = Depends(require_admin)):
     status = _kb_indexing_status_repository.get_latest_status()
 
     if status is None:
@@ -327,19 +327,20 @@ async def get_indexing_status():
 # resumen agregado de metricas de interacciones, para el dashboard 
 #
 @router.get("/api/metrics/summary", response_model=MetricsSummaryResponse)
-async def get_metrics_summary(project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
+async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
     result = _metrics_service.get_summary(project_id, from_date, to_date)
     return MetricsSummaryResponse(**result)
 
 # desglose de metricas por categoria, para el dashboard
 @router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
-async def get_metrics_by_category(project_id: str | None = None):
+async def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), project_id: str | None = None):
     result = _metrics_service.get_by_category(project_id)
     return MetricsByCategoryResponse(categories=result)
 
 # lista interacciones paginadas, con filtros, para el dashboard
 @router.get("/api/interactions", response_model=InteractionListResponse)
 async def list_interactions(
+    usuario: AppUser = Depends(get_current_user),
     project_id: str | None = None,
     category: str | None = None,
     decision: str | None = None,
@@ -354,7 +355,7 @@ async def list_interactions(
 
 # detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)
 @router.get("/api/interactions/{interaction_id}", response_model=InteractionDetailResponse)
-async def get_interaction_detail(interaction_id: str):
+async def get_interaction_detail(interaction_id: str, usuario: AppUser = Depends(get_current_user)):
     result = _listing_service.get_detail(interaction_id)
 
     if result is None:
