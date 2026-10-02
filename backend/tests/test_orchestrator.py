@@ -14,6 +14,7 @@ from app.modules.response_generator.schemas import (
     ACTION_NEEDS_REVIEW,
     ACTION_ESCALATE,   
  )
+import json
 
 
 def _build_event(issue_key="TEST-1") -> NormalizedEvent:
@@ -560,3 +561,221 @@ async def test_retry_calls_retrieve_again_with_wider_top_k(mock_analyzer_class, 
     mock_generator.regenerate.assert_called_once_with(
         analysis, second_retrieval, rejection_reason="la respuesta generada no esta suficientemente respaldada por el contexto"
     )
+
+# verifica que cuando no existe ningun camino de respaldo, se postea la nota explicando que no hay ninguno
+@patch("app.modules.event_pipeline.orchestrator.get_redis")
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_handle_missing_direct_transition_posts_no_path_note(
+    mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
+    mock_discovery_class, mock_jsm_class, mock_get_db, mock_get_redis,
+):
+    mock_analyzer_class.return_value = MagicMock()
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_logger_class.return_value = MagicMock()
+
+    mock_db = MagicMock()
+    mock_row = MagicMock(code="TARG")
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_redis = AsyncMock()
+    mock_redis.get.return_value = None
+    mock_get_redis.return_value = mock_redis
+
+    # A y B conectados, C aislado sin ninguna entrada, igual que waiting for customer en targ real
+    workflow = {
+        "transitions": [
+            {"id": "t1", "type": "DIRECTED", "toStatusReference": "B", "links": [{"fromStatusReference": "A"}]},
+        ],
+    }
+    status_names = {"A": "Escalated", "B": "In Progress", "C": "Waiting for customer"}
+    mock_discovery = MagicMock()
+    mock_discovery.get_project_workflow = AsyncMock(return_value={"workflow": workflow, "status_names": status_names})
+    mock_discovery_class.return_value = mock_discovery
+
+    mock_jsm = MagicMock()
+    mock_jsm.get_issue_status = AsyncMock(return_value="Escalated")
+    mock_jsm.post_comment = AsyncMock()
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    await orchestrator._handle_missing_direct_transition("TEST-1", "proj-1", "Waiting for customer")
+
+    mock_jsm.post_comment.assert_called_once()
+    args, kwargs = mock_jsm.post_comment.call_args
+    assert "no encontro ningun camino" in args[1]
+    assert kwargs["public"] is False
+
+
+# verifica que cuando existe un camino de varios pasos, se avisa pero no se ejecuta ninguna transicion
+@patch("app.modules.event_pipeline.orchestrator.get_redis")
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_handle_missing_direct_transition_posts_multihop_note_without_executing(
+    mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
+    mock_discovery_class, mock_jsm_class, mock_get_db, mock_get_redis,
+):
+    mock_analyzer_class.return_value = MagicMock()
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_logger_class.return_value = MagicMock()
+
+    mock_db = MagicMock()
+    mock_row = MagicMock(code="TARG")
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_redis = AsyncMock()
+    mock_redis.get.return_value = None
+    mock_get_redis.return_value = mock_redis
+
+    # A -> B -> C, dos saltos reales, sin ningun atajo directo ni global
+    workflow = {
+        "transitions": [
+            {"id": "t1", "type": "DIRECTED", "toStatusReference": "B", "links": [{"fromStatusReference": "A"}]},
+            {"id": "t2", "type": "DIRECTED", "toStatusReference": "C", "links": [{"fromStatusReference": "B"}]},
+        ],
+    }
+    status_names = {"A": "To Do", "B": "In Progress", "C": "Waiting for customer"}
+    mock_discovery = MagicMock()
+    mock_discovery.get_project_workflow = AsyncMock(return_value={"workflow": workflow, "status_names": status_names})
+    mock_discovery_class.return_value = mock_discovery
+
+    mock_jsm = MagicMock()
+    mock_jsm.get_issue_status = AsyncMock(return_value="To Do")
+    mock_jsm.post_comment = AsyncMock()
+    mock_jsm.transition_issue = AsyncMock()
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    await orchestrator._handle_missing_direct_transition("TEST-1", "proj-1", "Waiting for customer")
+
+    mock_jsm.post_comment.assert_called_once()
+    args, kwargs = mock_jsm.post_comment.call_args
+    assert "camino de 2 pasos" in args[1]
+    mock_jsm.transition_issue.assert_not_called()
+
+
+# verifica que si el mapa de workflow ya esta en redis, no se vuelve a consultar jira
+@patch("app.modules.event_pipeline.orchestrator.get_redis")
+@patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_get_cached_workflow_map_uses_cache_when_present(
+    mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
+    mock_discovery_class, mock_get_redis,
+):
+    mock_analyzer_class.return_value = MagicMock()
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_logger_class.return_value = MagicMock()
+
+    workflow = {"transitions": []}
+    status_names = {"A": "To Do"}
+    cached_json = json.dumps({"workflow": workflow, "status_names": status_names})
+
+    mock_redis = AsyncMock()
+    mock_redis.get.return_value = cached_json
+    mock_get_redis.return_value = mock_redis
+
+    mock_discovery = MagicMock()
+    mock_discovery.get_project_workflow = AsyncMock()
+    mock_discovery_class.return_value = mock_discovery
+
+    orchestrator = Orchestrator()
+    result = await orchestrator._get_cached_workflow_map("TARG")
+
+    mock_discovery.get_project_workflow.assert_not_called()
+    assert result.status_names == status_names
+
+
+# verifica que si no hay nada en redis, consulta jira y guarda el resultado con ttl de una hora
+@patch("app.modules.event_pipeline.orchestrator.get_redis")
+@patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_get_cached_workflow_map_fetches_and_caches_when_missing(
+    mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
+    mock_discovery_class, mock_get_redis,
+):
+    mock_analyzer_class.return_value = MagicMock()
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_logger_class.return_value = MagicMock()
+
+    workflow = {"transitions": []}
+    status_names = {"A": "To Do"}
+
+    mock_redis = AsyncMock()
+    mock_redis.get.return_value = None
+    mock_get_redis.return_value = mock_redis
+
+    mock_discovery = MagicMock()
+    mock_discovery.get_project_workflow = AsyncMock(return_value={"workflow": workflow, "status_names": status_names})
+    mock_discovery_class.return_value = mock_discovery
+
+    orchestrator = Orchestrator()
+    result = await orchestrator._get_cached_workflow_map("TARG")
+
+    mock_discovery.get_project_workflow.assert_called_once_with("TARG")
+    mock_redis.set.assert_called_once()
+    args, kwargs = mock_redis.set.call_args
+    assert args[0] == "workflow_map:TARG"
+    assert kwargs["ex"] == 3600
+    assert result.status_names == status_names
+
+
+# verifica que _resolve_transition_id dispara el camino de respaldo cuando no hay transicion directa disponible
+@patch("app.modules.event_pipeline.orchestrator.get_db")
+@patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
+@patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
+@patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
+@patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
+@patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
+@pytest.mark.asyncio
+async def test_resolve_transition_id_triggers_fallback_when_no_direct_transition(
+    mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class, mock_get_db,
+):
+    mock_analyzer_class.return_value = MagicMock()
+    mock_retriever_class.return_value = MagicMock()
+    mock_generator_class.return_value = MagicMock()
+    mock_logger_class.return_value = MagicMock()
+
+    mock_db = MagicMock()
+    mock_row = MagicMock()
+    mock_row.name = "Waiting for customer"
+    mock_db.execute.return_value.fetchone.return_value = mock_row
+    mock_get_db.return_value = iter([mock_db])
+
+    mock_jsm = MagicMock()
+    mock_jsm.get_transitions = AsyncMock(return_value={"transitions": [{"id": "1", "to": {"name": "Otro estado"}}]})
+    mock_jsm_class.return_value = mock_jsm
+
+    orchestrator = Orchestrator()
+    orchestrator._handle_missing_direct_transition = AsyncMock()
+
+    transition_id, target_status_name = await orchestrator._resolve_transition_id("TEST-1", "proj-1", "awaiting_customer")
+
+    assert transition_id is None
+    assert target_status_name == "Waiting for customer"
+    orchestrator._handle_missing_direct_transition.assert_called_once_with("TEST-1", "proj-1", "Waiting for customer")
