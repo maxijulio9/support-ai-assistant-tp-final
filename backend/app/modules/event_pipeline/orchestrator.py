@@ -21,6 +21,10 @@ from app.modules.response_generator.schemas import (
 )
 from app.modules.jsm_executor.client import JsmExecutor
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
+from app.modules.internal_api.services.workflow_discovery_service import WorkflowDiscoveryService
+from app.modules.internal_api.project_workflow_map import ProjectWorkflowMap
+from app.core.redis_client import get_redis
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +38,7 @@ class Orchestrator:
         self.knowledge_retriever = KnowledgeRetriever()
         self.response_generator = ResponseGenerator()
         self.jsm_executor = JsmExecutor()
+        self.workflow_discovery_service = WorkflowDiscoveryService()
 
 
     # punto de entrada del pipeline
@@ -200,10 +205,10 @@ class Orchestrator:
             "retrieved_chunks": [chunk.model_dump() for chunk in retrieval_result.chunks], #TEST
             "generated_response": generated_response.model_dump(),
         }
-    
-    # resuelve el transition_id real de jsm para una accion generica (escalate, resolve, etc)
+       # resuelve el transition_id real de jsm para una accion generica (escalate, resolve, etc)
     # busca el system_action(en jsm_status_actions)configurado para ese proyecto y lo matchea contra
     # las transiciones disponibles para ese ticket puntual en su estado actual
+    # si no hay transicion directa, intenta un camino de respaldo (multi salto) y avisa por nota interna, sin ejecutarlo
     async def _resolve_transition_id(self, issue_key: str, project_id: str, system_action: str) -> tuple[str | None, str | None]:
         target_status_name = self._get_target_status_name(project_id, system_action)
 
@@ -219,7 +224,80 @@ class Orchestrator:
                 return transition["id"], target_status_name
 
         logger.warning(f"[{issue_key}] no se encontro una transicion disponible hacia '{target_status_name}'")
+        await self._handle_missing_direct_transition(issue_key, project_id, target_status_name)
         return None, target_status_name
+
+    # cuando no hay transicion directa, busca si existe un camino multi salto como respaldo
+    # no lo ejecuta automaticamente, solo avisa por nota interna, el riesgo de disparar automatizaciones
+    # en estados intermedios sin que un humano lo apruebe queda documentado en TF-151
+    async def _handle_missing_direct_transition(self, issue_key: str, project_id: str, target_status_name: str) -> None:
+        try:
+            project_code = self._get_project_code(project_id)
+            if project_code is None:
+                return
+
+            workflow_map = await self._get_cached_workflow_map(project_code)
+            current_status_name = await self.jsm_executor.get_issue_status(issue_key)
+            path = workflow_map.find_path(current_status_name, target_status_name)
+
+            if path is None:
+                note = (
+                    f"El sistema no encontro ningun camino, ni directo ni de varios pasos, "
+                    f"para transicionar este ticket desde '{current_status_name}' hacia '{target_status_name}'. "
+                    f"Revisar el workflow configurado en JSM para este proyecto."
+                )
+            else:
+                note = (
+                    f"El sistema encontro un camino de {len(path)} pasos desde '{current_status_name}' hacia "
+                    f"'{target_status_name}', pero no lo ejecuto automaticamente. Cada paso intermedio es un "
+                    f"evento real en JSM que podria disparar automatizaciones no deseadas. Revisar manualmente "
+                    f"o ajustar el workflow para agregar una transicion directa."
+                )
+
+            await self.jsm_executor.post_comment(issue_key, note, public=False)
+
+        except Exception as e:
+            logger.error(f"[{issue_key}] fallo al calcular el camino de respaldo: {e}")
+
+    # trae el code real del proyecto (ej TARG) a partir de su uuid interno
+    def _get_project_code(self, project_id: str) -> str | None:
+        db = next(get_db())
+        try:
+            row = db.execute(text("SELECT code FROM project WHERE id = :project_id"), {"project_id": project_id}).fetchone()
+            return row.code if row else None
+        finally:
+            db.close()
+
+    # trae el mapa de workflow de un proyecto, cacheado en redis por una hora, para no pegarle a jira en cada ticket
+    async def _get_cached_workflow_map(self, project_code: str) -> ProjectWorkflowMap:
+        redis = get_redis()
+        cache_key = f"workflow_map:{project_code}"
+        cached = await redis.get(cache_key)
+
+        if cached:
+            data = json.loads(cached)
+            return ProjectWorkflowMap(data["workflow"], data["status_names"])
+
+        result = await self.workflow_discovery_service.get_project_workflow(project_code)
+        await redis.set(cache_key, json.dumps(result), ex=3600)
+
+        return ProjectWorkflowMap(result["workflow"], result["status_names"])
+
+    # busca en project_config el nombre del estado configurado para una accion, en un proyecto puntual
+    def _get_target_status_name(self, project_id: str, system_action: str) -> str | None:
+        db = next(get_db())
+        try:
+            row = db.execute(text("""
+                SELECT ts.name
+                FROM project_config pc
+                JOIN ticket_status ts ON pc.status_id = ts.id
+                WHERE pc.project_id = :project_id AND pc.system_action = :system_action AND pc.is_active = TRUE
+            """), {"project_id": project_id, "system_action": system_action}).fetchone()
+
+            return row.name if row else None
+        finally:
+            db.close()
+            
 
     # busca en project_config el nombre del estado configurado para una accion, en un proyecto puntual
     def _get_target_status_name(self, project_id: str, system_action: str) -> str | None:
