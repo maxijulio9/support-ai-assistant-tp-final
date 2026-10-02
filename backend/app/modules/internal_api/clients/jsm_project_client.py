@@ -119,3 +119,38 @@ class JsmProjectClient:
 
         return [{"id": p["id"], "name": p["name"]} for p in data]
 
+
+    # resuelve el id numerico real de un proyecto a partir de su key
+    # necesario porque workflowscheme/project exige el id numerico, no acepta la key de texto (confirmado con un 400 real)
+    async def get_project_numeric_id(self, base_url: str, user_email: str, api_token: str, project_key: str) -> str:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/api/3/project/{project_key}")
+            response.raise_for_status()
+            data = response.json()
+
+        return data["id"]
+
+    # trae el esquema de workflow asignado a un proyecto, incluye que workflow usa cada tipo de issue
+    async def get_workflow_scheme(self, base_url: str, user_email: str, api_token: str, project_numeric_id: str) -> dict:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.get(f"{base_url}/rest/api/3/workflowscheme/project", params={"projectId": project_numeric_id})
+            response.raise_for_status()
+            data = response.json()
+
+        return data
+
+    # trae el detalle completo de uno o mas workflows, estados y transiciones incluidas
+    # cada transicion trae type (GLOBAL/DIRECTED/INITIAL), toStatusReference, y para DIRECTED, links con fromStatusReference
+    async def get_workflow_details(self, base_url: str, user_email: str, api_token: str, workflow_names: list[str]) -> dict:
+        headers = self._build_auth_header(user_email, api_token)
+
+        async with httpx.AsyncClient(headers=headers) as client:
+            response = await client.post(f"{base_url}/rest/api/3/workflows", json={"workflowNames": workflow_names})
+            response.raise_for_status()
+            data = response.json()
+
+        return data
