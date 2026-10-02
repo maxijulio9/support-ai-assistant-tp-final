@@ -73,3 +73,9 @@ class JsmExecutor:
         response = await self._client.put(url, json=payload)
         return response.status_code == 204 
     
+    # trae el estado actual real del ticket, necesario para el pathfinding de respaldo cuando no hay transicion directa
+    async def get_issue_status(self, issue_key: str) -> str:
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}"
+        response = await self._client.get(url, params={"fields": "status"})
+        response.raise_for_status()
+        return response.json()["fields"]["status"]["name"]
