@@ -72,3 +72,25 @@ class JsmExecutor:
         payload = {"fields": fields_dict}
         response = await self._client.put(url, json=payload)
         return response.status_code == 204 
+    
+    # resuelve el id numerico real de un proyecto a partir de su key
+    # necesario porque workflowscheme/project exige el id numerico, no acepta la key de texto (confirmado con un 400 real)
+    async def get_project_numeric_id(self, project_key: str) -> str:
+        url = f"{self.base_url}/rest/api/3/project/{project_key}"
+        response = await self._client.get(url)
+        response.raise_for_status()
+        return response.json()["id"]
+
+    # trae el esquema de workflow asignado a un proyecto, incluye que workflow usa cada tipo de issue
+    async def get_workflow_scheme(self, project_numeric_id: str) -> dict:
+        url = f"{self.base_url}/rest/api/3/workflowscheme/project"
+        response = await self._client.get(url, params={"projectId": project_numeric_id})
+        response.raise_for_status()
+        return response.json()
+
+    # trae el detalle completo de uno o mas workflows, estados y transiciones incluidas (statusReference, toStatusReference, type GLOBAL/DIRECTED/INITIAL)
+    async def get_workflow_details(self, workflow_names: list[str]) -> dict:
+        url = f"{self.base_url}/rest/api/3/workflows"
+        response = await self._client.post(url, json={"workflowNames": workflow_names})
+        response.raise_for_status()
+        return response.json()
