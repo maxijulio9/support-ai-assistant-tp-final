@@ -9,6 +9,7 @@ from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.response_generator.service import ResponseGenerator
 from app.modules.response_generator.schemas import ACTION_AUTO_PUBLISH
 from app.modules.jsm_executor.client import JsmExecutor
+from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -19,15 +20,17 @@ class InteractionReviewService:
         self.interaction_repository = InteractionRepository()
         self.history = ConversationHistory()
         self.response_generator = ResponseGenerator()
-        self.jsm_executor = JsmExecutor()
-
+        #self.jsm_executor = JsmExecutor()
+        self.credentials_repository = JsmCredentialsRepository()
+        
     # aprueba la interaccion, publica la respuesta ya generada tal cual esta
     async def approve_interaction(self, interaction_id: str, reviewed_by: str | None) -> str:
         context = self.interaction_repository.get_interaction_context(interaction_id)
         if context is None:
             raise ValueError(f"interaction '{interaction_id}' no encontrada")
 
-        await self.jsm_executor.post_comment(context["issue_key"], context["generated_response"], public=True)
+        jsm_executor = self._get_jsm_executor()
+        await jsm_executor.post_comment(context["issue_key"], context["generated_response"], public=True)
         self._update_interaction(interaction_id, decision=ACTION_AUTO_PUBLISH, reviewed_by=reviewed_by)
 
         return ACTION_AUTO_PUBLISH
@@ -108,3 +111,15 @@ class InteractionReviewService:
 
         finally:
             db.close()
+    
+    # resuelve un jsm_executor fresco con las credenciales configuradas, lanza si todavia no hay conexion
+    def _get_jsm_executor(self) -> JsmExecutor:
+        credentials = self.credentials_repository.get_credentials()
+        if credentials is None:
+            raise ValueError("todavia no se configuro la conexion con jsm")
+
+        return JsmExecutor(
+            base_url=credentials["base_url"],
+            user_email=credentials["user_email"],
+            api_token=credentials["api_token"],
+        )

@@ -8,6 +8,7 @@ from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.ticket_analyzer.llm_client import LlmClient
 from app.modules.ticket_analyzer.project_repository import ProjectRepository
 from app.modules.jsm_executor.client import JsmExecutor
+from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
 
 
 logger = logging.getLogger(__name__)
@@ -42,9 +43,10 @@ class TicketAnalyzer:
         self.history = ConversationHistory()
         self.llm_client = LlmClient()
         self.project_repository = ProjectRepository()
-        self.jsm_executor = JsmExecutor()
+        #self.jsm_executor = JsmExecutor()
+        self.credentials_repository = JsmCredentialsRepository()
 
-    async def analyze(self, event: NormalizedEvent) -> TicketAnalysis:
+    async def analyze(self, event: NormalizedEvent, jsm_executor) -> TicketAnalysis:
         # punto de entrada, por ahora arma el objeto base con lo que llega de M1
         project_key = self._get_project_key(event.issue_key)
         project_context = self.project_repository.get_project_context(project_key)
@@ -72,7 +74,8 @@ class TicketAnalyzer:
                 impact=classification.impact if classification else None,
                 urgency=classification.urgency if classification else None,
                 user_priority=event.priority,
-                issue_key=event.issue_key
+                issue_key=event.issue_key,
+                jsm_executor=jsm_executor,
             )
         
         # si el llm no pudo clasificar, asumimos que hay info suficiente
@@ -119,7 +122,7 @@ class TicketAnalyzer:
 
     # solo escala la prioridad hacia arriba, nunca la baja por un mensaje aislado
     # un problema urgente sigue siendo urgente aunque un comentario puntual suene neutro
-    async def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str) -> str:
+    async def _determine_priority(self, impact: str, urgency: str, user_priority: str, issue_key: str, jsm_executor) -> str:
         current_priority = user_priority or "Medium"
 
         if not impact or not urgency:
@@ -134,7 +137,7 @@ class TicketAnalyzer:
         logger.info(f"[{issue_key}] prioridad escala de '{current_priority}' a '{calculated}'")
 
         try:
-            await self.jsm_executor.update_fields(issue_key, {"priority": {"name": calculated}})
+            await jsm_executor.update_fields(issue_key, {"priority": {"name": calculated}})
             logger.info(f"[{issue_key}] prioridad actualizada en jsm a '{calculated}'")
         except Exception as e:
             logger.error(f"[{issue_key}] error al actualizar prioridad en jsm: {e}")

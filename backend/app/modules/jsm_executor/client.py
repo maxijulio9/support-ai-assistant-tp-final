@@ -6,15 +6,14 @@ Responsabilidades: publicar comentarios, transicionar estados, asignar tickets a
 
 import httpx
 import base64
-from app.core.config import settings
 
 
 class JsmExecutor:
     
-    def __init__(self):
-        self.base_url = settings.jsm_base_url
-        self.user_email = settings.jsm_user_email
-        self.api_token = settings.jsm_api_token
+    def __init__(self, base_url: str, user_email: str, api_token: str):
+        self.base_url = base_url
+        self.user_email = user_email
+        self.api_token = api_token
         self._headers = self._build_auth_header()
         self._client = httpx.AsyncClient(headers=self._headers)
 

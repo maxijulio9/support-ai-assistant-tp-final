@@ -607,8 +607,9 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
     mock_jsm_class.return_value = mock_jsm
 
     orchestrator = Orchestrator()
+    orchestrator.jsm_executor = mock_jsm
     await orchestrator._handle_missing_direct_transition("TEST-1", "proj-1", "Waiting for customer")
-
+    
     mock_jsm.post_comment.assert_called_once()
     args, kwargs = mock_jsm.post_comment.call_args
     assert "no encontro ningun camino" in args[1]
@@ -662,8 +663,9 @@ async def test_handle_missing_direct_transition_posts_multihop_note_without_exec
     mock_jsm_class.return_value = mock_jsm
 
     orchestrator = Orchestrator()
+    orchestrator.jsm_executor = mock_jsm
     await orchestrator._handle_missing_direct_transition("TEST-1", "proj-1", "Waiting for customer")
-
+    
     mock_jsm.post_comment.assert_called_once()
     args, kwargs = mock_jsm.post_comment.call_args
     assert "camino de 2 pasos" in args[1]
@@ -773,9 +775,10 @@ async def test_resolve_transition_id_triggers_fallback_when_no_direct_transition
 
     orchestrator = Orchestrator()
     orchestrator._handle_missing_direct_transition = AsyncMock()
+    orchestrator.jsm_executor = mock_jsm
 
     transition_id, target_status_name = await orchestrator._resolve_transition_id("TEST-1", "proj-1", "awaiting_customer")
-
+    
     assert transition_id is None
     assert target_status_name == "Waiting for customer"
     orchestrator._handle_missing_direct_transition.assert_called_once_with("TEST-1", "proj-1", "Waiting for customer")
