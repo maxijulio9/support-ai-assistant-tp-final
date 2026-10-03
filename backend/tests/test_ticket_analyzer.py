@@ -45,6 +45,13 @@ def _build_project_context(**overrides) -> ProjectContext:
     return ProjectContext(**defaults)
 
 
+# arma un jsm_executor mockeado generico, lo necesita analyze() como parametro desde TF-169
+def _build_jsm_executor() -> MagicMock:
+    jsm_executor = MagicMock()
+    jsm_executor.update_fields = AsyncMock()
+    return jsm_executor
+
+
 # verifica que info_sufficient es False cuando el llm devuelve MISSING_INFO
 @patch("app.modules.ticket_analyzer.service.ProjectRepository")
 @patch("app.modules.ticket_analyzer.service.ConversationHistory")
@@ -65,7 +72,7 @@ async def test_info_sufficient_false_cuando_falta_info(mock_llm_class, mock_hist
     mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
-    result = await analyzer.analyze(_build_event())
+    result = await analyzer.analyze(_build_event(), _build_jsm_executor())
 
     assert result.info_sufficient is False
     assert result.resolved_by == "MISSING_INFO"
@@ -91,7 +98,7 @@ async def test_info_sufficient_true_cuando_resuelve_l1(mock_llm_class, mock_hist
     mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
-    result = await analyzer.analyze(_build_event())
+    result = await analyzer.analyze(_build_event(), _build_jsm_executor())
 
     assert result.info_sufficient is True
     assert result.resolved_by == "L1"
@@ -117,7 +124,7 @@ async def test_info_sufficient_true_por_defecto_si_falla_llm(mock_llm_class, moc
     mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
-    result = await analyzer.analyze(_build_event())
+    result = await analyzer.analyze(_build_event(), _build_jsm_executor())
 
     assert result.info_sufficient is True
     
@@ -142,7 +149,7 @@ async def test_escalate_direct_true_cuando_out_of_scope(mock_llm_class, mock_his
     mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
-    result = await analyzer.analyze(_build_event())
+    result = await analyzer.analyze(_build_event(), _build_jsm_executor())
 
     assert result.escalate_direct is True
 
@@ -167,7 +174,7 @@ async def test_escalate_direct_false_en_camino_normal(mock_llm_class, mock_histo
     mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
-    result = await analyzer.analyze(_build_event())
+    result = await analyzer.analyze(_build_event(), _build_jsm_executor())
 
     assert result.escalate_direct is False
     
@@ -175,26 +182,28 @@ async def test_escalate_direct_false_en_camino_normal(mock_llm_class, mock_histo
 @pytest.mark.asyncio
 async def test_determine_priority_no_baja_de_high_a_low():
     analyzer = TicketAnalyzer()
-    analyzer.jsm_executor = MagicMock()
-    analyzer.jsm_executor.update_fields = AsyncMock()
+    jsm_executor = _build_jsm_executor()
 
-    resultado = await analyzer._determine_priority(impact="Low", urgency="Low", user_priority="High", issue_key="TEST-1")
+    resultado = await analyzer._determine_priority(
+        impact="Low", urgency="Low", user_priority="High", issue_key="TEST-1", jsm_executor=jsm_executor
+    )
 
     assert resultado == "High"
-    analyzer.jsm_executor.update_fields.assert_not_called()
+    jsm_executor.update_fields.assert_not_called()
 
 
 # verifica que la prioridad si escala cuando la calculada es mayor a la actual
 @pytest.mark.asyncio
 async def test_determine_priority_escala_de_low_a_highest():
     analyzer = TicketAnalyzer()
-    analyzer.jsm_executor = MagicMock()
-    analyzer.jsm_executor.update_fields = AsyncMock()
+    jsm_executor = _build_jsm_executor()
 
-    resultado = await analyzer._determine_priority(impact="Critical", urgency="Critical", user_priority="Low", issue_key="TEST-1")
+    resultado = await analyzer._determine_priority(
+        impact="Critical", urgency="Critical", user_priority="Low", issue_key="TEST-1", jsm_executor=jsm_executor
+    )
 
     assert resultado == "Highest"
-    analyzer.jsm_executor.update_fields.assert_called_once()
+    jsm_executor.update_fields.assert_called_once()
 
 
 # verifica que un cierre de conversacion no recalcula la prioridad, mantiene la actual
@@ -218,12 +227,12 @@ async def test_cierre_conversacion_no_recalcula_prioridad(mock_llm_class, mock_h
     mock_repo_class.return_value = mock_repo
 
     analyzer = TicketAnalyzer()
-    analyzer.jsm_executor.update_fields = AsyncMock()
+    jsm_executor = _build_jsm_executor()
 
     event = _build_event()
     event.priority = "High"
 
-    result = await analyzer.analyze(event)
+    result = await analyzer.analyze(event, jsm_executor)
 
     assert result.priority == "High"
-    analyzer.jsm_executor.update_fields.assert_not_called()
+    jsm_executor.update_fields.assert_not_called()
