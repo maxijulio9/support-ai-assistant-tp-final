@@ -217,3 +217,16 @@ CREATE TABLE IF NOT EXISTS app_user (
 
 -- evita duplicados de email por mayusculas/minusculas (Test@x.com y test@x.com son el mismo usuario)
 CREATE UNIQUE INDEX IF NOT EXISTS app_user_email_lower_idx ON app_user (LOWER(email));
+
+-- workflow completo de jira descubierto para un proyecto + tipo de issue, reemplaza el cache de redis de TF-151
+-- workflow_data guarda el json crudo que ya arma WorkflowDiscoveryService (estados reales y transiciones)
+-- la resincronizacion (como y cuando se refresca) queda resuelta en TF-171, por ahora es solo persistencia
+CREATE TABLE IF NOT EXISTS project_workflow (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id      UUID NOT NULL REFERENCES project(id),
+    issue_type_id   VARCHAR(50),
+    workflow_name   VARCHAR(255) NOT NULL,
+    workflow_data   JSONB NOT NULL,
+    last_synced_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (project_id, issue_type_id)
+);

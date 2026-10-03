@@ -23,8 +23,7 @@ from app.modules.jsm_executor.client import JsmExecutor
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.internal_api.services.workflow_discovery_service import WorkflowDiscoveryService
 from app.modules.internal_api.project_workflow_map import ProjectWorkflowMap
-from app.core.redis_client import get_redis
-import json
+from app.modules.internal_api.repositories.project_workflow_repository import ProjectWorkflowRepository
 from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
 
 logger = logging.getLogger(__name__)
@@ -41,6 +40,7 @@ class Orchestrator:
         #self.jsm_executor = JsmExecutor()
         self.workflow_discovery_service = WorkflowDiscoveryService()
         self.credentials_repository = JsmCredentialsRepository()
+        self.project_workflow_repository = ProjectWorkflowRepository()
 
 
     # punto de entrada del pipeline
@@ -250,7 +250,7 @@ class Orchestrator:
             if project_code is None:
                 return
 
-            workflow_map = await self._get_cached_workflow_map(project_code)
+            workflow_map = await self._get_cached_workflow_map(project_code, project_id)
             current_status_name = await self.jsm_executor.get_issue_status(issue_key)
             path = workflow_map.find_path(current_status_name, target_status_name)
 
@@ -282,21 +282,22 @@ class Orchestrator:
         finally:
             db.close()
 
-    # trae el mapa de workflow de un proyecto, cacheado en redis por una hora, para no pegarle a jira en cada ticket
-    async def _get_cached_workflow_map(self, project_code: str) -> ProjectWorkflowMap:
-        redis = get_redis()
-        cache_key = f"workflow_map:{project_code}"
-        cached = await redis.get(cache_key)
+    # trae el mapa de workflow de un proyecto desde la basess, descubriendolo y persistiendolo
+    # la primera vez que se necesite. usa el fallback (issue_type_id None), ver TF-172 para la mejora
+    # que propague el issue_type_id real del ticket
+    async def _get_cached_workflow_map(self, project_code: str, project_id: str) -> ProjectWorkflowMap:
+        workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=None)
 
-        if cached:
-            data = json.loads(cached)
-            return ProjectWorkflowMap(data["workflow"], data["status_names"])
+        if workflow_data is None:
+            resultados = await self.workflow_discovery_service.discover_all_workflows(project_code)
+            for r in resultados:
+                self.project_workflow_repository.upsert(project_id, r["issue_type_id"], r["workflow_name"], r["workflow_data"])
 
-        result = await self.workflow_discovery_service.get_project_workflow(project_code)
-        await redis.set(cache_key, json.dumps(result), ex=3600)
+            workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=None)
 
-        return ProjectWorkflowMap(result["workflow"], result["status_names"])
-
+        return ProjectWorkflowMap(workflow_data["workflow"], workflow_data["status_names"])
+    
+    
     # busca en project_config el nombre del estado configurado para una accion, en un proyecto puntual
     def _get_target_status_name(self, project_id: str, system_action: str) -> str | None:
         db = next(get_db())
