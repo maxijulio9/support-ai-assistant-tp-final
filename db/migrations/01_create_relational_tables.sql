@@ -224,7 +224,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS app_user_email_lower_idx ON app_user (LOWER(em
 CREATE TABLE IF NOT EXISTS project_workflow (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id      UUID NOT NULL REFERENCES project(id),
-    issue_type_id   VARCHAR(50) NOT NULL,
+    issue_type_id   VARCHAR(50),
     workflow_name   VARCHAR(255) NOT NULL,
     workflow_data   JSONB NOT NULL,
     last_synced_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
