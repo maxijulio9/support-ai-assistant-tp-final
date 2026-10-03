@@ -18,7 +18,7 @@ async def test_post_comment_public(mock_async_client_class):
     mock_client.post = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.post_comment("TEST-1", "respuesta de prueba", public=True)
 
     assert result["public"] is True
@@ -38,7 +38,7 @@ async def test_post_comment_internal(mock_async_client_class):
     mock_client.post = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.post_comment("TEST-1", "nota interna", public=False)
 
     assert result["public"] is False
@@ -55,7 +55,7 @@ async def test_transition_issue_success(mock_async_client_class):
     mock_client.post = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.transition_issue("TEST-1", "21")
 
     assert result is True
@@ -72,7 +72,7 @@ async def test_assign_issue_success(mock_async_client_class):
     mock_client.put = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.assign_issue("TEST-1", "abc123")
 
     assert result is True
@@ -95,7 +95,7 @@ async def test_get_transitions(mock_async_client_class):
     mock_client.get = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.get_transitions("TEST-1")
 
     assert len(result["transitions"]) == 2
@@ -112,7 +112,7 @@ async def test_update_fields_success(mock_async_client_class):
     mock_client.put = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.update_fields("TEST-1", {"priority": {"name": "High"}})
 
     assert result is True
@@ -130,7 +130,7 @@ async def test_update_fields_failure(mock_async_client_class):
     mock_client.put = AsyncMock(return_value=mock_response)
     mock_async_client_class.return_value = mock_client
 
-    executor = JsmExecutor()
+    executor = JsmExecutor(base_url="https://tokenia.atlassian.net", user_email="test@tokenia.com", api_token="fake-token")
     result = await executor.update_fields("TEST-1", {"priority": {"name": "InvalidValue"}})
 
     assert result is False
