@@ -25,6 +25,7 @@ from app.modules.internal_api.services.workflow_discovery_service import Workflo
 from app.modules.internal_api.project_workflow_map import ProjectWorkflowMap
 from app.core.redis_client import get_redis
 import json
+from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +38,9 @@ class Orchestrator:
         self.interaction_logger = InteractionLogger()
         self.knowledge_retriever = KnowledgeRetriever()
         self.response_generator = ResponseGenerator()
-        self.jsm_executor = JsmExecutor()
+        #self.jsm_executor = JsmExecutor()
         self.workflow_discovery_service = WorkflowDiscoveryService()
+        self.credentials_repository = JsmCredentialsRepository()
 
 
     # punto de entrada del pipeline
@@ -47,8 +49,20 @@ class Orchestrator:
         
         logger.info(f"[{event.issue_key}] iniciando procesamiento del evento {event.event_type}")
 
-                #  m2 analisis y clasificaciòn del ticket
-        analysis = await self.ticket_analyzer.analyze(event)
+        # obtener credenciales de JSM
+        credentials = self.credentials_repository.get_credentials()
+        if credentials is None:
+            logger.error(f"[{event.issue_key}] no hay credenciales de jsm configuradas, no se puede procesar el evento")
+            return {"status": "error", "issue_key": event.issue_key, "reason": "jsm no configurado"}
+
+        self.jsm_executor = JsmExecutor(
+            base_url=credentials["base_url"],
+            user_email=credentials["user_email"],
+            api_token=credentials["api_token"],
+        )
+
+        #m2 analisis y clasificaciòn del ticket
+        analysis = await self.ticket_analyzer.analyze(event, self.jsm_executor)
 
         logger.info(f"[{event.issue_key}] M2 listorti, priority={analysis.priority}, country={analysis.country}")
 
