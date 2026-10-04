@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS interaction (
     system_event_id         UUID REFERENCES system_event(id),
     category_id             UUID REFERENCES ticket_category(id),
     priority_id             UUID REFERENCES ticket_priority(id),
-    sentiment_id            UUID REFERENCES sentiment_typ(id),
+    sentiment_id            UUID REFERENCES sentiment_type(id),
     text_input              TEXT,
     detected_intent         VARCHAR(100),
     info_sufficient         BOOLEAN DEFAULT TRUE,
