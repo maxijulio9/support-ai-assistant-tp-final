@@ -228,5 +228,5 @@ CREATE TABLE IF NOT EXISTS project_workflow (
     workflow_name   VARCHAR(255) NOT NULL,
     workflow_data   JSONB NOT NULL,
     last_synced_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (project_id, issue_type_id)
+    UNIQUE NULLS NOT DISTINCT (project_id, issue_type_id)
 );

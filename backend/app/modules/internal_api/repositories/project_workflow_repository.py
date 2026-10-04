@@ -64,3 +64,15 @@ class ProjectWorkflowRepository:
 
         finally:
             db.close()
+            
+        
+    # lista id y code de todos los proyectos dados de alta, para recorrerlos en la resincronizacion periodica
+    def list_all_projects(self) -> list[dict]:
+        db = next(get_db())
+
+        try:
+            rows = db.execute(text("SELECT id, code FROM project")).fetchall()
+            return [{"id": str(row.id), "code": row.code} for row in rows]
+
+        finally:
+            db.close()

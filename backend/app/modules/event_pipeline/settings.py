@@ -1,13 +1,20 @@
 # Configuración del worker ARQ para el pipeline de procesamiento de eventos
 
+from arq import cron
 from arq.connections import RedisSettings
 from app.core.config import settings
-from app.modules.event_pipeline.worker import process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex, process_agent_resolution
+from app.modules.event_pipeline.worker import process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex, process_agent_resolution, resync_all_project_workflows
+
 # nombre de la cola dedicada a las tareas de kb, usado tambien al encolar desde m1 y m7
 KB_QUEUE_NAME = "kb_queue"
+
 class WorkerSettings:
     # funciones que este worker sabe ejecutar
     functions = [process_issue_created, process_comment_created, process_agent_resolution]
+
+    # tareas periodicas, TF-171 resincroniza el workflow de todos los proyectos una vez por dia a las 3 am
+    cron_jobs = [cron(resync_all_project_workflows, hour=3, minute=0)]
+
     # configuración de conexión a rexdis
     # RedisSettings.from_dsn("redis://redis:6379")
     redis_settings = RedisSettings.from_dsn(settings.redis_url)
