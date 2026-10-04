@@ -108,3 +108,32 @@ async def process_agent_resolution(arq_context, issue_key: str):
 
     logger.info(f"worker: resolucion externa procesada para {issue_key}, descartada={discarded}")
     return {"status": "completed", "issue_key": issue_key, "discarded": discarded}
+
+
+
+# CRON:::: tarea periodica que resincroniza el workflow de todos los proyectos dados de alta
+# recorre cada proyecto y vuelve a descubrir su workflow real contra jira, sobreescribiendo lo persistido en TF-170
+async def resync_all_project_workflows(arq_context):
+    logger.info("worker: iniciando resincronizacion periodica de workflows")
+
+    from app.modules.internal_api.repositories.project_workflow_repository import ProjectWorkflowRepository
+    from app.modules.internal_api.services.workflow_discovery_service import WorkflowDiscoveryService
+
+    repo = ProjectWorkflowRepository()
+    discovery = WorkflowDiscoveryService()
+
+    proyectos = repo.list_all_projects()
+    total_sincronizados = 0
+
+    for proyecto in proyectos:
+        try:
+            resultados = await discovery.discover_all_workflows(proyecto["code"])
+            for r in resultados:
+                repo.upsert(proyecto["id"], r["issue_type_id"], r["workflow_name"], r["workflow_data"])
+            total_sincronizados += 1
+
+        except Exception as e:
+            logger.error(f"worker: fallo la resincronizacion de workflow para {proyecto['code']}: {e}")
+
+    logger.info(f"worker: resincronizacion periodica completa, {total_sincronizados} de {len(proyectos)} proyectos actualizados")
+    return {"status": "completed", "total_proyectos": len(proyectos), "sincronizados": total_sincronizados}
