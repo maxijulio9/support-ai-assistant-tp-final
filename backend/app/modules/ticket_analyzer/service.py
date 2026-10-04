@@ -92,6 +92,7 @@ class TicketAnalyzer:
             description=event.description,
             country=project_context.country,
             project_id=project_context.project_id,
+            issue_type_id=event.issue_type_id,
             threshold_auto_publish=project_context.threshold_auto_publish,
             threshold_needs_review=project_context.threshold_needs_review,
             similarity_threshold=project_context.similarity_threshold,

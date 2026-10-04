@@ -85,6 +85,7 @@ class NormalizedEvent(BaseModel):
     summary: Optional[str] = None
     description: Optional[str] = None
     issue_type: Optional[str] = None
+    issue_type_id: Optional[str] = None
     priority: Optional[str] = None
     status: Optional[str] = None
     reporter_id: Optional[str] = None

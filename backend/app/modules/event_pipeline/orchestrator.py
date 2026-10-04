@@ -80,7 +80,7 @@ class Orchestrator:
                 decision=ACTION_ESCALATE,
             )
 
-            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
+            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
             
             if transition_id:
                 try:
@@ -116,7 +116,9 @@ class Orchestrator:
                 decision="RESOLVED",
             )
 
-            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED)
+            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED, analysis.issue_type_id)
+            
+            
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
@@ -180,7 +182,7 @@ class Orchestrator:
 
                 # si ya se le respondio al cliente (o se le pidio mas info), transiciona a un estado de espera
                 if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_REQUEST_INFO):
-                    transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER)
+                    transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER, analysis.issue_type_id)
                     if transition_id:
                         await self.jsm_executor.transition_issue(event.issue_key, transition_id)
                         self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
@@ -193,7 +195,7 @@ class Orchestrator:
 
         
         elif generated_response.action_type == ACTION_ESCALATE:
-            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE)
+            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
             if transition_id:
                 try:
                     await self.jsm_executor.transition_issue(event.issue_key, transition_id)
@@ -223,7 +225,7 @@ class Orchestrator:
     # busca el system_action(en jsm_status_actions)configurado para ese proyecto y lo matchea contra
     # las transiciones disponibles para ese ticket puntual en su estado actual
     # si no hay transicion directa, intenta un camino de respaldo (multi salto) y avisa por nota interna, sin ejecutarlo
-    async def _resolve_transition_id(self, issue_key: str, project_id: str, system_action: str) -> tuple[str | None, str | None]:
+    async def _resolve_transition_id(self, issue_key: str, project_id: str, system_action: str, issue_type_id: str | None = None) -> tuple[str | None, str | None]:
         target_status_name = self._get_target_status_name(project_id, system_action)
 
         if target_status_name is None:
@@ -238,19 +240,19 @@ class Orchestrator:
                 return transition["id"], target_status_name
 
         logger.warning(f"[{issue_key}] no se encontro una transicion disponible hacia '{target_status_name}'")
-        await self._handle_missing_direct_transition(issue_key, project_id, target_status_name)
+        await self._handle_missing_direct_transition(issue_key, project_id, target_status_name, issue_type_id)
         return None, target_status_name
 
-    # cuando no hay transicion directa, busca si existe un camino multi salto como respaldo
+       # cuando no hay transicion directa, busca si existe un camino multi salto como respaldo
     # no lo ejecuta automaticamente, solo avisa por nota interna, el riesgo de disparar automatizaciones
     # en estados intermedios sin que un humano lo apruebe queda documentado en TF-151
-    async def _handle_missing_direct_transition(self, issue_key: str, project_id: str, target_status_name: str) -> None:
+    async def _handle_missing_direct_transition(self, issue_key: str, project_id: str, target_status_name: str, issue_type_id: str | None = None) -> None:
         try:
             project_code = self._get_project_code(project_id)
             if project_code is None:
                 return
 
-            workflow_map = await self._get_cached_workflow_map(project_code, project_id)
+            workflow_map = await self._get_cached_workflow_map(project_code, project_id, issue_type_id)
             current_status_name = await self.jsm_executor.get_issue_status(issue_key)
             path = workflow_map.find_path(current_status_name, target_status_name)
 
@@ -272,7 +274,8 @@ class Orchestrator:
 
         except Exception as e:
             logger.error(f"[{issue_key}] fallo al calcular el camino de respaldo: {e}")
-
+            
+            
     # trae el code real del proyecto (ej TARG) a partir de su uuid interno
     def _get_project_code(self, project_id: str) -> str | None:
         db = next(get_db())
@@ -282,21 +285,19 @@ class Orchestrator:
         finally:
             db.close()
 
-    # trae el mapa de workflow de un proyecto desde la basess, descubriendolo y persistiendolo
-    # la primera vez que se necesite. usa el fallback (issue_type_id None), ver TF-172 para la mejora
-    # que propague el issue_type_id real del ticket
-    async def _get_cached_workflow_map(self, project_code: str, project_id: str) -> ProjectWorkflowMap:
-        workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=None)
+    # trae el mapa de workflow de un proyecto desde la base, descubriendolo y persistiendolo
+    # la primera vez que se necesite. usa el issue_type_id real si se paso (TF-172), sino cae al fallback
+    async def _get_cached_workflow_map(self, project_code: str, project_id: str, issue_type_id: str | None = None) -> ProjectWorkflowMap:
+        workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=issue_type_id)
 
         if workflow_data is None:
             resultados = await self.workflow_discovery_service.discover_all_workflows(project_code)
             for r in resultados:
                 self.project_workflow_repository.upsert(project_id, r["issue_type_id"], r["workflow_name"], r["workflow_data"])
 
-            workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=None)
+            workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=issue_type_id)
 
         return ProjectWorkflowMap(workflow_data["workflow"], workflow_data["status_names"])
-    
     
     # busca en project_config el nombre del estado configurado para una accion, en un proyecto puntual
     def _get_target_status_name(self, project_id: str, system_action: str) -> str | None:

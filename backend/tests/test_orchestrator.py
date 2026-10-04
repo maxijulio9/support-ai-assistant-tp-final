@@ -798,4 +798,4 @@ async def test_resolve_transition_id_triggers_fallback_when_no_direct_transition
     
     assert transition_id is None
     assert target_status_name == "Waiting for customer"
-    orchestrator._handle_missing_direct_transition.assert_called_once_with("TEST-1", "proj-1", "Waiting for customer")
+    orchestrator._handle_missing_direct_transition.assert_called_once_with("TEST-1", "proj-1", "Waiting for customer", None)

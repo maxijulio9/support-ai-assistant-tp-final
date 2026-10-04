@@ -50,6 +50,7 @@ class WebhookReceiver:
             summary=fields.summary,
             description=description_text,
             issue_type=fields.issuetype.name if fields.issuetype else None,
+            issue_type_id=fields.issuetype.id if fields.issuetype else None,
             priority=fields.priority.name if fields.priority else None,
             status=fields.status.name if fields.status else None,
             reporter_id=fields.reporter.accountId if fields.reporter else None,
