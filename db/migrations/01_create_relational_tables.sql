@@ -154,7 +154,8 @@ CREATE TABLE IF NOT EXISTS interaction (
     chunks_retrieved_count  INTEGER DEFAULT 0,
     ragas_faithfulness      FLOAT,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    reviewed_at             TIMESTAMPTZ
+    reviewed_at             TIMESTAMPTZ,
+    reviewed_by             UUID REFERENCES app_user(id)
 );
 
 -- tabla para almacenar credenciales externas que van a estar encriptadas
