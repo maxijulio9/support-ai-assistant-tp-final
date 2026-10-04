@@ -155,7 +155,8 @@ CREATE TABLE IF NOT EXISTS interaction (
     ragas_faithfulness      FLOAT,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     reviewed_at             TIMESTAMPTZ,
-    reviewed_by             UUID REFERENCES app_user(id)
+    reviewed_by             UUID REFERENCES app_user(id),
+    rejection_reason        TEXT
 );
 
 -- tabla para almacenar credenciales externas que van a estar encriptadas
