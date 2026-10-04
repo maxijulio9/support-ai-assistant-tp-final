@@ -15,6 +15,7 @@ from app.modules.response_generator.schemas import (
     ACTION_ESCALATE,   
  )
 import json
+from app.modules.internal_api.repositories.project_workflow_repository import ProjectWorkflowRepository
 
 
 def _build_event(issue_key="TEST-1") -> NormalizedEvent:
@@ -563,7 +564,7 @@ async def test_retry_calls_retrieve_again_with_wider_top_k(mock_analyzer_class, 
     )
 
 # verifica que cuando no existe ningun camino de respaldo, se postea la nota explicando que no hay ninguno
-@patch("app.modules.event_pipeline.orchestrator.get_redis")
+@patch("app.modules.event_pipeline.orchestrator.ProjectWorkflowRepository")
 @patch("app.modules.event_pipeline.orchestrator.get_db")
 @patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
 @patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
@@ -574,7 +575,7 @@ async def test_retry_calls_retrieve_again_with_wider_top_k(mock_analyzer_class, 
 @pytest.mark.asyncio
 async def test_handle_missing_direct_transition_posts_no_path_note(
     mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
-    mock_discovery_class, mock_jsm_class, mock_get_db, mock_get_redis,
+    mock_discovery_class, mock_jsm_class, mock_get_db, mock_repo_class,
 ):
     mock_analyzer_class.return_value = MagicMock()
     mock_retriever_class.return_value = MagicMock()
@@ -586,9 +587,9 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
     mock_db.execute.return_value.fetchone.return_value = mock_row
     mock_get_db.return_value = iter([mock_db])
 
-    mock_redis = AsyncMock()
-    mock_redis.get.return_value = None
-    mock_get_redis.return_value = mock_redis
+    mock_repo = MagicMock()
+    mock_repo.get_workflow_data.return_value = None
+    mock_repo_class.return_value = mock_repo
 
     # A y B conectados, C aislado sin ninguna entrada, igual que waiting for customer en targ real
     workflow = {
@@ -598,7 +599,9 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
     }
     status_names = {"A": "Escalated", "B": "In Progress", "C": "Waiting for customer"}
     mock_discovery = MagicMock()
-    mock_discovery.get_project_workflow = AsyncMock(return_value={"workflow": workflow, "status_names": status_names})
+    mock_discovery.discover_all_workflows = AsyncMock(return_value=[
+        {"issue_type_id": None, "workflow_name": "wf", "workflow_data": {"workflow": workflow, "status_names": status_names}}
+    ])
     mock_discovery_class.return_value = mock_discovery
 
     mock_jsm = MagicMock()
@@ -608,8 +611,16 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
 
     orchestrator = Orchestrator()
     orchestrator.jsm_executor = mock_jsm
+
+    def get_workflow_data_side_effect(project_id, issue_type_id):
+        if mock_repo.upsert.called:
+            return {"workflow": workflow, "status_names": status_names}
+        return None
+
+    mock_repo.get_workflow_data.side_effect = get_workflow_data_side_effect
+
     await orchestrator._handle_missing_direct_transition("TEST-1", "proj-1", "Waiting for customer")
-    
+
     mock_jsm.post_comment.assert_called_once()
     args, kwargs = mock_jsm.post_comment.call_args
     assert "no encontro ningun camino" in args[1]
@@ -617,7 +628,7 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
 
 
 # verifica que cuando existe un camino de varios pasos, se avisa pero no se ejecuta ninguna transicion
-@patch("app.modules.event_pipeline.orchestrator.get_redis")
+@patch("app.modules.event_pipeline.orchestrator.ProjectWorkflowRepository")
 @patch("app.modules.event_pipeline.orchestrator.get_db")
 @patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
 @patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
@@ -628,7 +639,7 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
 @pytest.mark.asyncio
 async def test_handle_missing_direct_transition_posts_multihop_note_without_executing(
     mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
-    mock_discovery_class, mock_jsm_class, mock_get_db, mock_get_redis,
+    mock_discovery_class, mock_jsm_class, mock_get_db, mock_repo_class,
 ):
     mock_analyzer_class.return_value = MagicMock()
     mock_retriever_class.return_value = MagicMock()
@@ -640,9 +651,8 @@ async def test_handle_missing_direct_transition_posts_multihop_note_without_exec
     mock_db.execute.return_value.fetchone.return_value = mock_row
     mock_get_db.return_value = iter([mock_db])
 
-    mock_redis = AsyncMock()
-    mock_redis.get.return_value = None
-    mock_get_redis.return_value = mock_redis
+    mock_repo = MagicMock()
+    mock_repo_class.return_value = mock_repo
 
     # A -> B -> C, dos saltos reales, sin ningun atajo directo ni global
     workflow = {
@@ -653,7 +663,9 @@ async def test_handle_missing_direct_transition_posts_multihop_note_without_exec
     }
     status_names = {"A": "To Do", "B": "In Progress", "C": "Waiting for customer"}
     mock_discovery = MagicMock()
-    mock_discovery.get_project_workflow = AsyncMock(return_value={"workflow": workflow, "status_names": status_names})
+    mock_discovery.discover_all_workflows = AsyncMock(return_value=[
+        {"issue_type_id": None, "workflow_name": "wf", "workflow_data": {"workflow": workflow, "status_names": status_names}}
+    ])
     mock_discovery_class.return_value = mock_discovery
 
     mock_jsm = MagicMock()
@@ -664,16 +676,24 @@ async def test_handle_missing_direct_transition_posts_multihop_note_without_exec
 
     orchestrator = Orchestrator()
     orchestrator.jsm_executor = mock_jsm
+
+    def get_workflow_data_side_effect(project_id, issue_type_id):
+        if mock_repo.upsert.called:
+            return {"workflow": workflow, "status_names": status_names}
+        return None
+
+    mock_repo.get_workflow_data.side_effect = get_workflow_data_side_effect
+
     await orchestrator._handle_missing_direct_transition("TEST-1", "proj-1", "Waiting for customer")
-    
+
     mock_jsm.post_comment.assert_called_once()
     args, kwargs = mock_jsm.post_comment.call_args
     assert "camino de 2 pasos" in args[1]
     mock_jsm.transition_issue.assert_not_called()
 
 
-# verifica que si el mapa de workflow ya esta en redis, no se vuelve a consultar jira
-@patch("app.modules.event_pipeline.orchestrator.get_redis")
+# verifica que si el workflow ya esta persistido en la base, no se vuelve a consultar jira
+@patch("app.modules.event_pipeline.orchestrator.ProjectWorkflowRepository")
 @patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
 @patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
 @patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
@@ -682,7 +702,7 @@ async def test_handle_missing_direct_transition_posts_multihop_note_without_exec
 @pytest.mark.asyncio
 async def test_get_cached_workflow_map_uses_cache_when_present(
     mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
-    mock_discovery_class, mock_get_redis,
+    mock_discovery_class, mock_repo_class,
 ):
     mock_analyzer_class.return_value = MagicMock()
     mock_retriever_class.return_value = MagicMock()
@@ -691,25 +711,24 @@ async def test_get_cached_workflow_map_uses_cache_when_present(
 
     workflow = {"transitions": []}
     status_names = {"A": "To Do"}
-    cached_json = json.dumps({"workflow": workflow, "status_names": status_names})
 
-    mock_redis = AsyncMock()
-    mock_redis.get.return_value = cached_json
-    mock_get_redis.return_value = mock_redis
+    mock_repo = MagicMock()
+    mock_repo.get_workflow_data.return_value = {"workflow": workflow, "status_names": status_names}
+    mock_repo_class.return_value = mock_repo
 
     mock_discovery = MagicMock()
-    mock_discovery.get_project_workflow = AsyncMock()
+    mock_discovery.discover_all_workflows = AsyncMock()
     mock_discovery_class.return_value = mock_discovery
 
     orchestrator = Orchestrator()
-    result = await orchestrator._get_cached_workflow_map("TARG")
+    result = await orchestrator._get_cached_workflow_map("TARG", "proj-1")
 
-    mock_discovery.get_project_workflow.assert_not_called()
+    mock_discovery.discover_all_workflows.assert_not_called()
     assert result.status_names == status_names
 
 
-# verifica que si no hay nada en redis, consulta jira y guarda el resultado con ttl de una hora
-@patch("app.modules.event_pipeline.orchestrator.get_redis")
+# verifica que si no hay nada persistido, descubre contra jira y lo guarda en la base
+@patch("app.modules.event_pipeline.orchestrator.ProjectWorkflowRepository")
 @patch("app.modules.event_pipeline.orchestrator.WorkflowDiscoveryService")
 @patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
 @patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
@@ -718,7 +737,7 @@ async def test_get_cached_workflow_map_uses_cache_when_present(
 @pytest.mark.asyncio
 async def test_get_cached_workflow_map_fetches_and_caches_when_missing(
     mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class,
-    mock_discovery_class, mock_get_redis,
+    mock_discovery_class, mock_repo_class,
 ):
     mock_analyzer_class.return_value = MagicMock()
     mock_retriever_class.return_value = MagicMock()
@@ -728,24 +747,22 @@ async def test_get_cached_workflow_map_fetches_and_caches_when_missing(
     workflow = {"transitions": []}
     status_names = {"A": "To Do"}
 
-    mock_redis = AsyncMock()
-    mock_redis.get.return_value = None
-    mock_get_redis.return_value = mock_redis
+    mock_repo = MagicMock()
+    mock_repo.get_workflow_data.side_effect = [None, {"workflow": workflow, "status_names": status_names}]
+    mock_repo_class.return_value = mock_repo
 
     mock_discovery = MagicMock()
-    mock_discovery.get_project_workflow = AsyncMock(return_value={"workflow": workflow, "status_names": status_names})
+    mock_discovery.discover_all_workflows = AsyncMock(return_value=[
+        {"issue_type_id": None, "workflow_name": "wf", "workflow_data": {"workflow": workflow, "status_names": status_names}}
+    ])
     mock_discovery_class.return_value = mock_discovery
 
     orchestrator = Orchestrator()
-    result = await orchestrator._get_cached_workflow_map("TARG")
+    result = await orchestrator._get_cached_workflow_map("TARG", "proj-1")
 
-    mock_discovery.get_project_workflow.assert_called_once_with("TARG")
-    mock_redis.set.assert_called_once()
-    args, kwargs = mock_redis.set.call_args
-    assert args[0] == "workflow_map:TARG"
-    assert kwargs["ex"] == 3600
+    mock_discovery.discover_all_workflows.assert_called_once_with("TARG")
+    mock_repo.upsert.assert_called_once_with("proj-1", None, "wf", {"workflow": workflow, "status_names": status_names})
     assert result.status_names == status_names
-
 
 # verifica que _resolve_transition_id dispara el camino de respaldo cuando no hay transicion directa disponible
 @patch("app.modules.event_pipeline.orchestrator.get_db")
