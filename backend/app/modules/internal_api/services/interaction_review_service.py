@@ -10,6 +10,7 @@ from app.modules.response_generator.service import ResponseGenerator
 from app.modules.response_generator.schemas import ACTION_AUTO_PUBLISH
 from app.modules.jsm_executor.client import JsmExecutor
 from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
+from app.modules.ticket_analyzer.schemas import TicketAnalysis
 
 logger = logging.getLogger(__name__)
 
