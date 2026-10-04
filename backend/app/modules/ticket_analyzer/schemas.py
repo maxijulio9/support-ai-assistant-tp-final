@@ -48,6 +48,9 @@ class TicketAnalysis(BaseModel):
     # id del proyecto, lo necesita m4 para leer sus umbrales de decision
     project_id: Optional[str] = None
     
+    # id real del tipo de issue en jira, usado para resolver el workflow especifico en el camino de respaldo (TF-172)
+    issue_type_id: Optional[str] = None
+    
     # umbrales de decision del pipeline, resueltos por m2 para que m4 no consulte la bd de nuevo
     threshold_auto_publish: Optional[float] = None
     threshold_needs_review: Optional[float] = None
