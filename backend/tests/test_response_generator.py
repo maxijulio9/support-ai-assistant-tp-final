@@ -53,14 +53,32 @@ def test_escalates_when_resolved_by_l2():
     assert result.action_type == ACTION_ESCALATE
 
 
-# verifica que pide info al usuario cuando falta informacion
-def test_requests_info_when_info_not_sufficient():
+# verifica que pide info al usuario, con el texto generado por el llm, cuando falta informacion
+@patch("app.modules.response_generator.service.LlmClient")
+def test_requests_info_when_info_not_sufficient(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = "texto del pedido de informacion"
+    mock_llm_class.return_value = mock_llm
+
     generator = ResponseGenerator()
     analysis = _build_analysis(info_sufficient=False)
     result = generator.generate(analysis, _build_retrieval())
 
     assert result.action_type == ACTION_REQUEST_INFO
+    assert result.response_text == "texto del pedido de informacion"
 
+# verifica que escala si falla la llamada al llm al generar el pedido de informacion
+@patch("app.modules.response_generator.service.LlmClient")
+def test_escalates_when_info_request_llm_call_fails(mock_llm_class):
+    mock_llm = MagicMock()
+    mock_llm.generate_response.return_value = None
+    mock_llm_class.return_value = mock_llm
+
+    generator = ResponseGenerator()
+    analysis = _build_analysis(info_sufficient=False)
+    result = generator.generate(analysis, _build_retrieval())
+
+    assert result.action_type == ACTION_ESCALATE
 
 #verifica que escala directo cuando no hay chunks relevantes en la kb
 def test_escalates_when_no_chunks_found():
