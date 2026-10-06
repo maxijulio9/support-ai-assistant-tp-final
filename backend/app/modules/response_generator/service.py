@@ -32,8 +32,15 @@ class ResponseGenerator:
             return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE, escalation_reason=ESCALATION_REASON_OUT_OF_SCOPE)
 
         if not analysis.info_sufficient:
-            logger.info(f"[{analysis.issue_key}] falta informacion del usuario")
-            return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_REQUEST_INFO)
+            logger.info(f"[{analysis.issue_key}] falta informacion del usuario, generando pedido de informacion")
+            info_request_prompt = self.prompt_builder.build_info_request_prompt(analysis, retrieval)
+            info_request_text = self.llm_client.generate_response(info_request_prompt)
+
+            if info_request_text is None:
+                logger.error(f"[{analysis.issue_key}] fallo la llamada al llm al generar el pedido de informacion, escalando")
+                return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE, escalation_reason=ESCALATION_REASON_LLM_FAILURE)
+
+            return GeneratedResponse(issue_key=analysis.issue_key, response_text=info_request_text, action_type=ACTION_REQUEST_INFO)
 
         if not retrieval.chunks:
             logger.info(f"[{analysis.issue_key}] sin chunks relevantes en la kb, escalando")

@@ -174,7 +174,7 @@ class Orchestrator:
         # m5 ejecuta la accion segun lo que decidio m4
         # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
         # escalate por ahora solo logea, la asignacion depende de m7
-        if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO):
+        if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO) and generated_response.response_text:
             is_public = generated_response.action_type != ACTION_NEEDS_REVIEW
             try:
                 await self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
@@ -192,7 +192,8 @@ class Orchestrator:
 
             except Exception as e:
                 logger.error(f"[{event.issue_key}] fallo al publicar comentario o transicionar en jsm: {e}")
-
+        elif generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO):
+            logger.warning(f"[{event.issue_key}] action_type={generated_response.action_type} sin response_text, no se publica ningun comentario")
         
         elif generated_response.action_type == ACTION_ESCALATE:
             transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
