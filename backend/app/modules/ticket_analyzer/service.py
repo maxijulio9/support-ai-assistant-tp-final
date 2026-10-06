@@ -66,8 +66,8 @@ class TicketAnalyzer:
         classification = self._classify(texto_usuario, conversation_history, project_context.categories)
         
         
-        # un cierre de conversacion no tiene contenido real que evaluar, se mantiene la prioridad actual sin tocarla
-        if classification and classification.intent == "cierre_conversacion":
+        # un cierre de conversacion o un mensaje sin info suficiente no tienen contenido real que evaluar, impact y urgency saldrian inventados, se mantiene la prioridad actual
+        if classification and (classification.intent == "cierre_conversacion" or classification.resolved_by == "MISSING_INFO"):
             priority = event.priority or "Medium"
         else:
             priority = await self._determine_priority(
