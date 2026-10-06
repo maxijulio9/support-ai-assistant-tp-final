@@ -37,7 +37,21 @@ SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera,
                 - Separá la respuesta en lineas claras: el saludo en su propia linea, el cuerpo de la respuesta despues, y una frase de cierre breve al final en su propia linea.{register_instruction}
                 - Respondé siempre en {language}, con un tono profesional y cordial, sin importar en que idioma este el contexto de arriba."""
 
+INFO_REQUEST_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera, respondiendo directamente al cliente de {country}. El cliente envio una consulta pero no dio la informacion suficiente para poder resolverla. Tu tarea es pedirle, de forma concreta y breve, los datos que faltan.
 
+                Reglas estrictas:
+                - Vos SOS el soporte, hablá siempre como parte del equipo, nunca derives al cliente a "contactar a soporte".
+                - Si el contexto de abajo describe que datos o documentacion hacen falta para este tipo de consulta, usalo para saber que pedir. Si el contexto no lo dice, pedi los detalles esenciales para entender el problema (que intento hacer, que mensaje o error ve, desde donde lo intenta), sin inventar requisitos.
+                - Pedi como maximo tres cosas, en una lista corta o en una o dos frases, no hagas un interrogatorio.
+                - No resuelvas la consulta ni des por sentado cual es el problema, solo pedí lo que falta.
+                - No inventes datos especificos del caso, como montos, fechas o numeros de operacion.
+                - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos.
+                - Se conciso, no superes los 2 parrafos cortos.
+                - Abrí con un saludo breve y natural, y mantené un tono calido y cercano, como lo haria una persona real atendiendo a otra, sin sonar robotico.
+                - Separá la respuesta en lineas claras: el saludo en su propia linea, el pedido despues, y una frase de cierre breve al final en su propia linea.
+                - En el cierre, hablá en primera persona plural (nosotros, nos), como parte de un equipo de soporte, nunca en primera persona singular.
+                - No uses signos de exclamacion en el saludo ni en el cierre. Mantene un tono calido pero sobrio.{register_instruction}
+                - Respondé siempre en {language}, sin importar en que idioma este el contexto de abajo."""
 
 CONFIDENCE_PROMPT = """Tu tarea es evaluar si la respuesta generada esta fundamentada exclusivamente en el contexto proporcionado.
 
@@ -96,6 +110,24 @@ class PromptBuilder:
             sections.append(f"Un agente humano rechazo tu respuesta anterior por el siguiente motivo, tenelo en cuenta:\n{rejection_reason}")
 
         return "\n\n".join(sections)
+    
+    # arma el prompt para pedirle al cliente la informacion que falta, cuando m2 detecto que la consulta no alcanza para resolverla
+    def build_info_request_prompt(self, analysis: TicketAnalysis, retrieval: RetrievalResult) -> str:
+        context_text = self._format_chunks(retrieval.chunks)
+        history_text = self._format_history(analysis.conversation_history)
+        language_name = LANGUAGE_NAMES.get(analysis.language_code, "español")
+        country_name = COUNTRY_NAMES.get(analysis.country, analysis.country or "el pais del cliente")
+        register_instruction = self._build_register_instruction(analysis.country)
+
+        sections = [
+            INFO_REQUEST_PROMPT.format(language=language_name, country=country_name, register_instruction=register_instruction),
+            f"Contexto recuperado de la base de conocimiento:\n{context_text}",
+            f"Historial de la conversacion:\n{history_text}",
+        ]
+
+        return "\n\n".join(sections)
+    
+    
     # arma el prompt para evaluar que tan bien fundamentada esta la respuesta generada
     def build_confidence_prompt(self, retrieval: RetrievalResult, response_text: str) -> str:
         context_text = self._format_chunks(retrieval.chunks)
