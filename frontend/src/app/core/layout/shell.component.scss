@@ -22,3 +22,12 @@
 .active-link {
   background-color: var(--mat-sys-secondary-container);
 }
+
+.shell-toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.shell-user-name {
+  margin-right: 0.5rem;
+  font-size: 0.875rem;
+}

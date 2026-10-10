@@ -9,7 +9,7 @@
         <mat-icon matListItemIcon>history</mat-icon>
         <span matListItemTitle>Historial</span>
       </a>
-      @if (role() === 'admin') {
+      @if (isAdmin()) {
         <a mat-list-item routerLink="/users" routerLinkActive="active-link">
           <mat-icon matListItemIcon>group</mat-icon>
           <span matListItemTitle>Usuarios</span>
@@ -25,6 +25,19 @@
   <mat-sidenav-content class="shell-content-pane">
     <mat-toolbar>
       <span>Soporte N1</span>
+      <span class="shell-toolbar-spacer"></span>
+      @if (profile()?.full_name) {
+        <span class="shell-user-name">{{ profile()?.full_name }}</span>
+      }
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Cerrar sesión"
+        matTooltip="Cerrar sesión"
+        (click)="logout()"
+      >
+        <mat-icon>logout</mat-icon>
+      </button>
     </mat-toolbar>
     <main class="shell-content">
       <router-outlet />
