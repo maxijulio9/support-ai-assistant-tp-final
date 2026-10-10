@@ -1,0 +1,33 @@
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav mode="side" opened class="shell-nav">
+    <mat-nav-list>
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>home</mat-icon>
+        <span matListItemTitle>Inicio</span>
+      </a>
+      <a mat-list-item routerLink="/interactions" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>history</mat-icon>
+        <span matListItemTitle>Historial</span>
+      </a>
+      @if (role() === 'admin') {
+        <a mat-list-item routerLink="/users" routerLinkActive="active-link">
+          <mat-icon matListItemIcon>group</mat-icon>
+          <span matListItemTitle>Usuarios</span>
+        </a>
+        <a mat-list-item routerLink="/config" routerLinkActive="active-link">
+          <mat-icon matListItemIcon>settings</mat-icon>
+          <span matListItemTitle>Configuración</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content-pane">
+    <mat-toolbar>
+      <span>Soporte N1</span>
+    </mat-toolbar>
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

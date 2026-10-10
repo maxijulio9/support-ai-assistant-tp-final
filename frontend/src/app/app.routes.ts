@@ -4,11 +4,6 @@ import { roleGuard } from './core/auth/role.guard';
 
 export const routes: Routes = [
   {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full',
-  },
-  {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then(
@@ -30,37 +25,46 @@ export const routes: Routes = [
       ).then((m) => m.ResetPasswordComponent),
   },
   {
-    path: 'dashboard',
+    path: '',
     loadComponent: () =>
-      import('./features/dashboard/dashboard.component').then(
-        (m) => m.DashboardComponent,
-      ),
+      import('./core/layout/shell.component').then((m) => m.ShellComponent),
     canActivate: [authGuard],
-  },
-  {
-    path: 'interactions',
-    loadComponent: () =>
-      import('./features/interactions/list.component').then(
-        (m) => m.InteractionsListComponent,
-      ),
-    canActivate: [authGuard],
-  },
-  {
-    path: 'users',
-    loadComponent: () =>
-      import('./features/users/users.component').then(
-        (m) => m.UsersComponent,
-      ),
-    canActivate: [authGuard, roleGuard('admin')],
-  },
-  {
-    path: 'config',
-    loadChildren: () =>
-      import('./features/config/config.routes').then((m) => m.CONFIG_ROUTES),
-    canActivate: [authGuard, roleGuard('admin')],
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent,
+          ),
+      },
+      {
+        path: 'interactions',
+        loadComponent: () =>
+          import('./features/interactions/list.component').then(
+            (m) => m.InteractionsListComponent,
+          ),
+      },
+      {
+        path: 'users',
+        loadComponent: () =>
+          import('./features/users/users.component').then(
+            (m) => m.UsersComponent,
+          ),
+        canActivate: [roleGuard('admin')],
+      },
+      {
+        path: 'config',
+        loadChildren: () =>
+          import('./features/config/config.routes').then(
+            (m) => m.CONFIG_ROUTES,
+          ),
+        canActivate: [roleGuard('admin')],
+      },
+    ],
   },
   {
     path: '**',
-    redirectTo: 'login',
+    redirectTo: 'dashboard',
   },
 ];

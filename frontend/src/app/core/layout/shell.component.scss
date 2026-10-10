@@ -1,0 +1,24 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.shell-container {
+  height: 100%;
+}
+
+.shell-content-pane {
+  --mat-sidenav-content-background-color: #f3f4f6;
+}
+
+.shell-nav {
+  width: 240px;
+}
+
+.shell-content {
+  padding: 1.5rem;
+}
+
+.active-link {
+  background-color: var(--mat-sys-secondary-container);
+}
