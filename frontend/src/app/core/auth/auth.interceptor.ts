@@ -3,25 +3,17 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { SessionService } from './session.service';
+import { LOGIN_ROUTE, isLoginRoute } from './auth-routes';
 
 // Rutas publicas de autenticacion: no llevan token ni disparan manejo de sesion.
 // Un error de login con credenciales incorrectas tiene que llegar intacto al formulario.
 const PUBLIC_PATHS = ['/auth/login', '/auth/forgot-password', '/auth/reset-password'];
-
-const LOGIN_ROUTE = '/login';
 
 // Las requests HTTP no llevan fragment (eso es solo de navegacion del browser),
 // asi que para compararlas alcanza con sacar la query string.
 function stripQuery(url: string): string {
   const queryIndex = url.indexOf('?');
   return queryIndex === -1 ? url : url.substring(0, queryIndex);
-}
-
-// router.url si puede traer query string y fragment, hay que sacar ambos
-// para comparar contra la ruta de login.
-function stripQueryAndFragment(url: string): string {
-  const cutIndex = url.search(/[?#]/);
-  return cutIndex === -1 ? url : url.substring(0, cutIndex);
 }
 
 function isPublicPath(url: string): boolean {
@@ -55,7 +47,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         const isSessionInvalid = error.status === 401 || (error.status === 403 && !tokenAttached);
         if (isSessionInvalid) {
           sessionService.clear();
-          if (stripQueryAndFragment(router.url) !== LOGIN_ROUTE) {
+          if (!isLoginRoute(router.url)) {
             router.navigateByUrl(LOGIN_ROUTE);
           }
         }
