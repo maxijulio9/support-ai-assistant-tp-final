@@ -16,13 +16,13 @@
             autocomplete="username"
             maxlength="254"
           />
-          @if (form.controls.email.touched && form.controls.email.invalid) {
+          <mat-error>
             @if (form.controls.email.hasError('required')) {
-              <mat-error>Ingresá tu email.</mat-error>
+              Ingresá tu email.
             } @else if (form.controls.email.hasError('email')) {
-              <mat-error>Ingresá un email válido.</mat-error>
+              Ingresá un email válido.
             }
-          }
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="login-field">
@@ -44,9 +44,7 @@
           >
             <mat-icon>{{ passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
-          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
-            <mat-error>Ingresá tu contraseña.</mat-error>
-          }
+          <mat-error>Ingresá tu contraseña.</mat-error>
         </mat-form-field>
 
         @if (errorMessage()) {
