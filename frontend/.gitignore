@@ -6,6 +6,9 @@
 /out-tsc
 /bazel-out
 
+# Contrato OpenAPI filtrado (generado por scripts/filter-openapi.mjs)
+/.openapi-gen
+
 # Node
 /node_modules
 npm-debug.log
