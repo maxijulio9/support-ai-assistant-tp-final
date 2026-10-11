@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+
+.review-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.review-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+}
+
+.review-page-title {
+  font: var(--app-text-page-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.review-page-subtitle {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0.25rem 0 0;
+}
+
+.review-page-count {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  border-radius: var(--app-radius-lg);
+  padding: 0.25rem 0.75rem;
+  font: var(--app-text-secondary);
+  white-space: nowrap;
+}
+
+.review-page-body {
+  display: flex;
+  gap: var(--app-space-sm);
+  align-items: flex-start;
+}
+
+.review-page-queue {
+  width: 360px;
+  flex-shrink: 0;
+}
+
+.review-page-detail {
+  flex: 1 1 auto;
+  min-width: 0;
+}

@@ -1,0 +1,41 @@
+<div class="review-page">
+  <header class="review-page-header">
+    <div>
+      <h1 class="review-page-title">Revisión de respuestas</h1>
+      <p class="review-page-subtitle">Aprobá o rechazá las respuestas sugeridas por el sistema antes de enviarlas</p>
+    </div>
+    <span class="review-page-count">{{ totalPending() }} pendientes</span>
+  </header>
+
+  <div class="review-page-body">
+    <app-review-queue
+      class="review-page-queue"
+      [items]="pageItems()"
+      [selectedId]="selectedId()"
+      [state]="queueState()"
+      [totalPending]="totalPending()"
+      [totalFiltered]="totalFiltered()"
+      [page]="page()"
+      [totalPages]="totalPages()"
+      [searchTerm]="searchTerm()"
+      [priorityFilter]="priorityFilter()"
+      [priorityOptions]="priorityOptions()"
+      [truncated]="queueTruncated()"
+      (searchTermChange)="onSearchTermChange($event)"
+      (priorityFilterChange)="onPriorityFilterChange($event)"
+      (selectItem)="selectItem($event)"
+      (pageChange)="onPageChange($event)"
+      (retry)="loadQueue()"
+    />
+
+    <app-review-detail
+      class="review-page-detail"
+      [detail]="detail()"
+      [state]="detailState()"
+      [submitting]="submittingApprove()"
+      (approve)="approve()"
+      (reject)="openRejectDialog()"
+      (retry)="retryDetail()"
+    />
+  </div>
+</div>
