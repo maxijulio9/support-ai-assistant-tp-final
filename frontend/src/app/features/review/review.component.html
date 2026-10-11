@@ -2,9 +2,11 @@
   <header class="review-page-header">
     <div>
       <h1 class="review-page-title">Revisión de respuestas</h1>
-      <p class="review-page-subtitle">Aprobá o rechazá las respuestas sugeridas por el sistema antes de enviarlas</p>
+      <p class="review-page-subtitle">Aprobá o regenerá las respuestas sugeridas por el sistema antes de enviarlas</p>
     </div>
-    <span class="review-page-count">{{ totalPending() }} pendientes</span>
+    @if (queueState() !== 'loading' && queueState() !== 'error') {
+      <span class="review-page-count">{{ totalPending() }} pendientes</span>
+    }
   </header>
 
   <div class="review-page-body">
@@ -34,7 +36,7 @@
       [state]="detailState()"
       [submitting]="submittingApprove()"
       (approve)="approve()"
-      (reject)="openRejectDialog()"
+      (regenerate)="openRegenerateDialog()"
       (retry)="retryDetail()"
     />
   </div>

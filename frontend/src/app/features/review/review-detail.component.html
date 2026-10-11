@@ -49,8 +49,11 @@
     </section>
 
     <div class="review-detail-actions">
-      <button mat-stroked-button type="button" [disabled]="submitting()" (click)="reject.emit()">
-        Rechazar respuesta
+      <span matTooltip="Descartar no disponible todavía">
+        <button mat-button type="button" disabled>Rechazar</button>
+      </span>
+      <button mat-stroked-button type="button" [disabled]="submitting()" (click)="regenerate.emit()">
+        Regenerar respuesta
       </button>
       <button mat-flat-button type="button" [disabled]="submitting()" (click)="approve.emit()">
         {{ submitting() ? 'Publicando...' : 'Aprobar respuesta' }}

@@ -19,7 +19,7 @@ export class ReviewDetailComponent {
   readonly submitting = input(false);
 
   readonly approve = output<void>();
-  readonly reject = output<void>();
+  readonly regenerate = output<void>();
   readonly retry = output<void>();
 
   formattedCreatedAt(createdAt: string | null | undefined): string {

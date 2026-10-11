@@ -1,0 +1,39 @@
+.regenerate-dialog-field {
+  width: 100%;
+}
+
+.regenerate-dialog-help {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-xs);
+}
+
+.regenerate-dialog-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+}
+
+.regenerate-dialog-progress {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin-top: var(--app-space-xs);
+}
+
+.regenerate-dialog-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.regenerate-dialog-generated-label {
+  font: var(--app-text-card-heading);
+  color: var(--mat-sys-on-surface);
+  margin: var(--app-space-xs) 0 0;
+}
+
+.regenerate-dialog-generated-text {
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  white-space: pre-wrap;
+  margin: 0;
+}

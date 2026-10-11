@@ -5,7 +5,9 @@
   </mat-form-field>
 
   <div class="review-queue-meta">
-    <span>{{ totalPending() }} pendientes</span>
+    @if (state() !== 'loading' && state() !== 'error') {
+      <span>{{ totalPending() }} pendientes</span>
+    }
     <mat-form-field appearance="outline" class="review-queue-priority">
       <mat-label>Prioridad</mat-label>
       <mat-select [value]="priorityFilter()" (selectionChange)="onPriorityChange($event.value)">

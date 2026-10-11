@@ -8,7 +8,7 @@ import { ReviewService, resolveReviewedBy } from './review.service';
 import { classifyReviewError } from './review-errors';
 import { ReviewQueueComponent, QueueState } from './review-queue.component';
 import { ReviewDetailComponent, DetailState } from './review-detail.component';
-import { RejectDialogComponent, RejectDialogData, RejectDialogResult } from './reject-dialog.component';
+import { RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult } from './regenerate-dialog.component';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
@@ -171,32 +171,42 @@ export class ReviewComponent {
       });
   }
 
-  openRejectDialog(): void {
+  openRegenerateDialog(): void {
     const id = this.selectedId();
     if (!id) return;
     const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
+    const previousResponse = this.detail()?.generated_response ?? null;
 
-    const dialogRef = this.dialog.open<RejectDialogComponent, RejectDialogData, RejectDialogResult>(
-      RejectDialogComponent,
-      { data: { interactionId: id, reviewedBy }, disableClose: true, width: '480px' },
+    const dialogRef = this.dialog.open<RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult>(
+      RegenerateDialogComponent,
+      { data: { interactionId: id, reviewedBy, previousResponse }, disableClose: true, width: '480px' },
     );
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result === 'success') {
-        this.snackBar.open('Respuesta rechazada. El sistema generará una nueva.', 'Cerrar', { duration: 4000 });
-        // Si el id rechazado sigue pendiente despues de recargar la cola, el
-        // detalle en pantalla quedo viejo (la respuesta pudo cambiar), asi
-        // que se fuerza un refetch. Si ya no esta, no hace falta.
+      if (result === 'not-found') {
+        this.snackBar.open('Esta solicitud ya no existe', 'Cerrar', { duration: 4000 });
+        this.loadQueue();
+        return;
+      }
+      if (result === 'timeout-refresh') {
+        this.loadQueue();
+        return;
+      }
+      if (result && typeof result === 'object') {
+        // Regenerar nunca vuelve a NEEDS_REVIEW (backend/app/modules/response_generator/service.py:75),
+        // asi que en AUTO_PUBLISH y en ESCALATE el id ya no deberia estar en
+        // la cola tras recargarla. El chequeo de abajo queda como resguardo.
+        if (result.actionType === 'AUTO_PUBLISH') {
+          this.snackBar.open('Respuesta regenerada y publicada.', 'Cerrar', { duration: 4000 });
+        } else if (result.actionType !== 'ESCALATE') {
+          this.snackBar.open('Respuesta regenerada.', 'Cerrar', { duration: 4000 });
+        }
+        // Para ESCALATE no se muestra snackbar: el dialogo ya mostro el resultado.
         this.loadQueue(() => {
           if (this.queueItems().some((item) => item.interaction_id === id)) {
             this.selectionRequest$.next(id);
           }
         });
-      } else if (result === 'not-found') {
-        this.snackBar.open('Esta solicitud ya no existe', 'Cerrar', { duration: 4000 });
-        this.loadQueue();
-      } else if (result === 'timeout-refresh') {
-        this.loadQueue();
       }
     });
   }
