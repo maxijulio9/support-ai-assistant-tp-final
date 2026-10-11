@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
@@ -9,6 +10,27 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ROLE_ADMIN, SessionService } from '../auth/session.service';
 import { AuthService } from '../auth/auth.service';
+
+// Traduccion del rol para mostrar en la interfaz. Un rol desconocido se
+// muestra tal cual (no rompe, no inventa una traduccion).
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrador',
+  agent: 'Agente',
+};
+
+function roleLabel(role: string | undefined): string {
+  if (!role) return '';
+  return ROLE_LABELS[role] ?? role;
+}
+
+function initials(fullName: string | undefined): string {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
+  return (first + last).toUpperCase();
+}
 
 @Component({
   selector: 'app-shell',
@@ -31,11 +53,26 @@ import { AuthService } from '../auth/auth.service';
 export class ShellComponent {
   private readonly sessionService = inject(SessionService);
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly activatedRoute = inject(ActivatedRoute);
 
   // Esto es solo para la interfaz (mostrar u ocultar los links de admin).
   // La autorizacion real la hace el backend, y roleGuard ya protege esas rutas.
   readonly isAdmin = computed(() => this.sessionService.hasRole(ROLE_ADMIN));
   readonly profile = this.authService.profile;
+  readonly initials = computed(() => initials(this.profile()?.full_name));
+  readonly roleLabel = computed(() => roleLabel(this.profile()?.role));
+
+  // Se lee de la propiedad "title" de la ruta activa mas profunda (no de
+  // data.title). Si la ruta no define title, el breadcrumb no se renderiza.
+  // No se agrega un TitleStrategy propio, esto solo lee el snapshot.
+  readonly breadcrumbTitle = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => this.deepestRouteTitle()),
+    ),
+    { initialValue: this.deepestRouteTitle() },
+  );
 
   constructor() {
     // El error se ignora a proposito: el interceptor ya maneja un 401 (limpia
@@ -49,5 +86,13 @@ export class ShellComponent {
 
   logout(): void {
     this.authService.logout().subscribe();
+  }
+
+  private deepestRouteTitle(): string | undefined {
+    let route = this.activatedRoute.snapshot;
+    while (route.firstChild) {
+      route = route.firstChild;
+    }
+    return route.title;
   }
 }
