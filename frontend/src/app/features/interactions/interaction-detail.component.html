@@ -1,0 +1,113 @@
+<div class="interaction-detail-page">
+  <a routerLink="/interactions" class="interaction-detail-back">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    Volver al Historial
+  </a>
+
+  @if (state() === 'loading') {
+    <div class="interaction-detail-skeleton" role="status">
+      <span class="visually-hidden">Cargando solicitud</span>
+      <div class="interaction-detail-skeleton-header" aria-hidden="true">
+        <div class="interaction-detail-skeleton-chip"></div>
+        <div class="interaction-detail-skeleton-chip interaction-detail-skeleton-chip--small"></div>
+      </div>
+      <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--title" aria-hidden="true"></div>
+      <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--subtitle" aria-hidden="true"></div>
+
+      <div class="interaction-detail-card" aria-hidden="true">
+        <div class="interaction-detail-skeleton-line"></div>
+        <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--short"></div>
+      </div>
+
+      <div class="interaction-detail-card" aria-hidden="true">
+        <div class="interaction-detail-skeleton-line"></div>
+        <div class="interaction-detail-skeleton-line"></div>
+        <div class="interaction-detail-skeleton-line"></div>
+        <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--short"></div>
+      </div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="interaction-detail-card interaction-detail-message" role="alert">
+      <p>No se pudo cargar la solicitud. Intentá de nuevo.</p>
+      <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'not-found') {
+    <div class="interaction-detail-card interaction-detail-message">
+      <p>No encontramos esta solicitud</p>
+      <a mat-stroked-button routerLink="/interactions">Volver al Historial</a>
+    </div>
+  }
+
+  @if (state() === 'loaded' && detail(); as data) {
+    @let ticketUrl = safeTicketUrl(data.ticket_url);
+    @let status = statusFor(data.decision);
+    @let confidence = confidencePercent();
+
+    <header class="interaction-detail-meta">
+      @if (ticketUrl) {
+        <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="interaction-detail-key">
+          {{ data.issue_key }}
+          <mat-icon aria-hidden="true" class="interaction-detail-key-icon">open_in_new</mat-icon>
+          <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+        </a>
+      } @else {
+        <span class="interaction-detail-key">{{ data.issue_key }}</span>
+      }
+      @if (data.category) {
+        <span class="interaction-detail-category">{{ data.category }}</span>
+      }
+      @if (data.priority) {
+        <span class="interaction-detail-priority">{{ data.priority }}</span>
+      }
+    </header>
+
+    <h1 #heading tabindex="-1" class="interaction-detail-title">{{ data.summary }}</h1>
+    <p class="interaction-detail-created">Creada el {{ formatDate(data.created_at) }}</p>
+
+    <div class="interaction-detail-card interaction-detail-decision">
+      <div class="interaction-detail-decision-status">
+        <span class="interaction-detail-decision-label">Decisión del sistema</span>
+        <span [class]="'interaction-detail-status interaction-detail-status--' + status.tone">
+          <span class="interaction-detail-status-dot"></span>
+          {{ status.label }}
+        </span>
+      </div>
+      <div class="interaction-detail-confidence">
+        @if (confidence !== null) {
+          <span class="interaction-detail-confidence-label">Confianza {{ confidence }}%</span>
+          <div class="interaction-detail-confidence-bar" aria-hidden="true">
+            <div class="interaction-detail-confidence-fill" [style.width.%]="confidence"></div>
+          </div>
+        } @else {
+          <span class="interaction-detail-confidence-label">Confianza sin dato</span>
+        }
+      </div>
+    </div>
+
+    <div class="interaction-detail-card">
+      <section class="interaction-detail-block">
+        <h2>Solicitud original</h2>
+        <p class="interaction-detail-text">{{ data.text_input }}</p>
+      </section>
+
+      <section class="interaction-detail-block interaction-detail-block--suggested">
+        <h2>Respuesta generada por el sistema</h2>
+        @if (data.generated_response) {
+          <p class="interaction-detail-text">{{ data.generated_response }}</p>
+        } @else {
+          <p class="interaction-detail-text interaction-detail-text--empty">No hay respuesta generada</p>
+        }
+      </section>
+
+      @if (data.decision === 'NEEDS_REVIEW') {
+        <div class="interaction-detail-actions">
+          <a mat-flat-button routerLink="/review">Ir a revisión</a>
+        </div>
+      }
+    </div>
+  }
+</div>
