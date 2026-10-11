@@ -38,3 +38,21 @@ class JsmCredentialsRepository:
 
         finally:
             db.close()
+    
+    # trae solo la url base de jsm ya guardada y la desencripta, o none si todavia no se configuro
+    def get_base_url(self) -> str | None:
+        db = next(get_db())
+
+        try:
+            row = db.execute(
+                text("SELECT encrypted_value FROM system_config WHERE key = :key"),
+                {"key": "jsm_base_url"},
+            ).fetchone()
+
+            if row is None:
+                return None
+
+            return self.cipher.decrypt(row.encrypted_value)
+
+        finally:
+            db.close()

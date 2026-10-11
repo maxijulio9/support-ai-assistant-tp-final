@@ -239,7 +239,7 @@ class MetricsByCategoryResponse(BaseModel):
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
-    issue_key: str = Field(description="key del ticket en JSM, por ejemplo TARG-123")
+    ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
     summary: str | None = Field(description="resumen del ticket original")
     category: str | None = Field(description="categoria detectada por el sistema")
     priority: str | None = Field(description="prioridad del ticket")
@@ -263,7 +263,7 @@ class RetrievedChunkDetail(BaseModel):
 class InteractionDetailResponse(BaseModel):
     """Detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)."""
     interaction_id: str = Field(description="id de la interaccion")
-    issue_key: str = Field(description="key del ticket en JSM, por ejemplo TARG-123")
+    ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
     summary: str | None = Field(description="resumen del ticket original")
     category: str | None = Field(description="categoria detectada por el sistema")
     priority: str | None = Field(description="prioridad del ticket")
