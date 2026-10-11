@@ -54,8 +54,9 @@ class InteractionReviewService:
         result = self.response_generator.regenerate(analysis, context["retrieval"], rejection_reason)
 
         if result.action_type == ACTION_AUTO_PUBLISH:
-            await self.jsm_executor.post_comment(context["issue_key"], result.response_text, public=True)
-
+            jsm_executor = self._get_jsm_executor()
+            await jsm_executor.post_comment(context["issue_key"], result.response_text, public=True)
+            
         self._update_interaction(
             interaction_id,
             decision=result.action_type,
