@@ -33,7 +33,7 @@ export interface InteractionListItem {
   interaction_id: string;
 
   /**
-   * key del ticket en JSM, por ejemplo TARG-123
+   * key del ticket original en JSM, por ejemplo TARG-123
    */
   issue_key: string;
 
@@ -46,4 +46,9 @@ export interface InteractionListItem {
    * resumen del ticket original
    */
   summary: (string | null);
+
+  /**
+   * enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion
+   */
+  ticket_url: (string | null);
 }
