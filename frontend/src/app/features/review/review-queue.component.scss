@@ -1,0 +1,148 @@
+:host {
+  display: block;
+}
+
+.review-queue {
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.review-queue-search {
+  width: 100%;
+}
+
+.review-queue-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+}
+
+.review-queue-priority {
+  width: 140px;
+}
+
+.review-queue-truncated {
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.review-queue-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  text-align: center;
+  padding: var(--app-space-lg) 0;
+}
+
+.review-queue-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-sm) 0;
+  text-align: center;
+}
+
+.review-queue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.review-queue-card {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-space-xs);
+  cursor: pointer;
+  font: inherit;
+  color: var(--mat-sys-on-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.review-queue-card.is-selected {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+  border-color: var(--mat-sys-primary);
+}
+
+.review-queue-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+}
+
+.review-queue-card-priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.review-queue-priority-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--app-color-text-secondary);
+}
+
+.review-queue-card-priority.is-high .review-queue-priority-dot {
+  background-color: var(--app-color-warning);
+}
+
+.review-queue-card-subject {
+  font: var(--app-text-card-heading);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.review-queue-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+}
+
+.review-queue-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+}
+
+.review-queue-skeleton {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.review-queue-skeleton-card {
+  height: 92px;
+  border-radius: var(--app-radius-md);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

@@ -1,0 +1,101 @@
+<div class="review-queue">
+  <mat-form-field appearance="outline" class="review-queue-search">
+    <mat-label>Buscar por asunto o ID</mat-label>
+    <input matInput [value]="searchTerm()" (input)="onSearchInput($event)" />
+  </mat-form-field>
+
+  <div class="review-queue-meta">
+    <span>{{ totalPending() }} pendientes</span>
+    <mat-form-field appearance="outline" class="review-queue-priority">
+      <mat-label>Prioridad</mat-label>
+      <mat-select [value]="priorityFilter()" (selectionChange)="onPriorityChange($event.value)">
+        <mat-option [value]="null">Todas</mat-option>
+        @for (option of priorityOptions(); track option) {
+          <mat-option [value]="option">{{ option }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (truncated()) {
+    <p class="review-queue-truncated">Mostrando las primeras {{ totalPending() }} solicitudes</p>
+  }
+
+  @if (state() === 'loading') {
+    <ul class="review-queue-skeleton" aria-hidden="true">
+      @for (row of skeletonRows; track row) {
+        <li class="review-queue-skeleton-card"></li>
+      }
+    </ul>
+  }
+
+  @if (state() === 'empty') {
+    <p class="review-queue-empty">No hay solicitudes pendientes</p>
+  }
+
+  @if (state() === 'no-results') {
+    <p class="review-queue-empty">No hay resultados para este filtro</p>
+  }
+
+  @if (state() === 'error') {
+    <div class="review-queue-error" role="alert">
+      <p>No se pudo cargar la cola. Intentá de nuevo.</p>
+      <button mat-button type="button" (click)="retry.emit()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <ul class="review-queue-list" aria-label="Cola de solicitudes pendientes">
+      @for (item of items(); track item.interaction_id) {
+        <li>
+          <button
+            type="button"
+            class="review-queue-card"
+            [class.is-selected]="item.interaction_id === selectedId()"
+            [attr.aria-current]="item.interaction_id === selectedId() ? 'true' : null"
+            (click)="selectItem.emit(item.interaction_id)"
+          >
+            <div class="review-queue-card-top">
+              <span class="review-queue-card-id">{{ item.issue_key }}</span>
+              @if (item.priority) {
+                <span class="review-queue-card-priority" [class.is-high]="isHighPriority(item.priority)">
+                  <span class="review-queue-priority-dot"></span>
+                  {{ item.priority }}
+                </span>
+              }
+            </div>
+            <p class="review-queue-card-subject">{{ item.summary }}</p>
+            <div class="review-queue-card-bottom">
+              <span>{{ item.category }}</span>
+              <span>{{ relativeTime(item.created_at) }}</span>
+            </div>
+          </button>
+        </li>
+      }
+    </ul>
+
+    <div class="review-queue-pagination">
+      <span>
+        {{ (page() - 1) * pageSize + 1 }}–{{ (page() - 1) * pageSize + items().length }} de {{ totalFiltered() }}
+      </span>
+      <button
+        mat-icon-button
+        type="button"
+        [disabled]="page() <= 1"
+        (click)="onPrevPage()"
+        aria-label="Página anterior"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        type="button"
+        [disabled]="page() >= totalPages()"
+        (click)="onNextPage()"
+        aria-label="Página siguiente"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  }
+</div>
