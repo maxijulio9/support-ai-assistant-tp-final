@@ -27,6 +27,19 @@
   color: var(--app-color-text-secondary);
 }
 
+// Solo cuando issue_key es un link (ticket_url valido): el texto plano
+// (<span class="review-detail-id">) mantiene el color heredado de
+// .review-detail-header, sin cambios.
+a.review-detail-id {
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+}
+
+a.review-detail-id:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
 .review-detail-title {
   font: var(--app-text-page-title);
   color: var(--mat-sys-on-surface);

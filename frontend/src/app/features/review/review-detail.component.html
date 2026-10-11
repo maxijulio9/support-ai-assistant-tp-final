@@ -20,8 +20,15 @@
   }
 
   @if (state() === 'loaded' && detail(); as data) {
+    @let ticketUrl = safeTicketUrl(data.ticket_url);
     <header class="review-detail-header">
-      <span class="review-detail-id">{{ data.issue_key }}</span>
+      @if (ticketUrl) {
+        <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="review-detail-id">
+          {{ data.issue_key }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+        </a>
+      } @else {
+        <span class="review-detail-id">{{ data.issue_key }}</span>
+      }
       @if (data.category) {
         <span class="review-detail-category">{{ data.category }}</span>
       }

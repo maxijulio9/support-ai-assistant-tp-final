@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { InteractionsService } from './interactions.service';
 import { DecisionStatus, STATUS_FILTER_OPTIONS, decisionStatus } from './interaction-status';
+import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 
 export type RowsState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
@@ -146,6 +147,8 @@ export class InteractionsComponent {
   statusFor(decision: string | null): DecisionStatus {
     return decisionStatus(decision);
   }
+
+  readonly safeTicketUrl = safeTicketUrl;
 
   formatDate(createdAt: string | null): string {
     if (!createdAt) return '';

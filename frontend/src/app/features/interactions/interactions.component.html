@@ -99,8 +99,17 @@
         <tbody>
           @for (item of pageItems(); track item.interaction_id) {
             @let status = statusFor(item.decision);
+            @let url = safeTicketUrl(item.ticket_url);
             <tr>
-              <td>{{ item.issue_key }}</td>
+              <td>
+                @if (url) {
+                  <a [href]="url" target="_blank" rel="noopener noreferrer" class="interactions-ticket-link">
+                    {{ item.issue_key }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+                  </a>
+                } @else {
+                  {{ item.issue_key }}
+                }
+              </td>
               <td>{{ item.category }}</td>
               <td>
                 <span [class]="'interactions-status interactions-status--' + status.tone">

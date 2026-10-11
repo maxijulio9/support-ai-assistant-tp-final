@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
+import { safeTicketUrl } from '../../shared/safe-ticket-url';
 
 export type DetailState = 'empty' | 'loading' | 'error' | 'loaded';
 
@@ -28,4 +29,6 @@ export class ReviewDetailComponent {
     if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleString('es', { dateStyle: 'long', timeStyle: 'short' });
   }
+
+  readonly safeTicketUrl = safeTicketUrl;
 }
