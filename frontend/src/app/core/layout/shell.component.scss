@@ -8,7 +8,7 @@
 }
 
 .shell-content-pane {
-  --mat-sidenav-content-background-color: #f3f4f6;
+  --mat-sidenav-content-background-color: var(--app-color-background);
 }
 
 .shell-nav {

@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use './theme-colors' as theme;
+@use './tokens';
 
 html {
   @include mat.theme(
@@ -14,7 +15,18 @@ html {
     )
   );
 
-  background-color: #f3f4f6;
+  // Botones sin forma de pildora (Figma no define una variante pill)
+  @include mat.button-overrides(
+    (
+      filled-container-shape: var(--mat-sys-corner-medium),
+      outlined-container-shape: var(--mat-sys-corner-medium),
+      protected-container-shape: var(--mat-sys-corner-medium),
+      text-container-shape: var(--mat-sys-corner-medium),
+      tonal-container-shape: var(--mat-sys-corner-medium),
+    )
+  );
+
+  background-color: var(--app-color-background);
   font-family: 'Inter', sans-serif;
   height: 100%;
 }
