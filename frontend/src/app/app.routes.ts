@@ -50,6 +50,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'interactions/:id',
+        title: 'Detalle de solicitud',
+        loadComponent: () =>
+          import('./features/interactions/interaction-detail.component').then(
+            (m) => m.InteractionDetailComponent,
+          ),
+      },
+      {
         path: 'review',
         title: 'Revisión',
         loadComponent: () =>

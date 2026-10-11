@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,23 +10,25 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { InteractionsService } from './interactions.service';
 import { DecisionStatus, STATUS_FILTER_OPTIONS, decisionStatus } from './interaction-status';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
+import { formatShortDate } from '../../shared/format-short-date';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 
 export type RowsState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
 
 const PAGE_SIZE = 10;
 
-const DATE_FORMATTER = new Intl.DateTimeFormat('es', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-
 @Component({
   selector: 'app-interactions',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule, MatTooltipModule],
+  imports: [
+    MatButtonModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatSelectModule,
+    MatTooltipModule,
+    RouterLink,
+  ],
   templateUrl: './interactions.component.html',
   styleUrl: './interactions.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -149,11 +152,5 @@ export class InteractionsComponent {
   }
 
   readonly safeTicketUrl = safeTicketUrl;
-
-  formatDate(createdAt: string | null): string {
-    if (!createdAt) return '';
-    const date = new Date(createdAt);
-    if (Number.isNaN(date.getTime())) return '';
-    return DATE_FORMATTER.format(date);
-  }
+  readonly formatDate = formatShortDate;
 }

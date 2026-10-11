@@ -117,7 +117,11 @@
                   {{ status.label }}
                 </span>
               </td>
-              <td>{{ item.summary }}</td>
+              <td>
+                <a [routerLink]="['/interactions', item.interaction_id]" class="interactions-subject-link">{{
+                  item.summary
+                }}</a>
+              </td>
               <td>{{ item.priority }}</td>
               <td>{{ formatDate(item.created_at) }}</td>
             </tr>
