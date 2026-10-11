@@ -1,0 +1,107 @@
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav mode="side" opened class="shell-nav">
+    <div class="shell-nav-inner">
+      <div class="shell-brand">
+        <mat-icon class="shell-brand-icon">layers</mat-icon>
+        <span class="shell-brand-name">Soporte N1</span>
+      </div>
+
+      <mat-nav-list class="shell-nav-list">
+        <a
+          mat-list-item
+          class="shell-nav-item"
+          routerLink="/dashboard"
+          routerLinkActive="active-link"
+          ariaCurrentWhenActive="page"
+        >
+          <mat-icon matListItemIcon>dashboard</mat-icon>
+          <span matListItemTitle>Inicio</span>
+        </a>
+
+        <div class="shell-nav-item shell-nav-item--disabled" role="link" aria-disabled="true">
+          <mat-icon>insights</mat-icon>
+          <span>Métricas</span>
+        </div>
+
+        <a
+          mat-list-item
+          class="shell-nav-item"
+          routerLink="/interactions"
+          routerLinkActive="active-link"
+          ariaCurrentWhenActive="page"
+        >
+          <mat-icon matListItemIcon>history</mat-icon>
+          <span matListItemTitle>Historial</span>
+        </a>
+
+        <a
+          mat-list-item
+          class="shell-nav-item"
+          routerLink="/review"
+          routerLinkActive="active-link"
+          ariaCurrentWhenActive="page"
+        >
+          <mat-icon matListItemIcon>fact_check</mat-icon>
+          <span matListItemTitle>Revisión</span>
+        </a>
+
+        @if (isAdmin()) {
+          <div class="shell-nav-section-label">Administración</div>
+
+          <a
+            mat-list-item
+            class="shell-nav-item"
+            routerLink="/users"
+            routerLinkActive="active-link"
+            ariaCurrentWhenActive="page"
+          >
+            <mat-icon matListItemIcon>group</mat-icon>
+            <span matListItemTitle>Usuarios</span>
+          </a>
+          <a
+            mat-list-item
+            class="shell-nav-item"
+            routerLink="/config"
+            routerLinkActive="active-link"
+            ariaCurrentWhenActive="page"
+          >
+            <mat-icon matListItemIcon>settings</mat-icon>
+            <span matListItemTitle>Configuración</span>
+          </a>
+        }
+      </mat-nav-list>
+
+      <div class="shell-nav-spacer"></div>
+
+      <div class="shell-account">
+        <div class="shell-avatar shell-avatar--account">{{ initials() }}</div>
+        <div class="shell-account-info">
+          <span class="shell-account-name">{{ profile()?.full_name }}</span>
+          <span class="shell-account-role">{{ roleLabel() }}</span>
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Cerrar sesión"
+          matTooltip="Cerrar sesión"
+          (click)="logout()"
+        >
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content-pane">
+    <mat-toolbar class="shell-toolbar">
+      @if (breadcrumbTitle()) {
+        <span class="shell-breadcrumb">{{ breadcrumbTitle() }}</span>
+      }
+      <span class="shell-toolbar-spacer"></span>
+      <div class="shell-avatar shell-avatar--toolbar">{{ initials() }}</div>
+    </mat-toolbar>
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

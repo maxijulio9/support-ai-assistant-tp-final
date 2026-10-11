@@ -1,0 +1,168 @@
+:host {
+  display: block;
+  height: 100vh;
+}
+
+.shell-container {
+  height: 100%;
+}
+
+.shell-content-pane {
+  --mat-sidenav-content-background-color: var(--app-color-background);
+}
+
+.shell-nav {
+  width: 232px;
+  background-color: var(--app-color-nav);
+  color: var(--mat-sys-inverse-on-surface);
+}
+
+.shell-nav-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.75rem 1rem 1rem;
+  color: var(--mat-sys-inverse-on-surface);
+}
+
+.shell-brand-icon {
+  color: var(--mat-sys-inverse-on-surface);
+}
+
+.shell-brand-name {
+  font-weight: 600;
+}
+
+.shell-nav-list {
+  --mat-list-list-item-label-text-color: var(--mat-sys-inverse-on-surface);
+  --mat-list-list-item-leading-icon-color: var(--mat-sys-inverse-on-surface);
+  --mat-list-list-item-hover-state-layer-color: color-mix(
+    in srgb,
+    var(--mat-sys-inverse-on-surface) 12%,
+    transparent
+  );
+  --mat-list-list-item-focus-state-layer-color: color-mix(
+    in srgb,
+    var(--mat-sys-inverse-on-surface) 16%,
+    transparent
+  );
+}
+
+.shell-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shell-nav-item--disabled {
+  padding: 0 1rem;
+  height: 48px;
+  color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 48%, transparent);
+  cursor: default;
+}
+
+.shell-nav-item--disabled mat-icon {
+  color: inherit;
+}
+
+.active-link {
+  background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 12%, transparent);
+  color: var(--mat-sys-inverse-primary);
+  --mat-list-list-item-label-text-color: var(--mat-sys-inverse-primary);
+}
+
+.active-link mat-icon {
+  color: var(--mat-sys-inverse-primary);
+}
+
+.shell-nav-section-label {
+  padding: 1rem 1rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 64%, transparent);
+}
+
+.shell-nav-spacer {
+  flex: 1 1 auto;
+}
+
+.shell-account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-inverse-on-surface) 16%, transparent);
+}
+
+.shell-account-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shell-account-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shell-account-role {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 72%, transparent);
+}
+
+.shell-account button {
+  color: var(--mat-sys-inverse-on-surface);
+}
+
+.shell-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.shell-avatar--account {
+  width: 30px;
+  height: 30px;
+  background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 20%, transparent);
+  color: var(--mat-sys-inverse-on-surface);
+}
+
+.shell-avatar--toolbar {
+  width: 28px;
+  height: 28px;
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
+.shell-toolbar {
+  height: 64px;
+}
+
+.shell-breadcrumb {
+  color: var(--mat-sys-on-surface);
+  font-weight: 500;
+}
+
+.shell-content {
+  padding: 1.5rem;
+}
+
+.shell-toolbar-spacer {
+  flex: 1 1 auto;
+}

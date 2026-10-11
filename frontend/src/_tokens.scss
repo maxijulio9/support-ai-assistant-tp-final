@@ -1,0 +1,37 @@
+// Tokens del proyecto que no tienen un rol nativo en el sistema M3 de Material,
+// o que Figma trata como un color aparte de lo que genera mat.theme().
+// Fuente: archivo de Figma CUbqV7AGXWQuRWOg8OTihL, frame "Fundamentos y estados".
+
+:root {
+  // Colores
+  --app-color-nav: #302244;
+  --app-color-success: #31734f;
+  --app-color-warning: #92641f;
+  --app-color-text-secondary: #6b6e77; // reemplaza el #747780 de Figma, no llegaba a AA
+  --app-color-background: #f6f7f9; // reemplaza el #f3f4f6 hardcodeado
+
+  // Radio (coincide con --mat-sys-corner-small/medium/large de Material)
+  --app-radius-sm: 8px;
+  --app-radius-md: 12px;
+  --app-radius-lg: 16px;
+
+  // Espaciado
+  --app-space-xs: 8px;
+  --app-space-sm: 16px;
+  --app-space-md: 24px;
+  --app-space-lg: 32px;
+  --app-space-xl: 48px;
+
+  // Sombra suave, solo para capas flotantes (modales, dropdowns, tooltips)
+  --app-shadow-soft: 0px 2px 6px 0px rgba(24, 32, 43, 0.04);
+
+  // Escala tipografica de Figma, para contenido de la app. No reemplaza la
+  // tipografia interna de los componentes de Material, que sigue usando Inter
+  // via mat.theme().
+  --app-text-page-title: 600 26px/1.45 'Inter', sans-serif;
+  --app-text-section-title: 600 18px/1.45 'Inter', sans-serif;
+  --app-text-card-heading: 600 15px/1.45 'Inter', sans-serif;
+  --app-text-body: 400 13px/1.45 'Inter', sans-serif;
+  --app-text-secondary: 400 12px/17px 'Inter', sans-serif;
+  --app-text-metadata: 400 11px/16px 'Inter', sans-serif;
+}

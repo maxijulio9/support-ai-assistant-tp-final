@@ -1,0 +1,63 @@
+<div class="review-detail">
+  @if (state() === 'empty') {
+    <p class="review-detail-empty">Elegí una solicitud de la cola para ver el detalle.</p>
+  }
+
+  @if (state() === 'loading') {
+    <div class="review-detail-skeleton" aria-hidden="true">
+      <div class="review-detail-skeleton-line short"></div>
+      <div class="review-detail-skeleton-line"></div>
+      <div class="review-detail-skeleton-block"></div>
+      <div class="review-detail-skeleton-block"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="review-detail-error" role="alert">
+      <p>No se pudo cargar el detalle. Intentá de nuevo.</p>
+      <button mat-button type="button" (click)="retry.emit()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded' && detail(); as data) {
+    <header class="review-detail-header">
+      <span class="review-detail-id">{{ data.issue_key }}</span>
+      @if (data.category) {
+        <span class="review-detail-category">{{ data.category }}</span>
+      }
+      @if (data.priority) {
+        <span class="review-detail-priority">{{ data.priority }}</span>
+      }
+    </header>
+
+    <h2 class="review-detail-title">{{ data.summary }}</h2>
+    <p class="review-detail-created">Creada el {{ formattedCreatedAt(data.created_at) }}</p>
+
+    <section class="review-detail-block">
+      <h2>Solicitud original</h2>
+      <p class="review-detail-text">{{ data.text_input }}</p>
+    </section>
+
+    <section class="review-detail-block review-detail-block--suggested">
+      <div class="review-detail-block-header">
+        <h2>Respuesta sugerida por el sistema</h2>
+        <span matTooltip="Edición no disponible todavía">
+          <button mat-button type="button" disabled>Editar</button>
+        </span>
+      </div>
+      <p class="review-detail-text">{{ data.generated_response }}</p>
+    </section>
+
+    <div class="review-detail-actions">
+      <span matTooltip="Descartar no disponible todavía">
+        <button mat-button type="button" disabled>Rechazar</button>
+      </span>
+      <button mat-stroked-button type="button" [disabled]="submitting()" (click)="regenerate.emit()">
+        Regenerar respuesta
+      </button>
+      <button mat-flat-button type="button" [disabled]="submitting()" (click)="approve.emit()">
+        {{ submitting() ? 'Publicando...' : 'Aprobar respuesta' }}
+      </button>
+    </div>
+  }
+</div>

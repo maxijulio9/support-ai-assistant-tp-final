@@ -1,0 +1,78 @@
+<h2 mat-dialog-title #resultTitle tabindex="-1">
+  {{ resultState() === 'escalated' ? 'Respuesta no publicada' : 'Regenerar respuesta' }}
+</h2>
+
+<mat-dialog-content>
+  @if (resultState() === 'escalated') {
+    <div role="status" class="regenerate-dialog-result">
+      <p class="regenerate-dialog-help">
+        El sistema procesó el rechazo, pero la respuesta no se publicó en el ticket. La solicitud fue escalada a
+        un agente.
+      </p>
+
+      @if (escalatedDetailState() === 'loading') {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <p class="regenerate-dialog-progress">Cargando el texto generado...</p>
+      }
+
+      @if (escalatedDetailState() === 'error') {
+        <p class="regenerate-dialog-error" role="alert">No se pudo cargar el texto generado.</p>
+      }
+
+      @if (escalatedDetailState() === 'loaded') {
+        @if (escalatedTextUnchanged()) {
+          <p class="regenerate-dialog-help">El sistema no pudo generar una respuesta nueva.</p>
+        } @else {
+          <p class="regenerate-dialog-generated-label">Respuesta generada, no publicada</p>
+          <p class="regenerate-dialog-generated-text">{{ escalatedResponseText() }}</p>
+        }
+      }
+    </div>
+  } @else {
+    <p class="regenerate-dialog-help">El sistema usará tu motivo para generar una nueva respuesta.</p>
+    <p class="regenerate-dialog-help">
+      La nueva respuesta se publica solo si el sistema la considera suficientemente respaldada; si no, la
+      solicitud se escala a un agente.
+    </p>
+
+    @if (timedOut()) {
+      <p class="regenerate-dialog-error" role="alert">
+        Esto está tardando más de lo esperado. La solicitud se actualizará cuando termine.
+      </p>
+    } @else {
+      <mat-form-field appearance="outline" class="regenerate-dialog-field">
+        <mat-label>Motivo para regenerar</mat-label>
+        <textarea
+          matInput
+          [formControl]="reasonControl"
+          [maxlength]="reasonMaxLength"
+          rows="4"
+        ></textarea>
+        <mat-hint align="end">{{ reasonLength() }}/{{ reasonMaxLength }}</mat-hint>
+        <mat-error>Ingresá el motivo para regenerar.</mat-error>
+      </mat-form-field>
+
+      @if (errorMessage()) {
+        <p class="regenerate-dialog-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      @if (submitting()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <p class="regenerate-dialog-progress">Generando una nueva respuesta...</p>
+      }
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (resultState() === 'escalated') {
+    <button mat-flat-button type="button" #entendidoButton (click)="acknowledgeEscalated()">Entendido</button>
+  } @else if (timedOut()) {
+    <button mat-flat-button type="button" (click)="updateQueueAfterTimeout()">Actualizar cola</button>
+  } @else {
+    <button mat-button type="button" [disabled]="submitting()" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button type="button" [disabled]="reasonInvalid() || submitting()" (click)="confirm()">
+      Regenerar
+    </button>
+  }
+</mat-dialog-actions>
