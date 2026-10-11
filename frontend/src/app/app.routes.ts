@@ -35,6 +35,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
+        title: 'Inicio',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent,
@@ -42,6 +43,7 @@ export const routes: Routes = [
       },
       {
         path: 'interactions',
+        title: 'Historial',
         loadComponent: () =>
           import('./features/interactions/list.component').then(
             (m) => m.InteractionsListComponent,
@@ -49,6 +51,7 @@ export const routes: Routes = [
       },
       {
         path: 'users',
+        title: 'Usuarios',
         loadComponent: () =>
           import('./features/users/users.component').then(
             (m) => m.UsersComponent,
@@ -57,6 +60,7 @@ export const routes: Routes = [
       },
       {
         path: 'config',
+        title: 'Configuración',
         loadChildren: () =>
           import('./features/config/config.routes').then(
             (m) => m.CONFIG_ROUTES,
