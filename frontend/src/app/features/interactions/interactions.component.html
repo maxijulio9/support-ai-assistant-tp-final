@@ -1,0 +1,147 @@
+<div class="interactions-page">
+  <header class="interactions-header">
+    <h1 class="interactions-title">Historial</h1>
+    <span matTooltip="Exportación no disponible todavía">
+      <button mat-stroked-button type="button" disabled>Exportar</button>
+    </span>
+  </header>
+
+  <div class="interactions-filters">
+    <mat-form-field appearance="outline" class="interactions-search">
+      <mat-label>Buscar por ID o asunto</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput [value]="searchTerm()" (input)="onSearchInput($event)" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="interactions-filter">
+      <mat-label>Estado</mat-label>
+      <mat-select [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
+        <mat-option [value]="null">Todos los estados</mat-option>
+        @for (option of statusOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="interactions-filter">
+      <mat-label>Categoría</mat-label>
+      <mat-select [value]="categoryFilter()" (selectionChange)="onCategoryFilterChange($event.value)">
+        <mat-option [value]="null">Todas las categorías</mat-option>
+        @for (option of categoryOptions(); track option) {
+          <mat-option [value]="option">{{ option }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (hasActiveFilters()) {
+      <button mat-button type="button" class="interactions-clear" (click)="clearFilters()">Limpiar filtros</button>
+    }
+  </div>
+
+  @if (truncated()) {
+    <p class="interactions-truncated">Mostrando las últimas 200 solicitudes</p>
+  }
+
+  @if (rowsState() === 'loading') {
+    <div class="interactions-table-wrapper">
+      <table class="interactions-table">
+        <caption class="visually-hidden">Historial de solicitudes</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Asunto</th>
+            <th scope="col">Prioridad</th>
+            <th scope="col">Fecha</th>
+          </tr>
+        </thead>
+        <tbody aria-hidden="true">
+          @for (row of skeletonRows; track row) {
+            <tr class="interactions-skeleton-row">
+              <td colspan="6"><span class="interactions-skeleton-bar"></span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (rowsState() === 'empty') {
+    <p class="interactions-empty">Todavía no hay solicitudes</p>
+  }
+
+  @if (rowsState() === 'no-results') {
+    <p class="interactions-empty">No hay resultados para este filtro</p>
+  }
+
+  @if (rowsState() === 'error') {
+    <div class="interactions-error" role="alert">
+      <p>No se pudo cargar el historial. Intentá de nuevo.</p>
+      <button mat-button type="button" (click)="loadHistory()">Reintentar</button>
+    </div>
+  }
+
+  @if (rowsState() === 'loaded') {
+    <div class="interactions-table-wrapper">
+      <table class="interactions-table">
+        <caption class="visually-hidden">Historial de solicitudes</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Asunto</th>
+            <th scope="col">Prioridad</th>
+            <th scope="col">Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of pageItems(); track item.interaction_id) {
+            @let status = statusFor(item.decision);
+            <tr>
+              <td>{{ item.issue_key }}</td>
+              <td>{{ item.category }}</td>
+              <td>
+                <span [class]="'interactions-status interactions-status--' + status.tone">
+                  <span class="interactions-status-dot"></span>
+                  {{ status.label }}
+                </span>
+              </td>
+              <td>{{ item.summary }}</td>
+              <td>{{ item.priority }}</td>
+              <td>{{ formatDate(item.created_at) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="interactions-pagination">
+      <span aria-live="polite">
+        {{ (effectivePage() - 1) * pageSize + 1 }}–{{ (effectivePage() - 1) * pageSize + pageItems().length }} de
+        {{ totalFiltered() }} resultados
+      </span>
+      <div class="interactions-pagination-buttons">
+        <button
+          mat-icon-button
+          type="button"
+          [disabled]="effectivePage() <= 1"
+          (click)="onPrevPage()"
+          aria-label="Página anterior"
+        >
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          [disabled]="effectivePage() >= totalPages()"
+          (click)="onNextPage()"
+          aria-label="Página siguiente"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
+</div>
