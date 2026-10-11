@@ -34,10 +34,16 @@
           <span matListItemTitle>Historial</span>
         </a>
 
-        <div class="shell-nav-item shell-nav-item--disabled" role="link" aria-disabled="true">
-          <mat-icon>fact_check</mat-icon>
-          <span>Revisión</span>
-        </div>
+        <a
+          mat-list-item
+          class="shell-nav-item"
+          routerLink="/review"
+          routerLinkActive="active-link"
+          ariaCurrentWhenActive="page"
+        >
+          <mat-icon matListItemIcon>fact_check</mat-icon>
+          <span matListItemTitle>Revisión</span>
+        </a>
 
         @if (isAdmin()) {
           <div class="shell-nav-section-label">Administración</div>

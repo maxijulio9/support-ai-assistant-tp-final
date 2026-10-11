@@ -50,6 +50,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'review',
+        title: 'Revisión',
+        loadComponent: () =>
+          import('./features/review/review.component').then(
+            (m) => m.ReviewComponent,
+          ),
+      },
+      {
         path: 'users',
         title: 'Usuarios',
         loadComponent: () =>
