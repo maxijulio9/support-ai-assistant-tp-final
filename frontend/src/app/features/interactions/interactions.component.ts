@@ -41,6 +41,7 @@ export class InteractionsComponent {
   readonly page = signal(1);
 
   readonly pageSize = PAGE_SIZE;
+  readonly historyLimit = this.interactionsService.historyLimit;
   readonly statusOptions = STATUS_FILTER_OPTIONS;
   readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 

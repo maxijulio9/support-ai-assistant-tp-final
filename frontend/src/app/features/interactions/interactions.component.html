@@ -39,7 +39,7 @@
   </div>
 
   @if (truncated()) {
-    <p class="interactions-truncated">Mostrando las últimas 200 solicitudes</p>
+    <p class="interactions-truncated">Mostrando las últimas {{ historyLimit }} solicitudes</p>
   }
 
   @if (rowsState() === 'loading') {
@@ -116,12 +116,16 @@
         </tbody>
       </table>
     </div>
+  }
 
-    <div class="interactions-pagination">
-      <span aria-live="polite">
+  <div class="interactions-pagination">
+    <span aria-live="polite">
+      @if (rowsState() === 'loaded') {
         {{ (effectivePage() - 1) * pageSize + 1 }}–{{ (effectivePage() - 1) * pageSize + pageItems().length }} de
         {{ totalFiltered() }} resultados
-      </span>
+      }
+    </span>
+    @if (rowsState() === 'loaded') {
       <div class="interactions-pagination-buttons">
         <button
           mat-icon-button
@@ -142,6 +146,6 @@
           <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
-    </div>
-  }
+    }
+  </div>
 </div>
