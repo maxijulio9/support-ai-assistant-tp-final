@@ -1,0 +1,20 @@
+.reject-dialog-field {
+  width: 100%;
+}
+
+.reject-dialog-help {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-xs);
+}
+
+.reject-dialog-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+}
+
+.reject-dialog-progress {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin-top: var(--app-space-xs);
+}

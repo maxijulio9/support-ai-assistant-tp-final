@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>Rechazar respuesta</h2>
+
+<mat-dialog-content>
+  <p class="reject-dialog-help">El sistema usará tu motivo para generar una nueva respuesta.</p>
+
+  @if (timedOut()) {
+    <p class="reject-dialog-error" role="alert">
+      Esto está tardando más de lo esperado. La solicitud se actualizará cuando termine.
+    </p>
+  } @else {
+    <mat-form-field appearance="outline" class="reject-dialog-field">
+      <mat-label>Motivo del rechazo</mat-label>
+      <textarea
+        matInput
+        [formControl]="reasonControl"
+        [maxlength]="reasonMaxLength"
+        rows="4"
+      ></textarea>
+      <mat-hint align="end">{{ reasonLength() }}/{{ reasonMaxLength }}</mat-hint>
+      <mat-error>Ingresá el motivo del rechazo.</mat-error>
+    </mat-form-field>
+
+    @if (errorMessage()) {
+      <p class="reject-dialog-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    @if (submitting()) {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p class="reject-dialog-progress">Generando una nueva respuesta...</p>
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (timedOut()) {
+    <button mat-flat-button type="button" (click)="updateQueueAfterTimeout()">Actualizar cola</button>
+  } @else {
+    <button mat-button type="button" [disabled]="submitting()" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button type="button" [disabled]="reasonInvalid() || submitting()" (click)="confirm()">
+      Confirmar rechazo
+    </button>
+  }
+</mat-dialog-actions>
