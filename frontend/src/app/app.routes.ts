@@ -45,8 +45,8 @@ export const routes: Routes = [
         path: 'interactions',
         title: 'Historial',
         loadComponent: () =>
-          import('./features/interactions/list.component').then(
-            (m) => m.InteractionsListComponent,
+          import('./features/interactions/interactions.component').then(
+            (m) => m.InteractionsComponent,
           ),
       },
       {
