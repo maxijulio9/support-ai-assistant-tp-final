@@ -2,7 +2,7 @@
 
 Se mockea la sesion de base de datos para verificar que arma bien las consultas,
 sin tocar la bd real"""
-
+import pytest
 from unittest.mock import patch, MagicMock
 from app.modules.interaction_logger.service import InteractionLogger
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
@@ -229,3 +229,64 @@ def test_update_ticket_status_sin_status_encontrado_no_actualiza(mock_get_db):
     logger_service.update_ticket_status("TEST-1", "EstadoInexistente")
 
     mock_db.commit.assert_not_called()
+    
+
+
+# verifica que update_interaction_result no pisa la decision original ni el canal si ya estaban completos
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_interaction_result_does_not_overwrite_existing_values(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+
+    InteractionLogger().update_interaction_result(
+        interaction_id="int-1",
+        chunks_retrieved_count=0,
+        generated_response=None,
+        confidence_score=None,
+        decision="ESCALATE",
+    )
+
+    query_text = str(mock_db.execute.call_args[0][0])
+    assert "system_decision = COALESCE(system_decision, :decision)" in query_text
+    assert "resolution_channel = COALESCE(resolution_channel, :resolution_channel)" in query_text
+
+
+# verifica que el canal queda en AUTO cuando la decision se resolvio sin intervencion humana
+@pytest.mark.parametrize("decision", ["AUTO_PUBLISH", "RESOLVED"])
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_interaction_result_sets_auto_channel(mock_get_db, decision):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+
+    InteractionLogger().update_interaction_result(
+        interaction_id="int-1",
+        chunks_retrieved_count=3,
+        generated_response="respuesta generada",
+        confidence_score=0.92,
+        decision=decision,
+    )
+
+    params = mock_db.execute.call_args[0][1]
+    assert params["decision"] == decision
+    assert params["resolution_channel"] == "AUTO"
+    mock_db.commit.assert_called_once()
+
+
+# verifica que el canal queda sin valor cuando la decision no es una resolucion automatica
+@pytest.mark.parametrize("decision", ["ESCALATE", "REQUEST_INFO", "NEEDS_REVIEW"])
+@patch("app.modules.interaction_logger.service.get_db")
+def test_update_interaction_result_leaves_channel_empty(mock_get_db, decision):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+
+    InteractionLogger().update_interaction_result(
+        interaction_id="int-1",
+        chunks_retrieved_count=0,
+        generated_response=None,
+        confidence_score=None,
+        decision=decision,
+    )
+
+    params = mock_db.execute.call_args[0][1]
+    assert params["decision"] == decision
+    assert params["resolution_channel"] is None

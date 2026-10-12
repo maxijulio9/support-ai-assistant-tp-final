@@ -239,6 +239,8 @@ class MetricsByCategoryResponse(BaseModel):
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
+    system_decision: str | None = Field(description="decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues")
+    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     issue_key: str = Field(description="key del ticket original en JSM, por ejemplo TARG-123")
     ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
     summary: str | None = Field(description="resumen del ticket original")
@@ -270,6 +272,8 @@ class InteractionDetailResponse(BaseModel):
     category: str | None = Field(description="categoria detectada por el sistema")
     priority: str | None = Field(description="prioridad del ticket")
     decision: str | None = Field(description="decision final del pipeline para esta interaccion")
+    system_decision: str | None = Field(description="decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues")
+    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     confidence_score: float | None = Field(description="confidence_score de la respuesta generada")
     text_input: str | None = Field(description="texto original del ticket, usado como input del pipeline")
     generated_response: str | None = Field(description="respuesta generada por el sistema")

@@ -28,6 +28,8 @@ class InteractionListingRepository:
                     tc.name AS category,
                     tp.name AS priority,
                     i.decision,
+                    i.system_decision,
+                    i.resolution_channel,
                     i.confidence_score,
                     i.created_at
                 FROM interaction i
@@ -66,6 +68,8 @@ class InteractionListingRepository:
                     "category": row.category,
                     "priority": row.priority,
                     "decision": row.decision,
+                    "system_decision": row.system_decision,
+                    "resolution_channel": row.resolution_channel,
                     "confidence_score": row.confidence_score,
                     "created_at": row.created_at.isoformat() if row.created_at else None,
                 }
@@ -86,6 +90,8 @@ class InteractionListingRepository:
                     tc.name AS category,
                     tp.name AS priority,
                     i.decision,
+                    i.system_decision,
+                    i.resolution_channel,
                     i.confidence_score,
                     i.text_input,
                     i.generated_response,
@@ -114,6 +120,8 @@ class InteractionListingRepository:
                 "category": row.category,
                 "priority": row.priority,
                 "decision": row.decision,
+                "system_decision": row.system_decision,
+                "resolution_channel": row.resolution_channel,
                 "confidence_score": row.confidence_score,
                 "text_input": row.text_input,
                 "generated_response": row.generated_response,

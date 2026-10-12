@@ -4,6 +4,8 @@ import logging
 from sqlalchemy import text
 from app.core.database import get_db
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
+from app.core.resolution_channels import RESOLUTION_CHANNEL_AUTO
+from app.modules.response_generator.schemas import ACTION_AUTO_PUBLISH
 
 logger = logging.getLogger(__name__)
 
@@ -154,11 +156,16 @@ class InteractionLogger:
 
         return str(row.id)
     
-    # completa la interaccion con el resultado de m3/m4, una vez que ya se genero (o se decidio no generar) una respuesta
+       # completa la interaccion con el resultado de m3/m4, una vez que ya se genero (o se decidio no generar) una respuesta
+    # tambien guarda la decision original del sistema (solo la primera vez) y el canal de resolucion si se resolvio sola
     def update_interaction_result(self, interaction_id: str, chunks_retrieved_count: int,
                                     generated_response: str | None, confidence_score: float | None, decision: str):
         if not interaction_id:
             return
+
+        # las decisiones que se resuelven sin intervencion humana quedan con canal AUTO, el resto queda sin canal
+        # RESOLVED es el cierre de conversacion que escribe el orchestrator
+        resolution_channel = RESOLUTION_CHANNEL_AUTO if decision in (ACTION_AUTO_PUBLISH, "RESOLVED") else None
 
         db = next(get_db())
         try:
@@ -167,7 +174,9 @@ class InteractionLogger:
                 SET chunks_retrieved_count = :chunks_retrieved_count,
                     generated_response = :generated_response,
                     confidence_score = :confidence_score,
-                    decision = :decision
+                    decision = :decision,
+                    system_decision = COALESCE(system_decision, :decision),
+                    resolution_channel = COALESCE(resolution_channel, :resolution_channel)
                 WHERE id = :interaction_id
             """)
 
@@ -177,6 +186,7 @@ class InteractionLogger:
                 "generated_response": generated_response,
                 "confidence_score": confidence_score,
                 "decision": decision,
+                "resolution_channel": resolution_channel,
             })
             db.commit()
             logger.info(f"interaccion {interaction_id} actualizada con el resultado de m3/m4")
@@ -187,7 +197,7 @@ class InteractionLogger:
 
         finally:
             db.close()
-        
+            
     # persiste cada chunk recuperado por m3, para poder auditar despues que contexto se uso (o no alcanzo) en una interaccion
     def save_retrieved_chunks(self, interaction_id: str, chunks: list):
         if not interaction_id or not chunks:

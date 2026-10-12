@@ -5,6 +5,7 @@
 import logging
 from sqlalchemy import text
 from app.core.database import get_db
+from app.core.resolution_channels import RESOLUTION_CHANNEL_RESOLVED_EXTERNALLY
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class AgentResolutionRepository:
 
     # busca la interaccion mas reciente en needs_review para este ticket, y la marca como resuelta externamente
     # si no hay ninguna interaccion pendiente, no hace nada, no hay nada que descartar
+    # system_decision no se toca, queda con lo que decidio el sistema, y resolution_channel registra como se resolvio
     def discard_pending_interaction(self, issue_key: str) -> bool:
         db = next(get_db())
         try:
@@ -31,9 +33,9 @@ class AgentResolutionRepository:
 
             db.execute(text("""
                 UPDATE interaction
-                SET decision = 'RESOLVED_EXTERNALLY', reviewed_at = NOW()
+                SET decision = 'RESOLVED_EXTERNALLY', resolution_channel = :resolution_channel, reviewed_at = NOW()
                 WHERE id = :id
-            """), {"id": row.id})
+            """), {"id": row.id, "resolution_channel": RESOLUTION_CHANNEL_RESOLVED_EXTERNALLY})
             db.commit()
 
             logger.info(f"[{issue_key}] interaccion {row.id} marcada como resuelta externamente")
