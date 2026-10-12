@@ -156,7 +156,9 @@ CREATE TABLE IF NOT EXISTS interaction (
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     reviewed_at             TIMESTAMPTZ,
     reviewed_by             UUID REFERENCES app_user(id),
-    rejection_reason        TEXT
+    rejection_reason        TEXT,
+    system_decision         VARCHAR(50),
+    resolution_channel      VARCHAR(50)
 );
 
 -- tabla para almacenar credenciales externas que van a estar encriptadas
