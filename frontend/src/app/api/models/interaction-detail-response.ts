@@ -54,9 +54,19 @@ export interface InteractionDetailResponse {
   priority: (string | null);
 
   /**
+   * como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar
+   */
+  resolution_channel: (string | null);
+
+  /**
    * resumen del ticket original
    */
   summary: (string | null);
+
+  /**
+   * decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues
+   */
+  system_decision: (string | null);
 
   /**
    * texto original del ticket, usado como input del pipeline
