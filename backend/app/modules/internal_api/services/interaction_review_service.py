@@ -4,6 +4,11 @@
 import logging
 from sqlalchemy import text
 from app.core.database import get_db
+from app.core.resolution_channels import (
+    RESOLUTION_CHANNEL_REVIEWED_APPROVED,
+    RESOLUTION_CHANNEL_REVIEWED_REGENERATED,
+    RESOLUTION_CHANNEL_ESCALATED_BY_HUMAN,
+)
 from app.modules.internal_api.repositories.interaction_repository import InteractionRepository
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.response_generator.service import ResponseGenerator
@@ -32,7 +37,12 @@ class InteractionReviewService:
 
         jsm_executor = self._get_jsm_executor()
         await jsm_executor.post_comment(context["issue_key"], context["generated_response"], public=True)
-        self._update_interaction(interaction_id, decision=ACTION_AUTO_PUBLISH, reviewed_by=reviewed_by)
+        self._update_interaction(
+            interaction_id,
+            decision=ACTION_AUTO_PUBLISH,
+            reviewed_by=reviewed_by,
+            resolution_channel=RESOLUTION_CHANNEL_REVIEWED_APPROVED,
+        )
 
         return ACTION_AUTO_PUBLISH
 
@@ -64,6 +74,7 @@ class InteractionReviewService:
             rejection_reason=rejection_reason,
             generated_response=result.response_text,
             confidence_score=result.confidence_score,
+            resolution_channel=RESOLUTION_CHANNEL_REVIEWED_REGENERATED,
         )
 
         return result.action_type
@@ -74,14 +85,21 @@ class InteractionReviewService:
         if context is None:
             raise ValueError(f"interaction '{interaction_id}' no encontrada")
 
-        self._update_interaction(interaction_id, decision="ESCALATE", reviewed_by=reviewed_by, rejection_reason=rejection_reason)
+        self._update_interaction(
+            interaction_id,
+            decision="ESCALATE",
+            reviewed_by=reviewed_by,
+            rejection_reason=rejection_reason,
+            resolution_channel=RESOLUTION_CHANNEL_ESCALATED_BY_HUMAN,
+        )
 
         return "ESCALATE"
 
     # actualiza la interaccion con el resultado de la revision humana
+    # system_decision no se toca nunca, queda con lo que decidio el sistema, y resolution_channel dice como se resolvio
     def _update_interaction(self, interaction_id: str, decision: str, reviewed_by: str | None,
                              rejection_reason: str | None = None, generated_response: str | None = None,
-                             confidence_score: float | None = None):
+                             confidence_score: float | None = None, resolution_channel: str | None = None):
         db = next(get_db())
 
         try:
@@ -92,7 +110,8 @@ class InteractionReviewService:
                     reviewed_at = NOW(),
                     rejection_reason = COALESCE(:rejection_reason, rejection_reason),
                     generated_response = COALESCE(:generated_response, generated_response),
-                    confidence_score = COALESCE(:confidence_score, confidence_score)
+                    confidence_score = COALESCE(:confidence_score, confidence_score),
+                    resolution_channel = COALESCE(:resolution_channel, resolution_channel)
                 WHERE id = :interaction_id
             """)
             db.execute(query, {
@@ -102,6 +121,7 @@ class InteractionReviewService:
                 "rejection_reason": rejection_reason,
                 "generated_response": generated_response,
                 "confidence_score": confidence_score,
+                "resolution_channel": resolution_channel,
             })
             db.commit()
             logger.info(f"interaction '{interaction_id}' actualizada, decision={decision}")
