@@ -2265,6 +2265,30 @@
             "title": "Decision",
             "description": "decision final del pipeline para esta interaccion"
           },
+          "system_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Decision",
+            "description": "decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues"
+          },
+          "resolution_channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Channel",
+            "description": "como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
+          },
           "confidence_score": {
             "anyOf": [
               {
@@ -2331,6 +2355,8 @@
           "category",
           "priority",
           "decision",
+          "system_decision",
+          "resolution_channel",
           "confidence_score",
           "text_input",
           "generated_response",
@@ -2346,6 +2372,30 @@
             "type": "string",
             "title": "Interaction Id",
             "description": "id de la interaccion"
+          },
+          "system_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Decision",
+            "description": "decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues"
+          },
+          "resolution_channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Channel",
+            "description": "como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
           },
           "issue_key": {
             "type": "string",
@@ -2440,6 +2490,8 @@
         "type": "object",
         "required": [
           "interaction_id",
+          "system_decision",
+          "resolution_channel",
           "issue_key",
           "ticket_url",
           "summary",
