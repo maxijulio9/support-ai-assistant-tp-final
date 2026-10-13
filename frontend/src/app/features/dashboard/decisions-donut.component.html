@@ -1,0 +1,30 @@
+<div class="decisions-donut">
+  <div class="decisions-donut-chart-wrapper">
+    <div
+      echarts
+      [options]="options()"
+      class="decisions-donut-chart"
+      role="img"
+      [attr.aria-label]="'Distribución de decisiones, ' + total() + ' solicitudes en total'"
+    ></div>
+    <div class="decisions-donut-center" aria-hidden="true">
+      <span class="decisions-donut-total">{{ total() | number }}</span>
+      <span class="decisions-donut-total-label">solicitudes</span>
+    </div>
+  </div>
+
+  <ul class="decisions-donut-legend">
+    @for (segment of segments(); track segment.label) {
+      <li class="decisions-donut-legend-item">
+        <span class="decisions-donut-legend-row">
+          <span [class]="'decisions-donut-dot decisions-donut-dot--' + segment.tone"></span>
+          {{ segment.label }}
+        </span>
+        <span class="decisions-donut-legend-value">
+          {{ segment.value | number }}
+          <span class="decisions-donut-legend-percent">{{ percentOf(segment.value) }}%</span>
+        </span>
+      </li>
+    }
+  </ul>
+</div>

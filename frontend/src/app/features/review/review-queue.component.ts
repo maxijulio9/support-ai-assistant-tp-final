@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
+import { formatRelativeTime } from '../../shared/format-relative-time';
 
 export type QueueState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
 
@@ -51,29 +52,7 @@ export class ReviewQueueComponent {
     return !!priority && HIGH_PRIORITY_PATTERN.test(priority);
   }
 
-  // "ayer, HH:mm" para cualquier diferencia de 24h o mas es una
-  // simplificacion deliberada pedida en el diseño, no distingue 1 dia de
-  // varios.
-  relativeTime(createdAt: string | null | undefined): string {
-    if (!createdAt) return '';
-    const date = new Date(createdAt);
-    if (Number.isNaN(date.getTime())) return '';
-
-    const diffMs = Date.now() - date.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-
-    if (diffHours >= 24) {
-      const time = date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-      return `ayer, ${time}`;
-    }
-
-    const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
-    const diffMinutes = Math.round(diffMs / (1000 * 60));
-    if (diffMinutes < 60) {
-      return rtf.format(-diffMinutes, 'minute');
-    }
-    return rtf.format(-Math.round(diffHours), 'hour');
-  }
+  readonly relativeTime = formatRelativeTime;
 
   onSearchInput(event: Event): void {
     const value = (event.target as HTMLInputElement).value;

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { filter, map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -32,6 +33,10 @@ function initials(fullName: string | undefined): string {
   return (first + last).toUpperCase();
 }
 
+// Breakpoint de pantalla chica: por debajo de 768px el nav pasa a cajon.
+// El .98 es la convencion estandar para "menor a 768px" exacto.
+const HANDSET_QUERY = '(max-width: 767.98px)';
+
 @Component({
   selector: 'app-shell',
   standalone: true,
@@ -55,6 +60,12 @@ export class ShellComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly breakpointObserver = inject(BreakpointObserver);
+
+  readonly isHandset = toSignal(
+    this.breakpointObserver.observe(HANDSET_QUERY).pipe(map((result) => result.matches)),
+    { initialValue: false },
+  );
 
   // Esto es solo para la interfaz (mostrar u ocultar los links de admin).
   // La autorizacion real la hace el backend, y roleGuard ya protege esas rutas.
