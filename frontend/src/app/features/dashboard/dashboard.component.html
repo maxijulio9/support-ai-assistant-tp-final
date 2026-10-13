@@ -1,0 +1,251 @@
+<div class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <h1 class="dashboard-title">Inicio</h1>
+      <p class="dashboard-greeting">{{ firstName() ? 'Buenos días, ' + firstName() : 'Buenos días' }}</p>
+    </div>
+    <span matTooltip="Exportación no disponible todavía">
+      <button mat-stroked-button type="button" disabled>
+        <mat-icon aria-hidden="true">download</mat-icon>
+        Exportar datos
+      </button>
+    </span>
+  </header>
+
+  <div class="dashboard-period">
+    <button
+      mat-stroked-button
+      type="button"
+      [class.is-active]="periodOption() === 'today'"
+      (click)="setPeriod('today')"
+    >
+      Hoy
+    </button>
+    <button mat-stroked-button type="button" [class.is-active]="periodOption() === '7d'" (click)="setPeriod('7d')">
+      7 días
+    </button>
+    <button mat-stroked-button type="button" [class.is-active]="periodOption() === '30d'" (click)="setPeriod('30d')">
+      30 días
+    </button>
+    <span class="dashboard-period-label">{{ periodLabel }}</span>
+  </div>
+
+  @if (state() === 'loading') {
+    <div class="dashboard-skeleton" role="status">
+      <span class="visually-hidden">Cargando las solicitudes del período</span>
+      <div class="dashboard-card" aria-hidden="true">
+        <div class="dashboard-skeleton-line dashboard-skeleton-line--lg" style="width: 40%"></div>
+        <div class="dashboard-skeleton-line" style="width: 25%; margin-top: var(--app-space-xs)"></div>
+      </div>
+      <p class="dashboard-card-subtitle" aria-hidden="true">Cargando las solicitudes del período...</p>
+      <div class="dashboard-skeleton-kpis" aria-hidden="true">
+        @for (row of [0, 1, 2, 3]; track row) {
+          <div class="dashboard-card">
+            <div class="dashboard-skeleton-line" style="width: 50%"></div>
+            <div class="dashboard-skeleton-line dashboard-skeleton-line--lg" style="width: 35%; margin-top: var(--app-space-xs)"></div>
+          </div>
+        }
+      </div>
+      <div class="dashboard-skeleton-charts" aria-hidden="true">
+        <div class="dashboard-card dashboard-skeleton-chart">
+          <div class="dashboard-skeleton-line" style="width: 50%"></div>
+        </div>
+        <div class="dashboard-card dashboard-skeleton-chart">
+          <div class="dashboard-skeleton-line" style="width: 50%"></div>
+        </div>
+      </div>
+      <div class="dashboard-card dashboard-skeleton-table" aria-hidden="true">
+        <div class="dashboard-skeleton-line" style="width: 50%"></div>
+      </div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="dashboard-card dashboard-message" role="alert">
+      <mat-icon aria-hidden="true" class="dashboard-message-icon dashboard-message-icon--error">error</mat-icon>
+      <h2>No pudimos cargar las solicitudes</h2>
+      <p>Revisá tu conexión y volvé a intentarlo.</p>
+      <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <div class="dashboard-card dashboard-message">
+      <mat-icon aria-hidden="true" class="dashboard-message-icon">history</mat-icon>
+      <h2>Todavía no hay solicitudes en este período</h2>
+      <p>Elegí otro período para consultar la actividad.</p>
+      <button mat-stroked-button type="button" (click)="setPeriod('30d')">Cambiar período</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    @if (pendingReviewCount() > 0) {
+      <div class="dashboard-banner">
+        <div>
+          <p class="dashboard-banner-title">
+            {{ pendingReviewTruncated() ? pendingReviewLimit + ' o más' : pendingReviewCount() }}
+            solicitud{{ pendingReviewCount() === 1 ? '' : 'es' }} esperan revisión
+          </p>
+          @if (oldestPendingCreatedAt()) {
+            <p class="dashboard-banner-subtitle">La más antigua: {{ relativeTime(oldestPendingCreatedAt()) }}</p>
+          }
+        </div>
+        <a mat-flat-button routerLink="/review">Ir a revisión</a>
+      </div>
+    }
+
+    <div class="dashboard-kpis">
+      <div class="dashboard-card dashboard-kpi dashboard-kpi--highlight">
+        <p class="dashboard-kpi-label">Resolución automática</p>
+        <p class="dashboard-kpi-value">{{ autoPublishRate() !== null ? (autoPublishRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato' }}</p>
+        @if (autoPublishDeltaPp() !== null) {
+          <p class="dashboard-kpi-delta" [class.is-negative]="autoPublishDeltaPp()! < 0">
+            {{ autoPublishDeltaPp()! >= 0 ? '▲' : '▼' }} {{ (autoPublishDeltaPp()! | number: '1.1-1') }} pp
+            <span class="dashboard-kpi-delta-label">vs. anterior</span>
+          </p>
+        }
+      </div>
+
+      <div class="dashboard-card dashboard-kpi">
+        <p class="dashboard-kpi-label">En revisión ahora</p>
+        <p class="dashboard-kpi-value">{{ pendingReviewCount() | number }}</p>
+        <!-- Sin delta: es un conteo en vivo (igual al banner), no hay un
+             "anterior" period-scoped comparable sin inventar un dato. -->
+      </div>
+
+      <div class="dashboard-card dashboard-kpi">
+        <p class="dashboard-kpi-label">Escaladas</p>
+        <p class="dashboard-kpi-value">{{ escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato' }}</p>
+        @if (escalateDeltaPp() !== null) {
+          <p class="dashboard-kpi-delta" [class.is-negative]="escalateDeltaPp()! < 0">
+            {{ escalateDeltaPp()! >= 0 ? '▲' : '▼' }} {{ (escalateDeltaPp()! | number: '1.1-1') }} pp
+            <span class="dashboard-kpi-delta-label">vs. anterior</span>
+          </p>
+        }
+      </div>
+
+      <div class="dashboard-card dashboard-kpi">
+        <p class="dashboard-kpi-label">Confianza media</p>
+        <p class="dashboard-kpi-value">{{ avgConfidence() !== null ? (avgConfidence() | number: '1.2-2') : 'Sin dato' }}</p>
+        @if (avgConfidenceDelta() !== null) {
+          <p class="dashboard-kpi-delta" [class.is-negative]="avgConfidenceDelta()! < 0">
+            {{ avgConfidenceDelta()! >= 0 ? '▲' : '▼' }} {{ (avgConfidenceDelta()! | number: '1.2-2') }}
+            <span class="dashboard-kpi-delta-label">vs. anterior</span>
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="dashboard-charts">
+      <div class="dashboard-card dashboard-evolution">
+        <h2>Evolución de la resolución automática</h2>
+        <p class="dashboard-card-subtitle">Por día, porcentaje de solicitudes</p>
+        <div class="dashboard-evolution-empty">
+          <p style="margin: 0">Sin datos todavía</p>
+          <p class="dashboard-card-subtitle">La serie diaria se habilita en una próxima iteración.</p>
+        </div>
+      </div>
+
+      <div class="dashboard-card">
+        <h2>Distribución de decisiones</h2>
+        <p class="dashboard-card-subtitle">Decisiones del período</p>
+        <app-decisions-donut [segments]="donutSegments()" [total]="totalInteractions() ?? 0" />
+      </div>
+    </div>
+
+    <div class="dashboard-lower">
+      <div class="dashboard-card dashboard-activity">
+        <h2>Actividad reciente</h2>
+        <p class="dashboard-card-subtitle">Últimas solicitudes procesadas</p>
+
+        @if (recentActivity().length === 0) {
+          <p class="dashboard-activity-empty">Todavía no hay actividad para mostrar.</p>
+        } @else {
+          <div class="dashboard-activity-table-wrapper">
+            <table class="dashboard-activity-table">
+              <caption class="visually-hidden">Actividad reciente</caption>
+            <thead>
+              <tr>
+                <th scope="col">Clave</th>
+                <th scope="col">Asunto</th>
+                <th scope="col">Decisión</th>
+                <th scope="col">Actividad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of recentActivity(); track item.interaction_id) {
+                @let ticketUrl = safeTicketUrl(item.ticket_url);
+                @let status = statusFor(item.decision);
+                <tr>
+                  <td>
+                    @if (ticketUrl) {
+                      <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="dashboard-activity-key">
+                        {{ item.issue_key }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+                      </a>
+                    } @else {
+                      {{ item.issue_key }}
+                    }
+                  </td>
+                  <td>
+                    <a [routerLink]="['/interactions', item.interaction_id]" class="dashboard-activity-subject-link">{{
+                      item.summary
+                    }}</a>
+                  </td>
+                  <td>
+                    <span [class]="'dashboard-activity-status dashboard-activity-status--' + status.tone">
+                      <span class="dashboard-activity-status-dot"></span>
+                      {{ status.label }}
+                    </span>
+                  </td>
+                  <td>{{ relativeTime(item.created_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          </div>
+        }
+
+        <div class="dashboard-activity-footer">
+          <a routerLink="/interactions">Ver todo el historial</a>
+          @if (lastUpdatedAt()) {
+            <span>Actualizado {{ relativeTime(lastUpdatedAt()) }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dashboard-card dashboard-categories">
+        <h2>Solicitudes por categoría</h2>
+        <p class="dashboard-card-subtitle">Cuatro categorías, ordenadas por volumen</p>
+
+        @if (categoryRows().length === 0) {
+          <p class="dashboard-activity-empty">Todavía no hay categorías para mostrar.</p>
+        } @else {
+          <ul class="dashboard-categories-list">
+            @for (row of categoryRows(); track row.category) {
+              <li>
+                <div class="dashboard-categories-row">
+                  <span>{{ row.category }}</span>
+                  <span>{{ row.total | number }} {{ row.percent | number: '1.1-1' }}%</span>
+                </div>
+                <div class="dashboard-categories-bar">
+                  <div class="dashboard-categories-bar-fill" [style.width.%]="row.percent"></div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          @if (leaderCategory()) {
+            <p class="dashboard-categories-leader">
+              {{ leaderCategory()!.category }} lidera con {{ leaderCategory()!.total | number }} solicitudes
+            </p>
+          }
+        }
+      </div>
+    </div>
+
+    <footer class="dashboard-footer">
+      <span>{{ totalInteractions() ?? 0 | number }} solicitudes analizadas</span>
+      <span>La confianza expresa la certeza del sistema, no una precisión validada.</span>
+    </footer>
+  }
+</div>

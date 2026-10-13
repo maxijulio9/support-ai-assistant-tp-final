@@ -71,8 +71,14 @@
                   "maximumError": "1MB"
                 },
                 {
+                  // Angular no permite fijar un budget por archivo de
+                  // componente: este umbral es global para
+                  // anyComponentStyle. Se subio de 6kB a 7kB porque
+                  // dashboard.component.scss necesita el @media del
+                  // responsive de Inicio (TF: shell + Inicio a <768px).
+                  // Ningun otro componente se acerca a este tamaño hoy.
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kB",
+                  "maximumWarning": "7kB",
                   "maximumError": "8kB"
                 }
               ],
