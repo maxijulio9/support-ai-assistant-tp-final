@@ -1,4 +1,149 @@
-<div class="metrics-tab-placeholder">
-  <mat-icon aria-hidden="true">bar_chart</mat-icon>
-  <p>Sin datos todavía</p>
+<div class="resumen-page">
+  @if (state() === 'loading') {
+    <div class="resumen-skeleton" role="status">
+      <span class="visually-hidden">Cargando el resumen del período</span>
+      <div class="resumen-kpis" aria-hidden="true">
+        @for (row of [0, 1, 2, 3]; track row) {
+          <div class="resumen-card">
+            <div class="resumen-skeleton-line" style="width: 50%"></div>
+            <div class="resumen-skeleton-line resumen-skeleton-line--lg" style="width: 35%; margin-top: var(--app-space-xs)"></div>
+          </div>
+        }
+      </div>
+      <div class="resumen-card resumen-skeleton-block" aria-hidden="true">
+        <div class="resumen-skeleton-line" style="width: 40%"></div>
+      </div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="resumen-card resumen-message" role="alert">
+      <mat-icon aria-hidden="true" class="resumen-message-icon resumen-message-icon--error">error</mat-icon>
+      <h2>No pudimos cargar el resumen</h2>
+      <p>Revisá tu conexión y volvé a intentarlo.</p>
+      <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <div class="resumen-card resumen-message">
+      <mat-icon aria-hidden="true" class="resumen-message-icon">history</mat-icon>
+      <h2>Todavía no hay solicitudes en este período</h2>
+      <p>Elegí otro rango de fechas para consultar la actividad.</p>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <div class="resumen-kpis">
+      <app-metrics-kpi-card
+        label="Resolución automática"
+        [value]="autoPublishRate() !== null ? (autoPublishRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
+        [deltaText]="autoPublishDeltaPp() !== null ? (autoPublishDeltaPp()! | number: '1.1-1') + ' pp' : null"
+        [deltaArrowUp]="autoPublishDeltaArrowUp()"
+        [deltaBad]="autoPublishDeltaBad()"
+        [highlight]="true"
+      />
+      <app-metrics-kpi-card
+        label="Escalamiento"
+        [value]="escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
+        [deltaText]="escalateDeltaPp() !== null ? (escalateDeltaPp()! | number: '1.1-1') + ' pp' : null"
+        [deltaArrowUp]="escalateDeltaArrowUp()"
+        [deltaBad]="escalateDeltaBad()"
+      />
+      <app-metrics-kpi-card
+        label="Total de solicitudes"
+        [value]="(totalInteractions() ?? 0 | number) ?? ''"
+        [deltaText]="totalDeltaPercent() !== null ? (totalDeltaPercent()! | number: '1.1-1') + '%' : null"
+        [deltaArrowUp]="totalDeltaArrowUp()"
+        [deltaBad]="totalDeltaBad()"
+      />
+      <app-metrics-kpi-card
+        label="Confianza media"
+        [value]="avgConfidence() !== null ? ((avgConfidence() | number: '1.2-2') ?? '') : 'Sin dato'"
+        [deltaText]="avgConfidenceDelta() !== null ? (avgConfidenceDelta()! | number: '1.2-2') : null"
+        [deltaArrowUp]="avgConfidenceDeltaArrowUp()"
+        [deltaBad]="avgConfidenceDeltaBad()"
+      />
+    </div>
+
+    <div class="resumen-lower">
+      <div class="resumen-card resumen-categories">
+        <div class="resumen-categories-header">
+          <div>
+            <h2>Solicitudes por categoría</h2>
+            <p class="resumen-card-subtitle">Categorías, ordenadas por volumen</p>
+          </div>
+          <mat-slide-toggle [checked]="categoriesAsTable()" (change)="toggleCategoriesAsTable()">
+            Ver como tabla
+          </mat-slide-toggle>
+        </div>
+
+        @if (categoryRows().length === 0) {
+          <p class="resumen-empty">Todavía no hay categorías para mostrar.</p>
+        } @else if (categoriesAsTable()) {
+          <div class="resumen-categories-table-wrapper">
+            <table class="resumen-categories-table">
+              <caption class="visually-hidden">Solicitudes por categoría</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Categoría</th>
+                  <th scope="col">Solicitudes</th>
+                  <th scope="col">Porcentaje</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of categoryRows(); track row.category) {
+                  <tr>
+                    <td>{{ row.category }}</td>
+                    <td>{{ row.total | number }}</td>
+                    <td>{{ row.percent | number: '1.1-1' }}%</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <ul class="resumen-categories-list">
+            @for (row of categoryRows(); track row.category) {
+              <li>
+                <div class="resumen-categories-row">
+                  <span>{{ row.category }}</span>
+                  <span>{{ row.total | number }} ({{ row.percent | number: '1.1-1' }}%)</span>
+                </div>
+                <div class="resumen-categories-bar">
+                  <div class="resumen-categories-bar-fill" [style.width.%]="row.percent"></div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          @if (leaderCategory()) {
+            <p class="resumen-categories-leader">
+              {{ leaderCategory()!.category }} lidera con {{ leaderCategory()!.total | number }} solicitudes
+            </p>
+          }
+        }
+      </div>
+
+      <div class="resumen-card">
+        <h2>Solicitudes por día y decisión</h2>
+        <p class="resumen-card-subtitle">Serie diaria, apilada por decisión</p>
+        <div class="resumen-placeholder">
+          <p style="margin: 0">Sin datos todavía</p>
+        </div>
+      </div>
+
+      <div class="resumen-card">
+        <h2>Mapa de calor de actividad</h2>
+        <p class="resumen-card-subtitle">Solicitudes por día y hora</p>
+        <div class="resumen-placeholder">
+          <p style="margin: 0">Sin datos todavía</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="resumen-footer">
+      <span>{{ totalInteractions() ?? 0 | number }} solicitudes analizadas</span>
+    </footer>
+  }
 </div>
