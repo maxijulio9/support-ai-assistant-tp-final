@@ -1,4 +1,49 @@
-import { computePeriodRanges } from './period';
+import { computePeriodRanges, previousPeriodOf, resolveDateRange } from './period';
+
+describe('resolveDateRange', () => {
+  const fallback = { from: '2026-09-13T00:00:00.000Z', to: '2026-10-13T00:00:00.000Z' };
+
+  it('from y to ambos presentes: devuelve esos dos', () => {
+    const result = resolveDateRange('2026-09-01T00:00:00.000Z', '2026-09-30T00:00:00.000Z', fallback);
+    expect(result).toEqual({ from: '2026-09-01T00:00:00.000Z', to: '2026-09-30T00:00:00.000Z' });
+  });
+
+  it('solo from presente (sin to): devuelve el fallback completo, no mezcla', () => {
+    const result = resolveDateRange('2026-09-01T00:00:00.000Z', null, fallback);
+    expect(result).toEqual(fallback);
+  });
+
+  it('solo to presente (sin from): devuelve el fallback completo, no mezcla', () => {
+    const result = resolveDateRange(null, '2026-09-30T00:00:00.000Z', fallback);
+    expect(result).toEqual(fallback);
+  });
+
+  it('ninguno presente: devuelve el fallback completo', () => {
+    const result = resolveDateRange(null, null, fallback);
+    expect(result).toEqual(fallback);
+  });
+});
+
+describe('previousPeriodOf', () => {
+  it('devuelve un rango de la misma duracion, contiguo e inmediatamente anterior', () => {
+    const current = { from: '2026-09-10T00:00:00.000Z', to: '2026-09-17T00:00:00.000Z' };
+    const previous = previousPeriodOf(current);
+
+    expect(previous.to).toBe(current.from);
+    const currentDuration = new Date(current.to).getTime() - new Date(current.from).getTime();
+    const previousDuration = new Date(previous.to).getTime() - new Date(previous.from).getTime();
+    expect(previousDuration).toBe(currentDuration);
+  });
+
+  it('funciona con un rango libre que no es multiplo de dias exactos', () => {
+    const current = { from: '2026-09-10T08:15:00.000Z', to: '2026-09-15T20:45:00.000Z' };
+    const previous = previousPeriodOf(current);
+
+    expect(previous.to).toBe(current.from);
+    const currentDuration = new Date(current.to).getTime() - new Date(current.from).getTime();
+    expect(new Date(previous.from).getTime()).toBe(new Date(current.from).getTime() - currentDuration);
+  });
+});
 
 describe('computePeriodRanges', () => {
   it('hoy: actual es desde medianoche local hasta ahora, anterior es el dia calendario completo de ayer', () => {
