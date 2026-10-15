@@ -45,7 +45,6 @@ export class ResumenComponent {
   private readonly previousTotalInteractions = computed(() => this.previousSummary()?.total_interactions ?? null);
   readonly totalDeltaPercent = computed(() => percentGrowth(this.totalInteractions(), this.previousTotalInteractions()));
   readonly totalDeltaArrowUp = computed(() => (this.totalDeltaPercent() ?? 0) >= 0);
-  readonly totalDeltaBad = computed(() => (this.totalDeltaPercent() ?? 0) < 0);
 
   readonly autoPublishRate = computed(() => {
     const s = this.summary();
@@ -69,16 +68,11 @@ export class ResumenComponent {
   });
   readonly escalateDeltaPp = computed(() => ppDelta(this.escalateRate(), this.previousEscalateRate()));
   readonly escalateDeltaArrowUp = computed(() => (this.escalateDeltaPp() ?? 0) >= 0);
-  // Invertido respecto del resto: una suba de escalamiento es adversa, asi
-  // que sube pero se marca en rojo (al reves que una suba de resolucion
-  // automatica, que es favorable).
-  readonly escalateDeltaBad = computed(() => (this.escalateDeltaPp() ?? 0) > 0);
 
   readonly avgConfidence = computed(() => this.summary()?.avg_confidence_score ?? null);
   private readonly previousAvgConfidence = computed(() => this.previousSummary()?.avg_confidence_score ?? null);
   readonly avgConfidenceDelta = computed(() => rawDelta(this.avgConfidence(), this.previousAvgConfidence()));
   readonly avgConfidenceDeltaArrowUp = computed(() => (this.avgConfidenceDelta() ?? 0) >= 0);
-  readonly avgConfidenceDeltaBad = computed(() => (this.avgConfidenceDelta() ?? 0) < 0);
 
   // --- Solicitudes por categoria ---
   readonly categoryRows = computed(() => {

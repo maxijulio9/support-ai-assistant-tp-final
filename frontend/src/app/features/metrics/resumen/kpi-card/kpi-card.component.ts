@@ -14,6 +14,7 @@ export class KpiCardComponent {
   readonly value = input.required<string>();
   readonly deltaText = input<string | null>(null);
   readonly deltaArrowUp = input(true);
+  readonly deltaColored = input(false);
   readonly deltaBad = input(false);
   readonly highlight = input(false);
 }

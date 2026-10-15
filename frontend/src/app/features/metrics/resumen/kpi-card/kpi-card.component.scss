@@ -31,14 +31,18 @@
   align-items: center;
   gap: 0.25rem;
   font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.kpi-card-delta--colored {
   color: var(--app-color-success);
   background-color: color-mix(in srgb, var(--app-color-success) 12%, transparent);
   border-radius: var(--app-radius-sm);
   padding: 2px var(--app-space-xs);
-  margin: 0;
 }
 
-.kpi-card-delta--bad {
+.kpi-card-delta--colored.kpi-card-delta--bad {
   color: var(--mat-sys-error);
   background-color: color-mix(in srgb, var(--mat-sys-error) 12%, transparent);
 }
