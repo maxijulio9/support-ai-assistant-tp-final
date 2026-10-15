@@ -8,7 +8,8 @@ from app.core.database import get_db
 class InteractionMetricsRepository:
 
     # agregado global de interacciones, opcionalmente filtrado por proyecto, categoria, decision y rango de fechas
-    # se excluyen las filas con decision null, son datos viejos de antes de que se completara ese campo
+    # las filas con decision null no se suman al total ni a ningun conteo, son datos viejos de antes de que se completara ese campo
+    # se informan aparte en without_decision_count
     # to_date_exclusive en True deja afuera el to_date, se usa cuando el rango ya viene calculado en utc
     def get_summary(self, project_id: str | None = None, from_date: str | datetime | None = None,
                     to_date: str | datetime | None = None, category: str | None = None,
@@ -23,7 +24,7 @@ class InteractionMetricsRepository:
             # el join con la categoria solo se agrega si se filtra por ella, para no cambiar la consulta de antes
             if category:
                 query += " LEFT JOIN ticket_category tc ON i.category_id = tc.id"
-            query += " WHERE i.decision IS NOT NULL"
+            query += " WHERE 1=1"
             params = {}
 
             if project_id:
@@ -45,7 +46,7 @@ class InteractionMetricsRepository:
 
             rows = db.execute(text(query), params).fetchall()
 
-            total = len(rows)
+            without_decision_count = 0
             auto_publish_count = 0
             needs_review_count = 0
             escalate_count = 0
@@ -55,6 +56,11 @@ class InteractionMetricsRepository:
             confidence_scores = []
 
             for row in rows:
+                # las filas sin decision no entran en el total ni en los conteos, solo se cuentan aparte
+                if row.decision is None:
+                    without_decision_count += 1
+                    continue
+
                 if row.decision == "AUTO_PUBLISH":
                     auto_publish_count += 1
                 elif row.decision == "NEEDS_REVIEW":
@@ -70,6 +76,8 @@ class InteractionMetricsRepository:
 
                 if row.confidence_score is not None:
                     confidence_scores.append(row.confidence_score)
+
+            total = len(rows) - without_decision_count
 
             if total > 0:
                 automatic_resolution_rate = round(auto_publish_count / total, 4)
@@ -89,6 +97,7 @@ class InteractionMetricsRepository:
                 "request_info_count": request_info_count,
                 "resolved_count": resolved_count,
                 "resolved_externally_count": resolved_externally_count,
+                "without_decision_count": without_decision_count,
                 "automatic_resolution_rate": automatic_resolution_rate,
                 "avg_confidence_score": avg_confidence_score,
             }
