@@ -1,4 +1,4 @@
-# M7 InternalAPI, agrega metricas sobre interaction para el dashboard (TF-160)
+# M7 InternalAPI, agrega metricas sobre interaction para el dashboard
 
 from datetime import datetime
 from sqlalchemy import text
@@ -104,12 +104,15 @@ class InteractionMetricsRepository:
         finally:
             db.close()
             
-    # desglosa la tasa de resolucion automatica por categoria, para ver en que temas el sistema resuelve mejor
-    def get_by_category(self, project_id: str | None = None) -> list[dict]:
+    # desglosa la tasa de resolucion automatica y la confianza media por categoria, para ver en que temas el sistema resuelve mejor
+    # acepta los mismos filtros que el resumen, se excluyen las interacciones sin decision y las que no tienen categoria
+    def get_by_category(self, project_id: str | None = None, from_date: str | datetime | None = None,
+                        to_date: str | datetime | None = None, category: str | None = None,
+                        decision: str | None = None, to_date_exclusive: bool = False) -> list[dict]:
         db = next(get_db())
         try:
             query = """
-                SELECT tc.name AS category, i.decision
+                SELECT tc.name AS category, i.decision, i.confidence_score
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
                 JOIN ticket_category tc ON i.category_id = tc.id
@@ -120,26 +123,51 @@ class InteractionMetricsRepository:
             if project_id:
                 query += " AND t.project_id = :project_id"
                 params["project_id"] = project_id
+            if category:
+                query += " AND tc.name = :category"
+                params["category"] = category
+            if decision:
+                query += " AND i.decision = :decision"
+                params["decision"] = decision
+            if from_date:
+                query += " AND i.created_at >= :from_date"
+                params["from_date"] = from_date
+            if to_date:
+                operator = "<" if to_date_exclusive else "<="
+                query += f" AND i.created_at {operator} :to_date"
+                params["to_date"] = to_date
 
             rows = db.execute(text(query), params).fetchall()
 
             totals_by_category = {}
             auto_publish_by_category = {}
+            confidence_sum_by_category = {}
+            confidence_count_by_category = {}
 
             for row in rows:
-                category = row.category
-                totals_by_category[category] = totals_by_category.get(category, 0) + 1
+                category_name = row.category
+                totals_by_category[category_name] = totals_by_category.get(category_name, 0) + 1
                 if row.decision == "AUTO_PUBLISH":
-                    auto_publish_by_category[category] = auto_publish_by_category.get(category, 0) + 1
+                    auto_publish_by_category[category_name] = auto_publish_by_category.get(category_name, 0) + 1
+                if row.confidence_score is not None:
+                    confidence_sum_by_category[category_name] = confidence_sum_by_category.get(category_name, 0) + row.confidence_score
+                    confidence_count_by_category[category_name] = confidence_count_by_category.get(category_name, 0) + 1
 
             result = []
-            for category, total in totals_by_category.items():
-                auto_publish = auto_publish_by_category.get(category, 0)
+            for category_name, total in totals_by_category.items():
+                auto_publish = auto_publish_by_category.get(category_name, 0)
+                scored = confidence_count_by_category.get(category_name, 0)
+                if scored > 0:
+                    avg_confidence_score = round(confidence_sum_by_category[category_name] / scored, 4)
+                else:
+                    avg_confidence_score = None
+
                 result.append({
-                    "category": category,
+                    "category": category_name,
                     "total_interactions": total,
                     "auto_publish_count": auto_publish,
                     "automatic_resolution_rate": round(auto_publish / total, 4),
+                    "avg_confidence_score": avg_confidence_score,
                 })
 
             result.sort(key=lambda r: r["total_interactions"], reverse=True)
