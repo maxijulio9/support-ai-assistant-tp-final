@@ -12,16 +12,19 @@ export class MetricsService {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfiguration);
 
-  getByCategory(): Observable<CategoryMetric[]> {
-    return getMetricsByCategoryApiMetricsByCategoryGet(this.http, this.apiConfig.rootUrl, {}).pipe(
-      map((response) => response.body.categories),
-    );
+  getByCategory(tz: string, fromDate?: string, toDate?: string): Observable<CategoryMetric[]> {
+    return getMetricsByCategoryApiMetricsByCategoryGet(this.http, this.apiConfig.rootUrl, {
+      tz,
+      from_date: fromDate,
+      to_date: toDate,
+    }).pipe(map((response) => response.body.categories));
   }
 
-  getSummary(fromDate: string, toDate: string): Observable<MetricsSummaryResponse> {
+  getSummary(fromDate: string, toDate: string, tz: string): Observable<MetricsSummaryResponse> {
     return getMetricsSummaryApiMetricsSummaryGet(this.http, this.apiConfig.rootUrl, {
       from_date: fromDate,
       to_date: toDate,
+      tz,
     }).pipe(map((response) => response.body));
   }
 }

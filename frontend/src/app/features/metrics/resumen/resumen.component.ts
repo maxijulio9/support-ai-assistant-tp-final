@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
-import { defaultMetricsRange, previousPeriodOf, resolveDateRange } from '../../dashboard/period';
+import { METRICS_TIMEZONE, defaultMetricsDayRange, previousCalendarDayRange, resolveDateRange } from '../../dashboard/period';
 import { percentGrowth, ppDelta, rate, rawDelta } from '../../../shared/kpi-metrics';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
 import { KpiCardComponent } from './kpi-card/kpi-card.component';
@@ -29,7 +29,7 @@ export class ResumenComponent {
   private readonly metricsService = inject(MetricsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly defaultRange = defaultMetricsRange();
+  private readonly defaultRange = defaultMetricsDayRange();
 
   readonly state = signal<ResumenState>('loading');
   readonly summary = signal<MetricsSummaryResponse | null>(null);
@@ -97,9 +97,9 @@ export class ResumenComponent {
         switchMap((current) => {
           this.state.set('loading');
           this.previousSummary.set(null);
-          const previous = previousPeriodOf(current);
+          const previous = previousCalendarDayRange(current);
 
-          const summary$ = this.metricsService.getSummary(current.from, current.to).pipe(
+          const summary$ = this.metricsService.getSummary(current.from, current.to, METRICS_TIMEZONE).pipe(
             tap((summary) => {
               this.summary.set(summary);
               this.state.set(summary.total_interactions === 0 ? 'empty' : 'loaded');
@@ -113,7 +113,7 @@ export class ResumenComponent {
 
           // El periodo anterior es solo para el delta de cada KPI: si falla,
           // el KPI se muestra sin variacion, no bloquea el resto.
-          const previousSummary$ = this.metricsService.getSummary(previous.from, previous.to).pipe(
+          const previousSummary$ = this.metricsService.getSummary(previous.from, previous.to, METRICS_TIMEZONE).pipe(
             tap((summary) => this.previousSummary.set(summary)),
             catchError(() => {
               this.previousSummary.set(null);
@@ -127,10 +127,10 @@ export class ResumenComponent {
       )
       .subscribe();
 
-    // getByCategory no acepta rango de fechas en el contrato, asi que no
-    // depende del from/to: se pide una sola vez.
+    // getByCategory se pide una sola vez, sin fecha: todavia no depende del
+    // from/to seleccionado (ver reporte de duplicacion con MetricsComponent).
     this.metricsService
-      .getByCategory()
+      .getByCategory(METRICS_TIMEZONE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (categories) => this.byCategory.set(categories),

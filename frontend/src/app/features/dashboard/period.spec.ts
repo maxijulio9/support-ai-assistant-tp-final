@@ -1,32 +1,42 @@
 import {
-  calendarDaysToInstantRange,
   computePeriodRanges,
-  defaultMetricsRange,
-  lastDayOfInstantRange,
+  parseIsoDateLocal,
+  previousCalendarDayRange,
   previousPeriodOf,
   resolveDateRange,
+  toIsoDate,
 } from './period';
 
 describe('resolveDateRange', () => {
-  const fallback = { from: '2026-09-13T00:00:00.000Z', to: '2026-10-13T00:00:00.000Z' };
+  const fallback = { from: '2026-09-13', to: '2026-10-13' };
 
-  it('from y to ambos presentes: devuelve esos dos', () => {
-    const result = resolveDateRange('2026-09-01T00:00:00.000Z', '2026-09-30T00:00:00.000Z', fallback);
-    expect(result).toEqual({ from: '2026-09-01T00:00:00.000Z', to: '2026-09-30T00:00:00.000Z' });
+  it('from y to ambos presentes y validos: devuelve esos dos', () => {
+    const result = resolveDateRange('2026-09-01', '2026-09-30', fallback);
+    expect(result).toEqual({ from: '2026-09-01', to: '2026-09-30' });
   });
 
   it('solo from presente (sin to): devuelve el fallback completo, no mezcla', () => {
-    const result = resolveDateRange('2026-09-01T00:00:00.000Z', null, fallback);
+    const result = resolveDateRange('2026-09-01', null, fallback);
     expect(result).toEqual(fallback);
   });
 
   it('solo to presente (sin from): devuelve el fallback completo, no mezcla', () => {
-    const result = resolveDateRange(null, '2026-09-30T00:00:00.000Z', fallback);
+    const result = resolveDateRange(null, '2026-09-30', fallback);
     expect(result).toEqual(fallback);
   });
 
   it('ninguno presente: devuelve el fallback completo', () => {
     const result = resolveDateRange(null, null, fallback);
+    expect(result).toEqual(fallback);
+  });
+
+  it('formato invalido (instante ISO de una URL vieja): devuelve el fallback', () => {
+    const result = resolveDateRange('2026-09-01T00:00:00.000Z', '2026-09-30T00:00:00.000Z', fallback);
+    expect(result).toEqual(fallback);
+  });
+
+  it('fecha calendario invalida (30 de febrero): devuelve el fallback', () => {
+    const result = resolveDateRange('2026-02-30', '2026-03-01', fallback);
     expect(result).toEqual(fallback);
   });
 });
@@ -117,77 +127,60 @@ describe('computePeriodRanges', () => {
   });
 });
 
-describe('calendarDaysToInstantRange', () => {
-  it('from es la medianoche local del primer dia, to es la medianoche local del dia siguiente al ultimo (la hora de los Date recibidos se ignora)', () => {
-    const firstDay = new Date(2026, 8, 14, 10, 0, 0);
-    const lastDay = new Date(2026, 9, 14, 23, 59, 0);
-    const range = calendarDaysToInstantRange(firstDay, lastDay);
-
-    expect(range.from).toBe(new Date(2026, 8, 14, 0, 0, 0, 0).toISOString());
-    expect(range.to).toBe(new Date(2026, 9, 15, 0, 0, 0, 0).toISOString());
+describe('toIsoDate', () => {
+  it('formatea año, mes y dia con ceros a la izquierda', () => {
+    expect(toIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 
-  it('un solo dia: el extremo superior exclusivo deja un rango de exactamente 24hs, incluyendo el dia completo', () => {
-    const day = new Date(2026, 8, 20, 12, 0, 0);
-    const range = calendarDaysToInstantRange(day, day);
-
-    const durationMs = new Date(range.to).getTime() - new Date(range.from).getTime();
-    expect(durationMs).toBe(24 * 60 * 60 * 1000);
-  });
-
-  it('cruza el limite de un dia en UTC-3: 14 de septiembre a las 23:50 hora local sigue anclado al 14, aunque ese instante ya sea 15 de septiembre en UTC', () => {
-    const lateNightLocal = new Date(2026, 8, 14, 23, 50, 0);
-    const range = calendarDaysToInstantRange(lateNightLocal, lateNightLocal);
-
-    // Verificacion independiente del huso de la maquina: el dia local sigue
-    // siendo el 14, no el 15 (que es a lo que daria si se usaran getters UTC).
-    expect(range.from).toBe(new Date(2026, 8, 14, 0, 0, 0, 0).toISOString());
-    expect(range.to).toBe(new Date(2026, 8, 15, 0, 0, 0, 0).toISOString());
-
-    // Verificacion explicita en UTC-3 (America/Argentina/La_Rioja, el huso de
-    // este entorno): medianoche local del 14/sep es 03:00 UTC del mismo 14,
-    // no del 15 - el instante de las 23:50 local (02:50 UTC del 15) queda del
-    // lado correcto aunque su propio dia en UTC ya haya cruzado.
-    expect(range.from).toBe('2026-09-14T03:00:00.000Z');
-    expect(range.to).toBe('2026-09-15T03:00:00.000Z');
+  it('ignora la hora del Date recibido', () => {
+    expect(toIsoDate(new Date(2026, 8, 14, 23, 59, 59))).toBe('2026-09-14');
   });
 });
 
-describe('lastDayOfInstantRange', () => {
-  it('resta 1 ms al "to" exclusivo para caer dentro del ultimo dia elegido', () => {
-    const to = new Date(2026, 9, 15, 0, 0, 0, 0).toISOString();
-    const lastDay = lastDayOfInstantRange(to);
-
-    expect(lastDay.getFullYear()).toBe(2026);
-    expect(lastDay.getMonth()).toBe(9);
-    expect(lastDay.getDate()).toBe(14);
+describe('parseIsoDateLocal', () => {
+  it('parsea AAAA-MM-DD como fecha local, a medianoche', () => {
+    const date = parseIsoDateLocal('2026-09-14');
+    expect(date.getFullYear()).toBe(2026);
+    expect(date.getMonth()).toBe(8);
+    expect(date.getDate()).toBe(14);
+    expect(date.getHours()).toBe(0);
   });
 
-  it('es la inversa exacta del extremo superior de calendarDaysToInstantRange', () => {
-    const lastDay = new Date(2026, 8, 20);
-    const range = calendarDaysToInstantRange(lastDay, lastDay);
-    const recovered = lastDayOfInstantRange(range.to);
-
-    expect(recovered.getFullYear()).toBe(lastDay.getFullYear());
-    expect(recovered.getMonth()).toBe(lastDay.getMonth());
-    expect(recovered.getDate()).toBe(lastDay.getDate());
+  it('es la inversa exacta de toIsoDate', () => {
+    const day = '2026-12-31';
+    expect(toIsoDate(parseIsoDateLocal(day))).toBe(day);
   });
 });
 
-describe('defaultMetricsRange', () => {
-  it('ultimos 30 dias calendario incluyendo hoy: de "hace 29 dias" a hoy, medianoche local a medianoche local del dia siguiente', () => {
-    const now = new Date(2026, 9, 14, 16, 45, 0);
-    const range = defaultMetricsRange(now);
+describe('previousCalendarDayRange', () => {
+  it('misma cantidad de dias que current, termina el dia antes del primero de current', () => {
+    const current = { from: '2026-09-14', to: '2026-10-13' };
+    const previous = previousCalendarDayRange(current);
 
-    expect(range.from).toBe(new Date(2026, 8, 15, 0, 0, 0, 0).toISOString());
-    expect(range.to).toBe(new Date(2026, 9, 15, 0, 0, 0, 0).toISOString());
+    expect(previous.to).toBe('2026-09-13');
+    expect(previous.from).toBe('2026-08-15');
   });
 
-  it('cubre exactamente 30 dias completos, sin importar la hora de "now"', () => {
-    const now = new Date(2026, 9, 14, 9, 0, 0);
-    const range = defaultMetricsRange(now);
+  it('un solo dia', () => {
+    const current = { from: '2026-09-20', to: '2026-09-20' };
+    const previous = previousCalendarDayRange(current);
 
-    const durationMs = new Date(range.to).getTime() - new Date(range.from).getTime();
-    expect(durationMs).toBe(30 * 24 * 60 * 60 * 1000);
+    expect(previous).toEqual({ from: '2026-09-19', to: '2026-09-19' });
+  });
+
+  it('cruza el limite de un mes', () => {
+    const current = { from: '2026-10-01', to: '2026-10-05' };
+    const previous = previousCalendarDayRange(current);
+
+    expect(previous.to).toBe('2026-09-30');
+    expect(previous.from).toBe('2026-09-26');
+  });
+
+  it('cruza el limite de un año', () => {
+    const current = { from: '2027-01-01', to: '2027-01-10' };
+    const previous = previousCalendarDayRange(current);
+
+    expect(previous.to).toBe('2026-12-31');
+    expect(previous.from).toBe('2026-12-22');
   });
 });

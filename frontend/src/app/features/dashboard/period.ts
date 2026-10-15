@@ -46,39 +46,71 @@ export function computePeriodRanges(option: PeriodOption, now: Date = new Date()
   return { current, previous: previousPeriodOf(current) };
 }
 
-// Resuelve un rango a partir de dos valores de query param: solo se usan si
-// AMBOS (from y to) estan presentes juntos, como par atomico. Si falta
-// cualquiera de los dos, se cae al fallback completo (nunca se mezcla un
-// query param real con la mitad del fallback).
-export function resolveDateRange(from: string | null, to: string | null, fallback: PeriodRange): PeriodRange {
-  return from && to ? { from, to } : fallback;
+// --- Rango de dias de Metricas (AAAA-MM-DD + tz, contrato del backend) ---
+
+export interface DayRange {
+  from: string;
+  to: string;
 }
 
-// Convierte un rango de dias calendario (la hora de los Date recibidos se
-// ignora) a un rango de instantes en UTC: "from" es la medianoche local del
-// primer dia, "to" es la medianoche local del dia SIGUIENTE al ultimo, para
-// que el extremo superior sea exclusivo y el ultimo dia quede incluido
-// completo. Se usa para el selector de rango libre de Metricas, no para las
-// ventanas corredizas de Inicio.
-export function calendarDaysToInstantRange(firstDay: Date, lastDay: Date): PeriodRange {
-  const from = new Date(firstDay.getFullYear(), firstDay.getMonth(), firstDay.getDate());
-  const to = new Date(lastDay.getFullYear(), lastDay.getMonth(), lastDay.getDate() + 1);
-  return { from: from.toISOString(), to: to.toISOString() };
+export const METRICS_TIMEZONE = 'America/Argentina/La_Rioja';
+
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+// Dia calendario local en formato AAAA-MM-DD.
+export function toIsoDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-// Inversa del extremo superior de calendarDaysToInstantRange: recupera el
-// ultimo dia elegido a partir de un "to" exclusivo, restando 1 ms para caer
-// dentro de ese dia en vez de en la medianoche siguiente.
-export function lastDayOfInstantRange(to: string): Date {
-  return new Date(new Date(to).getTime() - 1);
+// Inversa de toIsoDate: parsea los componentes a mano para construir una
+// fecha local a medianoche. new Date('AAAA-MM-DD') se interpreta como UTC,
+// y en husos detras de UTC (como este) muestra el dia anterior.
+export function parseIsoDateLocal(day: string): Date {
+  const [year, month, date] = day.split('-').map(Number);
+  return new Date(year, month - 1, date);
+}
+
+// Formato AAAA-MM-DD y fecha calendario real (rechaza por ejemplo "30 de
+// febrero", que Date "arreglaria" corriendolo a marzo).
+function isValidIsoDate(value: string): boolean {
+  return ISO_DATE_PATTERN.test(value) && toIsoDate(parseIsoDateLocal(value)) === value;
+}
+
+// Resuelve un rango de dias a partir de dos valores de query param: solo se
+// usan si AMBOS estan presentes, con formato AAAA-MM-DD y son fechas
+// calendario validas (por ejemplo, una URL vieja con instantes ISO no pasa
+// la validacion). Si falta cualquiera de los dos o no son validos, se cae
+// al fallback completo.
+export function resolveDateRange(from: string | null, to: string | null, fallback: DayRange): DayRange {
+  if (from && to && isValidIsoDate(from) && isValidIsoDate(to)) {
+    return { from, to };
+  }
+  return fallback;
 }
 
 // Rango por defecto de Metricas: los ultimos 30 dias calendario incluyendo
-// hoy (de "hace 29 dias" a hoy), con el mismo criterio de extremo superior
-// exclusivo que calendarDaysToInstantRange. Distinto de
+// hoy (from = hoy menos 29 dias, to = hoy). Distinto de
 // computePeriodRanges('30d'), que es una ventana corrediza con la hora
 // incluida y sigue siendo la que usa Inicio.
-export function defaultMetricsRange(now: Date = new Date()): PeriodRange {
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
-  return calendarDaysToInstantRange(firstDay, now);
+export function defaultMetricsDayRange(now: Date = new Date()): DayRange {
+  const to = toIsoDate(now);
+  const from = toIsoDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29));
+  return { from, to };
+}
+
+// Periodo anterior en dias: misma cantidad de dias que "current", termina
+// el dia antes del primer dia de "current". Version en dias de
+// previousPeriodOf, para Metricas.
+export function previousCalendarDayRange(current: DayRange): DayRange {
+  const currentFrom = parseIsoDateLocal(current.from);
+  const currentTo = parseIsoDateLocal(current.to);
+  const dayCount = Math.round((currentTo.getTime() - currentFrom.getTime()) / MS_PER_DAY) + 1;
+
+  const to = new Date(currentFrom.getFullYear(), currentFrom.getMonth(), currentFrom.getDate() - 1);
+  const from = new Date(to.getFullYear(), to.getMonth(), to.getDate() - (dayCount - 1));
+
+  return { from: toIsoDate(from), to: toIsoDate(to) };
 }

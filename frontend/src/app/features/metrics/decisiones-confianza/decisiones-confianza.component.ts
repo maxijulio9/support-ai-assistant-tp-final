@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
-import { defaultMetricsRange, resolveDateRange } from '../../dashboard/period';
+import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 
@@ -36,7 +36,7 @@ export class DecisionesConfianzaComponent {
   private readonly metricsService = inject(MetricsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly defaultRange = defaultMetricsRange();
+  private readonly defaultRange = defaultMetricsDayRange();
 
   readonly state = signal<DecisionesConfianzaState>('loading');
   readonly summary = signal<MetricsSummaryResponse | null>(null);
@@ -68,7 +68,7 @@ export class DecisionesConfianzaComponent {
         map(([params]) => resolveDateRange(params.get('from'), params.get('to'), this.defaultRange)),
         switchMap((range) => {
           this.state.set('loading');
-          return this.metricsService.getSummary(range.from, range.to).pipe(
+          return this.metricsService.getSummary(range.from, range.to, METRICS_TIMEZONE).pipe(
             tap((summary) => {
               this.summary.set(summary);
               this.state.set(summary.total_interactions === 0 ? 'empty' : 'loaded');
