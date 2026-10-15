@@ -1,5 +1,4 @@
-# M7 InternalAPI, agrega metricas sobre interaction para el dashboard
-
+# M7 InternalAPI, agrega metricas sobre interaction para el dashboard 
 from datetime import datetime
 from sqlalchemy import text
 from app.core.database import get_db
@@ -17,7 +16,7 @@ class InteractionMetricsRepository:
         db = next(get_db())
         try:
             query = """
-                SELECT i.decision, i.confidence_score
+                SELECT i.decision, i.confidence_score, i.resolution_channel
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
             """
@@ -54,6 +53,7 @@ class InteractionMetricsRepository:
             resolved_count = 0
             resolved_externally_count = 0
             confidence_scores = []
+            channel_counts = {}
 
             for row in rows:
                 # las filas sin decision no entran en el total ni en los conteos, solo se cuentan aparte
@@ -77,6 +77,9 @@ class InteractionMetricsRepository:
                 if row.confidence_score is not None:
                     confidence_scores.append(row.confidence_score)
 
+                # el canal null reune las interacciones sin resolver y las anteriores a que se registrara el canal
+                channel_counts[row.resolution_channel] = channel_counts.get(row.resolution_channel, 0) + 1
+
             total = len(rows) - without_decision_count
 
             if total > 0:
@@ -89,6 +92,12 @@ class InteractionMetricsRepository:
             else:
                 avg_confidence_score = None
 
+            by_resolution_channel = []
+            for channel, count in channel_counts.items():
+                by_resolution_channel.append({"resolution_channel": channel, "count": count})
+            # mayor cantidad primero, y a igual cantidad el canal con nombre antes que el null y por orden alfabetico, asi el orden no cambia entre llamadas
+            by_resolution_channel.sort(key=lambda r: (-r["count"], r["resolution_channel"] is None, r["resolution_channel"] or ""))
+
             return {
                 "total_interactions": total,
                 "auto_publish_count": auto_publish_count,
@@ -100,6 +109,7 @@ class InteractionMetricsRepository:
                 "without_decision_count": without_decision_count,
                 "automatic_resolution_rate": automatic_resolution_rate,
                 "avg_confidence_score": avg_confidence_score,
+                "by_resolution_channel": by_resolution_channel,
             }
         finally:
             db.close()
