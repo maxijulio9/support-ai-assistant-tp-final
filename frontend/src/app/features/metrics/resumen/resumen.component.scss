@@ -170,6 +170,40 @@
   height: 1.5rem;
 }
 
+.resumen-daily-chart {
+  width: 100%;
+  height: 280px;
+}
+
+.resumen-daily-error {
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.resumen-daily-table-wrapper {
+  overflow-x: auto;
+}
+
+.resumen-daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+}
+
+.resumen-daily-table th,
+.resumen-daily-table td {
+  text-align: left;
+  padding: var(--app-space-xs) var(--app-space-xs) var(--app-space-xs) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  white-space: nowrap;
+}
+
+.resumen-daily-table th {
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+}
+
 @media (max-width: 767.98px) {
   .resumen-kpis {
     grid-template-columns: 1fr;
