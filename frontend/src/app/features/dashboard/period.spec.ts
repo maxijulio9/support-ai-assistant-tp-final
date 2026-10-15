@@ -1,4 +1,11 @@
-import { computePeriodRanges, previousPeriodOf, resolveDateRange } from './period';
+import {
+  calendarDaysToInstantRange,
+  computePeriodRanges,
+  defaultMetricsRange,
+  lastDayOfInstantRange,
+  previousPeriodOf,
+  resolveDateRange,
+} from './period';
 
 describe('resolveDateRange', () => {
   const fallback = { from: '2026-09-13T00:00:00.000Z', to: '2026-10-13T00:00:00.000Z' };
@@ -107,5 +114,80 @@ describe('computePeriodRanges', () => {
     // si usaran medianoche, current.to seria distinto de "now" exacto
     expect(current7d.to).toBe(now.toISOString());
     expect(current30d.to).toBe(now.toISOString());
+  });
+});
+
+describe('calendarDaysToInstantRange', () => {
+  it('from es la medianoche local del primer dia, to es la medianoche local del dia siguiente al ultimo (la hora de los Date recibidos se ignora)', () => {
+    const firstDay = new Date(2026, 8, 14, 10, 0, 0);
+    const lastDay = new Date(2026, 9, 14, 23, 59, 0);
+    const range = calendarDaysToInstantRange(firstDay, lastDay);
+
+    expect(range.from).toBe(new Date(2026, 8, 14, 0, 0, 0, 0).toISOString());
+    expect(range.to).toBe(new Date(2026, 9, 15, 0, 0, 0, 0).toISOString());
+  });
+
+  it('un solo dia: el extremo superior exclusivo deja un rango de exactamente 24hs, incluyendo el dia completo', () => {
+    const day = new Date(2026, 8, 20, 12, 0, 0);
+    const range = calendarDaysToInstantRange(day, day);
+
+    const durationMs = new Date(range.to).getTime() - new Date(range.from).getTime();
+    expect(durationMs).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it('cruza el limite de un dia en UTC-3: 14 de septiembre a las 23:50 hora local sigue anclado al 14, aunque ese instante ya sea 15 de septiembre en UTC', () => {
+    const lateNightLocal = new Date(2026, 8, 14, 23, 50, 0);
+    const range = calendarDaysToInstantRange(lateNightLocal, lateNightLocal);
+
+    // Verificacion independiente del huso de la maquina: el dia local sigue
+    // siendo el 14, no el 15 (que es a lo que daria si se usaran getters UTC).
+    expect(range.from).toBe(new Date(2026, 8, 14, 0, 0, 0, 0).toISOString());
+    expect(range.to).toBe(new Date(2026, 8, 15, 0, 0, 0, 0).toISOString());
+
+    // Verificacion explicita en UTC-3 (America/Argentina/La_Rioja, el huso de
+    // este entorno): medianoche local del 14/sep es 03:00 UTC del mismo 14,
+    // no del 15 - el instante de las 23:50 local (02:50 UTC del 15) queda del
+    // lado correcto aunque su propio dia en UTC ya haya cruzado.
+    expect(range.from).toBe('2026-09-14T03:00:00.000Z');
+    expect(range.to).toBe('2026-09-15T03:00:00.000Z');
+  });
+});
+
+describe('lastDayOfInstantRange', () => {
+  it('resta 1 ms al "to" exclusivo para caer dentro del ultimo dia elegido', () => {
+    const to = new Date(2026, 9, 15, 0, 0, 0, 0).toISOString();
+    const lastDay = lastDayOfInstantRange(to);
+
+    expect(lastDay.getFullYear()).toBe(2026);
+    expect(lastDay.getMonth()).toBe(9);
+    expect(lastDay.getDate()).toBe(14);
+  });
+
+  it('es la inversa exacta del extremo superior de calendarDaysToInstantRange', () => {
+    const lastDay = new Date(2026, 8, 20);
+    const range = calendarDaysToInstantRange(lastDay, lastDay);
+    const recovered = lastDayOfInstantRange(range.to);
+
+    expect(recovered.getFullYear()).toBe(lastDay.getFullYear());
+    expect(recovered.getMonth()).toBe(lastDay.getMonth());
+    expect(recovered.getDate()).toBe(lastDay.getDate());
+  });
+});
+
+describe('defaultMetricsRange', () => {
+  it('ultimos 30 dias calendario incluyendo hoy: de "hace 29 dias" a hoy, medianoche local a medianoche local del dia siguiente', () => {
+    const now = new Date(2026, 9, 14, 16, 45, 0);
+    const range = defaultMetricsRange(now);
+
+    expect(range.from).toBe(new Date(2026, 8, 15, 0, 0, 0, 0).toISOString());
+    expect(range.to).toBe(new Date(2026, 9, 15, 0, 0, 0, 0).toISOString());
+  });
+
+  it('cubre exactamente 30 dias completos, sin importar la hora de "now"', () => {
+    const now = new Date(2026, 9, 14, 9, 0, 0);
+    const range = defaultMetricsRange(now);
+
+    const durationMs = new Date(range.to).getTime() - new Date(range.from).getTime();
+    expect(durationMs).toBe(30 * 24 * 60 * 60 * 1000);
   });
 });
