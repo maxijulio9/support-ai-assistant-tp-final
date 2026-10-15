@@ -265,3 +265,71 @@ class InteractionMetricsRepository:
             return result
         finally:
             db.close()
+
+    # cuenta las interacciones por intervalo de confianza, diez intervalos de 0.1 de ancho entre 0.0 y 1.0
+    # cada intervalo incluye su limite inferior y deja afuera el superior, salvo el ultimo que incluye el 1.0
+    # las interacciones sin confidence_score se cuentan aparte, no entran en ningun intervalo
+    # acepta los mismos filtros que el resumen, y se excluyen las interacciones sin decision
+    def get_confidence_distribution(self, project_id: str | None = None, from_date: str | datetime | None = None,
+                                    to_date: str | datetime | None = None, category: str | None = None,
+                                    decision: str | None = None, to_date_exclusive: bool = False) -> dict:
+        db = next(get_db())
+        try:
+            query = """
+                SELECT i.confidence_score
+                FROM interaction i
+                JOIN ticket t ON i.ticket_id = t.id
+                LEFT JOIN ticket_category tc ON i.category_id = tc.id
+                WHERE i.decision IS NOT NULL
+            """
+            params = {}
+
+            if project_id:
+                query += " AND t.project_id = :project_id"
+                params["project_id"] = project_id
+            if category:
+                query += " AND tc.name = :category"
+                params["category"] = category
+            if decision:
+                query += " AND i.decision = :decision"
+                params["decision"] = decision
+            if from_date:
+                query += " AND i.created_at >= :from_date"
+                params["from_date"] = from_date
+            if to_date:
+                operator = "<" if to_date_exclusive else "<="
+                query += f" AND i.created_at {operator} :to_date"
+                params["to_date"] = to_date
+
+            rows = db.execute(text(query), params).fetchall()
+
+            interval_count = 10
+            counts = [0] * interval_count
+            without_score_count = 0
+
+            for row in rows:
+                if row.confidence_score is None:
+                    without_score_count += 1
+                    continue
+
+                # el redondeo a 6 decimales evita que un puntaje justo en un limite (por ejemplo 0.7) pase al intervalo de abajo por el error de coma flotante
+                index = int(round(row.confidence_score * interval_count, 6))
+                index = min(max(index, 0), interval_count - 1)
+                counts[index] += 1
+
+            intervals = []
+            for index, count in enumerate(counts):
+                intervals.append({
+                    "lower_bound": round(index / interval_count, 1),
+                    "upper_bound": round((index + 1) / interval_count, 1),
+                    "upper_inclusive": index == interval_count - 1,
+                    "count": count,
+                })
+
+            return {
+                "intervals": intervals,
+                "without_score_count": without_score_count,
+                "total_interactions": len(rows),
+            }
+        finally:
+            db.close()
