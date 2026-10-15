@@ -333,3 +333,51 @@ class InteractionMetricsRepository:
             }
         finally:
             db.close()
+
+    # cuenta las interacciones por dia de la semana y hora en el huso indicado
+    # solo devuelve las celdas que tienen interacciones, el servicio completa las vacias
+    # el rango ya viene calculado en utc, con el fin excluido, y se excluyen las interacciones sin decision
+    def get_heatmap(self, tz: ZoneInfo, project_id: str | None = None, from_date: datetime | None = None,
+                    to_date: datetime | None = None, category: str | None = None, decision: str | None = None) -> list[dict]:
+        db = next(get_db())
+        try:
+            query = """
+                SELECT i.created_at
+                FROM interaction i
+                JOIN ticket t ON i.ticket_id = t.id
+                LEFT JOIN ticket_category tc ON i.category_id = tc.id
+                WHERE i.decision IS NOT NULL
+            """
+            params = {}
+
+            if project_id:
+                query += " AND t.project_id = :project_id"
+                params["project_id"] = project_id
+            if category:
+                query += " AND tc.name = :category"
+                params["category"] = category
+            if decision:
+                query += " AND i.decision = :decision"
+                params["decision"] = decision
+            if from_date:
+                query += " AND i.created_at >= :from_date"
+                params["from_date"] = from_date
+            if to_date:
+                query += " AND i.created_at < :to_date"
+                params["to_date"] = to_date
+
+            rows = db.execute(text(query), params).fetchall()
+
+            counts = {}
+            for row in rows:
+                local_time = row.created_at.astimezone(tz)
+                key = (local_time.isoweekday(), local_time.hour)
+                counts[key] = counts.get(key, 0) + 1
+
+            result = []
+            for (weekday, hour), count in sorted(counts.items()):
+                result.append({"weekday": weekday, "hour": hour, "count": count})
+
+            return result
+        finally:
+            db.close()
