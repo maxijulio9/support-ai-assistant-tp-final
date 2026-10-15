@@ -39,7 +39,10 @@ from app.modules.internal_api.schemas import (
     MetricsByCategoryResponse,
     InteractionListResponse,
     InteractionDetailResponse,
-    
+    DailyMetricsResponse,
+    ConfidenceDistributionResponse,
+    HeatmapResponse,
+    ProjectThresholdsResponse,
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
@@ -52,6 +55,7 @@ from app.modules.internal_api.services.space_config_service import SpaceConfigur
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
+from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
 
@@ -69,6 +73,7 @@ _space_config_service = SpaceConfigurationService()
 _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
 _metrics_service = InteractionMetricsService()
+_thresholds_service = ProjectThresholdsService()
 _listing_service = InteractionListingService()
 
 
@@ -327,15 +332,71 @@ async def get_indexing_status(admin: AppUser = Depends(require_admin)):
 # resumen agregado de metricas de interacciones, para el dashboard 
 #
 @router.get("/api/metrics/summary", response_model=MetricsSummaryResponse)
-async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
-    result = _metrics_service.get_summary(project_id, from_date, to_date)
+async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                              category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_summary(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     return MetricsSummaryResponse(**result)
+
+# serie diaria de metricas en el huso pedido, para el dashboard
+@router.get("/api/metrics/daily", response_model=DailyMetricsResponse)
+async def get_metrics_daily(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                            category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_daily(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return DailyMetricsResponse(**result)
 
 # desglose de metricas por categoria, para el dashboard
 @router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
-async def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), project_id: str | None = None):
-    result = _metrics_service.get_by_category(project_id)
+async def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                                  category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_by_category(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     return MetricsByCategoryResponse(categories=result)
+
+# distribucion de las interacciones por intervalo de confianza, para el dashboard
+@router.get("/api/metrics/confidence-distribution", response_model=ConfidenceDistributionResponse)
+async def get_metrics_confidence_distribution(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                                              category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_confidence_distribution(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return ConfidenceDistributionResponse(**result)
+
+# mapa de calor de las interacciones por dia de la semana y hora, para el dashboard
+@router.get("/api/metrics/heatmap", response_model=HeatmapResponse)
+async def get_metrics_heatmap(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                              category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_heatmap(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return HeatmapResponse(**result)
+
+# umbrales de confianza y de similitud configurados por proyecto, para que el dashboard dibuje las zonas de decision
+@router.get("/api/metrics/thresholds", response_model=ProjectThresholdsResponse)
+async def get_metrics_thresholds(usuario: AppUser = Depends(get_current_user), project_id: str | None = None):
+    try:
+        result = _thresholds_service.get_thresholds(project_id)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    if project_id and not result:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    return ProjectThresholdsResponse(projects=result)
 
 # lista interacciones paginadas, con filtros, para el dashboard
 @router.get("/api/interactions", response_model=InteractionListResponse)

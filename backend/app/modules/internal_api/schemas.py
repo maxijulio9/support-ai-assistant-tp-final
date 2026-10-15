@@ -209,6 +209,10 @@ class IndexingStatusResponse(BaseModel):
     started_at: str = Field(description="marca de tiempo de inicio del trabajo")
     updated_at: str = Field(description="marca de tiempo de la ultima actualizacion del trabajo")
 
+class ResolutionChannelCount(BaseModel):
+    """Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."""
+    resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    count: int = Field(description="cantidad de interacciones con ese canal de resolucion")
 
 class MetricsSummaryResponse(BaseModel):
     """Resumen agregado de metricas de interacciones, para el dashboard."""
@@ -218,6 +222,8 @@ class MetricsSummaryResponse(BaseModel):
     escalate_count: int = Field(description="cantidad de interacciones escaladas a un agente humano")
     request_info_count: int = Field(description="cantidad de interacciones donde se le pidio mas informacion al usuario")
     resolved_count: int = Field(description="cantidad de tickets resueltos por el sistema")
+    without_decision_count: int = Field(description="cantidad de interacciones sin decision registrada en el periodo, no se suman a total_interactions ni a ningun otro conteo")
+    by_resolution_channel: list[ResolutionChannelCount] = Field(description="cantidad de interacciones por canal de resolucion, su suma coincide con total_interactions, el grupo con canal null reune las que todavia no se resolvieron y las anteriores a que se registrara el canal")
     resolved_externally_count: int = Field(description="cantidad de tickets resueltos por un humano fuera del sistema")
     automatic_resolution_rate: float = Field(description="porcentaje de interacciones resueltas sin intervencion humana")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones del periodo")
@@ -229,11 +235,70 @@ class CategoryMetric(BaseModel):
     total_interactions: int = Field(description="cantidad de interacciones de esa categoria")
     auto_publish_count: int = Field(description="cantidad de interacciones de esa categoria publicadas automaticamente")
     automatic_resolution_rate: float = Field(description="porcentaje de resolucion automatica dentro de esa categoria")
+    avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones de esa categoria, o null si ninguna tiene puntaje")
 
 
 class MetricsByCategoryResponse(BaseModel):
     """Desglose de metricas por categoria, para el dashboard."""
     categories: list[CategoryMetric]
+
+class DailyMetric(BaseModel):
+    """Metricas de un dia del calendario, en el huso horario de la respuesta."""
+    date: str = Field(description="dia del calendario en formato AAAA-MM-DD, en el huso horario de la respuesta")
+    total_interactions: int = Field(description="cantidad de interacciones con decision de ese dia")
+    auto_publish_count: int = Field(description="cantidad de interacciones publicadas automaticamente ese dia")
+    needs_review_count: int = Field(description="cantidad de interacciones pendientes de revision ese dia")
+    escalate_count: int = Field(description="cantidad de interacciones escaladas ese dia")
+    request_info_count: int = Field(description="cantidad de interacciones donde se pidio mas informacion ese dia")
+    resolved_count: int = Field(description="cantidad de interacciones resueltas por el sistema ese dia")
+    resolved_externally_count: int = Field(description="cantidad de interacciones resueltas por un humano fuera del sistema ese dia")
+    avg_confidence_score: float | None = Field(description="promedio del confidence_score de ese dia, o null si ninguna interaccion tiene puntaje")
+
+
+class DailyMetricsResponse(BaseModel):
+    """Serie diaria de metricas, para el dashboard."""
+    timezone: str = Field(description="huso horario con el que se armaron los dias, nombre IANA")
+    days: list[DailyMetric] = Field(description="un elemento por dia, de menor a mayor fecha, los dias sin interacciones traen todos los conteos en cero")
+class ConfidenceInterval(BaseModel):
+    """Un intervalo de la distribucion de confianza."""
+    lower_bound: float = Field(description="limite inferior del intervalo, siempre incluido")
+    upper_bound: float = Field(description="limite superior del intervalo, excluido salvo que upper_inclusive sea true")
+    upper_inclusive: bool = Field(description="true solo en el ultimo intervalo, que incluye el limite superior 1.0")
+    count: int = Field(description="cantidad de interacciones cuyo confidence_score cae en el intervalo")
+
+
+class ConfidenceDistributionResponse(BaseModel):
+    """Distribucion de las interacciones por intervalo de confianza, para el dashboard."""
+    intervals: list[ConfidenceInterval] = Field(description="diez intervalos de 0.1 de ancho entre 0.0 y 1.0, de menor a mayor")
+    without_score_count: int = Field(description="cantidad de interacciones sin confidence_score, por ejemplo las que se escalaron o cerraron sin generar una respuesta, no entran en ningun intervalo")
+    total_interactions: int = Field(description="cantidad de interacciones con decision bajo los filtros, es la suma de los intervalos mas without_score_count")
+
+
+class HeatmapCell(BaseModel):
+    """Una celda del mapa de calor, un dia de la semana y una hora."""
+    weekday: int = Field(description="dia de la semana de 1 (lunes) a 7 (domingo), en el huso horario de la respuesta")
+    hour: int = Field(description="hora del dia de 0 a 23, en el huso horario de la respuesta")
+    count: int = Field(description="cantidad de interacciones con decision en esa celda")
+
+
+class HeatmapResponse(BaseModel):
+    """Mapa de calor de las interacciones por dia de la semana y hora, para el dashboard."""
+    timezone: str = Field(description="huso horario con el que se armaron las celdas, nombre IANA")
+    total_interactions: int = Field(description="cantidad de interacciones con decision bajo los filtros, es la suma de todas las celdas")
+    cells: list[HeatmapCell] = Field(description="las 168 celdas, ordenadas por dia de la semana y despues por hora, las celdas sin interacciones traen count en cero")
+
+
+class ProjectThresholdsItem(BaseModel):
+    """Umbrales configurados de un proyecto."""
+    project_id: str = Field(description="id del proyecto")
+    threshold_auto_publish: float = Field(description="confidence_score minimo para publicar la respuesta sin revision humana")
+    threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana en vez de escalar directo")
+    similarity_threshold: float = Field(description="similarity_score minimo para que un chunk recuperado se use como contexto")
+
+
+class ProjectThresholdsResponse(BaseModel):
+    """Umbrales configurados por proyecto, para que el dashboard dibuje las zonas de decision."""
+    projects: list[ProjectThresholdsItem] = Field(description="un elemento por proyecto configurado, o solo el pedido si se indica project_id, los umbrales vacios traen el valor por defecto del pipeline")
 
 
 class InteractionListItem(BaseModel):
