@@ -41,6 +41,7 @@ from app.modules.internal_api.schemas import (
     InteractionDetailResponse,
     DailyMetricsResponse,
     ConfidenceDistributionResponse,
+    HeatmapResponse,
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
@@ -369,6 +370,17 @@ async def get_metrics_confidence_distribution(usuario: AppUser = Depends(get_cur
         raise HTTPException(status_code=422, detail=str(e))
 
     return ConfidenceDistributionResponse(**result)
+
+# mapa de calor de las interacciones por dia de la semana y hora, para el dashboard
+@router.get("/api/metrics/heatmap", response_model=HeatmapResponse)
+async def get_metrics_heatmap(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                              category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_heatmap(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return HeatmapResponse(**result)
 
 # lista interacciones paginadas, con filtros, para el dashboard
 @router.get("/api/interactions", response_model=InteractionListResponse)
