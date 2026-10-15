@@ -209,6 +209,10 @@ class IndexingStatusResponse(BaseModel):
     started_at: str = Field(description="marca de tiempo de inicio del trabajo")
     updated_at: str = Field(description="marca de tiempo de la ultima actualizacion del trabajo")
 
+class ResolutionChannelCount(BaseModel):
+    """Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."""
+    resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    count: int = Field(description="cantidad de interacciones con ese canal de resolucion")
 
 class MetricsSummaryResponse(BaseModel):
     """Resumen agregado de metricas de interacciones, para el dashboard."""
@@ -219,6 +223,7 @@ class MetricsSummaryResponse(BaseModel):
     request_info_count: int = Field(description="cantidad de interacciones donde se le pidio mas informacion al usuario")
     resolved_count: int = Field(description="cantidad de tickets resueltos por el sistema")
     without_decision_count: int = Field(description="cantidad de interacciones sin decision registrada en el periodo, no se suman a total_interactions ni a ningun otro conteo")
+    by_resolution_channel: list[ResolutionChannelCount] = Field(description="cantidad de interacciones por canal de resolucion, su suma coincide con total_interactions, el grupo con canal null reune las que todavia no se resolvieron y las anteriores a que se registrara el canal")
     resolved_externally_count: int = Field(description="cantidad de tickets resueltos por un humano fuera del sistema")
     automatic_resolution_rate: float = Field(description="porcentaje de interacciones resueltas sin intervencion humana")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones del periodo")
