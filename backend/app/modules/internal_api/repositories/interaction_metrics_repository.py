@@ -1,32 +1,46 @@
 # M7 InternalAPI, agrega metricas sobre interaction para el dashboard (TF-160)
 
+from datetime import datetime
 from sqlalchemy import text
 from app.core.database import get_db
 
 
 class InteractionMetricsRepository:
 
-    # agregado global de interacciones, opcionalmente filtrado por proyecto y rango de fechas
+    # agregado global de interacciones, opcionalmente filtrado por proyecto, categoria, decision y rango de fechas
     # se excluyen las filas con decision null, son datos viejos de antes de que se completara ese campo
-    def get_summary(self, project_id: str | None = None, from_date: str | None = None, to_date: str | None = None) -> dict:
+    # to_date_exclusive en True deja afuera el to_date, se usa cuando el rango ya viene calculado en utc
+    def get_summary(self, project_id: str | None = None, from_date: str | datetime | None = None,
+                    to_date: str | datetime | None = None, category: str | None = None,
+                    decision: str | None = None, to_date_exclusive: bool = False) -> dict:
         db = next(get_db())
         try:
             query = """
                 SELECT i.decision, i.confidence_score
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
-                WHERE i.decision IS NOT NULL
             """
+            # el join con la categoria solo se agrega si se filtra por ella, para no cambiar la consulta de antes
+            if category:
+                query += " LEFT JOIN ticket_category tc ON i.category_id = tc.id"
+            query += " WHERE i.decision IS NOT NULL"
             params = {}
 
             if project_id:
                 query += " AND t.project_id = :project_id"
                 params["project_id"] = project_id
+            if category:
+                query += " AND tc.name = :category"
+                params["category"] = category
+            if decision:
+                query += " AND i.decision = :decision"
+                params["decision"] = decision
             if from_date:
                 query += " AND i.created_at >= :from_date"
                 params["from_date"] = from_date
             if to_date:
-                query += " AND i.created_at <= :to_date"
+                operator = "<" if to_date_exclusive else "<="
+                query += f" AND i.created_at {operator} :to_date"
                 params["to_date"] = to_date
 
             rows = db.execute(text(query), params).fetchall()
