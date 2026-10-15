@@ -39,7 +39,7 @@ from app.modules.internal_api.schemas import (
     MetricsByCategoryResponse,
     InteractionListResponse,
     InteractionDetailResponse,
-    
+    DailyMetricsResponse,
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
@@ -335,6 +335,17 @@ async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), proj
         raise HTTPException(status_code=422, detail=str(e))
 
     return MetricsSummaryResponse(**result)
+
+# serie diaria de metricas en el huso pedido, para el dashboard
+@router.get("/api/metrics/daily", response_model=DailyMetricsResponse)
+async def get_metrics_daily(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                            category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_daily(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return DailyMetricsResponse(**result)
 
 # desglose de metricas por categoria, para el dashboard
 @router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
