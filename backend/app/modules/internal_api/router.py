@@ -338,8 +338,13 @@ async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), proj
 
 # desglose de metricas por categoria, para el dashboard
 @router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
-async def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), project_id: str | None = None):
-    result = _metrics_service.get_by_category(project_id)
+async def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                                  category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_by_category(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     return MetricsByCategoryResponse(categories=result)
 
 # lista interacciones paginadas, con filtros, para el dashboard
