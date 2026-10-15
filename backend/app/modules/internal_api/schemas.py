@@ -274,6 +274,20 @@ class ConfidenceDistributionResponse(BaseModel):
     total_interactions: int = Field(description="cantidad de interacciones con decision bajo los filtros, es la suma de los intervalos mas without_score_count")
 
 
+class HeatmapCell(BaseModel):
+    """Una celda del mapa de calor, un dia de la semana y una hora."""
+    weekday: int = Field(description="dia de la semana de 1 (lunes) a 7 (domingo), en el huso horario de la respuesta")
+    hour: int = Field(description="hora del dia de 0 a 23, en el huso horario de la respuesta")
+    count: int = Field(description="cantidad de interacciones con decision en esa celda")
+
+
+class HeatmapResponse(BaseModel):
+    """Mapa de calor de las interacciones por dia de la semana y hora, para el dashboard."""
+    timezone: str = Field(description="huso horario con el que se armaron las celdas, nombre IANA")
+    total_interactions: int = Field(description="cantidad de interacciones con decision bajo los filtros, es la suma de todas las celdas")
+    cells: list[HeatmapCell] = Field(description="las 168 celdas, ordenadas por dia de la semana y despues por hora, las celdas sin interacciones traen count en cero")
+
+
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
