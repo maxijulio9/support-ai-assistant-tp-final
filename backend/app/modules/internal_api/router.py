@@ -327,8 +327,13 @@ async def get_indexing_status(admin: AppUser = Depends(require_admin)):
 # resumen agregado de metricas de interacciones, para el dashboard 
 #
 @router.get("/api/metrics/summary", response_model=MetricsSummaryResponse)
-async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None):
-    result = _metrics_service.get_summary(project_id, from_date, to_date)
+async def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                              category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_summary(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
     return MetricsSummaryResponse(**result)
 
 # desglose de metricas por categoria, para el dashboard
