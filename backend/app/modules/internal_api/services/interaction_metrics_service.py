@@ -89,3 +89,25 @@ class InteractionMetricsService:
 
         start, end = resolve_period(from_date, to_date, resolve_timezone(tz))
         return self.metrics_repository.get_confidence_distribution(project_id, start, end, category, decision, to_date_exclusive=True)
+
+    # arma el mapa de calor por dia de la semana y hora en el huso pedido, con las 168 celdas y las vacias en cero
+    # weekday va de 1 (lunes) a 7 (domingo) y hour de 0 a 23, ambos en el huso de la respuesta
+    # from_date y to_date son dias del calendario en ese huso y ambos son inclusivos, el huso por defecto es America/Argentina/Buenos_Aires
+    # lanza ValueError si el huso o las fechas no son validos
+    def get_heatmap(self, project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                    category: str | None = None, decision: str | None = None, tz: str | None = None) -> dict:
+        zone = resolve_timezone(tz)
+        start, end = resolve_period(from_date, to_date, zone)
+        cells_with_data = self.metrics_repository.get_heatmap(zone, project_id, start, end, category, decision)
+
+        counts = {(cell["weekday"], cell["hour"]): cell["count"] for cell in cells_with_data}
+        cells = []
+        for weekday in range(1, 8):
+            for hour in range(24):
+                cells.append({"weekday": weekday, "hour": hour, "count": counts.get((weekday, hour), 0)})
+
+        return {
+            "timezone": zone.key,
+            "total_interactions": sum(counts.values()),
+            "cells": cells,
+        }
