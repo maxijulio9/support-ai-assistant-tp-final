@@ -18,6 +18,11 @@ export interface CategoryMetric {
   automatic_resolution_rate: number;
 
   /**
+   * promedio del confidence_score de las interacciones de esa categoria, o null si ninguna tiene puntaje
+   */
+  avg_confidence_score: (number | null);
+
+  /**
    * nombre de la categoria de soporte
    */
   category: string;

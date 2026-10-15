@@ -13,6 +13,9 @@ export interface GetMetricsSummaryApiMetricsSummaryGet$Params {
   project_id?: (string | null);
   from_date?: (string | null);
   to_date?: (string | null);
+  category?: (string | null);
+  decision?: (string | null);
+  tz?: (string | null);
 }
 
 export function getMetricsSummaryApiMetricsSummaryGet(http: HttpClient, rootUrl: string, params?: GetMetricsSummaryApiMetricsSummaryGet$Params, context?: HttpContext): Observable<StrictHttpResponse<MetricsSummaryResponse>> {
@@ -21,6 +24,9 @@ export function getMetricsSummaryApiMetricsSummaryGet(http: HttpClient, rootUrl:
     rb.query('project_id', params.project_id, {});
     rb.query('from_date', params.from_date, {});
     rb.query('to_date', params.to_date, {});
+    rb.query('category', params.category, {});
+    rb.query('decision', params.decision, {});
+    rb.query('tz', params.tz, {});
   }
 
   return http.request(

@@ -63,8 +63,16 @@ export type { GetIndexingStatusApiIndexingStatusGet$Params as GetIndexingStatusA
 export { getIndexingStatusApiIndexingStatusGet as getIndexingStatusApiIndexingStatusGet } from './fn/internal-api/get-indexing-status-api-indexing-status-get';
 export type { GetMetricsSummaryApiMetricsSummaryGet$Params as GetMetricsSummaryApiMetricsSummaryGet$Params } from './fn/internal-api/get-metrics-summary-api-metrics-summary-get';
 export { getMetricsSummaryApiMetricsSummaryGet as getMetricsSummaryApiMetricsSummaryGet } from './fn/internal-api/get-metrics-summary-api-metrics-summary-get';
+export type { GetMetricsDailyApiMetricsDailyGet$Params as GetMetricsDailyApiMetricsDailyGet$Params } from './fn/internal-api/get-metrics-daily-api-metrics-daily-get';
+export { getMetricsDailyApiMetricsDailyGet as getMetricsDailyApiMetricsDailyGet } from './fn/internal-api/get-metrics-daily-api-metrics-daily-get';
 export type { GetMetricsByCategoryApiMetricsByCategoryGet$Params as GetMetricsByCategoryApiMetricsByCategoryGet$Params } from './fn/internal-api/get-metrics-by-category-api-metrics-by-category-get';
 export { getMetricsByCategoryApiMetricsByCategoryGet as getMetricsByCategoryApiMetricsByCategoryGet } from './fn/internal-api/get-metrics-by-category-api-metrics-by-category-get';
+export type { GetMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet$Params as GetMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet$Params } from './fn/internal-api/get-metrics-confidence-distribution-api-metrics-confidence-distribution-get';
+export { getMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet as getMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet } from './fn/internal-api/get-metrics-confidence-distribution-api-metrics-confidence-distribution-get';
+export type { GetMetricsHeatmapApiMetricsHeatmapGet$Params as GetMetricsHeatmapApiMetricsHeatmapGet$Params } from './fn/internal-api/get-metrics-heatmap-api-metrics-heatmap-get';
+export { getMetricsHeatmapApiMetricsHeatmapGet as getMetricsHeatmapApiMetricsHeatmapGet } from './fn/internal-api/get-metrics-heatmap-api-metrics-heatmap-get';
+export type { GetMetricsThresholdsApiMetricsThresholdsGet$Params as GetMetricsThresholdsApiMetricsThresholdsGet$Params } from './fn/internal-api/get-metrics-thresholds-api-metrics-thresholds-get';
+export { getMetricsThresholdsApiMetricsThresholdsGet as getMetricsThresholdsApiMetricsThresholdsGet } from './fn/internal-api/get-metrics-thresholds-api-metrics-thresholds-get';
 export type { ListInteractionsApiInteractionsGet$Params as ListInteractionsApiInteractionsGet$Params } from './fn/internal-api/list-interactions-api-interactions-get';
 export { listInteractionsApiInteractionsGet as listInteractionsApiInteractionsGet } from './fn/internal-api/list-interactions-api-interactions-get';
 export type { GetInteractionDetailApiInteractionsInteractionIdGet$Params as GetInteractionDetailApiInteractionsInteractionIdGet$Params } from './fn/internal-api/get-interaction-detail-api-interactions-interaction-id-get';
