@@ -40,6 +40,7 @@ from app.modules.internal_api.schemas import (
     InteractionListResponse,
     InteractionDetailResponse,
     DailyMetricsResponse,
+    ConfidenceDistributionResponse,
 )
 from app.modules.internal_api.services.project_config_service import ProjectConfigService
 from app.modules.internal_api.services.interaction_review_service import InteractionReviewService
@@ -357,6 +358,17 @@ async def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), 
         raise HTTPException(status_code=422, detail=str(e))
 
     return MetricsByCategoryResponse(categories=result)
+
+# distribucion de las interacciones por intervalo de confianza, para el dashboard
+@router.get("/api/metrics/confidence-distribution", response_model=ConfidenceDistributionResponse)
+async def get_metrics_confidence_distribution(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                                              category: str | None = None, decision: str | None = None, tz: str | None = None):
+    try:
+        result = _metrics_service.get_confidence_distribution(project_id, from_date, to_date, category, decision, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return ConfidenceDistributionResponse(**result)
 
 # lista interacciones paginadas, con filtros, para el dashboard
 @router.get("/api/interactions", response_model=InteractionListResponse)
