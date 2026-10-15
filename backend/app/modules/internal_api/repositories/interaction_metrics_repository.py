@@ -1,5 +1,6 @@
 # M7 InternalAPI, agrega metricas sobre interaction para el dashboard 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from sqlalchemy import text
 from app.core.database import get_db
 
@@ -181,6 +182,86 @@ class InteractionMetricsRepository:
                 })
 
             result.sort(key=lambda r: r["total_interactions"], reverse=True)
+            return result
+        finally:
+            db.close()
+    
+    # cuenta las interacciones por dia del calendario en el huso indicado, con los conteos por decision y la confianza media del dia
+    # solo devuelve los dias que tienen interacciones, el servicio completa los dias vacios
+    # el rango ya viene calculado en utc, con el fin excluido, y se excluyen las interacciones sin decision
+    def get_daily(self, tz: ZoneInfo, project_id: str | None = None, from_date: datetime | None = None,
+                  to_date: datetime | None = None, category: str | None = None, decision: str | None = None) -> list[dict]:
+        db = next(get_db())
+        try:
+            query = """
+                SELECT i.created_at, i.decision, i.confidence_score
+                FROM interaction i
+                JOIN ticket t ON i.ticket_id = t.id
+                LEFT JOIN ticket_category tc ON i.category_id = tc.id
+                WHERE i.decision IS NOT NULL
+            """
+            params = {}
+
+            if project_id:
+                query += " AND t.project_id = :project_id"
+                params["project_id"] = project_id
+            if category:
+                query += " AND tc.name = :category"
+                params["category"] = category
+            if decision:
+                query += " AND i.decision = :decision"
+                params["decision"] = decision
+            if from_date:
+                query += " AND i.created_at >= :from_date"
+                params["from_date"] = from_date
+            if to_date:
+                query += " AND i.created_at < :to_date"
+                params["to_date"] = to_date
+
+            rows = db.execute(text(query), params).fetchall()
+
+            count_fields = {
+                "AUTO_PUBLISH": "auto_publish_count",
+                "NEEDS_REVIEW": "needs_review_count",
+                "ESCALATE": "escalate_count",
+                "REQUEST_INFO": "request_info_count",
+                "RESOLVED": "resolved_count",
+                "RESOLVED_EXTERNALLY": "resolved_externally_count",
+            }
+            days = {}
+            scores_by_day = {}
+
+            for row in rows:
+                day = row.created_at.astimezone(tz).date()
+
+                if day not in days:
+                    days[day] = {
+                        "date": day,
+                        "total_interactions": 0,
+                        "auto_publish_count": 0,
+                        "needs_review_count": 0,
+                        "escalate_count": 0,
+                        "request_info_count": 0,
+                        "resolved_count": 0,
+                        "resolved_externally_count": 0,
+                    }
+                    scores_by_day[day] = []
+
+                days[day]["total_interactions"] += 1
+                if row.decision in count_fields:
+                    days[day][count_fields[row.decision]] += 1
+                if row.confidence_score is not None:
+                    scores_by_day[day].append(row.confidence_score)
+
+            result = []
+            for day in sorted(days):
+                scores = scores_by_day[day]
+                if scores:
+                    days[day]["avg_confidence_score"] = round(sum(scores) / len(scores), 4)
+                else:
+                    days[day]["avg_confidence_score"] = None
+                result.append(days[day])
+
             return result
         finally:
             db.close()
