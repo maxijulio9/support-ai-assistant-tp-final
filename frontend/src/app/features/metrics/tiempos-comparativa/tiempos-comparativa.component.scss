@@ -2,18 +2,100 @@
   display: block;
 }
 
-.metrics-tab-placeholder {
+.tc-page {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--app-space-xs);
-  padding: var(--app-space-lg) var(--app-space-md);
+  gap: var(--app-space-sm);
+}
+
+.tc-card {
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--mat-sys-surface);
   border-radius: var(--app-radius-lg);
+  padding: var(--app-space-md);
+}
+
+.tc-card h2 {
+  font: var(--app-text-card-heading);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.tc-card-subtitle {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 var(--app-space-sm);
+}
+
+.tc-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--app-space-sm);
+}
+
+.tc-column {
+  box-sizing: border-box;
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-sm) var(--app-space-md);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+}
+
+.tc-column--auto {
+  background-color: color-mix(in srgb, var(--app-color-success) 8%, transparent);
+}
+
+.tc-column h3 {
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-xs);
+}
+
+.tc-column--auto h3 {
+  color: var(--app-color-success);
+}
+
+.tc-row-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  font: var(--app-text-secondary);
   color: var(--app-color-text-secondary);
 }
 
-.metrics-tab-placeholder p {
-  margin: 0;
+.tc-placeholder-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  text-align: center;
+  margin: var(--app-space-sm) 0 0;
+}
+
+.tc-lower {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: var(--app-space-sm);
+}
+
+.tc-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  text-align: center;
+  color: var(--app-color-text-secondary);
+}
+
+@media (max-width: 1099.98px) {
+  .tc-lower {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .tc-columns {
+    grid-template-columns: 1fr;
+  }
 }
