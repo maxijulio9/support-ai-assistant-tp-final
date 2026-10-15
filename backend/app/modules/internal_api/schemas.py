@@ -242,7 +242,23 @@ class MetricsByCategoryResponse(BaseModel):
     """Desglose de metricas por categoria, para el dashboard."""
     categories: list[CategoryMetric]
 
+class DailyMetric(BaseModel):
+    """Metricas de un dia del calendario, en el huso horario de la respuesta."""
+    date: str = Field(description="dia del calendario en formato AAAA-MM-DD, en el huso horario de la respuesta")
+    total_interactions: int = Field(description="cantidad de interacciones con decision de ese dia")
+    auto_publish_count: int = Field(description="cantidad de interacciones publicadas automaticamente ese dia")
+    needs_review_count: int = Field(description="cantidad de interacciones pendientes de revision ese dia")
+    escalate_count: int = Field(description="cantidad de interacciones escaladas ese dia")
+    request_info_count: int = Field(description="cantidad de interacciones donde se pidio mas informacion ese dia")
+    resolved_count: int = Field(description="cantidad de interacciones resueltas por el sistema ese dia")
+    resolved_externally_count: int = Field(description="cantidad de interacciones resueltas por un humano fuera del sistema ese dia")
+    avg_confidence_score: float | None = Field(description="promedio del confidence_score de ese dia, o null si ninguna interaccion tiene puntaje")
 
+
+class DailyMetricsResponse(BaseModel):
+    """Serie diaria de metricas, para el dashboard."""
+    timezone: str = Field(description="huso horario con el que se armaron los dias, nombre IANA")
+    days: list[DailyMetric] = Field(description="un elemento por dia, de menor a mayor fecha, los dias sin interacciones traen todos los conteos en cero")
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
