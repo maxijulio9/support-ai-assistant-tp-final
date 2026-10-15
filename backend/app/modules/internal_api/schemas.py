@@ -230,6 +230,7 @@ class CategoryMetric(BaseModel):
     total_interactions: int = Field(description="cantidad de interacciones de esa categoria")
     auto_publish_count: int = Field(description="cantidad de interacciones de esa categoria publicadas automaticamente")
     automatic_resolution_rate: float = Field(description="porcentaje de resolucion automatica dentro de esa categoria")
+    avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones de esa categoria, o null si ninguna tiene puntaje")
 
 
 class MetricsByCategoryResponse(BaseModel):
