@@ -259,6 +259,21 @@ class DailyMetricsResponse(BaseModel):
     """Serie diaria de metricas, para el dashboard."""
     timezone: str = Field(description="huso horario con el que se armaron los dias, nombre IANA")
     days: list[DailyMetric] = Field(description="un elemento por dia, de menor a mayor fecha, los dias sin interacciones traen todos los conteos en cero")
+class ConfidenceInterval(BaseModel):
+    """Un intervalo de la distribucion de confianza."""
+    lower_bound: float = Field(description="limite inferior del intervalo, siempre incluido")
+    upper_bound: float = Field(description="limite superior del intervalo, excluido salvo que upper_inclusive sea true")
+    upper_inclusive: bool = Field(description="true solo en el ultimo intervalo, que incluye el limite superior 1.0")
+    count: int = Field(description="cantidad de interacciones cuyo confidence_score cae en el intervalo")
+
+
+class ConfidenceDistributionResponse(BaseModel):
+    """Distribucion de las interacciones por intervalo de confianza, para el dashboard."""
+    intervals: list[ConfidenceInterval] = Field(description="diez intervalos de 0.1 de ancho entre 0.0 y 1.0, de menor a mayor")
+    without_score_count: int = Field(description="cantidad de interacciones sin confidence_score, por ejemplo las que se escalaron o cerraron sin generar una respuesta, no entran en ningun intervalo")
+    total_interactions: int = Field(description="cantidad de interacciones con decision bajo los filtros, es la suma de los intervalos mas without_score_count")
+
+
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
