@@ -79,3 +79,13 @@ class InteractionMetricsService:
             "resolved_externally_count": 0,
             "avg_confidence_score": None,
         }
+
+    # arma la distribucion de confianza, con los mismos filtros y la misma lectura de fechas que el resumen
+    # lanza ValueError si el huso o las fechas no son validos
+    def get_confidence_distribution(self, project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                                    category: str | None = None, decision: str | None = None, tz: str | None = None) -> dict:
+        if tz is None:
+            return self.metrics_repository.get_confidence_distribution(project_id, from_date, to_date, category, decision)
+
+        start, end = resolve_period(from_date, to_date, resolve_timezone(tz))
+        return self.metrics_repository.get_confidence_distribution(project_id, start, end, category, decision, to_date_exclusive=True)
