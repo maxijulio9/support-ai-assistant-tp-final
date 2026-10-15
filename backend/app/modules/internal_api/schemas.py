@@ -218,6 +218,7 @@ class MetricsSummaryResponse(BaseModel):
     escalate_count: int = Field(description="cantidad de interacciones escaladas a un agente humano")
     request_info_count: int = Field(description="cantidad de interacciones donde se le pidio mas informacion al usuario")
     resolved_count: int = Field(description="cantidad de tickets resueltos por el sistema")
+    without_decision_count: int = Field(description="cantidad de interacciones sin decision registrada en el periodo, no se suman a total_interactions ni a ningun otro conteo")
     resolved_externally_count: int = Field(description="cantidad de tickets resueltos por un humano fuera del sistema")
     automatic_resolution_rate: float = Field(description="porcentaje de interacciones resueltas sin intervencion humana")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones del periodo")
