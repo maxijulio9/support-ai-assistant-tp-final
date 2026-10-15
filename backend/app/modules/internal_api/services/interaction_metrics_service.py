@@ -22,6 +22,12 @@ class InteractionMetricsService:
         start, end = resolve_period(from_date, to_date, resolve_timezone(tz))
         return self.metrics_repository.get_summary(project_id, start, end, category, decision, to_date_exclusive=True)
 
-    # arma el desglose de metricas por categoria, opcionalmente filtrado por proyecto
-    def get_by_category(self, project_id: str | None = None) -> list[dict]:
-        return self.metrics_repository.get_by_category(project_id)
+    # arma el desglose de metricas por categoria, con los mismos filtros y la misma lectura de fechas que el resumen
+    # lanza ValueError si el huso o las fechas no son validos
+    def get_by_category(self, project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
+                        category: str | None = None, decision: str | None = None, tz: str | None = None) -> list[dict]:
+        if tz is None:
+            return self.metrics_repository.get_by_category(project_id, from_date, to_date, category, decision)
+
+        start, end = resolve_period(from_date, to_date, resolve_timezone(tz))
+        return self.metrics_repository.get_by_category(project_id, start, end, category, decision, to_date_exclusive=True)
