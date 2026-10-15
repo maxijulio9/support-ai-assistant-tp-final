@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
-import { computePeriodRanges, resolveDateRange } from '../../dashboard/period';
+import { defaultMetricsRange, resolveDateRange } from '../../dashboard/period';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 
@@ -36,7 +36,7 @@ export class DecisionesConfianzaComponent {
   private readonly metricsService = inject(MetricsService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly defaultRange = computePeriodRanges('30d').current;
+  private readonly defaultRange = defaultMetricsRange();
 
   readonly state = signal<DecisionesConfianzaState>('loading');
   readonly summary = signal<MetricsSummaryResponse | null>(null);

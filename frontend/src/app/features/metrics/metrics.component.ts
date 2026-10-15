@@ -11,7 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MetricsService } from './metrics.service';
-import { computePeriodRanges, resolveDateRange } from '../dashboard/period';
+import { calendarDaysToInstantRange, defaultMetricsRange, lastDayOfInstantRange, resolveDateRange } from '../dashboard/period';
 import { STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
 import { CategoryMetric } from '../../api/models/category-metric';
 
@@ -50,11 +50,12 @@ export class MetricsComponent {
   readonly decisionFilterValue = signal<string | null>(null);
 
   // from/to viven en los query params, como par atomico (ver
-  // resolveDateRange). Si no estan los dos juntos, el default es los
-  // ultimos 30 dias reales (mismo criterio que Inicio), no un rango
-  // ilustrativo inventado - y ese default solo se aplica mientras el par
-  // este incompleto en la URL, nunca pisa una eleccion real del usuario.
-  private readonly defaultRange = computePeriodRanges('30d').current;
+  // resolveDateRange). Si no estan los dos juntos, el default son los
+  // ultimos 30 dias calendario incluyendo hoy (medianoche a medianoche
+  // local), no un rango ilustrativo inventado - y ese default solo se
+  // aplica mientras el par este incompleto en la URL, nunca pisa una
+  // eleccion real del usuario.
+  private readonly defaultRange = defaultMetricsRange();
 
   private readonly queryRange = toSignal(
     this.route.queryParamMap.pipe(
@@ -80,25 +81,30 @@ export class MetricsComponent {
 
     // Los controles del date-range-picker reflejan el estado real, que vive
     // en los query params (no en el componente): si se navega directo con
-    // ?from=...&to=..., el picker tiene que mostrar esos valores.
+    // ?from=...&to=..., el picker tiene que mostrar esos valores. "to" es
+    // un extremo exclusivo (medianoche del dia siguiente al ultimo elegido),
+    // asi que para el picker se mapea de vuelta al ultimo dia real.
     effect(() => {
       this.rangeStart.setValue(new Date(this.fromParam()), { emitEvent: false });
-      this.rangeEnd.setValue(new Date(this.toParam()), { emitEvent: false });
+      this.rangeEnd.setValue(lastDayOfInstantRange(this.toParam()), { emitEvent: false });
     });
   }
 
   // Se dispara una sola vez, cuando el calendario se cierra (selection
   // completa o el usuario lo descarta) - no en cada clic individual. Si el
   // usuario cerro sin completar el rango, rangeEnd queda null y no se
-  // navega.
+  // navega. from es la medianoche local del primer dia elegido; to es la
+  // medianoche local del dia SIGUIENTE al ultimo, para no dejar afuera el
+  // tramo final del ultimo dia.
   onRangeChanged(): void {
     const start = this.rangeStart.value;
     const end = this.rangeEnd.value;
     if (!start || !end) return;
 
+    const range = calendarDaysToInstantRange(start, end);
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { from: start.toISOString(), to: end.toISOString() },
+      queryParams: { from: range.from, to: range.to },
       queryParamsHandling: 'merge',
     });
   }
