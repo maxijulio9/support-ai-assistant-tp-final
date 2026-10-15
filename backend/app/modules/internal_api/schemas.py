@@ -288,6 +288,19 @@ class HeatmapResponse(BaseModel):
     cells: list[HeatmapCell] = Field(description="las 168 celdas, ordenadas por dia de la semana y despues por hora, las celdas sin interacciones traen count en cero")
 
 
+class ProjectThresholdsItem(BaseModel):
+    """Umbrales configurados de un proyecto."""
+    project_id: str = Field(description="id del proyecto")
+    threshold_auto_publish: float = Field(description="confidence_score minimo para publicar la respuesta sin revision humana")
+    threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana en vez de escalar directo")
+    similarity_threshold: float = Field(description="similarity_score minimo para que un chunk recuperado se use como contexto")
+
+
+class ProjectThresholdsResponse(BaseModel):
+    """Umbrales configurados por proyecto, para que el dashboard dibuje las zonas de decision."""
+    projects: list[ProjectThresholdsItem] = Field(description="un elemento por proyecto configurado, o solo el pedido si se indica project_id, los umbrales vacios traen el valor por defecto del pipeline")
+
+
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
