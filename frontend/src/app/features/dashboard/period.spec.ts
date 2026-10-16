@@ -1,5 +1,6 @@
 import {
   computePeriodRanges,
+  daysInRange,
   parseIsoDateLocal,
   previousCalendarDayRange,
   previousPeriodOf,
@@ -182,5 +183,23 @@ describe('previousCalendarDayRange', () => {
 
     expect(previous.to).toBe('2026-12-31');
     expect(previous.from).toBe('2026-12-22');
+  });
+});
+
+describe('daysInRange', () => {
+  it('un solo dia (from === to) cuenta como 1', () => {
+    expect(daysInRange({ from: '2026-05-10', to: '2026-05-10' })).toBe(1);
+  });
+
+  it('366 dias exactos: un año bisiesto completo, de 1/1 a 31/12', () => {
+    expect(daysInRange({ from: '2024-01-01', to: '2024-12-31' })).toBe(366);
+  });
+
+  it('367 dias: un dia mas que el limite del contrato de /api/metrics/daily', () => {
+    expect(daysInRange({ from: '2024-01-01', to: '2025-01-01' })).toBe(367);
+  });
+
+  it('cruza un 29 de febrero: la cuenta no asume años de 365 dias', () => {
+    expect(daysInRange({ from: '2023-03-01', to: '2024-03-01' })).toBe(367);
   });
 });

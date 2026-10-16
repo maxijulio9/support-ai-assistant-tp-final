@@ -8,20 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
-import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
+import { DECISION_SEGMENTS, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 
 export type DecisionesConfianzaState = 'loading' | 'error' | 'empty' | 'loaded';
-
-// Campo de MetricsSummaryResponse que corresponde a cada decision, en el
-// mismo orden que STATUS_FILTER_OPTIONS, para no inventar ni el orden ni las
-// etiquetas. Duplicado de dashboard.component.ts (ver reporte de duplicacion).
-const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
-  AUTO_PUBLISH: 'auto_publish_count',
-  NEEDS_REVIEW: 'needs_review_count',
-  ESCALATE: 'escalate_count',
-  REQUEST_INFO: 'request_info_count',
-};
 
 @Component({
   selector: 'app-metrics-decisiones-confianza',
@@ -45,19 +35,27 @@ export class DecisionesConfianzaComponent {
   readonly totalInteractions = computed(() => this.summary()?.total_interactions ?? null);
 
   // --- Distribucion de decisiones ---
+  // "percent" (redondeado, con el ajuste de roundedSegmentPercentages) es el
+  // que se muestra como texto, para que la leyenda sume 100,0. "widthPercent"
+  // (crudo, sin redondear) es el que arma el ancho visual de la barra: ahi
+  // no hace falta "corregir" nada, es una proporcion continua.
   readonly decisionRows = computed(() => {
     const s = this.summary();
     if (!s) return [];
-    return STATUS_FILTER_OPTIONS.map((option) => {
-      const count = (s[DECISION_COUNT_FIELD[option.value]] as number) ?? 0;
-      return {
-        value: option.value,
-        label: option.label,
-        tone: decisionStatus(option.value).tone,
-        count,
-        percent: s.total_interactions > 0 ? (count / s.total_interactions) * 100 : 0,
-      };
-    });
+
+    const counts = DECISION_SEGMENTS.map((segment) => decisionSegmentValue(s, segment.key));
+    const total = s.total_interactions;
+    const widthPercents = counts.map((count) => (total > 0 ? (count / total) * 100 : 0));
+    const percents = roundedSegmentPercentages(counts, total);
+
+    return DECISION_SEGMENTS.map((segment, index) => ({
+      value: segment.key,
+      label: segment.label,
+      tone: segment.tone,
+      count: counts[index],
+      percent: percents[index],
+      widthPercent: widthPercents[index],
+    }));
   });
 
   private readonly retry$ = new Subject<void>();

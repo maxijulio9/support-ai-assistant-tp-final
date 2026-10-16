@@ -101,13 +101,20 @@ export function defaultMetricsDayRange(now: Date = new Date()): DayRange {
   return { from, to };
 }
 
+// Cantidad de dias que cubre el rango, contados inclusive (from y to
+// cuentan los dos). from === to cuenta como 1.
+export function daysInRange(range: DayRange): number {
+  const from = parseIsoDateLocal(range.from);
+  const to = parseIsoDateLocal(range.to);
+  return Math.round((to.getTime() - from.getTime()) / MS_PER_DAY) + 1;
+}
+
 // Periodo anterior en dias: misma cantidad de dias que "current", termina
 // el dia antes del primer dia de "current". Version en dias de
 // previousPeriodOf, para Metricas.
 export function previousCalendarDayRange(current: DayRange): DayRange {
+  const dayCount = daysInRange(current);
   const currentFrom = parseIsoDateLocal(current.from);
-  const currentTo = parseIsoDateLocal(current.to);
-  const dayCount = Math.round((currentTo.getTime() - currentFrom.getTime()) / MS_PER_DAY) + 1;
 
   const to = new Date(currentFrom.getFullYear(), currentFrom.getMonth(), currentFrom.getDate() - 1);
   const from = new Date(to.getFullYear(), to.getMonth(), to.getDate() - (dayCount - 1));

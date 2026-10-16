@@ -86,12 +86,16 @@
   background-color: var(--app-color-text-secondary);
 }
 
+.dc-distribution-segment--resolved {
+  background-color: var(--mat-sys-tertiary);
+}
+
 .dc-distribution-legend {
   list-style: none;
   margin: var(--app-space-sm) 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: var(--app-space-sm);
 }
 
@@ -124,6 +128,10 @@
 
 .dc-dot--neutral {
   background-color: var(--app-color-text-secondary);
+}
+
+.dc-dot--resolved {
+  background-color: var(--mat-sys-tertiary);
 }
 
 .dc-legend-value {
@@ -189,10 +197,4 @@
 
 .dc-skeleton-line--lg {
   height: 2.5rem;
-}
-
-@media (max-width: 767.98px) {
-  .dc-distribution-legend {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }

@@ -149,6 +149,12 @@
           </div>
         }
 
+        @if (dailyState() === 'rangeTooLong') {
+          <div class="resumen-placeholder">
+            <p style="margin: 0">La serie diaria admite hasta 366 días. Elegí un rango menor.</p>
+          </div>
+        }
+
         @if (dailyState() === 'loaded') {
           @if (dailyRows().length === 0) {
             <p class="resumen-empty">Todavía no hay datos diarios para mostrar.</p>

@@ -69,8 +69,8 @@
       } @else {
         <div class="dc-distribution-bar">
           @for (row of decisionRows(); track row.value) {
-            <div [class]="'dc-distribution-segment dc-distribution-segment--' + row.tone" [style.width.%]="row.percent">
-              @if (row.percent >= 5) {
+            <div [class]="'dc-distribution-segment dc-distribution-segment--' + row.tone" [style.width.%]="row.widthPercent">
+              @if (row.widthPercent >= 5) {
                 <span>{{ row.percent | number: '1.1-1' }}%</span>
               }
             </div>

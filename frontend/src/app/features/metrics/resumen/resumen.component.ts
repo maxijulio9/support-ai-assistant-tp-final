@@ -11,13 +11,15 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { MetricsService } from '../metrics.service';
 import {
   METRICS_TIMEZONE,
+  daysInRange,
   defaultMetricsDayRange,
   parseIsoDateLocal,
   previousCalendarDayRange,
   resolveDateRange,
 } from '../../dashboard/period';
 import { percentGrowth, ppDelta, rate, rawDelta } from '../../../shared/kpi-metrics';
-import { DecisionTone, decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
+import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
+import { DecisionSegmentTone, DECISION_SEGMENTS, decisionSegmentValue } from '../decision-segments';
 import { KpiCardComponent } from './kpi-card/kpi-card.component';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../../api/models/category-metric';
@@ -25,48 +27,16 @@ import { DailyMetric } from '../../../api/models/daily-metric';
 import { HeatmapCell } from '../../../api/models/heatmap-cell';
 
 export type ResumenState = 'loading' | 'error' | 'empty' | 'loaded';
-export type DailyState = 'loading' | 'error' | 'loaded';
+export type DailyState = 'loading' | 'error' | 'rangeTooLong' | 'loaded';
 export type HeatmapState = 'loading' | 'error' | 'loaded';
 
-type DailySegmentTone = DecisionTone | 'resolved';
-
-interface DailySegment {
-  key: string;
-  label: string;
-  tone: DailySegmentTone;
-}
-
-// Las 4 decisiones de siempre, mismo orden y color que la barra de
-// Decisiones y confianza, mas un quinto segmento local que agrupa las dos
-// decisiones que decisionStatus no cubre (resolved_count y
-// resolved_externally_count no son parte de las 4 decisiones mapeadas).
-const DAILY_SEGMENTS: DailySegment[] = [
-  ...STATUS_FILTER_OPTIONS.map((option) => ({
-    key: option.value,
-    label: option.label,
-    tone: decisionStatus(option.value).tone as DailySegmentTone,
-  })),
-  { key: 'RESOLVED_GROUP', label: 'Resueltas (incluye externas)', tone: 'resolved' },
-];
-
-// Campo de DailyMetric para cada una de las 4 decisiones mapeadas, mismo
-// orden que STATUS_FILTER_OPTIONS. Duplicado de dashboard.component.ts y
-// decisiones-confianza.component.ts (ver reporte de duplicacion).
-const DAILY_COUNT_FIELD: Record<string, keyof DailyMetric> = {
-  AUTO_PUBLISH: 'auto_publish_count',
-  NEEDS_REVIEW: 'needs_review_count',
-  ESCALATE: 'escalate_count',
-  REQUEST_INFO: 'request_info_count',
-};
-
-function dailySegmentValue(day: DailyMetric, key: string): number {
-  if (key === 'RESOLVED_GROUP') return day.resolved_count + day.resolved_externally_count;
-  return (day[DAILY_COUNT_FIELD[key]] as number) ?? 0;
-}
+// Limite del contrato de GET /api/metrics/daily (no es una regla de
+// calendario generica, por eso no va en period.ts).
+const MAX_DAILY_RANGE_DAYS = 366;
 
 // El canvas de echarts no puede resolver var(--token) solo, hace falta el
 // color literal, leido en runtime (mismo patron que decisions-donut).
-const DAILY_SEGMENT_CSS_VAR: Record<DailySegmentTone, string> = {
+const DAILY_SEGMENT_CSS_VAR: Record<DecisionSegmentTone, string> = {
   success: '--app-color-success',
   warning: '--app-color-warning',
   error: '--mat-sys-error',
@@ -74,7 +44,7 @@ const DAILY_SEGMENT_CSS_VAR: Record<DailySegmentTone, string> = {
   resolved: '--mat-sys-tertiary',
 };
 
-function resolveDailySegmentColor(tone: DailySegmentTone): string {
+function resolveDailySegmentColor(tone: DecisionSegmentTone): string {
   return getComputedStyle(document.documentElement).getPropertyValue(DAILY_SEGMENT_CSS_VAR[tone]).trim();
 }
 
@@ -183,13 +153,13 @@ export class ResumenComponent {
   readonly dailyState = signal<DailyState>('loading');
   readonly dailyMetrics = signal<DailyMetric[]>([]);
   readonly dailyAsTable = signal(false);
-  readonly dailySegments = DAILY_SEGMENTS;
+  readonly dailySegments = DECISION_SEGMENTS;
 
   readonly dailyRows = computed(() =>
     this.dailyMetrics().map((day) => ({
       date: day.date,
       label: formatShortDay(day.date),
-      segments: DAILY_SEGMENTS.map((segment) => dailySegmentValue(day, segment.key)),
+      segments: DECISION_SEGMENTS.map((segment) => decisionSegmentValue(day, segment.key)),
       total: day.total_interactions,
     })),
   );
@@ -200,16 +170,16 @@ export class ResumenComponent {
 
     return {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      legend: { data: DAILY_SEGMENTS.map((segment) => segment.label), bottom: 0 },
+      legend: { data: DECISION_SEGMENTS.map((segment) => segment.label), bottom: 0 },
       grid: { left: 40, right: 16, top: 24, bottom: 64, containLabel: false },
       xAxis: { type: 'category', data: days.map((day) => formatShortDay(day.date)) },
       yAxis: { type: 'value' },
-      series: DAILY_SEGMENTS.map((segment) => ({
+      series: DECISION_SEGMENTS.map((segment) => ({
         name: segment.label,
         type: 'bar',
         stack: 'total',
         itemStyle: { color: resolveDailySegmentColor(segment.tone) },
-        data: days.map((day) => dailySegmentValue(day, segment.key)),
+        data: days.map((day) => decisionSegmentValue(day, segment.key)),
       })),
     };
   });
@@ -300,17 +270,27 @@ export class ResumenComponent {
             }),
           );
 
-          const daily$ = this.metricsService.getDaily(current.from, current.to, METRICS_TIMEZONE).pipe(
-            tap((days) => {
-              this.dailyMetrics.set(days);
-              this.dailyState.set('loaded');
-            }),
-            catchError(() => {
-              this.dailyMetrics.set([]);
-              this.dailyState.set('error');
-              return EMPTY;
-            }),
-          );
+          // Mas de 366 dias: el backend responde 422, no tiene sentido
+          // pedirlo. Se corta antes, sin llamar a getDaily.
+          const daily$ =
+            daysInRange(current) > MAX_DAILY_RANGE_DAYS
+              ? of(null).pipe(
+                  tap(() => {
+                    this.dailyMetrics.set([]);
+                    this.dailyState.set('rangeTooLong');
+                  }),
+                )
+              : this.metricsService.getDaily(current.from, current.to, METRICS_TIMEZONE).pipe(
+                  tap((days) => {
+                    this.dailyMetrics.set(days);
+                    this.dailyState.set('loaded');
+                  }),
+                  catchError(() => {
+                    this.dailyMetrics.set([]);
+                    this.dailyState.set('error');
+                    return EMPTY;
+                  }),
+                );
 
           const heatmap$ = this.metricsService.getHeatmap(current.from, current.to, METRICS_TIMEZONE).pipe(
             tap((cells) => {
