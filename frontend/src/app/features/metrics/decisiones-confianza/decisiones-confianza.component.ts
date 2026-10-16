@@ -55,12 +55,22 @@ function renderConfidenceBar(_params: unknown, api: RenderItemApi) {
 // El canvas de echarts no puede resolver var(--token) solo, hace falta el
 // color literal, leido en runtime (mismo patron que el resto de los graficos
 // de Metricas).
-function resolveConfidenceColors(): { bar: string; autoPublish: string; needsReview: string } {
+interface ConfidenceColors {
+  bar: string;
+  barBorder: string;
+  autoPublish: string;
+  needsReview: string;
+  onColor: string;
+}
+
+function resolveConfidenceColors(): ConfidenceColors {
   const styles = getComputedStyle(document.documentElement);
   return {
     bar: styles.getPropertyValue('--mat-sys-primary').trim(),
+    barBorder: styles.getPropertyValue('--mat-sys-surface').trim(),
     autoPublish: styles.getPropertyValue('--app-color-success').trim(),
     needsReview: styles.getPropertyValue('--app-color-warning').trim(),
+    onColor: styles.getPropertyValue('--mat-sys-on-primary').trim(),
   };
 }
 
@@ -162,31 +172,43 @@ export class DecisionesConfianzaComponent {
     const intervals = this.intervals();
     const colors = resolveConfidenceColors();
     const agreed = this.thresholdsAgreement();
+    const maxCount = Math.max(1, ...intervals.map((interval) => interval.count));
 
+    // Las dos etiquetas van en forma de pildora, arriba del todo, una mas
+    // separada del eje que la otra (distance distinto) para que no se pisen
+    // si los dos umbrales caen cerca.
     const markLineData: Record<string, unknown>[] = [];
     if (agreed.thresholdAutoPublish !== null) {
       markLineData.push({
         xAxis: agreed.thresholdAutoPublish,
-        lineStyle: { color: colors.autoPublish },
+        lineStyle: { color: colors.autoPublish, width: 2 },
         label: {
           formatter: `Publicación automática ${agreed.thresholdAutoPublish.toFixed(2)}`,
-          color: colors.autoPublish,
-          rotate: 90,
-          align: 'right',
-          distance: 6,
+          position: 'end',
+          align: 'center',
+          distance: 8,
+          color: colors.onColor,
+          backgroundColor: colors.autoPublish,
+          padding: [2, 6],
+          borderRadius: 4,
+          fontSize: 11,
         },
       });
     }
     if (agreed.thresholdNeedsReview !== null) {
       markLineData.push({
         xAxis: agreed.thresholdNeedsReview,
-        lineStyle: { color: colors.needsReview },
+        lineStyle: { color: colors.needsReview, width: 2 },
         label: {
           formatter: `Revisión ${agreed.thresholdNeedsReview.toFixed(2)}`,
-          color: colors.needsReview,
-          rotate: 90,
-          align: 'left',
-          distance: 6,
+          position: 'end',
+          align: 'center',
+          distance: 28,
+          color: colors.onColor,
+          backgroundColor: colors.needsReview,
+          padding: [2, 6],
+          borderRadius: 4,
+          fontSize: 11,
         },
       });
     }
@@ -199,14 +221,18 @@ export class DecisionesConfianzaComponent {
           return `[${lower.toFixed(1)}, ${upper.toFixed(1)}${closingBracket} — ${count}`;
         },
       },
-      grid: { left: 50, right: 24, top: 24, bottom: 32, containLabel: false },
+      grid: { left: 50, right: 24, top: 64, bottom: 32, containLabel: false },
       xAxis: { type: 'value', min: 0, max: 1, interval: 0.1 },
-      yAxis: { type: 'value' },
+      // Eje de valor sobre una serie custom: no infiere el rango de "y" solo
+      // (los datos son [lower, upper, count], no [x, y]), asi que el maximo
+      // se fija a mano. minInterval 1 evita ticks fraccionarios en un eje de
+      // conteos.
+      yAxis: { type: 'value', min: 0, max: maxCount, minInterval: 1, name: 'Solicitudes' },
       series: [
         {
           type: 'custom',
           renderItem: renderConfidenceBar,
-          itemStyle: { color: colors.bar },
+          itemStyle: { color: colors.bar, borderColor: colors.barBorder, borderWidth: 2 },
           data: intervals.map((interval) => ({
             value: [interval.lower_bound, interval.upper_bound, interval.count],
             upperInclusive: interval.upper_inclusive,
@@ -214,6 +240,7 @@ export class DecisionesConfianzaComponent {
           markLine: {
             silent: true,
             symbol: 'none',
+            z: 10,
             data: markLineData,
           },
         },
