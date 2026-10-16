@@ -22,9 +22,11 @@ import { KpiCardComponent } from './kpi-card/kpi-card.component';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../../api/models/category-metric';
 import { DailyMetric } from '../../../api/models/daily-metric';
+import { HeatmapCell } from '../../../api/models/heatmap-cell';
 
 export type ResumenState = 'loading' | 'error' | 'empty' | 'loaded';
 export type DailyState = 'loading' | 'error' | 'loaded';
+export type HeatmapState = 'loading' | 'error' | 'loaded';
 
 type DailySegmentTone = DecisionTone | 'resolved';
 
@@ -82,6 +84,22 @@ const SHORT_DAY_FORMATTER = new Intl.DateTimeFormat('es', { day: 'numeric', mont
 // para timestamps, y aca "date" es un dia AAAA-MM-DD sin hora.
 function formatShortDay(day: string): string {
   return SHORT_DAY_FORMATTER.format(parseIsoDateLocal(day));
+}
+
+// Nombres de dia con Intl en vez de un array de strings a mano: 1/1/2024 es
+// lunes, asi que el indice 0 de esta semana de referencia es lunes y el 6 es
+// domingo, mismo orden que "weekday" del contrato (1=lunes...7=domingo).
+const WEEKDAY_LABELS = Array.from({ length: 7 }, (_, i) => {
+  const label = new Intl.DateTimeFormat('es', { weekday: 'long' }).format(new Date(2024, 0, 1 + i));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+});
+
+// El canvas de echarts no puede resolver var(--token) solo, hace falta el
+// color literal, leido en runtime (mismo mecanismo que decisions-donut y
+// la serie diaria de arriba).
+function resolveHeatmapColors(): [string, string] {
+  const styles = getComputedStyle(document.documentElement);
+  return [styles.getPropertyValue('--mat-sys-primary-container').trim(), styles.getPropertyValue('--mat-sys-primary').trim()];
 }
 
 @Component({
@@ -196,6 +214,47 @@ export class ResumenComponent {
     };
   });
 
+  // --- Mapa de calor de actividad ---
+  readonly heatmapState = signal<HeatmapState>('loading');
+  readonly heatmapCells = signal<HeatmapCell[]>([]);
+  readonly heatmapTotal = computed(() => this.heatmapCells().reduce((sum, cell) => sum + cell.count, 0));
+
+  readonly heatmapChartOptions = computed<EChartsCoreOption>(() => {
+    this.colorSchemeTick();
+    const cells = this.heatmapCells();
+    const maxCount = Math.max(1, ...cells.map((cell) => cell.count));
+    const [lightColor, fullColor] = resolveHeatmapColors();
+
+    return {
+      tooltip: {
+        position: 'top',
+        formatter: (params: { value: [number, number, number] }) => {
+          const [hour, weekdayIndex, count] = params.value;
+          return `${WEEKDAY_LABELS[weekdayIndex]}, ${hour}:00 — ${count}`;
+        },
+      },
+      grid: { left: 70, right: 16, top: 24, bottom: 70, containLabel: false },
+      xAxis: { type: 'category', data: Array.from({ length: 24 }, (_, hour) => `${hour}h`), splitArea: { show: true } },
+      yAxis: { type: 'category', data: WEEKDAY_LABELS, inverse: true, splitArea: { show: true } },
+      visualMap: {
+        type: 'continuous',
+        min: 0,
+        max: maxCount,
+        calculable: true,
+        orient: 'horizontal',
+        left: 'center',
+        bottom: 0,
+        inRange: { color: [lightColor, fullColor] },
+      },
+      series: [
+        {
+          type: 'heatmap',
+          data: cells.map((cell) => [cell.hour, cell.weekday - 1, cell.count]),
+        },
+      ],
+    };
+  });
+
   private readonly retry$ = new Subject<void>();
 
   constructor() {
@@ -216,6 +275,7 @@ export class ResumenComponent {
           this.state.set('loading');
           this.previousSummary.set(null);
           this.dailyState.set('loading');
+          this.heatmapState.set('loading');
           const previous = previousCalendarDayRange(current);
 
           const summary$ = this.metricsService.getSummary(current.from, current.to, METRICS_TIMEZONE).pipe(
@@ -252,7 +312,19 @@ export class ResumenComponent {
             }),
           );
 
-          return merge(summary$, previousSummary$, daily$);
+          const heatmap$ = this.metricsService.getHeatmap(current.from, current.to, METRICS_TIMEZONE).pipe(
+            tap((cells) => {
+              this.heatmapCells.set(cells);
+              this.heatmapState.set('loaded');
+            }),
+            catchError(() => {
+              this.heatmapCells.set([]);
+              this.heatmapState.set('error');
+              return EMPTY;
+            }),
+          );
+
+          return merge(summary$, previousSummary$, daily$, heatmap$);
         }),
         takeUntilDestroyed(this.destroyRef),
       )

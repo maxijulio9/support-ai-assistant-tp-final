@@ -4,9 +4,11 @@ import { Observable, map } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { getMetricsByCategoryApiMetricsByCategoryGet } from '../../api/fn/internal-api/get-metrics-by-category-api-metrics-by-category-get';
 import { getMetricsDailyApiMetricsDailyGet } from '../../api/fn/internal-api/get-metrics-daily-api-metrics-daily-get';
+import { getMetricsHeatmapApiMetricsHeatmapGet } from '../../api/fn/internal-api/get-metrics-heatmap-api-metrics-heatmap-get';
 import { getMetricsSummaryApiMetricsSummaryGet } from '../../api/fn/internal-api/get-metrics-summary-api-metrics-summary-get';
 import { CategoryMetric } from '../../api/models/category-metric';
 import { DailyMetric } from '../../api/models/daily-metric';
+import { HeatmapCell } from '../../api/models/heatmap-cell';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
 
 @Injectable({ providedIn: 'root' })
@@ -36,5 +38,13 @@ export class MetricsService {
       to_date: toDate,
       tz,
     }).pipe(map((response) => response.body.days));
+  }
+
+  getHeatmap(fromDate: string, toDate: string, tz: string): Observable<HeatmapCell[]> {
+    return getMetricsHeatmapApiMetricsHeatmapGet(this.http, this.apiConfig.rootUrl, {
+      from_date: fromDate,
+      to_date: toDate,
+      tz,
+    }).pipe(map((response) => response.body.cells));
   }
 }

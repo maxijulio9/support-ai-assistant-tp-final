@@ -193,9 +193,33 @@
       <div class="resumen-card">
         <h2>Mapa de calor de actividad</h2>
         <p class="resumen-card-subtitle">Solicitudes por día y hora</p>
-        <div class="resumen-placeholder">
-          <p style="margin: 0">Sin datos todavía</p>
-        </div>
+
+        @if (heatmapState() === 'loading') {
+          <div class="resumen-placeholder" role="status">
+            <span class="visually-hidden">Cargando el mapa de calor</span>
+          </div>
+        }
+
+        @if (heatmapState() === 'error') {
+          <div class="resumen-placeholder resumen-daily-error" role="alert">
+            <p style="margin: 0">No pudimos cargar el mapa de calor.</p>
+            <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+          </div>
+        }
+
+        @if (heatmapState() === 'loaded') {
+          @if (heatmapTotal() === 0) {
+            <p class="resumen-empty">Todavía no hay actividad para mostrar.</p>
+          } @else {
+            <div
+              echarts
+              [options]="heatmapChartOptions()"
+              class="resumen-heatmap-chart"
+              role="img"
+              [attr.aria-label]="'Mapa de calor de actividad, ' + heatmapTotal() + ' solicitudes representadas'"
+            ></div>
+          }
+        }
       </div>
     </div>
 
