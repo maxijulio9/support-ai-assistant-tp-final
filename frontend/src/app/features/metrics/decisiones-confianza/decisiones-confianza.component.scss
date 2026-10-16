@@ -177,6 +177,24 @@
   color: var(--app-color-text-secondary);
 }
 
+.dc-confidence-error {
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.dc-confidence-chart {
+  width: 100%;
+  min-width: 0;
+  height: 280px;
+}
+
+.dc-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  text-align: center;
+  padding: var(--app-space-md) 0;
+}
+
 .dc-footer {
   font: var(--app-text-metadata);
   color: var(--app-color-text-secondary);
