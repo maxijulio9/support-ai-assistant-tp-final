@@ -163,10 +163,69 @@
     </div>
 
     <div class="dc-card">
-      <h2>Confianza media por categoría</h2>
-      <div class="dc-placeholder">
-        <p style="margin: 0">Sin datos todavía</p>
+      <div class="dc-card-header">
+        <h2>Confianza media por categoría</h2>
+        @if (categoryConfidenceState() === 'loaded' && categoryConfidenceRows().length > 0) {
+          <mat-slide-toggle [checked]="categoryConfidenceAsTable()" (change)="toggleCategoryConfidenceAsTable()">
+            Ver como tabla
+          </mat-slide-toggle>
+        }
       </div>
+
+      @if (categoryConfidenceState() === 'loading') {
+        <div class="dc-placeholder" role="status">
+          <span class="visually-hidden">Cargando la confianza por categoría</span>
+        </div>
+      }
+
+      @if (categoryConfidenceState() === 'error') {
+        <div class="dc-placeholder dc-confidence-error" role="alert">
+          <p style="margin: 0">No pudimos cargar la confianza por categoría.</p>
+          <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+        </div>
+      }
+
+      @if (categoryConfidenceState() === 'loaded') {
+        @if (categoryConfidenceRows().length === 0) {
+          <p class="dc-empty">Todavía no hay categorías para mostrar.</p>
+        } @else if (categoryConfidenceAsTable()) {
+          <div class="dc-table-wrapper">
+            <table class="dc-table">
+              <caption class="visually-hidden">Confianza media por categoría</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Categoría</th>
+                  <th scope="col">Confianza media</th>
+                  <th scope="col">Solicitudes</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of categoryConfidenceRows(); track row.category) {
+                  <tr>
+                    <td>{{ row.category }}</td>
+                    <td>{{ row.score !== null ? (row.score | number: '1.2-2') : 'Sin puntaje' }}</td>
+                    <td>{{ row.total | number }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <ul class="dc-confidence-by-category-list">
+            @for (row of categoryConfidenceRows(); track row.category) {
+              <li>
+                <div class="dc-confidence-by-category-row">
+                  <span>{{ row.category }}</span>
+                  <span>{{ row.score !== null ? (row.score | number: '1.2-2') : 'Sin puntaje' }} ({{ row.total | number }} solicitudes)</span>
+                </div>
+                <div class="dc-confidence-by-category-bar">
+                  <div class="dc-confidence-by-category-bar-fill" [style.width.%]="row.widthPercent"></div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      }
     </div>
 
     <footer class="dc-footer">

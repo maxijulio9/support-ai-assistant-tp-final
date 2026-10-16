@@ -195,6 +195,37 @@
   padding: var(--app-space-md) 0;
 }
 
+.dc-confidence-by-category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.dc-confidence-by-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  margin-bottom: 0.25rem;
+}
+
+.dc-confidence-by-category-bar {
+  height: 6px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  overflow: hidden;
+}
+
+.dc-confidence-by-category-bar-fill {
+  height: 100%;
+  background-color: var(--mat-sys-primary);
+  border-radius: inherit;
+}
+
 .dc-footer {
   font: var(--app-text-metadata);
   color: var(--app-color-text-secondary);

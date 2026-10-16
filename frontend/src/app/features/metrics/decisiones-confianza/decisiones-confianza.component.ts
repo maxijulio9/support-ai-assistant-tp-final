@@ -12,9 +12,13 @@ import { MetricsService } from '../metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
 import { DECISION_SEGMENTS, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
 import { agreedThresholds } from '../confidence-thresholds';
+import { sortByConfidence } from '../category-confidence-order';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { ConfidenceInterval } from '../../../api/models/confidence-interval';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
+import { CategoryMetric } from '../../../api/models/category-metric';
+
+export type CategoryConfidenceState = 'loading' | 'error' | 'loaded';
 
 export type DecisionesConfianzaState = 'loading' | 'error' | 'empty' | 'loaded';
 export type ConfidenceState = 'loading' | 'error' | 'loaded';
@@ -213,6 +217,20 @@ export class DecisionesConfianzaComponent {
     };
   });
 
+  // --- Confianza media por categoria ---
+  readonly categoryConfidenceState = signal<CategoryConfidenceState>('loading');
+  readonly byCategory = signal<CategoryMetric[]>([]);
+  readonly categoryConfidenceAsTable = signal(false);
+
+  readonly categoryConfidenceRows = computed(() =>
+    sortByConfidence(this.byCategory()).map((category) => ({
+      category: category.category,
+      score: category.avg_confidence_score,
+      total: category.total_interactions,
+      widthPercent: (category.avg_confidence_score ?? 0) * 100,
+    })),
+  );
+
   private readonly retry$ = new Subject<void>();
 
   constructor() {
@@ -232,6 +250,7 @@ export class DecisionesConfianzaComponent {
         switchMap((range) => {
           this.state.set('loading');
           this.confidenceState.set('loading');
+          this.categoryConfidenceState.set('loading');
 
           const summary$ = this.metricsService.getSummary(range.from, range.to, METRICS_TIMEZONE).pipe(
             tap((summary) => {
@@ -274,7 +293,19 @@ export class DecisionesConfianzaComponent {
             }),
           );
 
-          return merge(summary$, confidenceDistribution$, thresholds$);
+          const byCategory$ = this.metricsService.getByCategory(METRICS_TIMEZONE, range.from, range.to).pipe(
+            tap((categories) => {
+              this.byCategory.set(categories);
+              this.categoryConfidenceState.set('loaded');
+            }),
+            catchError(() => {
+              this.byCategory.set([]);
+              this.categoryConfidenceState.set('error');
+              return EMPTY;
+            }),
+          );
+
+          return merge(summary$, confidenceDistribution$, thresholds$, byCategory$);
         }),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -291,5 +322,9 @@ export class DecisionesConfianzaComponent {
 
   toggleConfidenceAsTable(): void {
     this.confidenceAsTable.update((value) => !value);
+  }
+
+  toggleCategoryConfidenceAsTable(): void {
+    this.categoryConfidenceAsTable.update((value) => !value);
   }
 }

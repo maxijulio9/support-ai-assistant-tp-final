@@ -246,6 +246,7 @@ export class ResumenComponent {
           this.previousSummary.set(null);
           this.dailyState.set('loading');
           this.heatmapState.set('loading');
+          this.byCategory.set([]);
           const previous = previousCalendarDayRange(current);
 
           const summary$ = this.metricsService.getSummary(current.from, current.to, METRICS_TIMEZONE).pipe(
@@ -304,21 +305,23 @@ export class ResumenComponent {
             }),
           );
 
-          return merge(summary$, previousSummary$, daily$, heatmap$);
+          // Sin estado de carga/error propio: si falla, la lista queda vacia
+          // y la tarjeta cae en su mensaje de "Todavia no hay categorias"
+          // existente (pendiente: darle el mismo tratamiento de error con
+          // Reintentar que ya tienen daily/heatmap).
+          const byCategory$ = this.metricsService.getByCategory(METRICS_TIMEZONE, current.from, current.to).pipe(
+            tap((categories) => this.byCategory.set(categories)),
+            catchError(() => {
+              this.byCategory.set([]);
+              return of(null);
+            }),
+          );
+
+          return merge(summary$, previousSummary$, daily$, heatmap$, byCategory$);
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
-
-    // getByCategory se pide una sola vez, sin fecha: todavia no depende del
-    // from/to seleccionado (ver reporte de duplicacion con MetricsComponent).
-    this.metricsService
-      .getByCategory(METRICS_TIMEZONE)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (categories) => this.byCategory.set(categories),
-        error: () => this.byCategory.set([]),
-      });
   }
 
   retry(): void {
