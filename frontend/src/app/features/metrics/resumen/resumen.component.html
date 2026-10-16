@@ -28,8 +28,13 @@
   @if (state() === 'empty') {
     <div class="resumen-card resumen-message">
       <mat-icon aria-hidden="true" class="resumen-message-icon">history</mat-icon>
-      <h2>Todavía no hay solicitudes en este período</h2>
-      <p>Elegí otro rango de fechas para consultar la actividad.</p>
+      @if (hasActiveFilters()) {
+        <h2>Todavía no hay solicitudes con estos filtros</h2>
+        <p>Probá con otra categoría o decisión, o quitalos desde el encabezado.</p>
+      } @else {
+        <h2>Todavía no hay solicitudes en este período</h2>
+        <p>Elegí otro rango de fechas para consultar la actividad.</p>
+      }
     </div>
   }
 

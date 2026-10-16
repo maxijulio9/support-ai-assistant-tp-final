@@ -20,30 +20,50 @@
       <mat-date-range-picker #picker (closed)="onRangeChanged()"></mat-date-range-picker>
     </mat-form-field>
 
-    <span matTooltip="Disponible cuando el backend lo soporte">
-      <mat-form-field appearance="outline" class="metrics-filter">
-        <mat-label>Categoría</mat-label>
-        <mat-select [value]="categoryFilterValue()" disabled>
-          <mat-option [value]="null">Todas las categorías</mat-option>
-          @for (category of categories(); track category.category) {
-            <mat-option [value]="category.category">{{ category.category }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </span>
+    <mat-form-field appearance="outline" class="metrics-filter">
+      <mat-label>Categoría</mat-label>
+      <mat-select [value]="categoryFilterValue()" (selectionChange)="onCategoryFilterChange($event.value)">
+        <mat-option [value]="null">Todas las categorías</mat-option>
+        @for (name of categoryOptionNames(); track name) {
+          <mat-option [value]="name">{{ name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
-    <span matTooltip="Disponible cuando el backend lo soporte">
-      <mat-form-field appearance="outline" class="metrics-filter">
-        <mat-label>Decisión</mat-label>
-        <mat-select [value]="decisionFilterValue()" disabled>
-          <mat-option [value]="null">Todas las decisiones</mat-option>
-          @for (option of statusOptions; track option.value) {
-            <mat-option [value]="option.value">{{ option.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </span>
+    <mat-form-field appearance="outline" class="metrics-filter">
+      <mat-label>Decisión</mat-label>
+      <mat-select [value]="decisionFilterValue()" (selectionChange)="onDecisionFilterChange($event.value)">
+        <mat-option [value]="null">Todas las decisiones</mat-option>
+        @for (option of decisionOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
   </div>
+
+  @if (hasActiveFilters()) {
+    <div class="metrics-active-filters">
+      <mat-chip-set aria-label="Filtros activos">
+        @if (categoryFilterValue()) {
+          <mat-chip (removed)="onCategoryFilterChange(null)">
+            Categoría: {{ categoryFilterValue() }}
+            <button matChipRemove aria-label="Quitar filtro de categoría">
+              <mat-icon aria-hidden="true">cancel</mat-icon>
+            </button>
+          </mat-chip>
+        }
+        @if (decisionFilterLabel()) {
+          <mat-chip (removed)="onDecisionFilterChange(null)">
+            Decisión: {{ decisionFilterLabel() }}
+            <button matChipRemove aria-label="Quitar filtro de decisión">
+              <mat-icon aria-hidden="true">cancel</mat-icon>
+            </button>
+          </mat-chip>
+        }
+      </mat-chip-set>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  }
 
   <p class="metrics-compare-note">Comparado con el período anterior</p>
 

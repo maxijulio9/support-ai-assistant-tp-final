@@ -20,6 +20,7 @@ import {
 import { percentGrowth, ppDelta, rate, rawDelta } from '../../../shared/kpi-metrics';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
 import { DecisionSegmentTone, DECISION_SEGMENTS, decisionSegmentValue } from '../decision-segments';
+import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
 import { KpiCardComponent } from './kpi-card/kpi-card.component';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../../api/models/category-metric';
@@ -100,6 +101,9 @@ export class ResumenComponent {
 
   readonly statusOptions = STATUS_FILTER_OPTIONS;
   readonly statusFor = decisionStatus;
+
+  readonly activeFilters = signal<MetricsFilters>({ category: null, decision: null });
+  readonly hasActiveFilters = computed(() => this.activeFilters().category !== null || this.activeFilters().decision !== null);
 
   // --- KPIs ---
   readonly totalInteractions = computed(() => this.summary()?.total_interactions ?? null);
@@ -240,16 +244,20 @@ export class ResumenComponent {
 
     combineLatest([this.route.queryParamMap, this.retry$.pipe(startWith(undefined))])
       .pipe(
-        map(([params]) => resolveDateRange(params.get('from'), params.get('to'), this.defaultRange)),
-        switchMap((current) => {
+        map(([params]) => ({
+          range: resolveDateRange(params.get('from'), params.get('to'), this.defaultRange),
+          filters: resolveMetricsFilters(params.get('category'), params.get('decision')),
+        })),
+        switchMap(({ range: current, filters }) => {
           this.state.set('loading');
           this.previousSummary.set(null);
           this.dailyState.set('loading');
           this.heatmapState.set('loading');
           this.byCategory.set([]);
+          this.activeFilters.set(filters);
           const previous = previousCalendarDayRange(current);
 
-          const summary$ = this.metricsService.getSummary(current.from, current.to, METRICS_TIMEZONE).pipe(
+          const summary$ = this.metricsService.getSummary(current.from, current.to, METRICS_TIMEZONE, filters).pipe(
             tap((summary) => {
               this.summary.set(summary);
               this.state.set(summary.total_interactions === 0 ? 'empty' : 'loaded');
@@ -262,14 +270,17 @@ export class ResumenComponent {
           );
 
           // El periodo anterior es solo para el delta de cada KPI: si falla,
-          // el KPI se muestra sin variacion, no bloquea el resto.
-          const previousSummary$ = this.metricsService.getSummary(previous.from, previous.to, METRICS_TIMEZONE).pipe(
-            tap((summary) => this.previousSummary.set(summary)),
-            catchError(() => {
-              this.previousSummary.set(null);
-              return of(null);
-            }),
-          );
+          // el KPI se muestra sin variacion, no bloquea el resto. Mismos
+          // filtros que el periodo actual, para comparar el mismo subconjunto.
+          const previousSummary$ = this.metricsService
+            .getSummary(previous.from, previous.to, METRICS_TIMEZONE, filters)
+            .pipe(
+              tap((summary) => this.previousSummary.set(summary)),
+              catchError(() => {
+                this.previousSummary.set(null);
+                return of(null);
+              }),
+            );
 
           // Mas de 366 dias: el backend responde 422, no tiene sentido
           // pedirlo. Se corta antes, sin llamar a getDaily.
@@ -281,7 +292,7 @@ export class ResumenComponent {
                     this.dailyState.set('rangeTooLong');
                   }),
                 )
-              : this.metricsService.getDaily(current.from, current.to, METRICS_TIMEZONE).pipe(
+              : this.metricsService.getDaily(current.from, current.to, METRICS_TIMEZONE, filters).pipe(
                   tap((days) => {
                     this.dailyMetrics.set(days);
                     this.dailyState.set('loaded');
@@ -293,7 +304,7 @@ export class ResumenComponent {
                   }),
                 );
 
-          const heatmap$ = this.metricsService.getHeatmap(current.from, current.to, METRICS_TIMEZONE).pipe(
+          const heatmap$ = this.metricsService.getHeatmap(current.from, current.to, METRICS_TIMEZONE, filters).pipe(
             tap((cells) => {
               this.heatmapCells.set(cells);
               this.heatmapState.set('loaded');
@@ -309,13 +320,15 @@ export class ResumenComponent {
           // y la tarjeta cae en su mensaje de "Todavia no hay categorias"
           // existente (pendiente: darle el mismo tratamiento de error con
           // Reintentar que ya tienen daily/heatmap).
-          const byCategory$ = this.metricsService.getByCategory(METRICS_TIMEZONE, current.from, current.to).pipe(
-            tap((categories) => this.byCategory.set(categories)),
-            catchError(() => {
-              this.byCategory.set([]);
-              return of(null);
-            }),
-          );
+          const byCategory$ = this.metricsService
+            .getByCategory(METRICS_TIMEZONE, current.from, current.to, filters)
+            .pipe(
+              tap((categories) => this.byCategory.set(categories)),
+              catchError(() => {
+                this.byCategory.set([]);
+                return of(null);
+              }),
+            );
 
           return merge(summary$, previousSummary$, daily$, heatmap$, byCategory$);
         }),

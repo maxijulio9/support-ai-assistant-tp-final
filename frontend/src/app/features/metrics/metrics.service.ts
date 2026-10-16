@@ -14,54 +14,71 @@ import { DailyMetric } from '../../api/models/daily-metric';
 import { HeatmapCell } from '../../api/models/heatmap-cell';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
 import { ProjectThresholdsItem } from '../../api/models/project-thresholds-item';
+import { MetricsFilters } from './metrics-filters';
 
 @Injectable({ providedIn: 'root' })
 export class MetricsService {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfiguration);
 
-  getByCategory(tz: string, fromDate?: string, toDate?: string): Observable<CategoryMetric[]> {
+  getByCategory(tz: string, fromDate?: string, toDate?: string, filters?: MetricsFilters): Observable<CategoryMetric[]> {
     return getMetricsByCategoryApiMetricsByCategoryGet(this.http, this.apiConfig.rootUrl, {
       tz,
       from_date: fromDate,
       to_date: toDate,
+      category: filters?.category ?? undefined,
+      decision: filters?.decision ?? undefined,
     }).pipe(map((response) => response.body.categories));
   }
 
-  getSummary(fromDate: string, toDate: string, tz: string): Observable<MetricsSummaryResponse> {
+  getSummary(fromDate: string, toDate: string, tz: string, filters?: MetricsFilters): Observable<MetricsSummaryResponse> {
     return getMetricsSummaryApiMetricsSummaryGet(this.http, this.apiConfig.rootUrl, {
       from_date: fromDate,
       to_date: toDate,
       tz,
+      category: filters?.category ?? undefined,
+      decision: filters?.decision ?? undefined,
     }).pipe(map((response) => response.body));
   }
 
-  getDaily(fromDate: string, toDate: string, tz: string): Observable<DailyMetric[]> {
+  getDaily(fromDate: string, toDate: string, tz: string, filters?: MetricsFilters): Observable<DailyMetric[]> {
     return getMetricsDailyApiMetricsDailyGet(this.http, this.apiConfig.rootUrl, {
       from_date: fromDate,
       to_date: toDate,
       tz,
+      category: filters?.category ?? undefined,
+      decision: filters?.decision ?? undefined,
     }).pipe(map((response) => response.body.days));
   }
 
-  getHeatmap(fromDate: string, toDate: string, tz: string): Observable<HeatmapCell[]> {
+  getHeatmap(fromDate: string, toDate: string, tz: string, filters?: MetricsFilters): Observable<HeatmapCell[]> {
     return getMetricsHeatmapApiMetricsHeatmapGet(this.http, this.apiConfig.rootUrl, {
       from_date: fromDate,
       to_date: toDate,
       tz,
+      category: filters?.category ?? undefined,
+      decision: filters?.decision ?? undefined,
     }).pipe(map((response) => response.body.cells));
   }
 
-  getConfidenceDistribution(fromDate: string, toDate: string, tz: string): Observable<ConfidenceDistributionResponse> {
+  getConfidenceDistribution(
+    fromDate: string,
+    toDate: string,
+    tz: string,
+    filters?: MetricsFilters,
+  ): Observable<ConfidenceDistributionResponse> {
     return getMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet(this.http, this.apiConfig.rootUrl, {
       from_date: fromDate,
       to_date: toDate,
       tz,
+      category: filters?.category ?? undefined,
+      decision: filters?.decision ?? undefined,
     }).pipe(map((response) => response.body));
   }
 
   // Nunca manda project_id: siempre pide los umbrales de todos los proyectos
-  // configurados.
+  // configurados. No acepta category ni decision, el contrato no los define
+  // para este endpoint.
   getThresholds(): Observable<ProjectThresholdsItem[]> {
     return getMetricsThresholdsApiMetricsThresholdsGet(this.http, this.apiConfig.rootUrl, {}).pipe(
       map((response) => response.body.projects),

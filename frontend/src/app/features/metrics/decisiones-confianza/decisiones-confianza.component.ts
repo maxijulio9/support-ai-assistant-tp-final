@@ -13,6 +13,7 @@ import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../.
 import { DECISION_SEGMENTS, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
 import { agreedThresholds } from '../confidence-thresholds';
 import { sortByConfidence } from '../category-confidence-order';
+import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { ConfidenceInterval } from '../../../api/models/confidence-interval';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
@@ -93,6 +94,9 @@ export class DecisionesConfianzaComponent {
   readonly distributionAsTable = signal(false);
 
   readonly totalInteractions = computed(() => this.summary()?.total_interactions ?? null);
+
+  readonly activeFilters = signal<MetricsFilters>({ category: null, decision: null });
+  readonly hasActiveFilters = computed(() => this.activeFilters().category !== null || this.activeFilters().decision !== null);
 
   // --- Distribucion de decisiones ---
   // "percent" (redondeado, con el ajuste de roundedSegmentPercentages) es el
@@ -246,13 +250,17 @@ export class DecisionesConfianzaComponent {
 
     combineLatest([this.route.queryParamMap, this.retry$.pipe(startWith(undefined))])
       .pipe(
-        map(([params]) => resolveDateRange(params.get('from'), params.get('to'), this.defaultRange)),
-        switchMap((range) => {
+        map(([params]) => ({
+          range: resolveDateRange(params.get('from'), params.get('to'), this.defaultRange),
+          filters: resolveMetricsFilters(params.get('category'), params.get('decision')),
+        })),
+        switchMap(({ range, filters }) => {
           this.state.set('loading');
           this.confidenceState.set('loading');
           this.categoryConfidenceState.set('loading');
+          this.activeFilters.set(filters);
 
-          const summary$ = this.metricsService.getSummary(range.from, range.to, METRICS_TIMEZONE).pipe(
+          const summary$ = this.metricsService.getSummary(range.from, range.to, METRICS_TIMEZONE, filters).pipe(
             tap((summary) => {
               this.summary.set(summary);
               this.state.set(summary.total_interactions === 0 ? 'empty' : 'loaded');
@@ -265,7 +273,7 @@ export class DecisionesConfianzaComponent {
           );
 
           const confidenceDistribution$ = this.metricsService
-            .getConfidenceDistribution(range.from, range.to, METRICS_TIMEZONE)
+            .getConfidenceDistribution(range.from, range.to, METRICS_TIMEZONE, filters)
             .pipe(
               tap((response) => {
                 this.intervals.set(response.intervals);
@@ -284,7 +292,8 @@ export class DecisionesConfianzaComponent {
 
           // Si falla, el histograma se muestra igual: agreedThresholds() da
           // null con un arreglo vacio, asi que simplemente no se dibujan las
-          // lineas de umbral.
+          // lineas de umbral. No recibe filtros: el contrato no los define
+          // para este endpoint.
           const thresholds$ = this.metricsService.getThresholds().pipe(
             tap((projects) => this.thresholds.set(projects)),
             catchError(() => {
@@ -293,17 +302,19 @@ export class DecisionesConfianzaComponent {
             }),
           );
 
-          const byCategory$ = this.metricsService.getByCategory(METRICS_TIMEZONE, range.from, range.to).pipe(
-            tap((categories) => {
-              this.byCategory.set(categories);
-              this.categoryConfidenceState.set('loaded');
-            }),
-            catchError(() => {
-              this.byCategory.set([]);
-              this.categoryConfidenceState.set('error');
-              return EMPTY;
-            }),
-          );
+          const byCategory$ = this.metricsService
+            .getByCategory(METRICS_TIMEZONE, range.from, range.to, filters)
+            .pipe(
+              tap((categories) => {
+                this.byCategory.set(categories);
+                this.categoryConfidenceState.set('loaded');
+              }),
+              catchError(() => {
+                this.byCategory.set([]);
+                this.categoryConfidenceState.set('error');
+                return EMPTY;
+              }),
+            );
 
           return merge(summary$, confidenceDistribution$, thresholds$, byCategory$);
         }),

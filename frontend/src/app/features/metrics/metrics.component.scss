@@ -37,6 +37,19 @@
   width: 200px;
 }
 
+.metrics-active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  min-width: 0;
+}
+
+.metrics-active-filters mat-chip-set {
+  min-width: 0;
+}
+
 .metrics-compare-note {
   font: var(--app-text-secondary);
   color: var(--app-color-text-secondary);

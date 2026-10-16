@@ -66,3 +66,25 @@ export function roundedSegmentPercentages(values: number[], total: number): numb
 
   return rounded;
 }
+
+export interface DecisionFilterOption {
+  value: string;
+  label: string;
+}
+
+// Las 6 decisiones reales del contrato, cada una como opcion propia. A
+// diferencia de DECISION_SEGMENTS (5, agrupa RESOLVED y RESOLVED_EXTERNALLY
+// en "Resueltas"), el filtro "decision" del backend acepta un solo valor
+// por pedido, asi que no hay forma honesta de ofrecer una opcion combinada
+// para el filtro.
+export const DECISION_FILTER_OPTIONS: DecisionFilterOption[] = [
+  ...STATUS_FILTER_OPTIONS,
+  { value: 'RESOLVED', label: 'Resuelta' },
+  { value: 'RESOLVED_EXTERNALLY', label: 'Resuelta externamente' },
+];
+
+const KNOWN_DECISION_VALUES = new Set(DECISION_FILTER_OPTIONS.map((option) => option.value));
+
+export function isKnownDecisionValue(value: string): boolean {
+  return KNOWN_DECISION_VALUES.has(value);
+}
