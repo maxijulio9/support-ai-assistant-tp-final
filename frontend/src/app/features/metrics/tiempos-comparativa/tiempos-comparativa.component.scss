@@ -10,6 +10,7 @@
 
 .tc-card {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   background-color: var(--mat-sys-surface);
   border-radius: var(--app-radius-lg);
@@ -36,6 +37,7 @@
 
 .tc-column {
   box-sizing: border-box;
+  min-width: 0;
   border-radius: var(--app-radius-lg);
   padding: var(--app-space-sm) var(--app-space-md);
   background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);

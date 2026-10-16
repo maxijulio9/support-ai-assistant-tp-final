@@ -10,6 +10,7 @@
 
 .resumen-card {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   background-color: var(--mat-sys-surface);
   border-radius: var(--app-radius-lg);

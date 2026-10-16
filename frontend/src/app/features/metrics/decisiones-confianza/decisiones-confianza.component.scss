@@ -99,6 +99,10 @@
   gap: var(--app-space-sm);
 }
 
+.dc-distribution-legend > li {
+  min-width: 0;
+}
+
 .dc-legend-row {
   display: flex;
   align-items: center;
