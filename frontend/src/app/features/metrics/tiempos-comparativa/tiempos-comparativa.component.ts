@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 // Pestaña sin datos del backend: ni timestamps de primera respuesta ni de
-// resolucion, ni conteo por canal, ni definicion de tasa de primer contacto.
-// Por eso no inyecta ningun servicio ni hace pedidos HTTP, solo estructura.
+// resolucion, ni conteo por canal. Por eso no inyecta ningun servicio ni
+// hace pedidos HTTP, solo estructura.
 @Component({
   selector: 'app-metrics-tiempos-comparativa',
   standalone: true,
@@ -11,5 +11,5 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TiemposComparativaComponent {
-  readonly comparisonRows = ['Tiempo medio de resolución', 'Tasa de primer contacto', 'Volumen de la cohorte'];
+  readonly comparisonRows = ['Tiempo medio de resolución', 'Volumen de la cohorte'];
 }
