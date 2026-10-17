@@ -52,3 +52,10 @@
   color: inherit;
   opacity: 0.8;
 }
+
+.kpi-card-sparkline {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  margin-top: var(--app-space-xs);
+}

@@ -7,4 +7,13 @@
       <span class="kpi-card-delta-label">vs. anterior</span>
     </p>
   }
+  @if (sparklineValues().length > 0) {
+    <div
+      echarts
+      [options]="sparklineOptions()"
+      class="kpi-card-sparkline"
+      role="img"
+      [attr.aria-label]="'Serie diaria del período, ' + trendLabel()"
+    ></div>
+  }
 </div>

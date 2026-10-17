@@ -48,24 +48,28 @@
         [deltaColored]="true"
         [deltaBad]="autoPublishDeltaBad()"
         [highlight]="true"
+        [sparklineValues]="autoPublishSparkline()"
       />
       <app-metrics-kpi-card
         label="Escalamiento"
         [value]="escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
         [deltaText]="escalateDeltaPp() !== null ? (escalateDeltaPp()! | number: '1.1-1') + ' pp' : null"
         [deltaArrowUp]="escalateDeltaArrowUp()"
+        [sparklineValues]="escalateSparkline()"
       />
       <app-metrics-kpi-card
         label="Total de solicitudes"
         [value]="(totalInteractions() ?? 0 | number) ?? ''"
         [deltaText]="totalDeltaPercent() !== null ? (totalDeltaPercent()! | number: '1.1-1') + '%' : null"
         [deltaArrowUp]="totalDeltaArrowUp()"
+        [sparklineValues]="totalSparkline()"
       />
       <app-metrics-kpi-card
         label="Confianza media"
         [value]="avgConfidence() !== null ? ((avgConfidence() | number: '1.2-2') ?? '') : 'Sin dato'"
         [deltaText]="avgConfidenceDelta() !== null ? (avgConfidenceDelta()! | number: '1.2-2') : null"
         [deltaArrowUp]="avgConfidenceDeltaArrowUp()"
+        [sparklineValues]="avgConfidenceSparkline()"
       />
     </div>
 

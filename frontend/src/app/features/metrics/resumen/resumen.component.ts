@@ -159,6 +159,22 @@ export class ResumenComponent {
   readonly dailyAsTable = signal(false);
   readonly dailySegments = DECISION_SEGMENTS;
 
+  // --- Minigraficos de las tarjetas de indicadores ---
+  // Se arman a partir de dailyMetrics, que ya pide la tarjeta de barras
+  // apiladas: no hay ningun pedido nuevo. Resolucion automatica y
+  // Escalamiento son tasas (rate() da null en un dia sin interacciones, un
+  // hueco en la linea, no un cero). Total de solicitudes es un conteo
+  // crudo: ahi el 0 es un dato real y la linea llega a 0. Confianza media
+  // ya viene como numero o null por dia desde el backend, sin calculo.
+  readonly autoPublishSparkline = computed(() =>
+    this.dailyMetrics().map((day) => rate(day.auto_publish_count, day.total_interactions)),
+  );
+  readonly escalateSparkline = computed(() =>
+    this.dailyMetrics().map((day) => rate(day.escalate_count, day.total_interactions)),
+  );
+  readonly totalSparkline = computed(() => this.dailyMetrics().map((day) => day.total_interactions));
+  readonly avgConfidenceSparkline = computed(() => this.dailyMetrics().map((day) => day.avg_confidence_score));
+
   readonly dailyRows = computed(() =>
     this.dailyMetrics().map((day) => ({
       date: day.date,
