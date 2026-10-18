@@ -5,7 +5,7 @@ Define la estructura de project_config: mapeo de transiciones de JSM,
 pais asociado y umbrales de confianza/similitud por proyecto.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjectThresholds(BaseModel):
@@ -72,9 +72,54 @@ class ItsmConnectionResponse(BaseModel):
     status: str = Field(description="resultado de la operacion, 'ok' si las credenciales se validaron y guardaron")
 
 
+class AvailableProject(BaseModel):
+    """Un proyecto real de la instancia de JSM."""
+    key: str = Field(description="key del proyecto en JSM, por ejemplo TARG")
+    name: str = Field(description="nombre del proyecto en JSM")
+
+
+class Country(BaseModel):
+    """Un pais del catalogo."""
+    code: str = Field(description="codigo del pais, por ejemplo AR")
+    name: str = Field(description="nombre del pais")
+
+
+class JsmStatus(BaseModel):
+    """Un estado real del workflow de un proyecto de JSM."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del estado en JSM")
+    name: str = Field(description="nombre del estado en JSM")
+
+
+class JsmField(BaseModel):
+    """Un campo custom de JSM de tipo seleccion unica."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del campo en JSM, por ejemplo customfield_10050")
+    name: str = Field(description="nombre del campo en JSM")
+
+
+class JsmPriority(BaseModel):
+    """Una prioridad real de la instancia de JSM."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id de la prioridad en JSM, es el valor que se manda de vuelta dentro de mapping al confirmar el mapeo")
+    name: str = Field(description="nombre de la prioridad en JSM")
+
+
+class ConfluenceSpaceItem(BaseModel):
+    """Un space real de la instancia de Confluence."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del space en Confluence")
+    key: str = Field(description="key del space en Confluence, por ejemplo TA")
+    name: str = Field(description="nombre del space en Confluence")
+
+
 class AvailableProjectsResponse(BaseModel):
     """Response con la lista de proyectos disponibles en jsm, para que el admin elija (CU27)."""
-    projects: list[dict] = Field(description="proyectos reales de la instancia de JSM, con su key y name")
+    projects: list[AvailableProject] = Field(description="proyectos reales de la instancia de JSM, con su key y name")
 
 
 class ProjectToOnboard(BaseModel):
@@ -98,17 +143,17 @@ class OnboardProjectsResponse(BaseModel):
 
 class CountriesResponse(BaseModel):
     """Response con los paises validos, para que el frontend arme el dropdown al dar de alta proyectos."""
-    countries: list[dict] = Field(description="paises del catalogo, con su code y name")
+    countries: list[Country] = Field(description="paises del catalogo, con su code y name")
 
 
 class ProjectStatusesResponse(BaseModel):
     """Response con los estados reales de un proyecto de jsm, para el mapeo del admin (TF-122)."""
-    statuses: list[dict] = Field(description="estados reales del workflow de JSM para ese proyecto, con su id y name")
+    statuses: list[JsmStatus] = Field(description="estados reales del workflow de JSM para ese proyecto, con su id y name")
 
 
 class SelectFieldsResponse(BaseModel):
     """Response con los campos custom de tipo lista de seleccion unica, para que el admin elija cual es categoria."""
-    fields: list[dict] = Field(description="campos custom de JSM de tipo seleccion unica, con su id y nombre")
+    fields: list[JsmField] = Field(description="campos custom de JSM de tipo seleccion unica, con su id y nombre")
 
 
 class ConfigureCategoriesRequest(BaseModel):
@@ -135,8 +180,8 @@ class ConfigureRequestTypesResponse(BaseModel):
 
 class PrioritiesWithSuggestionResponse(BaseModel):
     """Response con las prioridades reales de jsm y una sugerencia automatica de mapeo."""
-    priorities: list[dict] = Field(description="prioridades reales de la instancia de JSM")
-    suggestions: dict = Field(description="mapeo sugerido de cada prioridad real a un nivel universal (Highest, High, Medium, Low)")
+    priorities: list[JsmPriority] = Field(description="prioridades reales de la instancia de JSM")
+    suggestions: dict[str, str | None] = Field(description="mapeo sugerido de cada nivel universal (Highest, High, Medium y Low) a un id de prioridad real de JSM, o null si no se encontro ninguna que se parezca")
 
 
 class ConfigurePriorityMappingRequest(BaseModel):
@@ -174,7 +219,7 @@ class SpaceToLink(BaseModel):
 
 class AvailableSpacesResponse(BaseModel):
     """Response con la lista de spaces disponibles en confluence, para que el admin elija (CU29)."""
-    spaces: list[dict] = Field(description="spaces reales de la instancia de Confluence, con su key y name")
+    spaces: list[ConfluenceSpaceItem] = Field(description="spaces reales de la instancia de Confluence, con su key y name")
 
 
 class ConfigureSpacesRequest(BaseModel):
