@@ -11,7 +11,7 @@
 .users-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--app-space-sm);
   flex-wrap: wrap;
 }
@@ -20,12 +20,6 @@
   font: var(--app-text-page-title);
   color: var(--mat-sys-on-surface);
   margin: 0;
-}
-
-.users-subtitle {
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
-  margin: var(--app-space-xs) 0 0;
 }
 
 .users-empty,
@@ -104,6 +98,19 @@
 .users-actions {
   display: flex;
   gap: var(--app-space-xs);
+}
+
+// Rojo oscurecido a partir del token de error del tema, para tener
+// suficiente contraste sobre el fondo claro (ver nota de accesibilidad en
+// _tokens.scss sobre el color secundario). El diálogo de confirmación usa
+// el mismo color (ver deactivate-user-dialog.component.scss).
+.users-deactivate-button {
+  color: color-mix(in srgb, var(--mat-sys-error) 70%, black);
+}
+
+// Deshabilitado en la propia fila: gris, no el rojo de la acción habilitada.
+.users-deactivate-button:disabled {
+  color: var(--app-color-text-secondary);
 }
 
 // Por debajo de este ancho cada fila pasa a verse como una tarjeta apilada

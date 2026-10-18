@@ -3,3 +3,10 @@
   font: var(--app-text-secondary);
   margin: var(--app-space-xs) 0 0;
 }
+
+// Mismo rojo oscurecido que el boton "Desactivar" de la fila (ver
+// users.component.scss), para que el diálogo de confirmación coincida.
+.deactivate-user-confirm-button {
+  background-color: color-mix(in srgb, var(--mat-sys-error) 70%, black);
+  color: var(--mat-sys-on-error);
+}

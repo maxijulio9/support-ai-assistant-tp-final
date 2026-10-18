@@ -1,9 +1,6 @@
 <div class="users-page">
   <header class="users-header">
-    <div>
-      <h1 class="users-title">Usuarios</h1>
-      <p class="users-subtitle">Los usuarios desactivados no pueden volver a activarse desde aquí.</p>
-    </div>
+    <h1 class="users-title">Usuarios</h1>
     @if (state() === 'loaded') {
       <button mat-flat-button type="button" (click)="openCreate()">Nuevo usuario</button>
     }
@@ -61,10 +58,26 @@
                 <button mat-button type="button" (click)="openEdit(user)">Editar</button>
                 @if (user.is_active) {
                   <span [matTooltip]="isSelf(user) ? 'No podés desactivarte a vos mismo' : ''">
-                    <button mat-button type="button" [disabled]="isSelf(user)" (click)="openDeactivate(user)">
+                    <button
+                      mat-button
+                      type="button"
+                      class="users-deactivate-button"
+                      [disabled]="isSelf(user)"
+                      (click)="openDeactivate(user)"
+                    >
                       Desactivar
                     </button>
                   </span>
+                } @else {
+                  <button
+                    mat-button
+                    type="button"
+                    color="primary"
+                    [disabled]="isReactivating(user)"
+                    (click)="activate(user)"
+                  >
+                    {{ isReactivating(user) ? 'Reactivando...' : 'Reactivar' }}
+                  </button>
                 }
               </td>
             </tr>

@@ -19,7 +19,7 @@ import {
 
 export type UsersState = 'loading' | 'error' | 'loaded';
 
-const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
+const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 
 function formatCreatedAt(createdAt: string): string {
   const date = new Date(createdAt);
@@ -49,6 +49,10 @@ export class UsersComponent {
   readonly users = signal<UserResponse[]>([]);
   readonly loadErrorMessage = signal<string | null>(null);
 
+  // Ids con una reactivacion en vuelo: solo para deshabilitar el boton de
+  // esa fila puntual mientras responde, no hay dialogo que lo haga por nosotros.
+  private readonly reactivatingIds = signal<ReadonlySet<string>>(new Set());
+
   readonly sortedUsers = computed(() =>
     [...this.users()].sort((a, b) => a.full_name.localeCompare(b.full_name, 'es')),
   );
@@ -61,8 +65,34 @@ export class UsersComponent {
     return user.id === this.authService.profile()?.id;
   }
 
+  isReactivating(user: UserResponse): boolean {
+    return this.reactivatingIds().has(user.id);
+  }
+
   retryLoad(): void {
     this.fetchUsers();
+  }
+
+  activate(user: UserResponse): void {
+    if (this.isReactivating(user)) return;
+
+    this.reactivatingIds.update((ids) => new Set(ids).add(user.id));
+
+    this.usersService
+      .activate(user.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.removeReactivatingId(user.id);
+          this.users.update((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+          this.snackBar.open('Usuario reactivado', 'Cerrar', { duration: 4000 });
+        },
+        error: (error: unknown) => {
+          this.removeReactivatingId(user.id);
+          const result = classifyFormError(error);
+          this.snackBar.open(result.message ?? GENERIC_ERROR_MESSAGE, 'Cerrar', { duration: 4000 });
+        },
+      });
   }
 
   openCreate(): void {
@@ -105,6 +135,14 @@ export class UsersComponent {
     });
   }
 
+  private removeReactivatingId(userId: string): void {
+    this.reactivatingIds.update((ids) => {
+      const next = new Set(ids);
+      next.delete(userId);
+      return next;
+    });
+  }
+
   private fetchUsers(): void {
     this.state.set('loading');
     this.loadErrorMessage.set(null);
@@ -119,7 +157,7 @@ export class UsersComponent {
         },
         error: (error: unknown) => {
           const result = classifyFormError(error);
-          this.loadErrorMessage.set(result.message ?? LOAD_ERROR_MESSAGE);
+          this.loadErrorMessage.set(result.message ?? GENERIC_ERROR_MESSAGE);
           this.state.set('error');
         },
       });
