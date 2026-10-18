@@ -57,3 +57,12 @@ class UserManagementService:
             raise ValueError("usuario no encontrado")
 
         return usuario_actualizado    
+
+    # reactiva un usuario, si ya estaba activo lo devuelve igual sin error
+    def activate_user(self, user_id: str) -> AppUser:
+        usuario_activado = self.app_user_repository.activate(user_id)
+
+        if usuario_activado is None:
+            raise ValueError("usuario no encontrado")
+
+        return usuario_activado
