@@ -22,6 +22,8 @@ from app.modules.internal_api.schemas import (
     ConfigureCategoriesResponse,
     ConfigureRequestTypesResponse,
     ProjectRequestTypesResponse,
+    OnboardedProjectsResponse,
+    ProjectConfigurationResponse,
     ConfigurePriorityMappingRequest,
     ConfigurePriorityMappingResponse,
     PrioritiesWithSuggestionResponse,
@@ -57,6 +59,7 @@ from app.modules.internal_api.services.indexer_trigger_service import IndexingTr
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
+from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
 
@@ -75,6 +78,7 @@ _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
 _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
+_project_configuration_reader_service = ProjectConfigurationReaderService()
 _listing_service = InteractionListingService()
 
 
@@ -411,6 +415,31 @@ async def get_metrics_thresholds(usuario: AppUser = Depends(get_current_user), p
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     return ProjectThresholdsResponse(projects=result)
+
+# lista los proyectos dados de alta con su id, para precargar la pantalla de configuracion
+@router.get("/api/config/itsm/projects", response_model=OnboardedProjectsResponse)
+async def list_onboarded_projects(admin: AppUser = Depends(require_admin)):
+    try:
+        projects = _project_configuration_reader_service.list_projects()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar los proyectos")
+
+    return OnboardedProjectsResponse(projects=projects)
+
+
+# trae todo lo que tiene guardado un proyecto, para precargar la pantalla de configuracion
+# se declara despues de .../projects/available para que esa ruta no quede tapada por esta
+@router.get("/api/config/itsm/projects/{project_key}", response_model=ProjectConfigurationResponse)
+async def get_project_configuration(project_key: str, admin: AppUser = Depends(require_admin)):
+    try:
+        configuration = _project_configuration_reader_service.get_project_configuration(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la configuracion del proyecto")
+
+    return ProjectConfigurationResponse(**configuration)
+
 
 # lista interacciones paginadas, con filtros, para el dashboard
 @router.get("/api/interactions", response_model=InteractionListResponse)
