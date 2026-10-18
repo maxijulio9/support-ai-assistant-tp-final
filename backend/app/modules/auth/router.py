@@ -86,6 +86,15 @@ def deactivate_user(user_id: str, admin: AppUser = Depends(require_admin)):
 
     return UserResponse(**usuario.model_dump())
 
+@router.patch("/api/users/{user_id}/activate", response_model=UserResponse)
+def activate_user(user_id: str, admin: AppUser = Depends(require_admin)):
+    try:
+        usuario = _user_management_service.activate_user(user_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    return UserResponse(**usuario.model_dump())
+
 @router.get("/auth/profile", response_model=UserResponse)
 def get_profile(usuario: AppUser = Depends(get_current_user)):
     return UserResponse(**usuario.model_dump())

@@ -165,6 +165,32 @@ class AppUserRepository:
         finally:
             db.close()      
     
+    # reactiva un usuario, devuelve None si el id no existe, y si ya estaba activo lo devuelve igual
+    def activate(self, user_id: str) -> AppUser | None:
+        db = next(get_db())
+
+        try:
+            query = text("""
+                UPDATE app_user
+                SET is_active = TRUE, updated_at = NOW()
+                WHERE id = :user_id
+                RETURNING id, email, password_hash, full_name, role, is_active, created_at, updated_at
+            """)
+            row = db.execute(query, {"user_id": user_id}).fetchone()
+            db.commit()
+
+            if row is None:
+                return None
+
+            return self._row_to_app_user(row)
+
+        except Exception:
+            db.rollback()
+            raise
+
+        finally:
+            db.close()
+
     # actualiza el password_hash de un usuario, usado por el flujo de restablecimiento de contraseña
     def update_password(self, user_id: str, password_hash: str) -> AppUser | None:
         db = next(get_db())
