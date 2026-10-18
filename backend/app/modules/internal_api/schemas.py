@@ -91,6 +91,7 @@ class JsmStatus(BaseModel):
 
     id: str = Field(description="id del estado en JSM")
     name: str = Field(description="nombre del estado en JSM")
+    status_id: str = Field(description="id interno del estado en ticket_status, es el que se manda como status_id al guardar el mapeo de estados")
 
 
 class JsmField(BaseModel):
