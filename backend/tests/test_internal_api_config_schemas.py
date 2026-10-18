@@ -29,7 +29,7 @@ def test_countries_are_typed():
 
 # verifica que los estados de JSM quedan tipados y que un id numerico se convierte a texto
 def test_statuses_are_typed_and_numeric_id_becomes_text():
-    response = ProjectStatusesResponse(statuses=[{"id": 10001, "name": "Open"}])
+    response = ProjectStatusesResponse(statuses=[{"id": 10001, "name": "Open", "status_id": "uuid-1"}])
 
     assert response.statuses[0].id == "10001"
 
