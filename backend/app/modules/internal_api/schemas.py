@@ -412,6 +412,13 @@ class ProjectConfigurationResponse(BaseModel):
     spaces: list[ProjectSpaceItem] = Field(description="spaces de Confluence vinculados, ordenados por key")
 
 
+class ConnectionStatusResponse(BaseModel):
+    """Estado de una conexion externa, JSM o Confluence, sin ningun secreto."""
+    configured: bool = Field(description="true si la conexion esta completa, con url, email y token guardados")
+    base_url: str | None = Field(description="url de la instancia, o null si todavia no se configuro")
+    user_email: str | None = Field(description="email de la cuenta usada para autenticar, o null si todavia no se configuro, el token y el secreto del webhook nunca se devuelven")
+
+
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
