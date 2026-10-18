@@ -61,7 +61,7 @@
                     <button
                       mat-button
                       type="button"
-                      class="users-deactivate-button"
+                      class="users-action-pill users-deactivate-button"
                       [disabled]="isSelf(user)"
                       (click)="openDeactivate(user)"
                     >
@@ -72,7 +72,7 @@
                   <button
                     mat-button
                     type="button"
-                    color="primary"
+                    class="users-action-pill users-reactivate-button"
                     [disabled]="isReactivating(user)"
                     (click)="activate(user)"
                   >
