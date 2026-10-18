@@ -81,7 +81,7 @@ _listing_service = InteractionListingService()
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
 async def configure_project(request: ProjectConfigRequest, admin: AppUser = Depends(require_admin)):
     try:
-        mappings_configured = _service.save_config(request.thresholds, request.status_mappings)
+        mappings_configured = _service.save_config(request.thresholds, request.status_mappings, request.project_key)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
