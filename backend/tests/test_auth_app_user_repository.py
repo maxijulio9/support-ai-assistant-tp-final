@@ -222,3 +222,50 @@ def test_count_users_returns_count(mock_get_db):
     result = repo.count_users()
 
     assert result == 3
+
+
+# verifica que activate pone is_active en true y devuelve el usuario, con commit
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_activate_returns_activated_user(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.fetchone.return_value = _build_app_user_row(is_active=True)
+
+    repo = AppUserRepository()
+    result = repo.activate("user-1")
+
+    assert result.is_active is True
+    assert "is_active = TRUE" in str(mock_db.execute.call_args[0][0])
+    mock_db.commit.assert_called_once()
+
+
+# verifica que activate devuelve None si el id no existe
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_activate_returns_none_when_not_found(mock_get_db):
+    mock_db = MagicMock()
+    mock_get_db.return_value = iter([mock_db])
+    mock_db.execute.return_value.fetchone.return_value = None
+
+    repo = AppUserRepository()
+    result = repo.activate("id-inexistente")
+
+    assert result is None
+
+
+# verifica que activate hace rollback y relanza el error si la query falla
+@patch("app.modules.auth.repositories.app_user_repository.get_db")
+def test_activate_rolls_back_on_error(mock_get_db):
+    mock_db = MagicMock()
+    mock_db.execute.side_effect = Exception("fallo de conexion")
+    mock_get_db.return_value = iter([mock_db])
+
+    repo = AppUserRepository()
+
+    raised = False
+    try:
+        repo.activate("user-1")
+    except Exception:
+        raised = True
+
+    assert raised
+    mock_db.rollback.assert_called_once()
