@@ -73,6 +73,10 @@ class ItsmProjectOnboardingService:
         request_types = await self.jsm_project_client.get_request_types(service_desk_id=service_desk_id, **credentials)
 
         return self.request_type_configuration_repository.configure_request_types(project_key, request_types)
+
+    # lista los tipos de solicitud ya incorporados a un proyecto, sin consultar jsm
+    def list_project_request_types(self, project_key: str) -> list[dict]:
+        return self.request_type_configuration_repository.list_project_request_types(project_key)
     
     # trae las prioridades reales de jsm junto con una sugerencia automatica de mapeo
     async def list_priorities_with_suggestion(self) -> dict:

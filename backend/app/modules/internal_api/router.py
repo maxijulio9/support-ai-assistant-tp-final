@@ -21,6 +21,10 @@ from app.modules.internal_api.schemas import (
     ConfigureCategoriesRequest,
     ConfigureCategoriesResponse,
     ConfigureRequestTypesResponse,
+    ProjectRequestTypesResponse,
+    OnboardedProjectsResponse,
+    ProjectConfigurationResponse,
+    ConnectionStatusResponse,
     ConfigurePriorityMappingRequest,
     ConfigurePriorityMappingResponse,
     PrioritiesWithSuggestionResponse,
@@ -35,6 +39,7 @@ from app.modules.internal_api.schemas import (
     StartIndexingRequest,
     StartIndexingResponse,
     IndexingStatusResponse,
+    ErrorResponse,
     MetricsSummaryResponse,
     MetricsByCategoryResponse,
     InteractionListResponse,
@@ -56,6 +61,8 @@ from app.modules.internal_api.services.indexer_trigger_service import IndexingTr
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
+from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
+from app.modules.internal_api.services.connection_status_service import ConnectionStatusService
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
 
@@ -74,6 +81,8 @@ _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
 _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
+_project_configuration_reader_service = ProjectConfigurationReaderService()
+_connection_status_service = ConnectionStatusService()
 _listing_service = InteractionListingService()
 
 
@@ -81,7 +90,7 @@ _listing_service = InteractionListingService()
 @router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
 async def configure_project(request: ProjectConfigRequest, admin: AppUser = Depends(require_admin)):
     try:
-        mappings_configured = _service.save_config(request.thresholds, request.status_mappings)
+        mappings_configured = _service.save_config(request.thresholds, request.status_mappings, request.project_key)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
@@ -237,6 +246,19 @@ async def configure_request_types(project_key: str, admin: AppUser = Depends(req
     return ConfigureRequestTypesResponse(status="ok", request_types_configured=request_types_configured)
 
 
+# lista los tipos de solicitud ya incorporados a un proyecto, para precargar la pantalla de configuracion
+@router.get("/api/config/itsm/projects/{project_key}/request-types", response_model=ProjectRequestTypesResponse)
+async def get_project_request_types(project_key: str, admin: AppUser = Depends(require_admin)):
+    try:
+        request_types = _project_onboarding_service.list_project_request_types(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar los tipos de solicitud")
+
+    return ProjectRequestTypesResponse(request_types=request_types)
+
+
 # trae las prioridades reales de un proyecto, con sugerencia automatica de mapeo
 @router.get("/api/config/itsm/projects/{project_key}/priorities", response_model=PrioritiesWithSuggestionResponse)
 async def list_priorities(project_key: str, admin: AppUser = Depends(require_admin)):
@@ -319,7 +341,7 @@ async def start_indexing(request: StartIndexingRequest, admin: AppUser = Depends
     return StartIndexingResponse(status="queued")
 
 # consulta el estado del ultimo trabajo de indexacion
-@router.get("/api/indexing/status", response_model=IndexingStatusResponse)
+@router.get("/api/indexing/status", response_model=IndexingStatusResponse, responses={404: {"model": ErrorResponse, "description": "Todavia no se disparo ninguna indexacion"}})
 async def get_indexing_status(admin: AppUser = Depends(require_admin)):
     status = _kb_indexing_status_repository.get_latest_status()
 
@@ -397,6 +419,53 @@ async def get_metrics_thresholds(usuario: AppUser = Depends(get_current_user), p
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     return ProjectThresholdsResponse(projects=result)
+
+# lista los proyectos dados de alta con su id, para precargar la pantalla de configuracion
+@router.get("/api/config/itsm/projects", response_model=OnboardedProjectsResponse)
+async def list_onboarded_projects(admin: AppUser = Depends(require_admin)):
+    try:
+        projects = _project_configuration_reader_service.list_projects()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar los proyectos")
+
+    return OnboardedProjectsResponse(projects=projects)
+
+
+# trae todo lo que tiene guardado un proyecto, para precargar la pantalla de configuracion
+# se declara despues de .../projects/available para que esa ruta no quede tapada por esta
+@router.get("/api/config/itsm/projects/{project_key}", response_model=ProjectConfigurationResponse)
+async def get_project_configuration(project_key: str, admin: AppUser = Depends(require_admin)):
+    try:
+        configuration = _project_configuration_reader_service.get_project_configuration(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la configuracion del proyecto")
+
+    return ProjectConfigurationResponse(**configuration)
+
+
+# dice si la conexion con jsm esta configurada y con que url y cuenta, nunca devuelve el token ni el secreto del webhook
+@router.get("/api/config/itsm", response_model=ConnectionStatusResponse)
+async def get_itsm_connection(admin: AppUser = Depends(require_admin)):
+    try:
+        connection = _connection_status_service.get_jsm_connection()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la conexion con JSM")
+
+    return ConnectionStatusResponse(**connection)
+
+
+# dice si la conexion con confluence esta configurada y con que url y cuenta, nunca devuelve el token
+@router.get("/api/config/knowledge-base", response_model=ConnectionStatusResponse)
+async def get_confluence_connection(admin: AppUser = Depends(require_admin)):
+    try:
+        connection = _connection_status_service.get_confluence_connection()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la conexion con Confluence")
+
+    return ConnectionStatusResponse(**connection)
+
 
 # lista interacciones paginadas, con filtros, para el dashboard
 @router.get("/api/interactions", response_model=InteractionListResponse)

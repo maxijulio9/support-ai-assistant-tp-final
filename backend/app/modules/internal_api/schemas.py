@@ -5,12 +5,12 @@ Define la estructura de project_config: mapeo de transiciones de JSM,
 pais asociado y umbrales de confianza/similitud por proyecto.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjectThresholds(BaseModel):
     """Umbrales de decision del pipeline, una fila por proyecto (columnas en la tabla project)."""
-    project_id: str = Field(description="id del proyecto en la tabla project")
+    project_id: str | None = Field(default=None, description="id del proyecto en la tabla project, se puede omitir si se indica project_key")
     threshold_auto_publish: float = Field(default=0.85, ge=0.0, le=1.0, description="confidence_score minimo para publicar la respuesta sin revision humana")
     threshold_needs_review: float = Field(default=0.60, ge=0.0, le=1.0, description="confidence_score minimo para pedir revision humana en vez de escalar directo")
     similarity_threshold: float = Field(default=0.40, ge=0.0, le=1.0, description="similarity_score minimo para que un chunk recuperado se use como contexto")
@@ -18,7 +18,7 @@ class ProjectThresholds(BaseModel):
 
 class ProjectStatusMapping(BaseModel):
     """Mapeo de una categoria generica de estado ITSM a la transicion real de JSM, una fila por combinacion proyecto + estado (tabla project_config)."""
-    project_id: str = Field(description="id del proyecto en la tabla project")
+    project_id: str | None = Field(default=None, description="id del proyecto en la tabla project, se puede omitir si se indica project_key")
     status_id: str = Field(description="id del estado generico en la tabla ticket_status")
     system_action: str | None = Field(default=None, description="id real de la transicion de JSM que corresponde a este estado")
     is_active: bool = Field(default=True, description="si el mapeo esta activo o fue desactivado por el admin")
@@ -26,6 +26,7 @@ class ProjectStatusMapping(BaseModel):
 
 class ProjectConfigRequest(BaseModel):
     """Request para el endpoint POST /api/config/itsm/projects (CU26)."""
+    project_key: str | None = Field(default=None, description="key del proyecto en JSM, por ejemplo TARG, es una alternativa a project_id, si se indica no hace falta mandar project_id")
     thresholds: ProjectThresholds
     status_mappings: list[ProjectStatusMapping]
 
@@ -72,9 +73,55 @@ class ItsmConnectionResponse(BaseModel):
     status: str = Field(description="resultado de la operacion, 'ok' si las credenciales se validaron y guardaron")
 
 
+class AvailableProject(BaseModel):
+    """Un proyecto real de la instancia de JSM."""
+    key: str = Field(description="key del proyecto en JSM, por ejemplo TARG")
+    name: str = Field(description="nombre del proyecto en JSM")
+
+
+class Country(BaseModel):
+    """Un pais del catalogo."""
+    code: str = Field(description="codigo del pais, por ejemplo AR")
+    name: str = Field(description="nombre del pais")
+
+
+class JsmStatus(BaseModel):
+    """Un estado real del workflow de un proyecto de JSM."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del estado en JSM")
+    name: str = Field(description="nombre del estado en JSM")
+    status_id: str = Field(description="id interno del estado en ticket_status, es el que se manda como status_id al guardar el mapeo de estados")
+
+
+class JsmField(BaseModel):
+    """Un campo custom de JSM de tipo seleccion unica."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del campo en JSM, por ejemplo customfield_10050")
+    name: str = Field(description="nombre del campo en JSM")
+
+
+class JsmPriority(BaseModel):
+    """Una prioridad real de la instancia de JSM."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id de la prioridad en JSM, es el valor que se manda de vuelta dentro de mapping al confirmar el mapeo")
+    name: str = Field(description="nombre de la prioridad en JSM")
+
+
+class ConfluenceSpaceItem(BaseModel):
+    """Un space real de la instancia de Confluence."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del space en Confluence")
+    key: str = Field(description="key del space en Confluence, por ejemplo TA")
+    name: str = Field(description="nombre del space en Confluence")
+
+
 class AvailableProjectsResponse(BaseModel):
     """Response con la lista de proyectos disponibles en jsm, para que el admin elija (CU27)."""
-    projects: list[dict] = Field(description="proyectos reales de la instancia de JSM, con su key y name")
+    projects: list[AvailableProject] = Field(description="proyectos reales de la instancia de JSM, con su key y name")
 
 
 class ProjectToOnboard(BaseModel):
@@ -98,17 +145,17 @@ class OnboardProjectsResponse(BaseModel):
 
 class CountriesResponse(BaseModel):
     """Response con los paises validos, para que el frontend arme el dropdown al dar de alta proyectos."""
-    countries: list[dict] = Field(description="paises del catalogo, con su code y name")
+    countries: list[Country] = Field(description="paises del catalogo, con su code y name")
 
 
 class ProjectStatusesResponse(BaseModel):
     """Response con los estados reales de un proyecto de jsm, para el mapeo del admin (TF-122)."""
-    statuses: list[dict] = Field(description="estados reales del workflow de JSM para ese proyecto, con su id y name")
+    statuses: list[JsmStatus] = Field(description="estados reales del workflow de JSM para ese proyecto, con su id y name")
 
 
 class SelectFieldsResponse(BaseModel):
     """Response con los campos custom de tipo lista de seleccion unica, para que el admin elija cual es categoria."""
-    fields: list[dict] = Field(description="campos custom de JSM de tipo seleccion unica, con su id y nombre")
+    fields: list[JsmField] = Field(description="campos custom de JSM de tipo seleccion unica, con su id y nombre")
 
 
 class ConfigureCategoriesRequest(BaseModel):
@@ -127,6 +174,18 @@ class FieldOptionsResponse(BaseModel):
     options: list[str] = Field(description="valores posibles de ese campo en la instancia real de JSM")
 
 
+class ProjectRequestType(BaseModel):
+    """Un tipo de solicitud incorporado a un proyecto."""
+    id: str = Field(description="id interno del tipo de solicitud")
+    name: str = Field(description="nombre del tipo de solicitud, igual al de JSM")
+    is_active: bool = Field(description="si el tipo de solicitud esta activo en el proyecto")
+
+
+class ProjectRequestTypesResponse(BaseModel):
+    """Response con los tipos de solicitud ya incorporados a un proyecto."""
+    request_types: list[ProjectRequestType] = Field(description="tipos de solicitud vinculados al proyecto, ordenados por nombre, la lista viene vacia si todavia no se incorporo ninguno")
+
+
 class ConfigureRequestTypesResponse(BaseModel):
     """Response de confirmacion al configurar los tipos de solicitud de un proyecto."""
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
@@ -135,8 +194,8 @@ class ConfigureRequestTypesResponse(BaseModel):
 
 class PrioritiesWithSuggestionResponse(BaseModel):
     """Response con las prioridades reales de jsm y una sugerencia automatica de mapeo."""
-    priorities: list[dict] = Field(description="prioridades reales de la instancia de JSM")
-    suggestions: dict = Field(description="mapeo sugerido de cada prioridad real a un nivel universal (Highest, High, Medium, Low)")
+    priorities: list[JsmPriority] = Field(description="prioridades reales de la instancia de JSM")
+    suggestions: dict[str, str | None] = Field(description="mapeo sugerido de cada nivel universal (Highest, High, Medium y Low) a un id de prioridad real de JSM, o null si no se encontro ninguna que se parezca")
 
 
 class ConfigurePriorityMappingRequest(BaseModel):
@@ -174,7 +233,7 @@ class SpaceToLink(BaseModel):
 
 class AvailableSpacesResponse(BaseModel):
     """Response con la lista de spaces disponibles en confluence, para que el admin elija (CU29)."""
-    spaces: list[dict] = Field(description="spaces reales de la instancia de Confluence, con su key y name")
+    spaces: list[ConfluenceSpaceItem] = Field(description="spaces reales de la instancia de Confluence, con su key y name")
 
 
 class ConfigureSpacesRequest(BaseModel):
@@ -213,6 +272,11 @@ class ResolutionChannelCount(BaseModel):
     """Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."""
     resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     count: int = Field(description="cantidad de interacciones con ese canal de resolucion")
+
+class ErrorResponse(BaseModel):
+    """Cuerpo de las respuestas de error de la API."""
+    detail: str = Field(description="mensaje que explica el error")
+
 
 class MetricsSummaryResponse(BaseModel):
     """Resumen agregado de metricas de interacciones, para el dashboard."""
@@ -299,6 +363,65 @@ class ProjectThresholdsItem(BaseModel):
 class ProjectThresholdsResponse(BaseModel):
     """Umbrales configurados por proyecto, para que el dashboard dibuje las zonas de decision."""
     projects: list[ProjectThresholdsItem] = Field(description="un elemento por proyecto configurado, o solo el pedido si se indica project_id, los umbrales vacios traen el valor por defecto del pipeline")
+
+
+class OnboardedProject(BaseModel):
+    """Un proyecto dado de alta, con su id interno y sus umbrales."""
+    project_id: str = Field(description="id interno del proyecto, es el que piden los endpoints que no aceptan project_key")
+    key: str = Field(description="key del proyecto en JSM, por ejemplo TARG")
+    name: str = Field(description="nombre del proyecto")
+    country_code: str | None = Field(description="codigo del pais del proyecto, por ejemplo AR, o null si no tiene")
+    language_code: str | None = Field(description="idioma principal del proyecto, o null si no se definio")
+    is_active: bool = Field(description="si el proyecto esta activo")
+    threshold_auto_publish: float = Field(description="confidence_score minimo para publicar sin revision humana, con el valor por defecto del pipeline si no esta cargado")
+    threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana, con el valor por defecto del pipeline si no esta cargado")
+    similarity_threshold: float = Field(description="similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado")
+
+
+class OnboardedProjectsResponse(BaseModel):
+    """Response con los proyectos dados de alta, para precargar la pantalla de configuracion."""
+    projects: list[OnboardedProject] = Field(description="proyectos dados de alta, ordenados por key")
+
+
+class ProjectCategoryItem(BaseModel):
+    """Una categoria vinculada a un proyecto."""
+    id: str = Field(description="id interno de la categoria")
+    name: str = Field(description="nombre de la categoria, igual al valor real de JSM")
+    is_active: bool = Field(description="si la categoria esta activa en el proyecto")
+
+
+class ProjectStatusMappingItem(BaseModel):
+    """Un mapeo de estado ya guardado para un proyecto."""
+    status_id: str = Field(description="id interno del estado en ticket_status")
+    status_name: str = Field(description="nombre del estado")
+    system_action: str | None = Field(description="accion del sistema asociada al estado, o null si no tiene")
+    is_active: bool = Field(description="si el mapeo esta activo")
+
+
+class ProjectSpaceItem(BaseModel):
+    """Un space de Confluence vinculado a un proyecto."""
+    space_key: str = Field(description="key del space en Confluence")
+    description: str | None = Field(description="descripcion del space, o null si no tiene")
+    language_code: str | None = Field(description="idioma del contenido del space, o null si no se definio")
+    country_code: str | None = Field(description="codigo del pais del space, o null si no tiene")
+    is_active: bool = Field(description="si el space esta activo en el proyecto")
+
+
+class ProjectConfigurationResponse(BaseModel):
+    """Todo lo que tiene guardado un proyecto, para precargar la pantalla de configuracion."""
+    project: OnboardedProject = Field(description="datos del proyecto")
+    categories: list[ProjectCategoryItem] = Field(description="categorias vinculadas, ordenadas por nombre")
+    request_types: list[ProjectRequestType] = Field(description="tipos de solicitud incorporados, ordenados por nombre")
+    priority_mapping: dict[str, list[str]] = Field(description="mapeo de prioridades guardado, con la misma forma que recibe el POST, nivel universal y lista de ids reales de JSM")
+    status_mappings: list[ProjectStatusMappingItem] = Field(description="mapeos de estado guardados, ordenados por nombre de estado")
+    spaces: list[ProjectSpaceItem] = Field(description="spaces de Confluence vinculados, ordenados por key")
+
+
+class ConnectionStatusResponse(BaseModel):
+    """Estado de una conexion externa, JSM o Confluence, sin ningun secreto."""
+    configured: bool = Field(description="true si la conexion esta completa, con url, email y token guardados")
+    base_url: str | None = Field(description="url de la instancia, o null si todavia no se configuro")
+    user_email: str | None = Field(description="email de la cuenta usada para autenticar, o null si todavia no se configuro, el token y el secreto del webhook nunca se devuelven")
 
 
 class InteractionListItem(BaseModel):

@@ -76,3 +76,23 @@ def test_configure_project_requires_admin():
     response = client.post("/api/config/itsm/projects", json=_build_request_body())
 
     assert response.status_code == 403
+
+
+# verifica que el endpoint acepta project_key sin project_id y se lo pasa al service
+@patch("app.modules.internal_api.router._service")
+def test_configure_project_accepts_project_key_without_project_id(mock_service):
+    mock_service.save_config.return_value = 1
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    body = {
+        "project_key": "TARG",
+        "thresholds": {"threshold_auto_publish": 0.9},
+        "status_mappings": [{"status_id": "status-1", "system_action": "21"}],
+    }
+    response = client.post("/api/config/itsm/projects", json=body)
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert mock_service.save_config.call_args[0][2] == "TARG"
