@@ -56,3 +56,25 @@ class JsmCredentialsRepository:
 
         finally:
             db.close()
+
+    # trae solo la url base y el email de la conexion con jsm, sin el token, o none si todavia no se configuro
+    # el token se verifica que exista pero no se desencripta, esta lectura se usa para mostrar el estado en el dashboard
+    def get_public_settings(self) -> dict | None:
+        db = next(get_db())
+
+        try:
+            keys = ["jsm_base_url", "jsm_user_email", "jsm_api_token"]
+            rows = db.execute(
+                text("SELECT key, encrypted_value FROM system_config WHERE key = ANY(:keys)"),
+                {"keys": keys},
+            ).fetchall()
+
+            if len({row.key for row in rows}) < len(keys):
+                return None
+
+            valores = {row.key: self.cipher.decrypt(row.encrypted_value) for row in rows if row.key != "jsm_api_token"}
+
+            return {"base_url": valores["jsm_base_url"], "user_email": valores["jsm_user_email"]}
+
+        finally:
+            db.close()
