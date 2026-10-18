@@ -273,6 +273,11 @@ class ResolutionChannelCount(BaseModel):
     resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     count: int = Field(description="cantidad de interacciones con ese canal de resolucion")
 
+class ErrorResponse(BaseModel):
+    """Cuerpo de las respuestas de error de la API."""
+    detail: str = Field(description="mensaje que explica el error")
+
+
 class MetricsSummaryResponse(BaseModel):
     """Resumen agregado de metricas de interacciones, para el dashboard."""
     total_interactions: int = Field(description="cantidad total de interacciones procesadas en el periodo")
