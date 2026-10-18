@@ -360,6 +360,58 @@ class ProjectThresholdsResponse(BaseModel):
     projects: list[ProjectThresholdsItem] = Field(description="un elemento por proyecto configurado, o solo el pedido si se indica project_id, los umbrales vacios traen el valor por defecto del pipeline")
 
 
+class OnboardedProject(BaseModel):
+    """Un proyecto dado de alta, con su id interno y sus umbrales."""
+    project_id: str = Field(description="id interno del proyecto, es el que piden los endpoints que no aceptan project_key")
+    key: str = Field(description="key del proyecto en JSM, por ejemplo TARG")
+    name: str = Field(description="nombre del proyecto")
+    country_code: str | None = Field(description="codigo del pais del proyecto, por ejemplo AR, o null si no tiene")
+    language_code: str | None = Field(description="idioma principal del proyecto, o null si no se definio")
+    is_active: bool = Field(description="si el proyecto esta activo")
+    threshold_auto_publish: float = Field(description="confidence_score minimo para publicar sin revision humana, con el valor por defecto del pipeline si no esta cargado")
+    threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana, con el valor por defecto del pipeline si no esta cargado")
+    similarity_threshold: float = Field(description="similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado")
+
+
+class OnboardedProjectsResponse(BaseModel):
+    """Response con los proyectos dados de alta, para precargar la pantalla de configuracion."""
+    projects: list[OnboardedProject] = Field(description="proyectos dados de alta, ordenados por key")
+
+
+class ProjectCategoryItem(BaseModel):
+    """Una categoria vinculada a un proyecto."""
+    id: str = Field(description="id interno de la categoria")
+    name: str = Field(description="nombre de la categoria, igual al valor real de JSM")
+    is_active: bool = Field(description="si la categoria esta activa en el proyecto")
+
+
+class ProjectStatusMappingItem(BaseModel):
+    """Un mapeo de estado ya guardado para un proyecto."""
+    status_id: str = Field(description="id interno del estado en ticket_status")
+    status_name: str = Field(description="nombre del estado")
+    system_action: str | None = Field(description="accion del sistema asociada al estado, o null si no tiene")
+    is_active: bool = Field(description="si el mapeo esta activo")
+
+
+class ProjectSpaceItem(BaseModel):
+    """Un space de Confluence vinculado a un proyecto."""
+    space_key: str = Field(description="key del space en Confluence")
+    description: str | None = Field(description="descripcion del space, o null si no tiene")
+    language_code: str | None = Field(description="idioma del contenido del space, o null si no se definio")
+    country_code: str | None = Field(description="codigo del pais del space, o null si no tiene")
+    is_active: bool = Field(description="si el space esta activo en el proyecto")
+
+
+class ProjectConfigurationResponse(BaseModel):
+    """Todo lo que tiene guardado un proyecto, para precargar la pantalla de configuracion."""
+    project: OnboardedProject = Field(description="datos del proyecto")
+    categories: list[ProjectCategoryItem] = Field(description="categorias vinculadas, ordenadas por nombre")
+    request_types: list[ProjectRequestType] = Field(description="tipos de solicitud incorporados, ordenados por nombre")
+    priority_mapping: dict[str, list[str]] = Field(description="mapeo de prioridades guardado, con la misma forma que recibe el POST, nivel universal y lista de ids reales de JSM")
+    status_mappings: list[ProjectStatusMappingItem] = Field(description="mapeos de estado guardados, ordenados por nombre de estado")
+    spaces: list[ProjectSpaceItem] = Field(description="spaces de Confluence vinculados, ordenados por key")
+
+
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
     interaction_id: str = Field(description="id de la interaccion")
