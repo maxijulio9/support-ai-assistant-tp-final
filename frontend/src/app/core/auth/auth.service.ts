@@ -6,6 +6,8 @@ import { ApiConfiguration } from '../../api/api-configuration';
 import { loginAuthLoginPost } from '../../api/fn/auth/login-auth-login-post';
 import { logoutAuthLogoutPost } from '../../api/fn/auth/logout-auth-logout-post';
 import { getProfileAuthProfileGet } from '../../api/fn/auth/get-profile-auth-profile-get';
+import { forgotPasswordAuthForgotPasswordPost } from '../../api/fn/auth/forgot-password-auth-forgot-password-post';
+import { resetPasswordAuthResetPasswordPost } from '../../api/fn/auth/reset-password-auth-reset-password-post';
 import { UserResponse } from '../../api/models/user-response';
 import { SessionService } from './session.service';
 import { LOGIN_ROUTE, isLoginRoute } from './auth-routes';
@@ -57,6 +59,20 @@ export class AuthService {
         }
       }),
     );
+  }
+
+  // El backend responde 200 sin importar si el email existe (no revela
+  // cuentas), asi que no hay nada que distinguir del lado del exito.
+  forgotPassword(email: string): Observable<void> {
+    return forgotPasswordAuthForgotPasswordPost(this.http, this.apiConfig.rootUrl, {
+      body: { email },
+    }).pipe(map(() => undefined));
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return resetPasswordAuthResetPasswordPost(this.http, this.apiConfig.rootUrl, {
+      body: { token, new_password: newPassword },
+    }).pipe(map(() => undefined));
   }
 
   loadProfile(): Observable<UserResponse> {
