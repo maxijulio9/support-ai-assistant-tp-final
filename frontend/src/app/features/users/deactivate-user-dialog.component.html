@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>Desactivar usuario</h2>
+
+<mat-dialog-content>
+  <p>
+    ¿Desactivar a <strong>{{ data.user.full_name }}</strong>? No va a poder iniciar sesión. Esta acción no se
+    puede revertir desde la interfaz.
+  </p>
+
+  @if (errorMessage()) {
+    <p class="deactivate-user-error" role="alert">{{ errorMessage() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [disabled]="submitting()" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button type="button" [disabled]="submitting()" (click)="confirm()">
+    {{ submitting() ? 'Desactivando...' : 'Desactivar' }}
+  </button>
+</mat-dialog-actions>

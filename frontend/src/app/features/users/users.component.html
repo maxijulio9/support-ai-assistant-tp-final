@@ -1,0 +1,76 @@
+<div class="users-page">
+  <header class="users-header">
+    <div>
+      <h1 class="users-title">Usuarios</h1>
+      <p class="users-subtitle">Los usuarios desactivados no pueden volver a activarse desde aquí.</p>
+    </div>
+    @if (state() === 'loaded') {
+      <button mat-flat-button type="button" (click)="openCreate()">Nuevo usuario</button>
+    }
+  </header>
+
+  @if (state() === 'loading') {
+    <div class="users-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando los usuarios</span>
+      <div class="users-skeleton-line" style="width: 100%"></div>
+      <div class="users-skeleton-line" style="width: 100%"></div>
+      <div class="users-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="users-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    @if (sortedUsers().length === 0) {
+      <p class="users-empty">No hay usuarios para mostrar.</p>
+    } @else {
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Email</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Fecha de alta</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of sortedUsers(); track user.id) {
+            <tr [class.is-inactive]="!user.is_active">
+              <td data-label="Nombre">
+                {{ user.full_name }}
+                @if (isSelf(user)) {
+                  <span class="users-you-badge">Tú</span>
+                }
+              </td>
+              <td data-label="Email">{{ user.email }}</td>
+              <td data-label="Rol">{{ roleLabel(user.role) }}</td>
+              <td data-label="Estado">
+                <span class="users-status-chip" [class.is-active]="user.is_active">
+                  {{ user.is_active ? 'Activo' : 'Desactivado' }}
+                </span>
+              </td>
+              <td data-label="Fecha de alta">{{ formattedCreatedAt(user.created_at) }}</td>
+              <td data-label="Acciones" class="users-actions">
+                <button mat-button type="button" (click)="openEdit(user)">Editar</button>
+                @if (user.is_active) {
+                  <span [matTooltip]="isSelf(user) ? 'No podés desactivarte a vos mismo' : ''">
+                    <button mat-button type="button" [disabled]="isSelf(user)" (click)="openDeactivate(user)">
+                      Desactivar
+                    </button>
+                  </span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+</div>

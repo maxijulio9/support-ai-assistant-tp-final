@@ -1,0 +1,144 @@
+:host {
+  display: block;
+}
+
+.users-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+}
+
+.users-title {
+  font: var(--app-text-page-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.users-subtitle {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 0;
+}
+
+.users-empty,
+.users-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+}
+
+.users-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.users-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.users-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+  overflow: hidden;
+}
+
+.users-table th,
+.users-table td {
+  text-align: left;
+  padding: var(--app-space-sm);
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.users-table th {
+  font: var(--app-text-card-heading);
+  color: var(--app-color-text-secondary);
+}
+
+.users-table tr.is-inactive td {
+  color: var(--app-color-text-secondary);
+}
+
+.users-you-badge {
+  margin-left: var(--app-space-xs);
+  font: var(--app-text-metadata);
+  color: var(--mat-sys-primary);
+}
+
+.users-status-chip {
+  display: inline-block;
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.users-status-chip.is-active {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
+.users-actions {
+  display: flex;
+  gap: var(--app-space-xs);
+}
+
+// Por debajo de este ancho cada fila pasa a verse como una tarjeta apilada
+// (misma logica que el resto de las pantallas, ver dashboard.component.scss),
+// en vez de forzar scroll horizontal en la tabla.
+@media (max-width: 767.98px) {
+  .users-table thead {
+    display: none;
+  }
+
+  .users-table,
+  .users-table tbody,
+  .users-table tr,
+  .users-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .users-table tr {
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+    padding: var(--app-space-xs) 0;
+  }
+
+  .users-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--app-space-sm);
+    border-bottom: none;
+    padding: calc(var(--app-space-xs) / 2) var(--app-space-sm);
+  }
+
+  .users-table td::before {
+    content: attr(data-label);
+    font: var(--app-text-card-heading);
+    color: var(--app-color-text-secondary);
+  }
+}

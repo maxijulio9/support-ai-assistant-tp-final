@@ -1,0 +1,49 @@
+<h2 mat-dialog-title>Editar usuario</h2>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <mat-dialog-content>
+    <div class="edit-user-readonly">
+      <span class="edit-user-readonly-label">Email</span>
+      <span class="edit-user-readonly-value">{{ email }}</span>
+    </div>
+
+    <mat-form-field appearance="outline" class="edit-user-field">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="fullName" autocomplete="off" maxlength="255" />
+      <mat-error>
+        @if (form.controls.fullName.hasError('required')) {
+          Ingresá un nombre.
+        } @else if (form.controls.fullName.hasError('maxlength')) {
+          Tiene que tener como máximo 255 caracteres.
+        }
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="edit-user-field">
+      <mat-label>Rol</mat-label>
+      <mat-select formControlName="role">
+        @for (option of roleOptions; track option) {
+          <mat-option [value]="option" [disabled]="isSelf && option === 'agent'">
+            {{ roleLabel(option) }}
+          </mat-option>
+        }
+      </mat-select>
+      <mat-error>Elegí un rol.</mat-error>
+    </mat-form-field>
+
+    @if (isSelf) {
+      <p class="edit-user-hint">No podés cambiar tu propio rol a agente.</p>
+    }
+
+    @if (errorMessage()) {
+      <p class="edit-user-error" role="alert">{{ errorMessage() }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" [disabled]="submitting()" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Guardando...' : 'Guardar' }}
+    </button>
+  </mat-dialog-actions>
+</form>

@@ -93,6 +93,18 @@ export class AuthService {
     );
   }
 
+  // Lo usa Usuarios cuando el admin edita su propia fila: el PUT lo hace
+  // UsersService, no este servicio, asi que el token de referencia se
+  // captura afuera (antes de ese PUT) y se pasa aca para aplicar la misma
+  // guarda que updateProfile. Solo el nombre, porque Usuarios bloquea el
+  // cambio de rol sobre la propia fila.
+  syncOwnProfileName(userId: string, fullName: string, tokenAtRequestTime: string | null): void {
+    const current = this.profileSignal();
+    if (!current || current.id !== userId) return;
+    if (this.sessionService.token() !== tokenAtRequestTime) return;
+    this.profileSignal.set({ ...current, full_name: fullName });
+  }
+
   loadProfile(): Observable<UserResponse> {
     // se captura el token al llamar: si cambia antes de que llegue la
     // respuesta (logout, o login de otro usuario), se descarta la respuesta
