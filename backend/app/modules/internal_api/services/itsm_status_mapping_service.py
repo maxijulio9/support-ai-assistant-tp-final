@@ -21,6 +21,4 @@ class ItsmStatusMappingService:
             raise ValueError("todavia no se configuro la conexion con jsm")
 
         statuses = await self.jsm_project_client.get_project_statuses(project_key=project_key, **credentials)
-        self.ticket_status_repository.configure_statuses(statuses)
-
-        return statuses
+        return self.ticket_status_repository.configure_statuses_with_ids(statuses)
