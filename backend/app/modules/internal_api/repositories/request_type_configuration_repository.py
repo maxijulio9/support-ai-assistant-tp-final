@@ -38,6 +38,32 @@ class RequestTypeConfigurationRepository:
         finally:
             db.close()
 
+    # lista los tipos de solicitud vinculados a un proyecto, ordenados por nombre
+    # lanza ValueError si el project_key no existe
+    def list_project_request_types(self, project_key: str) -> list[dict]:
+        db = next(get_db())
+
+        try:
+            project_id = self._find_project_id(db, project_key)
+            if project_id is None:
+                raise ValueError(f"project_key '{project_key}' no existe")
+
+            rows = db.execute(
+                text("""
+                    SELECT rt.id, rt.name, prt.is_active
+                    FROM project_request_type prt
+                    JOIN ticket_request_type rt ON rt.id = prt.request_type_id
+                    WHERE prt.project_id = :project_id
+                    ORDER BY rt.name
+                """),
+                {"project_id": project_id},
+            ).fetchall()
+
+            return [{"id": str(row.id), "name": row.name, "is_active": row.is_active} for row in rows]
+
+        finally:
+            db.close()
+
     # busca el id del proyecto por su code
     def _find_project_id(self, db, project_key: str):
         row = db.execute(text("SELECT id FROM project WHERE code = :code"), {"code": project_key}).fetchone()
