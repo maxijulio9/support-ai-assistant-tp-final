@@ -6,6 +6,7 @@ import { ApiConfiguration } from '../../api/api-configuration';
 import { loginAuthLoginPost } from '../../api/fn/auth/login-auth-login-post';
 import { logoutAuthLogoutPost } from '../../api/fn/auth/logout-auth-logout-post';
 import { getProfileAuthProfileGet } from '../../api/fn/auth/get-profile-auth-profile-get';
+import { updateProfileAuthProfilePut } from '../../api/fn/auth/update-profile-auth-profile-put';
 import { forgotPasswordAuthForgotPasswordPost } from '../../api/fn/auth/forgot-password-auth-forgot-password-post';
 import { resetPasswordAuthResetPasswordPost } from '../../api/fn/auth/reset-password-auth-reset-password-post';
 import { UserResponse } from '../../api/models/user-response';
@@ -73,6 +74,23 @@ export class AuthService {
     return resetPasswordAuthResetPasswordPost(this.http, this.apiConfig.rootUrl, {
       body: { token, new_password: newPassword },
     }).pipe(map(() => undefined));
+  }
+
+  updateProfile(fullName: string): Observable<UserResponse> {
+    // misma guarda que loadProfile: si el token cambio mientras esperaba la
+    // respuesta, no pisa el perfil de la sesion nueva.
+    const tokenAtRequestTime = this.sessionService.token();
+
+    return updateProfileAuthProfilePut(this.http, this.apiConfig.rootUrl, {
+      body: { full_name: fullName },
+    }).pipe(
+      map((response) => {
+        if (this.sessionService.token() === tokenAtRequestTime) {
+          this.profileSignal.set(response.body);
+        }
+        return response.body;
+      }),
+    );
   }
 
   loadProfile(): Observable<UserResponse> {

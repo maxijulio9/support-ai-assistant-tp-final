@@ -73,6 +73,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'profile',
+        title: 'Perfil',
+        loadComponent: () =>
+          import('./features/profile/profile.component').then(
+            (m) => m.ProfileComponent,
+          ),
+      },
+      {
         path: 'users',
         title: 'Usuarios',
         loadComponent: () =>

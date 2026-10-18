@@ -11,18 +11,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ROLE_ADMIN, SessionService } from '../auth/session.service';
 import { AuthService } from '../auth/auth.service';
-
-// Traduccion del rol para mostrar en la interfaz. Un rol desconocido se
-// muestra tal cual (no rompe, no inventa una traduccion).
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrador',
-  agent: 'Agente',
-};
-
-function roleLabel(role: string | undefined): string {
-  if (!role) return '';
-  return ROLE_LABELS[role] ?? role;
-}
+import { roleLabel as translateRole } from '../../shared/role-label';
 
 function initials(fullName: string | undefined): string {
   if (!fullName) return '';
@@ -72,7 +61,7 @@ export class ShellComponent {
   readonly isAdmin = computed(() => this.sessionService.hasRole(ROLE_ADMIN));
   readonly profile = this.authService.profile;
   readonly initials = computed(() => initials(this.profile()?.full_name));
-  readonly roleLabel = computed(() => roleLabel(this.profile()?.role));
+  readonly roleLabel = computed(() => translateRole(this.profile()?.role));
 
   // Se lee de la propiedad "title" de la ruta activa mas profunda (no de
   // data.title). Si la ruta no define title, el breadcrumb no se renderiza.

@@ -1,0 +1,67 @@
+<div class="profile-page">
+  <header class="profile-header">
+    <h1 class="profile-title">Mi perfil</h1>
+  </header>
+
+  <div class="profile-card">
+    @if (state() === 'loading') {
+      <div class="profile-skeleton" role="status" aria-hidden="true">
+        <span class="visually-hidden">Cargando el perfil</span>
+        <div class="profile-skeleton-line" style="width: 40%"></div>
+        <div class="profile-skeleton-line"></div>
+        <div class="profile-skeleton-line"></div>
+      </div>
+    }
+
+    @if (state() === 'error') {
+      <div class="profile-error" role="alert">
+        <p>{{ loadErrorMessage() }}</p>
+        <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+      </div>
+    }
+
+    @if (state() === 'loaded') {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="profile-form">
+        <mat-form-field appearance="outline" class="profile-field">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="fullName" autocomplete="name" maxlength="255" />
+          <mat-error>
+            @if (form.controls.fullName.hasError('required')) {
+              Ingresá tu nombre.
+            } @else if (form.controls.fullName.hasError('maxlength')) {
+              Tiene que tener como máximo 255 caracteres.
+            }
+          </mat-error>
+        </mat-form-field>
+
+        <dl class="profile-readonly">
+          <div class="profile-readonly-row">
+            <dt>Email</dt>
+            <dd>{{ profile()?.email }}</dd>
+          </div>
+          <div class="profile-readonly-row">
+            <dt>Rol</dt>
+            <dd>{{ roleLabel() }}</dd>
+          </div>
+          <div class="profile-readonly-row">
+            <dt>Fecha de alta</dt>
+            <dd>{{ createdAtLabel() }}</dd>
+          </div>
+        </dl>
+
+        @if (submitErrorMessage()) {
+          <p class="profile-submit-error" role="alert">{{ submitErrorMessage() }}</p>
+        }
+
+        <button
+          mat-flat-button
+          type="submit"
+          class="profile-submit"
+          [disabled]="submitting() || nameUnchanged() || form.invalid"
+        >
+          {{ submitting() ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

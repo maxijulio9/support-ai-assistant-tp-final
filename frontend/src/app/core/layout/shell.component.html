@@ -94,10 +94,15 @@
 
       <div class="shell-account">
         <div class="shell-avatar shell-avatar--account">{{ initials() }}</div>
-        <div class="shell-account-info">
+        <a
+          routerLink="/profile"
+          class="shell-account-info"
+          aria-label="Ir a mi perfil"
+          (click)="isHandset() && drawer.close()"
+        >
           <span class="shell-account-name">{{ profile()?.full_name }}</span>
           <span class="shell-account-role">{{ roleLabel() }}</span>
-        </div>
+        </a>
         <button
           mat-icon-button
           type="button"
