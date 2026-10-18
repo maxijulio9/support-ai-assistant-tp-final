@@ -174,6 +174,18 @@ class FieldOptionsResponse(BaseModel):
     options: list[str] = Field(description="valores posibles de ese campo en la instancia real de JSM")
 
 
+class ProjectRequestType(BaseModel):
+    """Un tipo de solicitud incorporado a un proyecto."""
+    id: str = Field(description="id interno del tipo de solicitud")
+    name: str = Field(description="nombre del tipo de solicitud, igual al de JSM")
+    is_active: bool = Field(description="si el tipo de solicitud esta activo en el proyecto")
+
+
+class ProjectRequestTypesResponse(BaseModel):
+    """Response con los tipos de solicitud ya incorporados a un proyecto."""
+    request_types: list[ProjectRequestType] = Field(description="tipos de solicitud vinculados al proyecto, ordenados por nombre, la lista viene vacia si todavia no se incorporo ninguno")
+
+
 class ConfigureRequestTypesResponse(BaseModel):
     """Response de confirmacion al configurar los tipos de solicitud de un proyecto."""
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
