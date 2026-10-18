@@ -13,6 +13,8 @@ export type { UpdateUserApiUsersUserIdPut$Params as UpdateUserApiUsersUserIdPut$
 export { updateUserApiUsersUserIdPut as updateUserApiUsersUserIdPut } from './fn/auth/update-user-api-users-user-id-put';
 export type { DeactivateUserApiUsersUserIdDeactivatePatch$Params as DeactivateUserApiUsersUserIdDeactivatePatch$Params } from './fn/auth/deactivate-user-api-users-user-id-deactivate-patch';
 export { deactivateUserApiUsersUserIdDeactivatePatch as deactivateUserApiUsersUserIdDeactivatePatch } from './fn/auth/deactivate-user-api-users-user-id-deactivate-patch';
+export type { ActivateUserApiUsersUserIdActivatePatch$Params as ActivateUserApiUsersUserIdActivatePatch$Params } from './fn/auth/activate-user-api-users-user-id-activate-patch';
+export { activateUserApiUsersUserIdActivatePatch as activateUserApiUsersUserIdActivatePatch } from './fn/auth/activate-user-api-users-user-id-activate-patch';
 export type { GetProfileAuthProfileGet$Params as GetProfileAuthProfileGet$Params } from './fn/auth/get-profile-auth-profile-get';
 export { getProfileAuthProfileGet as getProfileAuthProfileGet } from './fn/auth/get-profile-auth-profile-get';
 export type { UpdateProfileAuthProfilePut$Params as UpdateProfileAuthProfilePut$Params } from './fn/auth/update-profile-auth-profile-put';
