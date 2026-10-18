@@ -100,17 +100,62 @@
   gap: var(--app-space-xs);
 }
 
-// Rojo oscurecido a partir del token de error del tema, para tener
-// suficiente contraste sobre el fondo claro (ver nota de accesibilidad en
-// _tokens.scss sobre el color secundario). El diálogo de confirmación usa
-// el mismo color (ver deactivate-user-dialog.component.scss).
-.users-deactivate-button {
-  color: color-mix(in srgb, var(--mat-sys-error) 70%, black);
+// Pildora compartida por Desactivar y Reactivar: mismo alto y ancho minimo
+// en los dos estados para que la columna Acciones no salte de tamaño al
+// pasar de uno a otro. El color (texto, borde, fondo al pasar el mouse) lo
+// pone cada variante mas abajo, no esta clase base.
+.users-action-pill {
+  height: 32px;
+  min-width: 104px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-color: transparent;
+  font-weight: 500;
+  line-height: 1;
 }
 
-// Deshabilitado en la propia fila: gris, no el rojo de la acción habilitada.
-.users-deactivate-button:disabled {
+// Deshabilitado (la fila propia): gris, sin importar la variante.
+.users-action-pill:disabled {
   color: var(--app-color-text-secondary);
+  border-color: var(--app-color-text-secondary);
+  cursor: not-allowed;
+}
+
+// Token de error del tema sin oscurecer: mas vivo que la version mezclada
+// con negro, y --mat-sys-error (#a7373c) ya tiene contraste de sobra sobre
+// el fondo claro. El diálogo de confirmación usa el mismo color (ver
+// deactivate-user-dialog.component.scss). El color del hover/foco se repite
+// explicito (no via currentColor) para que cada variante quede
+// inequivocamente atada a su propio token.
+.users-deactivate-button {
+  color: var(--mat-sys-error);
+  border-color: var(--mat-sys-error);
+}
+
+.users-deactivate-button:not(:disabled):hover,
+.users-deactivate-button:not(:disabled):focus-visible {
+  background-color: color-mix(in srgb, var(--mat-sys-error) 28%, transparent);
+}
+
+.users-deactivate-button:focus-visible {
+  outline: 2px solid var(--mat-sys-error);
+  outline-offset: 2px;
+}
+
+.users-reactivate-button {
+  color: var(--app-color-success);
+  border-color: var(--app-color-success);
+}
+
+.users-reactivate-button:not(:disabled):hover,
+.users-reactivate-button:not(:disabled):focus-visible {
+  background-color: color-mix(in srgb, var(--app-color-success) 10%, transparent);
+}
+
+.users-reactivate-button:focus-visible {
+  outline: 2px solid var(--app-color-success);
+  outline-offset: 2px;
 }
 
 // Por debajo de este ancho cada fila pasa a verse como una tarjeta apilada
