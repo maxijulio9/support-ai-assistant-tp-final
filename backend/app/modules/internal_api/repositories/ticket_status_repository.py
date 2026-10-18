@@ -35,6 +35,29 @@ class TicketStatusRepository:
         finally:
             db.close()
 
+    # igual que configure_statuses, pero devuelve cada estado con el id interno que tiene en ticket_status
+    # es el id que se manda como status_id al guardar el mapeo de estados de un proyecto
+    def configure_statuses_with_ids(self, statuses: list[dict]) -> list[dict]:
+        db = next(get_db())
+
+        try:
+            result = []
+            for status in statuses:
+                internal_id = self._upsert_status(db, status["name"])
+                result.append({**status, "status_id": str(internal_id)})
+
+            db.commit()
+            logger.info(f"{len(result)} estados procesados en ticket_status")
+            return result
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al configurar ticket_status: {e}")
+            raise
+
+        finally:
+            db.close()
+
     # crea el estado si no existe (buscando por name exacto), no hace nada si ya estaba
     def _upsert_status(self, db, name: str):
         existing = db.execute(text("SELECT id FROM ticket_status WHERE name = :name"), {"name": name}).fetchone()
