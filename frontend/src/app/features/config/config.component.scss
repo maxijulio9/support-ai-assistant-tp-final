@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.config-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+}
+
+.config-title {
+  font: var(--app-text-page-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.config-tabs {
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+}
+
+.config-tab-content {
+  padding: var(--app-space-md);
+}
+
+.config-placeholder {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
