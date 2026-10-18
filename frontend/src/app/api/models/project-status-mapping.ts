@@ -13,9 +13,9 @@ export interface ProjectStatusMapping {
   is_active?: boolean;
 
   /**
-   * id del proyecto en la tabla project
+   * id del proyecto en la tabla project, se puede omitir si se indica project_key
    */
-  project_id: string;
+  project_id?: (string | null);
 
   /**
    * id del estado generico en la tabla ticket_status

@@ -8,6 +8,11 @@ import { ProjectThresholds } from '../models/project-thresholds';
  * Request para el endpoint POST /api/config/itsm/projects (CU26).
  */
 export interface ProjectConfigRequest {
+
+  /**
+   * key del proyecto en JSM, por ejemplo TARG, es una alternativa a project_id, si se indica no hace falta mandar project_id
+   */
+  project_key?: (string | null);
   status_mappings: Array<ProjectStatusMapping>;
   thresholds: ProjectThresholds;
 }

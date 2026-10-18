@@ -8,9 +8,9 @@
 export interface ProjectThresholds {
 
   /**
-   * id del proyecto en la tabla project
+   * id del proyecto en la tabla project, se puede omitir si se indica project_key
    */
-  project_id: string;
+  project_id?: (string | null);
 
   /**
    * similarity_score minimo para que un chunk recuperado se use como contexto

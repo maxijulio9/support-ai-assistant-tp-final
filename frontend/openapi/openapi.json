@@ -519,6 +519,30 @@
       }
     },
     "/api/config/itsm/projects": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "List Onboarded Projects",
+        "operationId": "list_onboarded_projects_api_config_itsm_projects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardedProjectsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "post": {
         "tags": [
           "InternalAPI"
@@ -736,6 +760,30 @@
       }
     },
     "/api/config/itsm": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Itsm Connection",
+        "operationId": "get_itsm_connection_api_config_itsm_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "post": {
         "tags": [
           "InternalAPI"
@@ -1101,6 +1149,51 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Project Request Types",
+        "operationId": "get_project_request_types_api_config_itsm_projects__project_key__request_types_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectRequestTypesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/config/itsm/projects/{project_key}/priorities": {
@@ -1206,6 +1299,30 @@
       }
     },
     "/api/config/knowledge-base": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Confluence Connection",
+        "operationId": "get_confluence_connection_api_config_knowledge_base_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "post": {
         "tags": [
           "InternalAPI"
@@ -1394,6 +1511,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IndexingStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todavia no se disparo ninguna indexacion",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2130,6 +2257,53 @@
         }
       }
     },
+    "/api/config/itsm/projects/{project_key}": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Project Configuration",
+        "operationId": "get_project_configuration_api_config_itsm_projects__project_key__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectConfigurationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/interactions": {
       "get": {
         "tags": [
@@ -2353,12 +2527,32 @@
         "title": "ApproveRequest",
         "description": "Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta tal cual esta."
       },
+      "AvailableProject": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "key del proyecto en JSM, por ejemplo TARG"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del proyecto en JSM"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "title": "AvailableProject",
+        "description": "Un proyecto real de la instancia de JSM."
+      },
       "AvailableProjectsResponse": {
         "properties": {
           "projects": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/AvailableProject"
             },
             "type": "array",
             "title": "Projects",
@@ -2376,8 +2570,7 @@
         "properties": {
           "spaces": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/ConfluenceSpaceItem"
             },
             "type": "array",
             "title": "Spaces",
@@ -2682,6 +2875,33 @@
         "title": "ConfluenceConnectionResponse",
         "description": "Response de confirmacion de la conexion con Confluence."
       },
+      "ConfluenceSpaceItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id del space en Confluence"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "key del space en Confluence, por ejemplo TA"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del space en Confluence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "name"
+        ],
+        "title": "ConfluenceSpaceItem",
+        "description": "Un space real de la instancia de Confluence."
+      },
       "ConfluenceWebhookPayload": {
         "properties": {
           "page_id": {
@@ -2700,12 +2920,52 @@
         ],
         "title": "ConfluenceWebhookPayload"
       },
+      "ConnectionStatusResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured",
+            "description": "true si la conexion esta completa, con url, email y token guardados"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url",
+            "description": "url de la instancia, o null si todavia no se configuro"
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email",
+            "description": "email de la cuenta usada para autenticar, o null si todavia no se configuro, el token y el secreto del webhook nunca se devuelven"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "base_url",
+          "user_email"
+        ],
+        "title": "ConnectionStatusResponse",
+        "description": "Estado de una conexion externa, JSM o Confluence, sin ningun secreto."
+      },
       "CountriesResponse": {
         "properties": {
           "countries": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/Country"
             },
             "type": "array",
             "title": "Countries",
@@ -2718,6 +2978,27 @@
         ],
         "title": "CountriesResponse",
         "description": "Response con los paises validos, para que el frontend arme el dropdown al dar de alta proyectos."
+      },
+      "Country": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "codigo del pais, por ejemplo AR"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del pais"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "Country",
+        "description": "Un pais del catalogo."
       },
       "CreateUserRequest": {
         "properties": {
@@ -2846,6 +3127,21 @@
         ],
         "title": "DailyMetricsResponse",
         "description": "Serie diaria de metricas, para el dashboard."
+      },
+      "ErrorResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "mensaje que explica el error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorResponse",
+        "description": "Cuerpo de las respuestas de error de la API."
       },
       "EscalateRequest": {
         "properties": {
@@ -3522,6 +3818,27 @@
         "type": "object",
         "title": "JsmCustomField10010Raw"
       },
+      "JsmField": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id del campo en JSM, por ejemplo customfield_10050"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del campo en JSM"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "JsmField",
+        "description": "Un campo custom de JSM de tipo seleccion unica."
+      },
       "JsmFieldsRaw": {
         "properties": {
           "summary": {
@@ -3689,6 +4006,27 @@
         ],
         "title": "JsmIssueTypeRaw"
       },
+      "JsmPriority": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id de la prioridad en JSM, es el valor que se manda de vuelta dentro de mapping al confirmar el mapeo"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre de la prioridad en JSM"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "JsmPriority",
+        "description": "Una prioridad real de la instancia de JSM."
+      },
       "JsmPriorityRaw": {
         "properties": {
           "id": {
@@ -3736,6 +4074,33 @@
           "id"
         ],
         "title": "JsmRequestTypeRaw"
+      },
+      "JsmStatus": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id del estado en JSM"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del estado en JSM"
+          },
+          "status_id": {
+            "type": "string",
+            "title": "Status Id",
+            "description": "id interno del estado en ticket_status, es el que se manda como status_id al guardar el mapeo de estados"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status_id"
+        ],
+        "title": "JsmStatus",
+        "description": "Un estado real del workflow de un proyecto de JSM."
       },
       "JsmStatusRaw": {
         "properties": {
@@ -4022,22 +4387,125 @@
         "title": "OnboardProjectsResponse",
         "description": "Response de confirmacion del alta de proyectos."
       },
+      "OnboardedProject": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "title": "Project Id",
+            "description": "id interno del proyecto, es el que piden los endpoints que no aceptan project_key"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "key del proyecto en JSM, por ejemplo TARG"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del proyecto"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code",
+            "description": "codigo del pais del proyecto, por ejemplo AR, o null si no tiene"
+          },
+          "language_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language Code",
+            "description": "idioma principal del proyecto, o null si no se definio"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "si el proyecto esta activo"
+          },
+          "threshold_auto_publish": {
+            "type": "number",
+            "title": "Threshold Auto Publish",
+            "description": "confidence_score minimo para publicar sin revision humana, con el valor por defecto del pipeline si no esta cargado"
+          },
+          "threshold_needs_review": {
+            "type": "number",
+            "title": "Threshold Needs Review",
+            "description": "confidence_score minimo para pedir revision humana, con el valor por defecto del pipeline si no esta cargado"
+          },
+          "similarity_threshold": {
+            "type": "number",
+            "title": "Similarity Threshold",
+            "description": "similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "key",
+          "name",
+          "country_code",
+          "language_code",
+          "is_active",
+          "threshold_auto_publish",
+          "threshold_needs_review",
+          "similarity_threshold"
+        ],
+        "title": "OnboardedProject",
+        "description": "Un proyecto dado de alta, con su id interno y sus umbrales."
+      },
+      "OnboardedProjectsResponse": {
+        "properties": {
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/OnboardedProject"
+            },
+            "type": "array",
+            "title": "Projects",
+            "description": "proyectos dados de alta, ordenados por key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projects"
+        ],
+        "title": "OnboardedProjectsResponse",
+        "description": "Response con los proyectos dados de alta, para precargar la pantalla de configuracion."
+      },
       "PrioritiesWithSuggestionResponse": {
         "properties": {
           "priorities": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/JsmPriority"
             },
             "type": "array",
             "title": "Priorities",
             "description": "prioridades reales de la instancia de JSM"
           },
           "suggestions": {
-            "additionalProperties": true,
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "type": "object",
             "title": "Suggestions",
-            "description": "mapeo sugerido de cada prioridad real a un nivel universal (Highest, High, Medium, Low)"
+            "description": "mapeo sugerido de cada nivel universal (Highest, High, Medium y Low) a un id de prioridad real de JSM, o null si no se encontro ninguna que se parezca"
           }
         },
         "type": "object",
@@ -4048,8 +4516,47 @@
         "title": "PrioritiesWithSuggestionResponse",
         "description": "Response con las prioridades reales de jsm y una sugerencia automatica de mapeo."
       },
+      "ProjectCategoryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id interno de la categoria"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre de la categoria, igual al valor real de JSM"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "si la categoria esta activa en el proyecto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "is_active"
+        ],
+        "title": "ProjectCategoryItem",
+        "description": "Una categoria vinculada a un proyecto."
+      },
       "ProjectConfigRequest": {
         "properties": {
+          "project_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Key",
+            "description": "key del proyecto en JSM, por ejemplo TARG, es una alternativa a project_id, si se indica no hace falta mandar project_id"
+          },
           "thresholds": {
             "$ref": "#/components/schemas/ProjectThresholds"
           },
@@ -4090,12 +4597,186 @@
         "title": "ProjectConfigResponse",
         "description": "Response de confirmacion del endpoint de configuracion de proyecto."
       },
+      "ProjectConfigurationResponse": {
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/OnboardedProject",
+            "description": "datos del proyecto"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectCategoryItem"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "categorias vinculadas, ordenadas por nombre"
+          },
+          "request_types": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectRequestType"
+            },
+            "type": "array",
+            "title": "Request Types",
+            "description": "tipos de solicitud incorporados, ordenados por nombre"
+          },
+          "priority_mapping": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Priority Mapping",
+            "description": "mapeo de prioridades guardado, con la misma forma que recibe el POST, nivel universal y lista de ids reales de JSM"
+          },
+          "status_mappings": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectStatusMappingItem"
+            },
+            "type": "array",
+            "title": "Status Mappings",
+            "description": "mapeos de estado guardados, ordenados por nombre de estado"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectSpaceItem"
+            },
+            "type": "array",
+            "title": "Spaces",
+            "description": "spaces de Confluence vinculados, ordenados por key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project",
+          "categories",
+          "request_types",
+          "priority_mapping",
+          "status_mappings",
+          "spaces"
+        ],
+        "title": "ProjectConfigurationResponse",
+        "description": "Todo lo que tiene guardado un proyecto, para precargar la pantalla de configuracion."
+      },
+      "ProjectRequestType": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id interno del tipo de solicitud"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del tipo de solicitud, igual al de JSM"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "si el tipo de solicitud esta activo en el proyecto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "is_active"
+        ],
+        "title": "ProjectRequestType",
+        "description": "Un tipo de solicitud incorporado a un proyecto."
+      },
+      "ProjectRequestTypesResponse": {
+        "properties": {
+          "request_types": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectRequestType"
+            },
+            "type": "array",
+            "title": "Request Types",
+            "description": "tipos de solicitud vinculados al proyecto, ordenados por nombre, la lista viene vacia si todavia no se incorporo ninguno"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_types"
+        ],
+        "title": "ProjectRequestTypesResponse",
+        "description": "Response con los tipos de solicitud ya incorporados a un proyecto."
+      },
+      "ProjectSpaceItem": {
+        "properties": {
+          "space_key": {
+            "type": "string",
+            "title": "Space Key",
+            "description": "key del space en Confluence"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "descripcion del space, o null si no tiene"
+          },
+          "language_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language Code",
+            "description": "idioma del contenido del space, o null si no se definio"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code",
+            "description": "codigo del pais del space, o null si no tiene"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "si el space esta activo en el proyecto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "space_key",
+          "description",
+          "language_code",
+          "country_code",
+          "is_active"
+        ],
+        "title": "ProjectSpaceItem",
+        "description": "Un space de Confluence vinculado a un proyecto."
+      },
       "ProjectStatusMapping": {
         "properties": {
           "project_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Id",
-            "description": "id del proyecto en la tabla project"
+            "description": "id del proyecto en la tabla project, se puede omitir si se indica project_key"
           },
           "status_id": {
             "type": "string",
@@ -4123,18 +4804,56 @@
         },
         "type": "object",
         "required": [
-          "project_id",
           "status_id"
         ],
         "title": "ProjectStatusMapping",
         "description": "Mapeo de una categoria generica de estado ITSM a la transicion real de JSM, una fila por combinacion proyecto + estado (tabla project_config)."
       },
+      "ProjectStatusMappingItem": {
+        "properties": {
+          "status_id": {
+            "type": "string",
+            "title": "Status Id",
+            "description": "id interno del estado en ticket_status"
+          },
+          "status_name": {
+            "type": "string",
+            "title": "Status Name",
+            "description": "nombre del estado"
+          },
+          "system_action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Action",
+            "description": "accion del sistema asociada al estado, o null si no tiene"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "si el mapeo esta activo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status_id",
+          "status_name",
+          "system_action",
+          "is_active"
+        ],
+        "title": "ProjectStatusMappingItem",
+        "description": "Un mapeo de estado ya guardado para un proyecto."
+      },
       "ProjectStatusesResponse": {
         "properties": {
           "statuses": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/JsmStatus"
             },
             "type": "array",
             "title": "Statuses",
@@ -4151,9 +4870,16 @@
       "ProjectThresholds": {
         "properties": {
           "project_id": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Project Id",
-            "description": "id del proyecto en la tabla project"
+            "description": "id del proyecto en la tabla project, se puede omitir si se indica project_key"
           },
           "threshold_auto_publish": {
             "type": "number",
@@ -4181,9 +4907,6 @@
           }
         },
         "type": "object",
-        "required": [
-          "project_id"
-        ],
         "title": "ProjectThresholds",
         "description": "Umbrales de decision del pipeline, una fila por proyecto (columnas en la tabla project)."
       },
@@ -4390,8 +5113,7 @@
         "properties": {
           "fields": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/JsmField"
             },
             "type": "array",
             "title": "Fields",
