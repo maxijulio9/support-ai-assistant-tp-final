@@ -24,6 +24,7 @@ from app.modules.internal_api.schemas import (
     ProjectRequestTypesResponse,
     OnboardedProjectsResponse,
     ProjectConfigurationResponse,
+    ConnectionStatusResponse,
     ConfigurePriorityMappingRequest,
     ConfigurePriorityMappingResponse,
     PrioritiesWithSuggestionResponse,
@@ -60,6 +61,7 @@ from app.modules.internal_api.repositories.kb_indexing_status_repository import 
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
+from app.modules.internal_api.services.connection_status_service import ConnectionStatusService
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
 
@@ -79,6 +81,7 @@ _kb_indexing_status_repository = KbIndexingStatusRepository()
 _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
 _project_configuration_reader_service = ProjectConfigurationReaderService()
+_connection_status_service = ConnectionStatusService()
 _listing_service = InteractionListingService()
 
 
@@ -439,6 +442,28 @@ async def get_project_configuration(project_key: str, admin: AppUser = Depends(r
         raise HTTPException(status_code=503, detail="No se pudo consultar la configuracion del proyecto")
 
     return ProjectConfigurationResponse(**configuration)
+
+
+# dice si la conexion con jsm esta configurada y con que url y cuenta, nunca devuelve el token ni el secreto del webhook
+@router.get("/api/config/itsm", response_model=ConnectionStatusResponse)
+async def get_itsm_connection(admin: AppUser = Depends(require_admin)):
+    try:
+        connection = _connection_status_service.get_jsm_connection()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la conexion con JSM")
+
+    return ConnectionStatusResponse(**connection)
+
+
+# dice si la conexion con confluence esta configurada y con que url y cuenta, nunca devuelve el token
+@router.get("/api/config/knowledge-base", response_model=ConnectionStatusResponse)
+async def get_confluence_connection(admin: AppUser = Depends(require_admin)):
+    try:
+        connection = _connection_status_service.get_confluence_connection()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la conexion con Confluence")
+
+    return ConnectionStatusResponse(**connection)
 
 
 # lista interacciones paginadas, con filtros, para el dashboard
