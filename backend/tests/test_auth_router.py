@@ -330,3 +330,56 @@ def test_reset_password_too_short():
     response = client.post("/auth/reset-password", json={"token": "token-valido", "new_password": "corta"})
 
     assert response.status_code == 422
+
+
+# verifica que un admin puede reactivar a un usuario desactivado
+@patch("app.modules.auth.router._user_management_service")
+def test_activate_user_success(mock_service):
+    mock_service.activate_user.return_value = AppUser(
+        id="user-1", email="reactivado@tokenia.com", password_hash="$2b$12$x",
+        full_name="Usuario Reactivado", role="agent", is_active=True,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.patch("/api/users/user-1/activate")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
+    assert "password_hash" not in response.json()
+    mock_service.activate_user.assert_called_once_with("user-1")
+
+
+# verifica que un id inexistente devuelve 404 con el mensaje esperado
+@patch("app.modules.auth.router._user_management_service")
+def test_activate_user_not_found(mock_service):
+    mock_service.activate_user.side_effect = ValueError("usuario no encontrado")
+
+    app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
+
+    response = client.patch("/api/users/id-inexistente/activate")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Usuario no encontrado"
+
+
+# verifica que un usuario agent no puede reactivar, devuelve 403 y no llega al servicio
+@patch("app.modules.auth.router._user_management_service")
+def test_activate_user_requires_admin(mock_service):
+    app.dependency_overrides[get_current_user] = lambda: AppUser(
+        id="agent-1", email="agente@tokenia.com", password_hash="$2b$12$x",
+        full_name="Agente", role="agent", is_active=True,
+        created_at="2026-09-26T00:00:00Z", updated_at="2026-09-26T00:00:00Z",
+    )
+
+    response = client.patch("/api/users/user-1/activate")
+
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 403
+    mock_service.activate_user.assert_not_called()

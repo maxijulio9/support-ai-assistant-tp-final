@@ -132,3 +132,39 @@ def test_update_profile_keeps_current_role(mock_repository_class):
 
     mock_repository_class.return_value.update.assert_called_once_with("user-1", "Nombre Nuevo", "admin")
     assert result.full_name == "Nombre Nuevo"
+
+
+# verifica que activate_user delega en el repositorio y devuelve el usuario reactivado
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_activate_user_success(mock_repository_class):
+    mock_repository_class.return_value.activate.return_value = _build_app_user(is_active=True)
+
+    service = UserManagementService()
+    result = service.activate_user("user-1")
+
+    assert result.is_active is True
+    mock_repository_class.return_value.activate.assert_called_once_with("user-1")
+
+
+# verifica que activate_user es idempotente, si el usuario ya estaba activo lo devuelve sin error
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_activate_user_is_idempotent_when_already_active(mock_repository_class):
+    mock_repository_class.return_value.activate.return_value = _build_app_user(is_active=True)
+
+    service = UserManagementService()
+    first = service.activate_user("user-1")
+    second = service.activate_user("user-1")
+
+    assert first.is_active is True
+    assert second.is_active is True
+
+
+# verifica que activate_user rechaza con ValueError si el id no existe
+@patch("app.modules.auth.services.user_management_service.AppUserRepository")
+def test_activate_user_raises_when_not_found(mock_repository_class):
+    mock_repository_class.return_value.activate.return_value = None
+
+    service = UserManagementService()
+
+    with pytest.raises(ValueError, match="usuario no encontrado"):
+        service.activate_user("id-inexistente")
