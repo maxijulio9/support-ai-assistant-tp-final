@@ -1,0 +1,110 @@
+<div class="metrics-page">
+  <header class="metrics-header">
+    <h1 class="metrics-title">Métricas</h1>
+    <span matTooltip="Exportación no disponible todavía">
+      <button mat-stroked-button type="button" disabled>
+        <mat-icon aria-hidden="true">download</mat-icon>
+        Exportar datos
+      </button>
+    </span>
+  </header>
+
+  <div class="metrics-controls">
+    <mat-form-field appearance="outline" class="metrics-range-field">
+      <mat-label>Rango de fechas</mat-label>
+      <mat-date-range-input [rangePicker]="picker">
+        <input matStartDate [formControl]="rangeStart" placeholder="Inicio" />
+        <input matEndDate [formControl]="rangeEnd" placeholder="Fin" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-date-range-picker #picker (closed)="onRangeChanged()"></mat-date-range-picker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="metrics-filter">
+      <mat-label>Categoría</mat-label>
+      <mat-select [value]="categoryFilterValue()" (selectionChange)="onCategoryFilterChange($event.value)">
+        <mat-option [value]="null">Todas las categorías</mat-option>
+        @for (name of categoryOptionNames(); track name) {
+          <mat-option [value]="name">{{ name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="metrics-filter">
+      <mat-label>Decisión</mat-label>
+      <mat-select [value]="decisionFilterValue()" (selectionChange)="onDecisionFilterChange($event.value)">
+        <mat-option [value]="null">Todas las decisiones</mat-option>
+        @for (option of decisionOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (hasActiveFilters()) {
+    <div class="metrics-active-filters">
+      <mat-chip-set aria-label="Filtros activos">
+        @if (categoryFilterValue()) {
+          <mat-chip (removed)="onCategoryFilterChange(null)">
+            Categoría: {{ categoryFilterValue() }}
+            <button matChipRemove aria-label="Quitar filtro de categoría">
+              <mat-icon aria-hidden="true">cancel</mat-icon>
+            </button>
+          </mat-chip>
+        }
+        @if (decisionFilterLabel()) {
+          <mat-chip (removed)="onDecisionFilterChange(null)">
+            Decisión: {{ decisionFilterLabel() }}
+            <button matChipRemove aria-label="Quitar filtro de decisión">
+              <mat-icon aria-hidden="true">cancel</mat-icon>
+            </button>
+          </mat-chip>
+        }
+      </mat-chip-set>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  }
+
+  <p class="metrics-compare-note">Comparado con el período anterior</p>
+
+  <nav mat-tab-nav-bar [tabPanel]="tabPanel" class="metrics-tabs">
+    <a
+      mat-tab-link
+      routerLink="resumen"
+      queryParamsHandling="preserve"
+      routerLinkActive
+      #rlaResumen="routerLinkActive"
+      [active]="rlaResumen.isActive"
+    >
+      Resumen
+    </a>
+    <a
+      mat-tab-link
+      routerLink="decisiones-confianza"
+      queryParamsHandling="preserve"
+      routerLinkActive
+      #rlaDecisiones="routerLinkActive"
+      [active]="rlaDecisiones.isActive"
+    >
+      Decisiones y confianza
+    </a>
+    <a
+      mat-tab-link
+      routerLink="tiempos-comparativa"
+      queryParamsHandling="preserve"
+      routerLinkActive
+      #rlaTiempos="routerLinkActive"
+      [active]="rlaTiempos.isActive"
+    >
+      Tiempos y comparativa
+    </a>
+  </nav>
+
+  <mat-tab-nav-panel #tabPanel class="metrics-tab-panel">
+    <router-outlet></router-outlet>
+  </mat-tab-nav-panel>
+
+  <footer class="metrics-footer">
+    <span>La confianza expresa la certeza del sistema, no una precisión validada.</span>
+  </footer>
+</div>

@@ -26,8 +26,7 @@ const QUEUE_LIMIT = 200;
 // convertirlo. Mandar un email rompe el INSERT/UPDATE en Postgres y vuelve
 // como el 503 generico de approve/regenerate. Por eso solo se manda el id
 // del perfil si tiene forma de uuid; si no, se omite. Lo correcto seria que
-// el backend tomara el revisor del JWT en vez de recibirlo en el body
-// (hueco para TF-150).
+// el backend tomara el revisor del JWT en vez de recibirlo en el body.
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function resolveReviewedBy(id: string | undefined): string | undefined {

@@ -12,6 +12,7 @@ import { DecisionsDonutComponent, DonutSegment } from './decisions-donut.compone
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { formatRelativeTime } from '../../shared/format-relative-time';
+import { rate, ppDelta, rawDelta } from '../../shared/kpi-metrics';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../api/models/category-metric';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
@@ -27,22 +28,6 @@ const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
   ESCALATE: 'escalate_count',
   REQUEST_INFO: 'request_info_count',
 };
-
-function rate(count: number, total: number): number | null {
-  return total > 0 ? count / total : null;
-}
-
-// Delta en puntos porcentuales: diferencia entre dos tasas (0-1), expresada en
-// puntos (x100). Se usa para Resolucion automatica y Escaladas.
-function ppDelta(current: number | null, previous: number | null): number | null {
-  return current !== null && previous !== null ? (current - previous) * 100 : null;
-}
-
-// Delta como diferencia cruda: para Confianza media (escala 0-1, no es una
-// tasa sobre un total).
-function rawDelta(current: number | null, previous: number | null): number | null {
-  return current !== null && previous !== null ? current - previous : null;
-}
 
 @Component({
   selector: 'app-dashboard',

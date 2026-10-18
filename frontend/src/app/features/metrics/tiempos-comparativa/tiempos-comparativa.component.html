@@ -1,0 +1,45 @@
+<div class="tc-page">
+  <div class="tc-card">
+    <h2>Atención automática vs manual</h2>
+    <p class="tc-card-subtitle">Comparativa ilustrativa entre cohortes</p>
+
+    <div class="tc-columns">
+      <div class="tc-column tc-column--auto">
+        <h3>Atención automática</h3>
+        <ul class="tc-row-list">
+          @for (row of comparisonRows; track row) {
+            <li>{{ row }}</li>
+          }
+        </ul>
+      </div>
+      <div class="tc-column">
+        <h3>Atención manual</h3>
+        <ul class="tc-row-list">
+          @for (row of comparisonRows; track row) {
+            <li>{{ row }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <p class="tc-placeholder-note">Sin datos todavía</p>
+  </div>
+
+  <div class="tc-lower">
+    <div class="tc-card">
+      <h2>Tiempo de primera respuesta</h2>
+      <p class="tc-card-subtitle">Promedio del período</p>
+      <div class="tc-placeholder">
+        <p style="margin: 0">Sin datos todavía</p>
+      </div>
+    </div>
+
+    <div class="tc-card">
+      <h2>Evolución del tiempo medio de respuesta</h2>
+      <p class="tc-card-subtitle">Percentiles diarios, en segundos</p>
+      <div class="tc-placeholder">
+        <p style="margin: 0">Sin datos todavía</p>
+      </div>
+    </div>
+  </div>
+</div>

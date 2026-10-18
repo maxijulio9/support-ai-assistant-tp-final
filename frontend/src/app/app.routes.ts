@@ -42,6 +42,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'metrics',
+        loadChildren: () =>
+          import('./features/metrics/metrics.routes').then(
+            (m) => m.METRICS_ROUTES,
+          ),
+      },
+      {
         path: 'interactions',
         title: 'Historial',
         loadComponent: () =>
@@ -63,6 +70,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/review/review.component').then(
             (m) => m.ReviewComponent,
+          ),
+      },
+      {
+        path: 'profile',
+        title: 'Perfil',
+        loadComponent: () =>
+          import('./features/profile/profile.component').then(
+            (m) => m.ProfileComponent,
           ),
       },
       {

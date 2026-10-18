@@ -1,0 +1,245 @@
+<div class="resumen-page">
+  @if (state() === 'loading') {
+    <div class="resumen-skeleton" role="status">
+      <span class="visually-hidden">Cargando el resumen del período</span>
+      <div class="resumen-kpis" aria-hidden="true">
+        @for (row of [0, 1, 2, 3]; track row) {
+          <div class="resumen-card">
+            <div class="resumen-skeleton-line" style="width: 50%"></div>
+            <div class="resumen-skeleton-line resumen-skeleton-line--lg" style="width: 35%; margin-top: var(--app-space-xs)"></div>
+          </div>
+        }
+      </div>
+      <div class="resumen-card resumen-skeleton-block" aria-hidden="true">
+        <div class="resumen-skeleton-line" style="width: 40%"></div>
+      </div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="resumen-card resumen-message" role="alert">
+      <mat-icon aria-hidden="true" class="resumen-message-icon resumen-message-icon--error">error</mat-icon>
+      <h2>No pudimos cargar el resumen</h2>
+      <p>Revisá tu conexión y volvé a intentarlo.</p>
+      <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <div class="resumen-card resumen-message">
+      <mat-icon aria-hidden="true" class="resumen-message-icon">history</mat-icon>
+      @if (hasActiveFilters()) {
+        <h2>Todavía no hay solicitudes con estos filtros</h2>
+        <p>Probá con otra categoría o decisión, o quitalos desde el encabezado.</p>
+      } @else {
+        <h2>Todavía no hay solicitudes en este período</h2>
+        <p>Elegí otro rango de fechas para consultar la actividad.</p>
+      }
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <div class="resumen-kpis">
+      <app-metrics-kpi-card
+        label="Resolución automática"
+        [value]="autoPublishRate() !== null ? (autoPublishRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
+        [deltaText]="autoPublishDeltaPp() !== null ? (autoPublishDeltaPp()! | number: '1.1-1') + ' pp' : null"
+        [deltaArrowUp]="autoPublishDeltaArrowUp()"
+        [deltaColored]="true"
+        [deltaBad]="autoPublishDeltaBad()"
+        [highlight]="true"
+        [sparklineValues]="autoPublishSparkline()"
+      />
+      <app-metrics-kpi-card
+        label="Escalamiento"
+        [value]="escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
+        [deltaText]="escalateDeltaPp() !== null ? (escalateDeltaPp()! | number: '1.1-1') + ' pp' : null"
+        [deltaArrowUp]="escalateDeltaArrowUp()"
+        [sparklineValues]="escalateSparkline()"
+      />
+      <app-metrics-kpi-card
+        label="Total de solicitudes"
+        [value]="(totalInteractions() ?? 0 | number) ?? ''"
+        [deltaText]="totalDeltaPercent() !== null ? (totalDeltaPercent()! | number: '1.1-1') + '%' : null"
+        [deltaArrowUp]="totalDeltaArrowUp()"
+        [sparklineValues]="totalSparkline()"
+      />
+      <app-metrics-kpi-card
+        label="Confianza media"
+        [value]="avgConfidence() !== null ? ((avgConfidence() | number: '1.2-2') ?? '') : 'Sin dato'"
+        [deltaText]="avgConfidenceDelta() !== null ? (avgConfidenceDelta()! | number: '1.2-2') : null"
+        [deltaArrowUp]="avgConfidenceDeltaArrowUp()"
+        [sparklineValues]="avgConfidenceSparkline()"
+      />
+    </div>
+
+    <div class="resumen-lower">
+      <div class="resumen-card resumen-categories">
+        <div class="resumen-categories-header">
+          <div>
+            <h2>Solicitudes por categoría</h2>
+            <p class="resumen-card-subtitle">Categorías, ordenadas por volumen</p>
+          </div>
+          <mat-slide-toggle [checked]="categoriesAsTable()" (change)="toggleCategoriesAsTable()">
+            Ver como tabla
+          </mat-slide-toggle>
+        </div>
+
+        @if (categoryRows().length === 0) {
+          <p class="resumen-empty">Todavía no hay categorías para mostrar.</p>
+        } @else if (categoriesAsTable()) {
+          <div class="resumen-categories-table-wrapper">
+            <table class="resumen-categories-table">
+              <caption class="visually-hidden">Solicitudes por categoría</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Categoría</th>
+                  <th scope="col">Solicitudes</th>
+                  <th scope="col">Porcentaje</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of categoryRows(); track row.category) {
+                  <tr>
+                    <td>{{ row.category }}</td>
+                    <td>{{ row.total | number }}</td>
+                    <td>{{ row.percent | number: '1.1-1' }}%</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <ul class="resumen-categories-list">
+            @for (row of categoryRows(); track row.category) {
+              <li>
+                <div class="resumen-categories-row">
+                  <span>{{ row.category }}</span>
+                  <span>{{ row.total | number }} ({{ row.percent | number: '1.1-1' }}%)</span>
+                </div>
+                <div class="resumen-categories-bar">
+                  <div class="resumen-categories-bar-fill" [style.width.%]="row.percent"></div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          @if (leaderCategory()) {
+            <p class="resumen-categories-leader">
+              {{ leaderCategory()!.category }} lidera con {{ leaderCategory()!.total | number }} solicitudes
+            </p>
+          }
+        }
+      </div>
+
+      <div class="resumen-card resumen-daily">
+        <div class="resumen-categories-header">
+          <div>
+            <h2>Solicitudes por día y decisión</h2>
+            <p class="resumen-card-subtitle">Serie diaria, apilada por decisión</p>
+          </div>
+          @if (dailyState() === 'loaded' && dailyRows().length > 0) {
+            <mat-slide-toggle [checked]="dailyAsTable()" (change)="toggleDailyAsTable()">
+              Ver como tabla
+            </mat-slide-toggle>
+          }
+        </div>
+
+        @if (dailyState() === 'loading') {
+          <div class="resumen-placeholder" role="status">
+            <span class="visually-hidden">Cargando la serie diaria</span>
+          </div>
+        }
+
+        @if (dailyState() === 'error') {
+          <div class="resumen-placeholder resumen-daily-error" role="alert">
+            <p style="margin: 0">No pudimos cargar la serie diaria.</p>
+            <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+          </div>
+        }
+
+        @if (dailyState() === 'rangeTooLong') {
+          <div class="resumen-placeholder">
+            <p style="margin: 0">La serie diaria admite hasta 366 días. Elegí un rango menor.</p>
+          </div>
+        }
+
+        @if (dailyState() === 'loaded') {
+          @if (dailyRows().length === 0) {
+            <p class="resumen-empty">Todavía no hay datos diarios para mostrar.</p>
+          } @else if (dailyAsTable()) {
+            <div class="resumen-daily-table-wrapper">
+              <table class="resumen-daily-table">
+                <caption class="visually-hidden">Solicitudes por día y decisión</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Día</th>
+                    @for (segment of dailySegments; track segment.key) {
+                      <th scope="col">{{ segment.label }}</th>
+                    }
+                    <th scope="col">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of dailyRows(); track row.date) {
+                    <tr>
+                      <td>{{ row.label }}</td>
+                      @for (value of row.segments; track $index) {
+                        <td>{{ value | number }}</td>
+                      }
+                      <td>{{ row.total | number }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div
+              echarts
+              [options]="dailyChartOptions()"
+              class="resumen-daily-chart"
+              role="img"
+              [attr.aria-label]="'Solicitudes por día y decisión, ' + dailyRows().length + ' días'"
+            ></div>
+          }
+        }
+      </div>
+
+      <div class="resumen-card">
+        <h2>Mapa de calor de actividad</h2>
+        <p class="resumen-card-subtitle">Solicitudes por día y hora</p>
+
+        @if (heatmapState() === 'loading') {
+          <div class="resumen-placeholder" role="status">
+            <span class="visually-hidden">Cargando el mapa de calor</span>
+          </div>
+        }
+
+        @if (heatmapState() === 'error') {
+          <div class="resumen-placeholder resumen-daily-error" role="alert">
+            <p style="margin: 0">No pudimos cargar el mapa de calor.</p>
+            <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+          </div>
+        }
+
+        @if (heatmapState() === 'loaded') {
+          @if (heatmapTotal() === 0) {
+            <p class="resumen-empty">Todavía no hay actividad para mostrar.</p>
+          } @else {
+            <div
+              echarts
+              [options]="heatmapChartOptions()"
+              class="resumen-heatmap-chart"
+              role="img"
+              [attr.aria-label]="'Mapa de calor de actividad, ' + heatmapTotal() + ' solicitudes representadas'"
+            ></div>
+          }
+        }
+      </div>
+    </div>
+
+    <footer class="resumen-footer">
+      <span>{{ totalInteractions() ?? 0 | number }} solicitudes analizadas</span>
+    </footer>
+  }
+</div>

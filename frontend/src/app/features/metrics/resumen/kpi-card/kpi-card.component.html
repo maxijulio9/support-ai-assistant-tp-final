@@ -1,0 +1,19 @@
+<div class="kpi-card" [class.kpi-card--highlight]="highlight()">
+  <p class="kpi-card-label">{{ label() }}</p>
+  <p class="kpi-card-value">{{ value() }}</p>
+  @if (deltaText() !== null) {
+    <p class="kpi-card-delta" [class.kpi-card-delta--colored]="deltaColored()" [class.kpi-card-delta--bad]="deltaColored() && deltaBad()">
+      {{ deltaArrowUp() ? '▲' : '▼' }} {{ deltaText() }}
+      <span class="kpi-card-delta-label">vs. anterior</span>
+    </p>
+  }
+  @if (sparklineValues().length > 0) {
+    <div
+      echarts
+      [options]="sparklineOptions()"
+      class="kpi-card-sparkline"
+      role="img"
+      [attr.aria-label]="'Serie diaria del período, ' + trendLabel()"
+    ></div>
+  }
+</div>

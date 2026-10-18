@@ -26,10 +26,17 @@
           <span matListItemTitle>Inicio</span>
         </a>
 
-        <div class="shell-nav-item shell-nav-item--disabled" role="link" aria-disabled="true">
-          <mat-icon>insights</mat-icon>
-          <span>Métricas</span>
-        </div>
+        <a
+          mat-list-item
+          class="shell-nav-item"
+          routerLink="/metrics"
+          routerLinkActive="active-link"
+          ariaCurrentWhenActive="page"
+          (click)="isHandset() && drawer.close()"
+        >
+          <mat-icon matListItemIcon>insights</mat-icon>
+          <span matListItemTitle>Métricas</span>
+        </a>
 
         <a
           mat-list-item
@@ -87,10 +94,15 @@
 
       <div class="shell-account">
         <div class="shell-avatar shell-avatar--account">{{ initials() }}</div>
-        <div class="shell-account-info">
+        <a
+          routerLink="/profile"
+          class="shell-account-info"
+          aria-label="Ir a mi perfil"
+          (click)="isHandset() && drawer.close()"
+        >
           <span class="shell-account-name">{{ profile()?.full_name }}</span>
           <span class="shell-account-role">{{ roleLabel() }}</span>
-        </div>
+        </a>
         <button
           mat-icon-button
           type="button"

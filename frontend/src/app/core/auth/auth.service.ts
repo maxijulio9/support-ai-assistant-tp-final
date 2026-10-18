@@ -6,6 +6,9 @@ import { ApiConfiguration } from '../../api/api-configuration';
 import { loginAuthLoginPost } from '../../api/fn/auth/login-auth-login-post';
 import { logoutAuthLogoutPost } from '../../api/fn/auth/logout-auth-logout-post';
 import { getProfileAuthProfileGet } from '../../api/fn/auth/get-profile-auth-profile-get';
+import { updateProfileAuthProfilePut } from '../../api/fn/auth/update-profile-auth-profile-put';
+import { forgotPasswordAuthForgotPasswordPost } from '../../api/fn/auth/forgot-password-auth-forgot-password-post';
+import { resetPasswordAuthResetPasswordPost } from '../../api/fn/auth/reset-password-auth-reset-password-post';
 import { UserResponse } from '../../api/models/user-response';
 import { SessionService } from './session.service';
 import { LOGIN_ROUTE, isLoginRoute } from './auth-routes';
@@ -57,6 +60,49 @@ export class AuthService {
         }
       }),
     );
+  }
+
+  // El backend responde 200 sin importar si el email existe (no revela
+  // cuentas), asi que no hay nada que distinguir del lado del exito.
+  forgotPassword(email: string): Observable<void> {
+    return forgotPasswordAuthForgotPasswordPost(this.http, this.apiConfig.rootUrl, {
+      body: { email },
+    }).pipe(map(() => undefined));
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<void> {
+    return resetPasswordAuthResetPasswordPost(this.http, this.apiConfig.rootUrl, {
+      body: { token, new_password: newPassword },
+    }).pipe(map(() => undefined));
+  }
+
+  updateProfile(fullName: string): Observable<UserResponse> {
+    // misma guarda que loadProfile: si el token cambio mientras esperaba la
+    // respuesta, no pisa el perfil de la sesion nueva.
+    const tokenAtRequestTime = this.sessionService.token();
+
+    return updateProfileAuthProfilePut(this.http, this.apiConfig.rootUrl, {
+      body: { full_name: fullName },
+    }).pipe(
+      map((response) => {
+        if (this.sessionService.token() === tokenAtRequestTime) {
+          this.profileSignal.set(response.body);
+        }
+        return response.body;
+      }),
+    );
+  }
+
+  // Lo usa Usuarios cuando el admin edita su propia fila: el PUT lo hace
+  // UsersService, no este servicio, asi que el token de referencia se
+  // captura afuera (antes de ese PUT) y se pasa aca para aplicar la misma
+  // guarda que updateProfile. Solo el nombre, porque Usuarios bloquea el
+  // cambio de rol sobre la propia fila.
+  syncOwnProfileName(userId: string, fullName: string, tokenAtRequestTime: string | null): void {
+    const current = this.profileSignal();
+    if (!current || current.id !== userId) return;
+    if (this.sessionService.token() !== tokenAtRequestTime) return;
+    this.profileSignal.set({ ...current, full_name: fullName });
   }
 
   loadProfile(): Observable<UserResponse> {

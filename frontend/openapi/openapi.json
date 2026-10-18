@@ -323,6 +323,53 @@
         }
       }
     },
+    "/api/users/{user_id}/activate": {
+      "patch": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Activate User",
+        "operationId": "activate_user_api_users__user_id__activate_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/profile": {
       "get": {
         "tags": [
@@ -1419,6 +1466,54 @@
               ],
               "title": "To Date"
             }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decision"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tz"
+            }
           }
         ],
         "responses": {
@@ -1428,6 +1523,140 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MetricsSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics/daily": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Metrics Daily",
+        "operationId": "get_metrics_daily_api_metrics_daily_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decision"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tz"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyMetricsResponse"
                 }
               }
             }
@@ -1473,6 +1702,86 @@
               ],
               "title": "Project Id"
             }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decision"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tz"
+            }
           }
         ],
         "responses": {
@@ -1482,6 +1791,328 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MetricsByCategoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics/confidence-distribution": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Metrics Confidence Distribution",
+        "operationId": "get_metrics_confidence_distribution_api_metrics_confidence_distribution_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decision"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tz"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfidenceDistributionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics/heatmap": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Metrics Heatmap",
+        "operationId": "get_metrics_heatmap_api_metrics_heatmap_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decision"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tz"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeatmapResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics/thresholds": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Metrics Thresholds",
+        "operationId": "get_metrics_thresholds_api_metrics_thresholds_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectThresholdsResponse"
                 }
               }
             }
@@ -1781,6 +2412,18 @@
             "type": "number",
             "title": "Automatic Resolution Rate",
             "description": "porcentaje de resolucion automatica dentro de esa categoria"
+          },
+          "avg_confidence_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Confidence Score",
+            "description": "promedio del confidence_score de las interacciones de esa categoria, o null si ninguna tiene puntaje"
           }
         },
         "type": "object",
@@ -1788,10 +2431,74 @@
           "category",
           "total_interactions",
           "auto_publish_count",
-          "automatic_resolution_rate"
+          "automatic_resolution_rate",
+          "avg_confidence_score"
         ],
         "title": "CategoryMetric",
         "description": "Un item del desglose de metricas por categoria."
+      },
+      "ConfidenceDistributionResponse": {
+        "properties": {
+          "intervals": {
+            "items": {
+              "$ref": "#/components/schemas/ConfidenceInterval"
+            },
+            "type": "array",
+            "title": "Intervals",
+            "description": "diez intervalos de 0.1 de ancho entre 0.0 y 1.0, de menor a mayor"
+          },
+          "without_score_count": {
+            "type": "integer",
+            "title": "Without Score Count",
+            "description": "cantidad de interacciones sin confidence_score, por ejemplo las que se escalaron o cerraron sin generar una respuesta, no entran en ningun intervalo"
+          },
+          "total_interactions": {
+            "type": "integer",
+            "title": "Total Interactions",
+            "description": "cantidad de interacciones con decision bajo los filtros, es la suma de los intervalos mas without_score_count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "intervals",
+          "without_score_count",
+          "total_interactions"
+        ],
+        "title": "ConfidenceDistributionResponse",
+        "description": "Distribucion de las interacciones por intervalo de confianza, para el dashboard."
+      },
+      "ConfidenceInterval": {
+        "properties": {
+          "lower_bound": {
+            "type": "number",
+            "title": "Lower Bound",
+            "description": "limite inferior del intervalo, siempre incluido"
+          },
+          "upper_bound": {
+            "type": "number",
+            "title": "Upper Bound",
+            "description": "limite superior del intervalo, excluido salvo que upper_inclusive sea true"
+          },
+          "upper_inclusive": {
+            "type": "boolean",
+            "title": "Upper Inclusive",
+            "description": "true solo en el ultimo intervalo, que incluye el limite superior 1.0"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "cantidad de interacciones cuyo confidence_score cae en el intervalo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lower_bound",
+          "upper_bound",
+          "upper_inclusive",
+          "count"
+        ],
+        "title": "ConfidenceInterval",
+        "description": "Un intervalo de la distribucion de confianza."
       },
       "ConfigureCategoriesRequest": {
         "properties": {
@@ -2046,6 +2753,100 @@
         ],
         "title": "CreateUserRequest"
       },
+      "DailyMetric": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "dia del calendario en formato AAAA-MM-DD, en el huso horario de la respuesta"
+          },
+          "total_interactions": {
+            "type": "integer",
+            "title": "Total Interactions",
+            "description": "cantidad de interacciones con decision de ese dia"
+          },
+          "auto_publish_count": {
+            "type": "integer",
+            "title": "Auto Publish Count",
+            "description": "cantidad de interacciones publicadas automaticamente ese dia"
+          },
+          "needs_review_count": {
+            "type": "integer",
+            "title": "Needs Review Count",
+            "description": "cantidad de interacciones pendientes de revision ese dia"
+          },
+          "escalate_count": {
+            "type": "integer",
+            "title": "Escalate Count",
+            "description": "cantidad de interacciones escaladas ese dia"
+          },
+          "request_info_count": {
+            "type": "integer",
+            "title": "Request Info Count",
+            "description": "cantidad de interacciones donde se pidio mas informacion ese dia"
+          },
+          "resolved_count": {
+            "type": "integer",
+            "title": "Resolved Count",
+            "description": "cantidad de interacciones resueltas por el sistema ese dia"
+          },
+          "resolved_externally_count": {
+            "type": "integer",
+            "title": "Resolved Externally Count",
+            "description": "cantidad de interacciones resueltas por un humano fuera del sistema ese dia"
+          },
+          "avg_confidence_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Confidence Score",
+            "description": "promedio del confidence_score de ese dia, o null si ninguna interaccion tiene puntaje"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "total_interactions",
+          "auto_publish_count",
+          "needs_review_count",
+          "escalate_count",
+          "request_info_count",
+          "resolved_count",
+          "resolved_externally_count",
+          "avg_confidence_score"
+        ],
+        "title": "DailyMetric",
+        "description": "Metricas de un dia del calendario, en el huso horario de la respuesta."
+      },
+      "DailyMetricsResponse": {
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "huso horario con el que se armaron los dias, nombre IANA"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DailyMetric"
+            },
+            "type": "array",
+            "title": "Days",
+            "description": "un elemento por dia, de menor a mayor fecha, los dias sin interacciones traen todos los conteos en cero"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timezone",
+          "days"
+        ],
+        "title": "DailyMetricsResponse",
+        "description": "Serie diaria de metricas, para el dashboard."
+      },
       "EscalateRequest": {
         "properties": {
           "rejection_reason": {
@@ -2120,6 +2921,63 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HeatmapCell": {
+        "properties": {
+          "weekday": {
+            "type": "integer",
+            "title": "Weekday",
+            "description": "dia de la semana de 1 (lunes) a 7 (domingo), en el huso horario de la respuesta"
+          },
+          "hour": {
+            "type": "integer",
+            "title": "Hour",
+            "description": "hora del dia de 0 a 23, en el huso horario de la respuesta"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "cantidad de interacciones con decision en esa celda"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weekday",
+          "hour",
+          "count"
+        ],
+        "title": "HeatmapCell",
+        "description": "Una celda del mapa de calor, un dia de la semana y una hora."
+      },
+      "HeatmapResponse": {
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "huso horario con el que se armaron las celdas, nombre IANA"
+          },
+          "total_interactions": {
+            "type": "integer",
+            "title": "Total Interactions",
+            "description": "cantidad de interacciones con decision bajo los filtros, es la suma de todas las celdas"
+          },
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/HeatmapCell"
+            },
+            "type": "array",
+            "title": "Cells",
+            "description": "las 168 celdas, ordenadas por dia de la semana y despues por hora, las celdas sin interacciones traen count en cero"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timezone",
+          "total_interactions",
+          "cells"
+        ],
+        "title": "HeatmapResponse",
+        "description": "Mapa de calor de las interacciones por dia de la semana y hora, para el dashboard."
       },
       "IndexingStatusResponse": {
         "properties": {
@@ -3073,6 +3931,19 @@
             "title": "Resolved Count",
             "description": "cantidad de tickets resueltos por el sistema"
           },
+          "without_decision_count": {
+            "type": "integer",
+            "title": "Without Decision Count",
+            "description": "cantidad de interacciones sin decision registrada en el periodo, no se suman a total_interactions ni a ningun otro conteo"
+          },
+          "by_resolution_channel": {
+            "items": {
+              "$ref": "#/components/schemas/ResolutionChannelCount"
+            },
+            "type": "array",
+            "title": "By Resolution Channel",
+            "description": "cantidad de interacciones por canal de resolucion, su suma coincide con total_interactions, el grupo con canal null reune las que todavia no se resolvieron y las anteriores a que se registrara el canal"
+          },
           "resolved_externally_count": {
             "type": "integer",
             "title": "Resolved Externally Count",
@@ -3104,6 +3975,8 @@
           "escalate_count",
           "request_info_count",
           "resolved_count",
+          "without_decision_count",
+          "by_resolution_channel",
           "resolved_externally_count",
           "automatic_resolution_rate",
           "avg_confidence_score"
@@ -3314,6 +4187,57 @@
         "title": "ProjectThresholds",
         "description": "Umbrales de decision del pipeline, una fila por proyecto (columnas en la tabla project)."
       },
+      "ProjectThresholdsItem": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "title": "Project Id",
+            "description": "id del proyecto"
+          },
+          "threshold_auto_publish": {
+            "type": "number",
+            "title": "Threshold Auto Publish",
+            "description": "confidence_score minimo para publicar la respuesta sin revision humana"
+          },
+          "threshold_needs_review": {
+            "type": "number",
+            "title": "Threshold Needs Review",
+            "description": "confidence_score minimo para pedir revision humana en vez de escalar directo"
+          },
+          "similarity_threshold": {
+            "type": "number",
+            "title": "Similarity Threshold",
+            "description": "similarity_score minimo para que un chunk recuperado se use como contexto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "threshold_auto_publish",
+          "threshold_needs_review",
+          "similarity_threshold"
+        ],
+        "title": "ProjectThresholdsItem",
+        "description": "Umbrales configurados de un proyecto."
+      },
+      "ProjectThresholdsResponse": {
+        "properties": {
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectThresholdsItem"
+            },
+            "type": "array",
+            "title": "Projects",
+            "description": "un elemento por proyecto configurado, o solo el pedido si se indica project_id, los umbrales vacios traen el valor por defecto del pipeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projects"
+        ],
+        "title": "ProjectThresholdsResponse",
+        "description": "Umbrales configurados por proyecto, para que el dashboard dibuje las zonas de decision."
+      },
       "ProjectToOnboard": {
         "properties": {
           "code": {
@@ -3399,6 +4323,34 @@
           "new_password"
         ],
         "title": "ResetPasswordRequest"
+      },
+      "ResolutionChannelCount": {
+        "properties": {
+          "resolution_channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Channel",
+            "description": "canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "cantidad de interacciones con ese canal de resolucion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resolution_channel",
+          "count"
+        ],
+        "title": "ResolutionChannelCount",
+        "description": "Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."
       },
       "RetrievedChunkDetail": {
         "properties": {

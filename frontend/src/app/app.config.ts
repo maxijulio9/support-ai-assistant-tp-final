@@ -2,6 +2,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideEchartsCore } from 'ngx-echarts';
+import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 
@@ -16,5 +17,7 @@ export const appConfig: ApplicationConfig = {
     // cuando se instancia la directiva "echarts" (hoy, solo en el donut de
     // Inicio).
     provideEchartsCore({ echarts: () => import('echarts') }),
+    provideNativeDateAdapter(),
+    { provide: MAT_DATE_LOCALE, useValue: 'es' },
   ],
 };

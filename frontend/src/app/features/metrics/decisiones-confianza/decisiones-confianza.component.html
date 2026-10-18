@@ -1,0 +1,240 @@
+<div class="dc-page">
+  @if (state() === 'loading') {
+    <div class="dc-skeleton" role="status">
+      <span class="visually-hidden">Cargando decisiones y confianza del período</span>
+      <div class="dc-card dc-skeleton-block" aria-hidden="true">
+        <div class="dc-skeleton-line" style="width: 40%"></div>
+        <div class="dc-skeleton-line dc-skeleton-line--lg" style="width: 100%; margin-top: var(--app-space-sm)"></div>
+      </div>
+      <div class="dc-card dc-skeleton-block" aria-hidden="true">
+        <div class="dc-skeleton-line" style="width: 40%"></div>
+      </div>
+      <div class="dc-card dc-skeleton-block" aria-hidden="true">
+        <div class="dc-skeleton-line" style="width: 40%"></div>
+      </div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="dc-card dc-message" role="alert">
+      <mat-icon aria-hidden="true" class="dc-message-icon dc-message-icon--error">error</mat-icon>
+      <h2>No pudimos cargar decisiones y confianza</h2>
+      <p>Revisá tu conexión y volvé a intentarlo.</p>
+      <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <div class="dc-card dc-message">
+      <mat-icon aria-hidden="true" class="dc-message-icon">history</mat-icon>
+      @if (hasActiveFilters()) {
+        <h2>Todavía no hay solicitudes con estos filtros</h2>
+        <p>Probá con otra categoría o decisión, o quitalos desde el encabezado.</p>
+      } @else {
+        <h2>Todavía no hay solicitudes en este período</h2>
+        <p>Elegí otro rango de fechas para consultar la actividad.</p>
+      }
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <div class="dc-card">
+      <div class="dc-card-header">
+        <div>
+          <h2>Distribución de decisiones</h2>
+          <p class="dc-card-subtitle">{{ totalInteractions() | number }} solicitudes, participación sobre el total</p>
+        </div>
+        <mat-slide-toggle [checked]="distributionAsTable()" (change)="toggleDistributionAsTable()">
+          Ver como tabla
+        </mat-slide-toggle>
+      </div>
+
+      @if (distributionAsTable()) {
+        <div class="dc-table-wrapper">
+          <table class="dc-table">
+            <caption class="visually-hidden">Distribución de decisiones</caption>
+            <thead>
+              <tr>
+                <th scope="col">Decisión</th>
+                <th scope="col">Solicitudes</th>
+                <th scope="col">Porcentaje</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of decisionRows(); track row.value) {
+                <tr>
+                  <td>{{ row.label }}</td>
+                  <td>{{ row.count | number }}</td>
+                  <td>{{ row.percent | number: '1.1-1' }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="dc-distribution-bar">
+          @for (row of decisionRows(); track row.value) {
+            <div [class]="'dc-distribution-segment dc-distribution-segment--' + row.tone" [style.width.%]="row.widthPercent">
+              @if (row.widthPercent >= 5) {
+                <span>{{ row.percent | number: '1.1-1' }}%</span>
+              }
+            </div>
+          }
+        </div>
+
+        <ul class="dc-distribution-legend">
+          @for (row of decisionRows(); track row.value) {
+            <li>
+              <span class="dc-legend-row">
+                <span [class]="'dc-dot dc-dot--' + row.tone"></span>
+                {{ row.label }}
+              </span>
+              <span class="dc-legend-value">{{ row.count | number }} ({{ row.percent | number: '1.1-1' }}%)</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <div class="dc-card">
+      <div class="dc-card-header">
+        <div>
+          <h2>Distribución de confianza</h2>
+          <p class="dc-card-subtitle">Solicitudes por intervalo, eje continuo de 0 a 1</p>
+        </div>
+        @if (confidenceState() === 'loaded' && intervals().length > 0) {
+          <mat-slide-toggle [checked]="confidenceAsTable()" (change)="toggleConfidenceAsTable()">
+            Ver como tabla
+          </mat-slide-toggle>
+        }
+      </div>
+
+      @if (confidenceState() === 'loading') {
+        <div class="dc-placeholder" role="status">
+          <span class="visually-hidden">Cargando la distribución de confianza</span>
+        </div>
+      }
+
+      @if (confidenceState() === 'error') {
+        <div class="dc-placeholder dc-confidence-error" role="alert">
+          <p style="margin: 0">No pudimos cargar la distribución de confianza.</p>
+          <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+        </div>
+      }
+
+      @if (confidenceState() === 'loaded') {
+        @if (intervals().length === 0) {
+          <p class="dc-empty">Todavía no hay datos de confianza para mostrar.</p>
+        } @else if (confidenceAsTable()) {
+          <div class="dc-table-wrapper">
+            <table class="dc-table">
+              <caption class="visually-hidden">Distribución de confianza</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Intervalo</th>
+                  <th scope="col">Solicitudes</th>
+                  <th scope="col">Porcentaje</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of confidenceRows(); track row.label) {
+                  <tr>
+                    <td>{{ row.label }}</td>
+                    <td>{{ row.count | number }}</td>
+                    <td>{{ row.percent | number: '1.1-1' }}%</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div
+            echarts
+            [options]="confidenceChartOptions()"
+            class="dc-confidence-chart"
+            role="img"
+            [attr.aria-label]="'Distribución de confianza, ' + confidenceTotal() + ' solicitudes con puntaje'"
+          ></div>
+        }
+
+        <p class="dc-card-subtitle">{{ withoutScoreCount() | number }} solicitudes sin puntaje de confianza</p>
+
+        @if (thresholdsDisagree()) {
+          <p class="dc-card-subtitle">Los proyectos configurados tienen umbrales distintos; no se muestran las líneas de referencia.</p>
+        } @else if (thresholdsAgreement().thresholdAutoPublish !== null || thresholdsAgreement().thresholdNeedsReview !== null) {
+          <p class="dc-card-subtitle">Los umbrales mostrados son los vigentes hoy; las decisiones ya tomadas se calcularon con los umbrales vigentes en el momento.</p>
+        }
+      }
+    </div>
+
+    <div class="dc-card">
+      <div class="dc-card-header">
+        <h2>Confianza media por categoría</h2>
+        @if (categoryConfidenceState() === 'loaded' && categoryConfidenceRows().length > 0) {
+          <mat-slide-toggle [checked]="categoryConfidenceAsTable()" (change)="toggleCategoryConfidenceAsTable()">
+            Ver como tabla
+          </mat-slide-toggle>
+        }
+      </div>
+
+      @if (categoryConfidenceState() === 'loading') {
+        <div class="dc-placeholder" role="status">
+          <span class="visually-hidden">Cargando la confianza por categoría</span>
+        </div>
+      }
+
+      @if (categoryConfidenceState() === 'error') {
+        <div class="dc-placeholder dc-confidence-error" role="alert">
+          <p style="margin: 0">No pudimos cargar la confianza por categoría.</p>
+          <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+        </div>
+      }
+
+      @if (categoryConfidenceState() === 'loaded') {
+        @if (categoryConfidenceRows().length === 0) {
+          <p class="dc-empty">Todavía no hay categorías para mostrar.</p>
+        } @else if (categoryConfidenceAsTable()) {
+          <div class="dc-table-wrapper">
+            <table class="dc-table">
+              <caption class="visually-hidden">Confianza media por categoría</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Categoría</th>
+                  <th scope="col">Confianza media</th>
+                  <th scope="col">Solicitudes</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of categoryConfidenceRows(); track row.category) {
+                  <tr>
+                    <td>{{ row.category }}</td>
+                    <td>{{ row.score !== null ? (row.score | number: '1.2-2') : 'Sin puntaje' }}</td>
+                    <td>{{ row.total | number }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <ul class="dc-confidence-by-category-list">
+            @for (row of categoryConfidenceRows(); track row.category) {
+              <li>
+                <div class="dc-confidence-by-category-row">
+                  <span>{{ row.category }}</span>
+                  <span>{{ row.score !== null ? (row.score | number: '1.2-2') : 'Sin puntaje' }} ({{ row.total | number }} solicitudes)</span>
+                </div>
+                <div class="dc-confidence-by-category-bar">
+                  <div class="dc-confidence-by-category-bar-fill" [style.width.%]="row.widthPercent"></div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+
+    <footer class="dc-footer">
+      <span>{{ totalInteractions() ?? 0 | number }} solicitudes analizadas</span>
+    </footer>
+  }
+</div>

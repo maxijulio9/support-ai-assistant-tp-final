@@ -11,12 +11,22 @@ import { MetricsByCategoryResponse } from '../../models/metrics-by-category-resp
 
 export interface GetMetricsByCategoryApiMetricsByCategoryGet$Params {
   project_id?: (string | null);
+  from_date?: (string | null);
+  to_date?: (string | null);
+  category?: (string | null);
+  decision?: (string | null);
+  tz?: (string | null);
 }
 
 export function getMetricsByCategoryApiMetricsByCategoryGet(http: HttpClient, rootUrl: string, params?: GetMetricsByCategoryApiMetricsByCategoryGet$Params, context?: HttpContext): Observable<StrictHttpResponse<MetricsByCategoryResponse>> {
   const rb = new RequestBuilder(rootUrl, getMetricsByCategoryApiMetricsByCategoryGet.PATH, 'get');
   if (params) {
     rb.query('project_id', params.project_id, {});
+    rb.query('from_date', params.from_date, {});
+    rb.query('to_date', params.to_date, {});
+    rb.query('category', params.category, {});
+    rb.query('decision', params.decision, {});
+    rb.query('tz', params.tz, {});
   }
 
   return http.request(
