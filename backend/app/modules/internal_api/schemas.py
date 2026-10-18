@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ProjectThresholds(BaseModel):
     """Umbrales de decision del pipeline, una fila por proyecto (columnas en la tabla project)."""
-    project_id: str = Field(description="id del proyecto en la tabla project")
+    project_id: str | None = Field(default=None, description="id del proyecto en la tabla project, se puede omitir si se indica project_key")
     threshold_auto_publish: float = Field(default=0.85, ge=0.0, le=1.0, description="confidence_score minimo para publicar la respuesta sin revision humana")
     threshold_needs_review: float = Field(default=0.60, ge=0.0, le=1.0, description="confidence_score minimo para pedir revision humana en vez de escalar directo")
     similarity_threshold: float = Field(default=0.40, ge=0.0, le=1.0, description="similarity_score minimo para que un chunk recuperado se use como contexto")
@@ -18,7 +18,7 @@ class ProjectThresholds(BaseModel):
 
 class ProjectStatusMapping(BaseModel):
     """Mapeo de una categoria generica de estado ITSM a la transicion real de JSM, una fila por combinacion proyecto + estado (tabla project_config)."""
-    project_id: str = Field(description="id del proyecto en la tabla project")
+    project_id: str | None = Field(default=None, description="id del proyecto en la tabla project, se puede omitir si se indica project_key")
     status_id: str = Field(description="id del estado generico en la tabla ticket_status")
     system_action: str | None = Field(default=None, description="id real de la transicion de JSM que corresponde a este estado")
     is_active: bool = Field(default=True, description="si el mapeo esta activo o fue desactivado por el admin")
@@ -26,6 +26,7 @@ class ProjectStatusMapping(BaseModel):
 
 class ProjectConfigRequest(BaseModel):
     """Request para el endpoint POST /api/config/itsm/projects (CU26)."""
+    project_key: str | None = Field(default=None, description="key del proyecto en JSM, por ejemplo TARG, es una alternativa a project_id, si se indica no hace falta mandar project_id")
     thresholds: ProjectThresholds
     status_mappings: list[ProjectStatusMapping]
 
