@@ -21,6 +21,7 @@ from app.modules.internal_api.schemas import (
     ConfigureCategoriesRequest,
     ConfigureCategoriesResponse,
     ConfigureRequestTypesResponse,
+    ProjectRequestTypesResponse,
     ConfigurePriorityMappingRequest,
     ConfigurePriorityMappingResponse,
     PrioritiesWithSuggestionResponse,
@@ -235,6 +236,19 @@ async def configure_request_types(project_key: str, admin: AppUser = Depends(req
         raise HTTPException(status_code=503, detail="No se pudo configurar los tipos de solicitud")
 
     return ConfigureRequestTypesResponse(status="ok", request_types_configured=request_types_configured)
+
+
+# lista los tipos de solicitud ya incorporados a un proyecto, para precargar la pantalla de configuracion
+@router.get("/api/config/itsm/projects/{project_key}/request-types", response_model=ProjectRequestTypesResponse)
+async def get_project_request_types(project_key: str, admin: AppUser = Depends(require_admin)):
+    try:
+        request_types = _project_onboarding_service.list_project_request_types(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar los tipos de solicitud")
+
+    return ProjectRequestTypesResponse(request_types=request_types)
 
 
 # trae las prioridades reales de un proyecto, con sugerencia automatica de mapeo
