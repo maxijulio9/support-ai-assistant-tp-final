@@ -39,6 +39,7 @@ from app.modules.internal_api.schemas import (
     StartIndexingRequest,
     StartIndexingResponse,
     IndexingStatusResponse,
+    ErrorResponse,
     MetricsSummaryResponse,
     MetricsByCategoryResponse,
     InteractionListResponse,
@@ -340,7 +341,7 @@ async def start_indexing(request: StartIndexingRequest, admin: AppUser = Depends
     return StartIndexingResponse(status="queued")
 
 # consulta el estado del ultimo trabajo de indexacion
-@router.get("/api/indexing/status", response_model=IndexingStatusResponse)
+@router.get("/api/indexing/status", response_model=IndexingStatusResponse, responses={404: {"model": ErrorResponse, "description": "Todavia no se disparo ninguna indexacion"}})
 async def get_indexing_status(admin: AppUser = Depends(require_admin)):
     status = _kb_indexing_status_repository.get_latest_status()
 
