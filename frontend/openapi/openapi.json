@@ -1127,6 +1127,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ConfigureRequestTypesRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1179,6 +1196,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectRequestTypesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/itsm/projects/{project_key}/request-types/available": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "List Available Request Types",
+        "operationId": "list_available_request_types_api_config_itsm_projects__project_key__request_types_available_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableRequestTypesResponse"
                 }
               }
             }
@@ -2566,6 +2630,51 @@
         "title": "AvailableProjectsResponse",
         "description": "Response con la lista de proyectos disponibles en jsm, para que el admin elija (CU27)."
       },
+      "AvailableRequestType": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id del tipo de solicitud en JSM, es el valor que se manda en request_type_ids"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del tipo de solicitud en JSM"
+          },
+          "incorporated": {
+            "type": "boolean",
+            "title": "Incorporated",
+            "description": "true si el tipo ya esta incorporado y activo en el proyecto, se compara por nombre"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "incorporated"
+        ],
+        "title": "AvailableRequestType",
+        "description": "Un tipo de solicitud real del service desk de un proyecto en JSM."
+      },
+      "AvailableRequestTypesResponse": {
+        "properties": {
+          "request_types": {
+            "items": {
+              "$ref": "#/components/schemas/AvailableRequestType"
+            },
+            "type": "array",
+            "title": "Request Types",
+            "description": "tipos de solicitud del service desk del proyecto, en el orden en que los devuelve JSM"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_types"
+        ],
+        "title": "AvailableRequestTypesResponse",
+        "description": "Response con los tipos de solicitud reales de un proyecto en JSM, para que el admin elija cuales incorporar."
+      },
       "AvailableSpacesResponse": {
         "properties": {
           "spaces": {
@@ -2773,6 +2882,28 @@
         ],
         "title": "ConfigurePriorityMappingResponse",
         "description": "Response de confirmacion del mapeo de prioridades."
+      },
+      "ConfigureRequestTypesRequest": {
+        "properties": {
+          "request_type_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Type Ids",
+            "description": "ids de JSM de los tipos de solicitud a incorporar, tal cual los devuelve GET .../request-types/available, si se omite o es null se incorporan todos los del service desk, una lista vacia se rechaza"
+          }
+        },
+        "type": "object",
+        "title": "ConfigureRequestTypesRequest",
+        "description": "Request opcional para elegir que tipos de solicitud se incorporan a un proyecto."
       },
       "ConfigureRequestTypesResponse": {
         "properties": {

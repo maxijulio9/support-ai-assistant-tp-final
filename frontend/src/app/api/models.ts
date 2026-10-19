@@ -4,6 +4,8 @@
 export type { ApproveRequest } from './models/approve-request';
 export type { AvailableProject } from './models/available-project';
 export type { AvailableProjectsResponse } from './models/available-projects-response';
+export type { AvailableRequestType } from './models/available-request-type';
+export type { AvailableRequestTypesResponse } from './models/available-request-types-response';
 export type { AvailableSpacesResponse } from './models/available-spaces-response';
 export type { CategoryMetric } from './models/category-metric';
 export type { ConfidenceDistributionResponse } from './models/confidence-distribution-response';
@@ -12,6 +14,7 @@ export type { ConfigureCategoriesRequest } from './models/configure-categories-r
 export type { ConfigureCategoriesResponse } from './models/configure-categories-response';
 export type { ConfigurePriorityMappingRequest } from './models/configure-priority-mapping-request';
 export type { ConfigurePriorityMappingResponse } from './models/configure-priority-mapping-response';
+export type { ConfigureRequestTypesRequest } from './models/configure-request-types-request';
 export type { ConfigureRequestTypesResponse } from './models/configure-request-types-response';
 export type { ConfigureSpacesRequest } from './models/configure-spaces-request';
 export type { ConfigureSpacesResponse } from './models/configure-spaces-response';

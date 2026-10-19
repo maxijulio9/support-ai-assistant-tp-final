@@ -7,16 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ConfigureRequestTypesRequest } from '../../models/configure-request-types-request';
 import { ConfigureRequestTypesResponse } from '../../models/configure-request-types-response';
 
 export interface ConfigureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost$Params {
   project_key: string;
+      body?: (ConfigureRequestTypesRequest | null)
 }
 
 export function configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost(http: HttpClient, rootUrl: string, params: ConfigureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost$Params, context?: HttpContext): Observable<StrictHttpResponse<ConfigureRequestTypesResponse>> {
   const rb = new RequestBuilder(rootUrl, configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost.PATH, 'post');
   if (params) {
     rb.path('project_key', params.project_key, {});
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(
