@@ -1,0 +1,102 @@
+:host {
+  display: block;
+}
+
+.indexing-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--app-space-sm);
+}
+
+.indexing-status-chip {
+  display: inline-block;
+  padding: 2px var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  text-transform: capitalize;
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.indexing-status-chip--progress {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+.indexing-status-chip--success {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
+.indexing-status-chip--error {
+  background-color: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+  color: var(--mat-sys-error);
+}
+
+.indexing-status-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  margin: 0;
+}
+
+.indexing-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-xs) 0;
+  font: var(--app-text-body);
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.indexing-status-row dt {
+  color: var(--app-color-text-secondary);
+}
+
+.indexing-status-row dd {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  text-align: right;
+}
+
+.indexing-status-timeout {
+  font: var(--app-text-secondary);
+  color: var(--app-color-warning);
+  margin: var(--app-space-sm) 0 0;
+}
+
+.indexing-status-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.indexing-status-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.indexing-status-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.indexing-status-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.indexing-status-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

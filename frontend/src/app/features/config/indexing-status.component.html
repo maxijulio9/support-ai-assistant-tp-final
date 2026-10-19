@@ -1,0 +1,68 @@
+<div class="indexing-status">
+  @if (state() === 'loading') {
+    <div class="indexing-status-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando el estado de indexación</span>
+      <div class="indexing-status-skeleton-line" style="width: 100%"></div>
+      <div class="indexing-status-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="indexing-status-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="refresh()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <p class="indexing-status-empty">Todavía no hay indexaciones.</p>
+    <button mat-stroked-button type="button" (click)="refresh()">Actualizar estado</button>
+  }
+
+  @if (state() === 'loaded' && status(); as data) {
+    <div class="indexing-status-header">
+      <span class="indexing-status-chip" [class]="'indexing-status-chip--' + statusTone(data.status)">
+        {{ data.status }}
+      </span>
+      <button mat-stroked-button type="button" (click)="refresh()">Actualizar estado</button>
+    </div>
+
+    <dl class="indexing-status-details">
+      <div class="indexing-status-row">
+        <dt>Espacios</dt>
+        <dd>{{ data.space_keys.join(', ') }}</dd>
+      </div>
+      <div class="indexing-status-row">
+        <dt>Iniciado</dt>
+        <dd>{{ formatTimestamp(data.started_at) }}</dd>
+      </div>
+      <div class="indexing-status-row">
+        <dt>Actualizado</dt>
+        <dd>{{ formatTimestamp(data.updated_at) }}</dd>
+      </div>
+      <div class="indexing-status-row">
+        <dt>Documentos procesados</dt>
+        <dd>
+          {{ data.documents_processed }}
+          @if (data.total_documents !== null) {
+            de {{ data.total_documents }}
+          }
+        </dd>
+      </div>
+      <div class="indexing-status-row">
+        <dt>Fragmentos generados</dt>
+        <dd>{{ data.chunks_generated }}</dd>
+      </div>
+      @if (data.error_detail) {
+        <div class="indexing-status-row">
+          <dt>Error</dt>
+          <dd>{{ data.error_detail }}</dd>
+        </div>
+      }
+    </dl>
+
+    @if (pollingTimedOut()) {
+      <p class="indexing-status-timeout" role="alert">Actualizá el estado manualmente.</p>
+    }
+  }
+</div>

@@ -23,6 +23,8 @@ import { getConfluenceConnectionApiConfigKnowledgeBaseGet } from '../../api/fn/i
 import { configureConfluenceConnectionApiConfigKnowledgeBasePost } from '../../api/fn/internal-api/configure-confluence-connection-api-config-knowledge-base-post';
 import { listAvailableSpacesApiConfigKnowledgeBaseSpacesAvailableGet } from '../../api/fn/internal-api/list-available-spaces-api-config-knowledge-base-spaces-available-get';
 import { configureSpacesApiConfigItsmProjectsProjectKeySpacesPost } from '../../api/fn/internal-api/configure-spaces-api-config-itsm-projects-project-key-spaces-post';
+import { startIndexingApiIndexingStartPost } from '../../api/fn/internal-api/start-indexing-api-indexing-start-post';
+import { getIndexingStatusApiIndexingStatusGet } from '../../api/fn/internal-api/get-indexing-status-api-indexing-status-get';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
 import { ItsmConnectionRequest } from '../../api/models/itsm-connection-request';
 import { ItsmConnectionResponse } from '../../api/models/itsm-connection-response';
@@ -43,6 +45,8 @@ import { ProjectConfigurationResponse } from '../../api/models/project-configura
 import { ProjectRequestType } from '../../api/models/project-request-type';
 import { AvailableRequestType } from '../../api/models/available-request-type';
 import { JsmPriority } from '../../api/models/jsm-priority';
+import { StartIndexingResponse } from '../../api/models/start-indexing-response';
+import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 
 // Nivel universal de prioridad como clave, lista de ids reales de JSM como
 // valor: misma forma que usan tanto el POST como el detalle del proyecto.
@@ -214,5 +218,22 @@ export class ConfigService {
       project_key: projectKey,
       body: { spaces: [space] },
     }).pipe(map((response) => response.body));
+  }
+
+  // El request pide space_keys, no project_key: el proyecto solo se usa del
+  // lado de la pantalla para elegir de que espacios ya vinculados salen esos
+  // space_keys (ver project-spaces.component / detalle del proyecto).
+  startIndexing(spaceKeys: string[]): Observable<StartIndexingResponse> {
+    return startIndexingApiIndexingStartPost(this.http, this.apiConfig.rootUrl, {
+      body: { space_keys: spaceKeys },
+    }).pipe(map((response) => response.body));
+  }
+
+  // 404 (todavia no se disparo ninguna indexacion) se propaga como error:
+  // quien llama lo distingue del resto antes de pasarlo por classifyFormError.
+  getIndexingStatus(): Observable<IndexingStatusResponse> {
+    return getIndexingStatusApiIndexingStatusGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body),
+    );
   }
 }

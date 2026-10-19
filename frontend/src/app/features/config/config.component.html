@@ -29,7 +29,12 @@
     </mat-tab>
     <mat-tab label="Indexación">
       <div class="config-tab-content">
-        <p class="config-placeholder">Esta sección se habilita en un próximo paso.</p>
+        <!-- Se renderiza solo con la pestaña activa (no con @if (true)) para
+             que el polling se corte al salir: mat-tab-group no destruye el
+             contenido de las pestañas al cambiar, solo lo oculta. -->
+        @if (selectedTabIndex() === 4) {
+          <app-indexing-tab />
+        }
       </div>
     </mat-tab>
   </mat-tab-group>

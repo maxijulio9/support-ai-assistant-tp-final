@@ -1,0 +1,82 @@
+<div class="indexing-tab">
+  <section class="indexing-tab-section">
+    <h2 class="indexing-tab-section-title">Iniciar indexación</h2>
+
+    @if (state() === 'loading') {
+      <div class="indexing-tab-skeleton" role="status" aria-hidden="true">
+        <span class="visually-hidden">Cargando los proyectos</span>
+        <div class="indexing-tab-skeleton-line" style="width: 100%"></div>
+      </div>
+    }
+
+    @if (state() === 'error') {
+      <div class="indexing-tab-error" role="alert">
+        <p>{{ loadErrorMessage() }}</p>
+        <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+      </div>
+    }
+
+    @if (state() === 'loaded') {
+      @if (projects().length === 0) {
+        <p class="indexing-tab-empty">Todavía no incorporaste ningún proyecto.</p>
+      } @else {
+        <mat-form-field appearance="outline" class="indexing-tab-field">
+          <mat-label>Proyecto</mat-label>
+          <mat-select [value]="selectedProjectKey()" (selectionChange)="selectProject($event.value)">
+            @for (project of projects(); track project.key) {
+              <mat-option [value]="project.key">{{ project.key }} - {{ project.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (linkedSpacesState() === 'loading') {
+          <div class="indexing-tab-skeleton" role="status" aria-hidden="true">
+            <span class="visually-hidden">Cargando los espacios vinculados</span>
+            <div class="indexing-tab-skeleton-line" style="width: 100%"></div>
+          </div>
+        }
+
+        @if (linkedSpacesState() === 'error') {
+          <div class="indexing-tab-error" role="alert">
+            <p>Ocurrió un error inesperado. Intentá de nuevo.</p>
+            <button mat-stroked-button type="button" (click)="retryLinkedSpaces()">Reintentar</button>
+          </div>
+        }
+
+        @if (linkedSpacesState() === 'loaded') {
+          @if (linkedSpaceKeys().length === 0) {
+            <p class="indexing-tab-empty">Este proyecto no tiene espacios vinculados para indexar.</p>
+          } @else {
+            <div class="indexing-tab-picker">
+              <mat-form-field appearance="outline" class="indexing-tab-field">
+                <mat-label>Espacios a indexar</mat-label>
+                <mat-select
+                  multiple
+                  [value]="selectedSpaceKeys()"
+                  (selectionChange)="selectSpaces($event.value)"
+                >
+                  @for (spaceKey of linkedSpaceKeys(); track spaceKey) {
+                    <mat-option [value]="spaceKey">{{ spaceKey }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <button mat-flat-button type="button" [disabled]="!canStart()" (click)="onStart()">
+                {{ submitting() ? 'Iniciando...' : 'Iniciar indexación' }}
+              </button>
+            </div>
+          }
+        }
+
+        @if (submitErrorMessage()) {
+          <p class="indexing-tab-submit-error" role="alert">{{ submitErrorMessage() }}</p>
+        }
+      }
+    }
+  </section>
+
+  <section class="indexing-tab-section">
+    <h2 class="indexing-tab-section-title">Estado</h2>
+    <app-indexing-status />
+  </section>
+</div>

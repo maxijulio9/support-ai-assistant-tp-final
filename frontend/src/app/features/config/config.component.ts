@@ -7,6 +7,7 @@ import { JsmConnectionComponent } from './jsm-connection.component';
 import { ProjectsTabComponent } from './projects-tab.component';
 import { FieldsCategoriesTabComponent } from './fields-categories-tab.component';
 import { ConfluenceTabComponent } from './confluence-tab.component';
+import { IndexingTabComponent } from './indexing-tab.component';
 import { configTabKeyForIndex, resolveConfigTabIndex } from './config-tabs';
 
 @Component({
@@ -18,6 +19,7 @@ import { configTabKeyForIndex, resolveConfigTabIndex } from './config-tabs';
     ProjectsTabComponent,
     FieldsCategoriesTabComponent,
     ConfluenceTabComponent,
+    IndexingTabComponent,
   ],
   templateUrl: './config.component.html',
   styleUrl: './config.component.scss',
