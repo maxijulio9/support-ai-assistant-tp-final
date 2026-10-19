@@ -134,7 +134,7 @@
   <div class="interactions-pagination">
     <span aria-live="polite">
       @if (rowsState() === 'loaded') {
-        {{ (effectivePage() - 1) * pageSize + 1 }}–{{ (effectivePage() - 1) * pageSize + pageItems().length }} de
+        {{ (effectivePage() - 1) * pageSize + 1 }}-{{ (effectivePage() - 1) * pageSize + pageItems().length }} de
         {{ totalFiltered() }} resultados
       }
     </span>

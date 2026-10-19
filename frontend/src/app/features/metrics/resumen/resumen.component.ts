@@ -220,7 +220,7 @@ export class ResumenComponent {
         position: 'top',
         formatter: (params: { value: [number, number, number] }) => {
           const [hour, weekdayIndex, count] = params.value;
-          return `${WEEKDAY_LABELS[weekdayIndex]}, ${hour}:00 — ${count}`;
+          return `${WEEKDAY_LABELS[weekdayIndex]}, ${hour}:00: ${count}`;
         },
       },
       grid: { left: 70, right: 16, top: 24, bottom: 70, containLabel: false },

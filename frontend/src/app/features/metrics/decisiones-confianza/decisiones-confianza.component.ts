@@ -77,7 +77,7 @@ function resolveConfidenceColors(): ConfidenceColors {
 function intervalLabel(interval: ConfidenceInterval): string {
   const lower = interval.lower_bound.toFixed(1);
   const upper = interval.upper_bound.toFixed(1);
-  return `${lower}–${upper}`;
+  return `${lower}-${upper}`;
 }
 
 @Component({
@@ -218,7 +218,7 @@ export class DecisionesConfianzaComponent {
         formatter: (params: { data: { value: [number, number, number]; upperInclusive: boolean } }) => {
           const [lower, upper, count] = params.data.value;
           const closingBracket = params.data.upperInclusive ? ']' : ')';
-          return `[${lower.toFixed(1)}, ${upper.toFixed(1)}${closingBracket} — ${count}`;
+          return `[${lower.toFixed(1)}, ${upper.toFixed(1)}${closingBracket}: ${count}`;
         },
       },
       grid: { left: 50, right: 24, top: 64, bottom: 32, containLabel: false },
