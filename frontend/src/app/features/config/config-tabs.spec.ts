@@ -5,6 +5,10 @@ describe('resolveConfigTabIndex', () => {
     expect(resolveConfigTabIndex('confluence')).toBe(3);
   });
 
+  it('devuelve el indice de Indexacion', () => {
+    expect(resolveConfigTabIndex('indexacion')).toBe(4);
+  });
+
   it('cae en JSM (indice 0) con una key invalida', () => {
     expect(resolveConfigTabIndex('no-existe')).toBe(0);
   });
