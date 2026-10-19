@@ -186,6 +186,25 @@ class ProjectRequestTypesResponse(BaseModel):
     request_types: list[ProjectRequestType] = Field(description="tipos de solicitud vinculados al proyecto, ordenados por nombre, la lista viene vacia si todavia no se incorporo ninguno")
 
 
+class ConfigureRequestTypesRequest(BaseModel):
+    """Request opcional para elegir que tipos de solicitud se incorporan a un proyecto."""
+    request_type_ids: list[str] | None = Field(default=None, description="ids de JSM de los tipos de solicitud a incorporar, tal cual los devuelve GET .../request-types/available, si se omite o es null se incorporan todos los del service desk, una lista vacia se rechaza")
+
+
+class AvailableRequestType(BaseModel):
+    """Un tipo de solicitud real del service desk de un proyecto en JSM."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+
+    id: str = Field(description="id del tipo de solicitud en JSM, es el valor que se manda en request_type_ids")
+    name: str = Field(description="nombre del tipo de solicitud en JSM")
+    incorporated: bool = Field(description="true si el tipo ya esta incorporado y activo en el proyecto, se compara por nombre")
+
+
+class AvailableRequestTypesResponse(BaseModel):
+    """Response con los tipos de solicitud reales de un proyecto en JSM, para que el admin elija cuales incorporar."""
+    request_types: list[AvailableRequestType] = Field(description="tipos de solicitud del service desk del proyecto, en el orden en que los devuelve JSM")
+
+
 class ConfigureRequestTypesResponse(BaseModel):
     """Response de confirmacion al configurar los tipos de solicitud de un proyecto."""
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
