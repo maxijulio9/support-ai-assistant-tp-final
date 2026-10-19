@@ -16,6 +16,7 @@ import { configureCategoriesApiConfigItsmProjectsProjectKeyCategoriesPost } from
 import { getProjectConfigurationApiConfigItsmProjectsProjectKeyGet } from '../../api/fn/internal-api/get-project-configuration-api-config-itsm-projects-project-key-get';
 import { getProjectRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesGet } from '../../api/fn/internal-api/get-project-request-types-api-config-itsm-projects-project-key-request-types-get';
 import { configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost } from '../../api/fn/internal-api/configure-request-types-api-config-itsm-projects-project-key-request-types-post';
+import { listAvailableRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesAvailableGet } from '../../api/fn/internal-api/list-available-request-types-api-config-itsm-projects-project-key-request-types-available-get';
 import { listPrioritiesApiConfigItsmProjectsProjectKeyPrioritiesGet } from '../../api/fn/internal-api/list-priorities-api-config-itsm-projects-project-key-priorities-get';
 import { configurePriorityMappingApiConfigItsmProjectsProjectKeyPrioritiesPost } from '../../api/fn/internal-api/configure-priority-mapping-api-config-itsm-projects-project-key-priorities-post';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
@@ -32,6 +33,7 @@ import { JsmStatus } from '../../api/models/jsm-status';
 import { JsmField } from '../../api/models/jsm-field';
 import { ProjectConfigurationResponse } from '../../api/models/project-configuration-response';
 import { ProjectRequestType } from '../../api/models/project-request-type';
+import { AvailableRequestType } from '../../api/models/available-request-type';
 import { JsmPriority } from '../../api/models/jsm-priority';
 
 // Nivel universal de prioridad como clave, lista de ids reales de JSM como
@@ -146,10 +148,21 @@ export class ConfigService {
     }).pipe(map((response) => response.body.request_types));
   }
 
-  // Sin body: incorpora todos los tipos de solicitud del proyecto en JSM.
-  configureRequestTypes(projectKey: string) {
+  listAvailableRequestTypes(projectKey: string): Observable<AvailableRequestType[]> {
+    return listAvailableRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesAvailableGet(
+      this.http,
+      this.apiConfig.rootUrl,
+      { project_key: projectKey },
+    ).pipe(map((response) => response.body.request_types));
+  }
+
+  // De a un tipo por vez: el contrato acepta una lista vacia o la omision
+  // del body para incorporar todos, pero esta pantalla siempre manda
+  // exactamente el id elegido.
+  addProjectRequestType(projectKey: string, requestTypeId: string) {
     return configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
+      body: { request_type_ids: [requestTypeId] },
     }).pipe(map((response) => response.body));
   }
 

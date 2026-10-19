@@ -2,6 +2,19 @@
   display: block;
 }
 
+.project-request-types-picker {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--app-space-sm);
+}
+
+.project-request-types-field {
+  width: 100%;
+  max-width: 320px;
+}
+
 .project-request-types-hint {
   font: var(--app-text-secondary);
   color: var(--app-color-text-secondary);
@@ -17,7 +30,7 @@
 .project-request-types-empty {
   font: var(--app-text-body);
   color: var(--app-color-text-secondary);
-  margin: var(--app-space-sm) 0 0;
+  margin: 0 0 var(--app-space-sm);
 }
 
 .project-request-types-list {
@@ -25,7 +38,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--app-space-xs);
-  margin: var(--app-space-sm) 0 0;
+  margin: 0;
   padding: 0;
 }
 

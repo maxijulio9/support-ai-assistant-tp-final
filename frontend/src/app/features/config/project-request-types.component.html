@@ -14,21 +14,45 @@
   }
 
   @if (state() === 'loaded') {
-    <p class="project-request-types-hint">Se incorporan todos los tipos de solicitud del proyecto en JSM.</p>
-
-    @if (incorporateErrorMessage()) {
-      <p class="project-request-types-submit-error" role="alert">{{ incorporateErrorMessage() }}</p>
+    @if (!hasEligible()) {
+      <p class="project-request-types-empty">No hay tipos de solicitud nuevos para incorporar.</p>
     }
 
-    <button mat-flat-button type="button" [disabled]="incorporating()" (click)="incorporate()">
-      {{ incorporating() ? 'Incorporando...' : 'Incorporar tipos de solicitud' }}
-    </button>
+    <div class="project-request-types-picker">
+      <mat-form-field appearance="outline" class="project-request-types-field">
+        <mat-label>Tipo de solicitud</mat-label>
+        <mat-select
+          [value]="selectedRequestTypeId()"
+          [disabled]="!hasEligible()"
+          (selectionChange)="selectRequestType($event.value)"
+        >
+          @for (requestType of availableRequestTypes(); track requestType.id) {
+            <mat-option [value]="requestType.id" [disabled]="requestType.incorporated">
+              {{ requestType.name }}
+              @if (requestType.incorporated) {
+                (Incorporado)
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-    @if (requestTypes().length === 0) {
+      <button mat-flat-button type="button" [disabled]="!canSubmit()" (click)="onAdd()">
+        {{ submitting() ? 'Agregando...' : 'Agregar' }}
+      </button>
+    </div>
+
+    @if (submitErrorMessage()) {
+      <p class="project-request-types-submit-error" role="alert">{{ submitErrorMessage() }}</p>
+    }
+
+    <p class="project-request-types-hint">Los tipos de solicitud incorporados no se pueden quitar por ahora.</p>
+
+    @if (incorporatedRequestTypes().length === 0) {
       <p class="project-request-types-empty">Todavía no hay tipos de solicitud incorporados.</p>
     } @else {
       <ul class="project-request-types-list">
-        @for (requestType of requestTypes(); track requestType.id) {
+        @for (requestType of incorporatedRequestTypes(); track requestType.id) {
           <li class="project-request-types-row">
             {{ requestType.name }}
             <span class="project-request-types-status" [class.is-active]="requestType.is_active">
