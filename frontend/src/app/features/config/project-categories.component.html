@@ -1,0 +1,81 @@
+<div class="project-categories">
+  @if (state() === 'loading') {
+    <div class="project-categories-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando categorías</span>
+      <div class="project-categories-skeleton-line" style="width: 100%"></div>
+      <div class="project-categories-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="project-categories-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <p class="project-categories-warning">Las categorías guardadas no se pueden quitar por ahora.</p>
+
+    @if (fields().length === 0) {
+      <p class="project-categories-empty">No hay campos de selección en JSM.</p>
+    } @else {
+      <mat-form-field appearance="outline" class="project-categories-field">
+        <mat-label>Campo de JSM</mat-label>
+        <mat-select [value]="selectedFieldId()" (selectionChange)="onSelectField($event.value)">
+          @for (field of fields(); track field.id) {
+            <mat-option [value]="field.id">{{ field.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (optionsState() === 'loading') {
+        <div class="project-categories-skeleton" role="status" aria-hidden="true">
+          <span class="visually-hidden">Cargando las opciones del campo</span>
+          <div class="project-categories-skeleton-line" style="width: 100%"></div>
+        </div>
+      }
+
+      @if (optionsState() === 'error') {
+        <div class="project-categories-error" role="alert">
+          <p>{{ optionsErrorMessage() }}</p>
+          <button mat-stroked-button type="button" (click)="retryOptions()">Reintentar</button>
+        </div>
+      }
+
+      @if (optionsState() === 'empty') {
+        <p class="project-categories-empty">Este campo no tiene valores para elegir.</p>
+      }
+
+      @if (optionsState() === 'loaded') {
+        <ul class="project-categories-list">
+          @for (option of options(); track option) {
+            <li class="project-categories-row">
+              <mat-checkbox
+                [checked]="isLocked(option) || isNewlySelected(option)"
+                [disabled]="isLocked(option)"
+                (change)="toggleOption(option, $event.checked)"
+              >
+                {{ option }}
+              </mat-checkbox>
+              @if (isLocked(option)) {
+                <span class="project-categories-locked">
+                  <mat-icon aria-hidden="true">lock</mat-icon>
+                  Guardada
+                </span>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (submitErrorMessage()) {
+          <p class="project-categories-submit-error" role="alert">{{ submitErrorMessage() }}</p>
+        }
+
+        <button mat-flat-button type="button" [disabled]="!canSubmit()" (click)="onSubmit()">
+          {{ submitting() ? 'Guardando...' : 'Guardar categorías' }}
+        </button>
+      }
+    }
+  }
+</div>

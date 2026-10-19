@@ -1,0 +1,49 @@
+<div class="fields-categories-tab">
+  @if (state() === 'loading') {
+    <div class="fields-categories-tab-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando los proyectos</span>
+      <div class="fields-categories-tab-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="fields-categories-tab-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    @if (projects().length === 0) {
+      <p class="fields-categories-tab-empty">Todavía no incorporaste ningún proyecto.</p>
+    } @else {
+      <mat-form-field appearance="outline" class="fields-categories-tab-field">
+        <mat-label>Proyecto</mat-label>
+        <mat-select [value]="selectedProjectKey()" (selectionChange)="selectProject($event.value)">
+          @for (project of projects(); track project.key) {
+            <mat-option [value]="project.key">{{ project.key }} - {{ project.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (selectedProjectKey(); as projectKey) {
+        <section class="fields-categories-tab-section">
+          <h2 class="fields-categories-tab-section-title">Categorías</h2>
+          <app-project-categories [projectKey]="projectKey" />
+        </section>
+
+        <section class="fields-categories-tab-section">
+          <h2 class="fields-categories-tab-section-title">Tipos de solicitud</h2>
+          <p class="fields-categories-tab-placeholder">Esta sección se habilita en un próximo paso.</p>
+        </section>
+
+        <section class="fields-categories-tab-section">
+          <h2 class="fields-categories-tab-section-title">Prioridades</h2>
+          <p class="fields-categories-tab-placeholder">Esta sección se habilita en un próximo paso.</p>
+        </section>
+      } @else {
+        <p class="fields-categories-tab-empty">Elegí un proyecto para ver sus categorías, tipos de solicitud y prioridades.</p>
+      }
+    }
+  }
+</div>

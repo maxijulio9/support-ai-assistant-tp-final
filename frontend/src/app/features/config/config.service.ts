@@ -10,6 +10,10 @@ import { onboardProjectsApiConfigItsmProjectsOnboardPost } from '../../api/fn/in
 import { listOnboardedProjectsApiConfigItsmProjectsGet } from '../../api/fn/internal-api/list-onboarded-projects-api-config-itsm-projects-get';
 import { configureProjectApiConfigItsmProjectsPost } from '../../api/fn/internal-api/configure-project-api-config-itsm-projects-post';
 import { listProjectStatusesApiConfigItsmProjectsProjectKeyStatusesGet } from '../../api/fn/internal-api/list-project-statuses-api-config-itsm-projects-project-key-statuses-get';
+import { listSelectFieldsApiConfigItsmFieldsGet } from '../../api/fn/internal-api/list-select-fields-api-config-itsm-fields-get';
+import { listFieldOptionsApiConfigItsmFieldsFieldIdOptionsGet } from '../../api/fn/internal-api/list-field-options-api-config-itsm-fields-field-id-options-get';
+import { configureCategoriesApiConfigItsmProjectsProjectKeyCategoriesPost } from '../../api/fn/internal-api/configure-categories-api-config-itsm-projects-project-key-categories-post';
+import { getProjectConfigurationApiConfigItsmProjectsProjectKeyGet } from '../../api/fn/internal-api/get-project-configuration-api-config-itsm-projects-project-key-get';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
 import { ItsmConnectionRequest } from '../../api/models/itsm-connection-request';
 import { ItsmConnectionResponse } from '../../api/models/itsm-connection-response';
@@ -21,6 +25,8 @@ import { OnboardedProject } from '../../api/models/onboarded-project';
 import { ProjectThresholds } from '../../api/models/project-thresholds';
 import { ProjectConfigResponse } from '../../api/models/project-config-response';
 import { JsmStatus } from '../../api/models/jsm-status';
+import { JsmField } from '../../api/models/jsm-field';
+import { ProjectConfigurationResponse } from '../../api/models/project-configuration-response';
 
 // 3 umbrales siempre completos (sin project_id: project_key va a nivel raiz
 // del request), para no depender de los defaults del backend al guardar.
@@ -89,5 +95,33 @@ export class ConfigService {
     return listProjectStatusesApiConfigItsmProjectsProjectKeyStatusesGet(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
     }).pipe(map((response) => response.body.statuses));
+  }
+
+  listSelectFields(): Observable<JsmField[]> {
+    return listSelectFieldsApiConfigItsmFieldsGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body.fields),
+    );
+  }
+
+  listFieldOptions(fieldId: string): Observable<string[]> {
+    return listFieldOptionsApiConfigItsmFieldsFieldIdOptionsGet(this.http, this.apiConfig.rootUrl, {
+      field_id: fieldId,
+    }).pipe(map((response) => response.body.options));
+  }
+
+  // El backend solo agrega: lo ya vinculado se conserva aunque no venga en
+  // la lista, y no hay forma de desactivar ni quitar categorias por API
+  // (limitacion conocida, registrada como tarea pendiente del backend).
+  configureCategories(projectKey: string, categories: string[]) {
+    return configureCategoriesApiConfigItsmProjectsProjectKeyCategoriesPost(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+      body: { categories },
+    }).pipe(map((response) => response.body));
+  }
+
+  getProjectConfiguration(projectKey: string): Observable<ProjectConfigurationResponse> {
+    return getProjectConfigurationApiConfigItsmProjectsProjectKeyGet(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+    }).pipe(map((response) => response.body));
   }
 }
