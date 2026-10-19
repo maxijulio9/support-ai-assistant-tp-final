@@ -22,6 +22,8 @@ from app.modules.internal_api.schemas import (
     ConfigureCategoriesResponse,
     ConfigureRequestTypesResponse,
     ProjectRequestTypesResponse,
+    ConfigureRequestTypesRequest,
+    AvailableRequestTypesResponse,
     OnboardedProjectsResponse,
     ProjectConfigurationResponse,
     ConnectionStatusResponse,
@@ -235,9 +237,12 @@ async def configure_categories(project_key: str, request: ConfigureCategoriesReq
 
 # trae y persiste automaticamente los tipos de solicitud reales de un proyecto, sin necesitar seleccion del admin
 @router.post("/api/config/itsm/projects/{project_key}/request-types", response_model=ConfigureRequestTypesResponse)
-async def configure_request_types(project_key: str, admin: AppUser = Depends(require_admin)):
+async def configure_request_types(project_key: str, request: ConfigureRequestTypesRequest | None = None, admin: AppUser = Depends(require_admin)):
     try:
-        request_types_configured = await _project_onboarding_service.configure_request_types(project_key)
+        if request is not None and request.request_type_ids is not None:
+            request_types_configured = await _project_onboarding_service.configure_request_types(project_key, request.request_type_ids)
+        else:
+            request_types_configured = await _project_onboarding_service.configure_request_types(project_key)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
@@ -257,6 +262,19 @@ async def get_project_request_types(project_key: str, admin: AppUser = Depends(r
         raise HTTPException(status_code=503, detail="No se pudo consultar los tipos de solicitud")
 
     return ProjectRequestTypesResponse(request_types=request_types)
+
+
+# lista los tipos de solicitud reales de un proyecto en jsm, con su id, e indica cuales ya estan incorporados
+@router.get("/api/config/itsm/projects/{project_key}/request-types/available", response_model=AvailableRequestTypesResponse)
+async def list_available_request_types(project_key: str, admin: AppUser = Depends(require_admin)):
+    try:
+        request_types = await _project_onboarding_service.list_available_request_types(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar JSM")
+
+    return AvailableRequestTypesResponse(request_types=request_types)
 
 
 # trae las prioridades reales de un proyecto, con sugerencia automatica de mapeo
