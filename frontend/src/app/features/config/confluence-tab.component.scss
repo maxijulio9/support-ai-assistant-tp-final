@@ -1,0 +1,47 @@
+:host {
+  display: block;
+}
+
+.confluence-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+}
+
+.confluence-tab-field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.confluence-tab-section-title {
+  font: var(--app-text-section-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.confluence-tab-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.confluence-tab-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.confluence-tab-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.confluence-tab-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

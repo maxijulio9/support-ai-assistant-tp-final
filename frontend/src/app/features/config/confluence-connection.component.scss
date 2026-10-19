@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  max-width: 480px;
+}
+
+.confluence-connection-status {
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.confluence-connection-status-chip {
+  display: inline-block;
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.confluence-connection-status-chip.is-active {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
+.confluence-connection-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.confluence-connection-field {
+  width: 100%;
+}
+
+.confluence-connection-hint {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: calc(-1 * var(--app-space-xs)) 0 var(--app-space-sm);
+}
+
+.confluence-connection-error-message {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.confluence-connection-submit {
+  align-self: flex-start;
+}
+
+.confluence-connection-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.confluence-connection-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.confluence-connection-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.confluence-connection-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

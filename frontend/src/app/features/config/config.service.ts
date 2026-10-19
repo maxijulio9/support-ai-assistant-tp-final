@@ -19,9 +19,17 @@ import { configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost } 
 import { listAvailableRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesAvailableGet } from '../../api/fn/internal-api/list-available-request-types-api-config-itsm-projects-project-key-request-types-available-get';
 import { listPrioritiesApiConfigItsmProjectsProjectKeyPrioritiesGet } from '../../api/fn/internal-api/list-priorities-api-config-itsm-projects-project-key-priorities-get';
 import { configurePriorityMappingApiConfigItsmProjectsProjectKeyPrioritiesPost } from '../../api/fn/internal-api/configure-priority-mapping-api-config-itsm-projects-project-key-priorities-post';
+import { getConfluenceConnectionApiConfigKnowledgeBaseGet } from '../../api/fn/internal-api/get-confluence-connection-api-config-knowledge-base-get';
+import { configureConfluenceConnectionApiConfigKnowledgeBasePost } from '../../api/fn/internal-api/configure-confluence-connection-api-config-knowledge-base-post';
+import { listAvailableSpacesApiConfigKnowledgeBaseSpacesAvailableGet } from '../../api/fn/internal-api/list-available-spaces-api-config-knowledge-base-spaces-available-get';
+import { configureSpacesApiConfigItsmProjectsProjectKeySpacesPost } from '../../api/fn/internal-api/configure-spaces-api-config-itsm-projects-project-key-spaces-post';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
 import { ItsmConnectionRequest } from '../../api/models/itsm-connection-request';
 import { ItsmConnectionResponse } from '../../api/models/itsm-connection-response';
+import { ConfluenceConnectionRequest } from '../../api/models/confluence-connection-request';
+import { ConfluenceConnectionResponse } from '../../api/models/confluence-connection-response';
+import { ConfluenceSpaceItem } from '../../api/models/confluence-space-item';
+import { SpaceToLink } from '../../api/models/space-to-link';
 import { AvailableProject } from '../../api/models/available-project';
 import { Country } from '../../api/models/country';
 import { ProjectToOnboard } from '../../api/models/project-to-onboard';
@@ -178,6 +186,33 @@ export class ConfigService {
     return configurePriorityMappingApiConfigItsmProjectsProjectKeyPrioritiesPost(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
       body: { mapping },
+    }).pipe(map((response) => response.body));
+  }
+
+  getConfluenceConnection(): Observable<ConnectionStatusResponse> {
+    return getConfluenceConnectionApiConfigKnowledgeBaseGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body),
+    );
+  }
+
+  configureConfluenceConnection(request: ConfluenceConnectionRequest): Observable<ConfluenceConnectionResponse> {
+    return configureConfluenceConnectionApiConfigKnowledgeBasePost(this.http, this.apiConfig.rootUrl, {
+      body: request,
+    }).pipe(map((response) => response.body));
+  }
+
+  listAvailableSpaces(): Observable<ConfluenceSpaceItem[]> {
+    return listAvailableSpacesApiConfigKnowledgeBaseSpacesAvailableGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body.spaces),
+    );
+  }
+
+  // El backend solo agrega: lo ya vinculado se conserva, no hay forma de
+  // quitar espacios por API (misma limitacion que categorias y prioridades).
+  addProjectSpace(projectKey: string, space: SpaceToLink) {
+    return configureSpacesApiConfigItsmProjectsProjectKeySpacesPost(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+      body: { spaces: [space] },
     }).pipe(map((response) => response.body));
   }
 }

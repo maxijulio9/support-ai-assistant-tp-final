@@ -1,0 +1,107 @@
+<div class="project-spaces">
+  @if (state() === 'loading') {
+    <div class="project-spaces-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando espacios de Confluence</span>
+      <div class="project-spaces-skeleton-line" style="width: 100%"></div>
+      <div class="project-spaces-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="project-spaces-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    @if (!hasEligible()) {
+      <p class="project-spaces-empty">No hay espacios de Confluence para vincular.</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onAdd()" novalidate>
+      <div class="project-spaces-picker">
+        <mat-form-field appearance="outline" class="project-spaces-field">
+          <mat-label>Espacio</mat-label>
+          <mat-select
+            [value]="selectedSpaceKey()"
+            [disabled]="!hasEligible()"
+            (selectionChange)="selectSpace($event.value)"
+          >
+            @for (space of availableSpaces(); track space.key) {
+              <mat-option [value]="space.key" [disabled]="isLinked(space.key)">
+                {{ space.key }} - {{ space.name }}
+                @if (isPersonal(space.key)) {
+                  (Personal)
+                }
+                @if (isLinked(space.key)) {
+                  (Vinculado)
+                }
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-flat-button type="submit" [disabled]="!canSubmit()">
+          {{ submitting() ? 'Agregando...' : 'Agregar' }}
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" class="project-spaces-field">
+        <mat-label>País</mat-label>
+        <mat-select formControlName="countryCode">
+          <mat-option [value]="null">Sin país</mat-option>
+          @for (country of countries(); track country.code) {
+            <mat-option [value]="country.code">{{ country.name }}</mat-option>
+          }
+        </mat-select>
+        <mat-hint>País al que corresponde este espacio, si aplica.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="project-spaces-field">
+        <mat-label>Idioma</mat-label>
+        <input matInput formControlName="languageCode" />
+        <mat-hint>Idioma del contenido de este espacio.</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="project-spaces-field">
+        <mat-label>Descripción</mat-label>
+        <input matInput formControlName="description" />
+        <mat-hint>Descripción libre del espacio, para referencia del admin.</mat-hint>
+      </mat-form-field>
+    </form>
+
+    @if (submitErrorMessage()) {
+      <p class="project-spaces-submit-error" role="alert">{{ submitErrorMessage() }}</p>
+    }
+
+    <p class="project-spaces-hint">Los espacios vinculados no se pueden quitar por ahora.</p>
+
+    @if (linkedSpaces().length === 0) {
+      <p class="project-spaces-empty">Todavía no vinculaste ningún espacio.</p>
+    } @else {
+      <ul class="project-spaces-list">
+        @for (space of linkedSpaces(); track space.space_key) {
+          <li class="project-spaces-row">
+            <div class="project-spaces-row-main">
+              <span class="project-spaces-key">{{ space.space_key }}</span>
+              @if (nameFor(space.space_key); as name) {
+                {{ name }}
+              }
+              @if (isPersonal(space.space_key)) {
+                <span class="project-spaces-tag">Personal</span>
+              }
+            </div>
+            <div class="project-spaces-row-meta">
+              <span>{{ space.country_code ?? 'Sin país' }}</span>
+              <span>{{ space.language_code ?? 'Sin idioma' }}</span>
+              <span class="project-spaces-status" [class.is-active]="space.is_active">
+                {{ space.is_active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

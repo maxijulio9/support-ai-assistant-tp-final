@@ -1,0 +1,45 @@
+<div class="confluence-tab">
+  <section class="confluence-tab-section">
+    <h2 class="confluence-tab-section-title">Conexión</h2>
+    <app-confluence-connection />
+  </section>
+
+  <section class="confluence-tab-section">
+    <h2 class="confluence-tab-section-title">Asignación de espacios</h2>
+
+    @if (state() === 'loading') {
+      <div class="confluence-tab-skeleton" role="status" aria-hidden="true">
+        <span class="visually-hidden">Cargando los proyectos</span>
+        <div class="confluence-tab-skeleton-line" style="width: 100%"></div>
+      </div>
+    }
+
+    @if (state() === 'error') {
+      <div class="confluence-tab-error" role="alert">
+        <p>{{ loadErrorMessage() }}</p>
+        <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+      </div>
+    }
+
+    @if (state() === 'loaded') {
+      @if (projects().length === 0) {
+        <p class="confluence-tab-empty">Todavía no incorporaste ningún proyecto.</p>
+      } @else {
+        <mat-form-field appearance="outline" class="confluence-tab-field">
+          <mat-label>Proyecto</mat-label>
+          <mat-select [value]="selectedProjectKey()" (selectionChange)="selectProject($event.value)">
+            @for (project of projects(); track project.key) {
+              <mat-option [value]="project.key">{{ project.key }} - {{ project.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (selectedProjectKey(); as projectKey) {
+          <app-project-spaces [projectKey]="projectKey" />
+        } @else {
+          <p class="confluence-tab-empty">Elegí un proyecto para ver y asignar sus espacios de Confluence.</p>
+        }
+      }
+    }
+  </section>
+</div>

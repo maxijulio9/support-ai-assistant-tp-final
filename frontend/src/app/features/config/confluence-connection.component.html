@@ -1,0 +1,61 @@
+<div class="confluence-connection">
+  @if (state() === 'loading') {
+    <div class="confluence-connection-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando la conexión con Confluence</span>
+      <div class="confluence-connection-skeleton-line" style="width: 100%"></div>
+      <div class="confluence-connection-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="confluence-connection-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <p class="confluence-connection-status">
+      Estado de la conexión:
+      <span class="confluence-connection-status-chip" [class.is-active]="configured()">
+        {{ configured() ? 'Conectado' : 'No conectado todavía' }}
+      </span>
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="confluence-connection-form">
+      <mat-form-field appearance="outline" class="confluence-connection-field">
+        <mat-label>URL de la instancia</mat-label>
+        <input
+          matInput
+          formControlName="baseUrl"
+          autocomplete="off"
+          placeholder="https://tuempresa.atlassian.net/wiki"
+        />
+        <mat-error>Ingresá la URL de la instancia.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="confluence-connection-field">
+        <mat-label>Email de la cuenta</mat-label>
+        <input matInput formControlName="userEmail" autocomplete="off" />
+        <mat-error>Ingresá el email de la cuenta.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="confluence-connection-field">
+        <mat-label>API token</mat-label>
+        <input matInput type="password" formControlName="apiToken" autocomplete="new-password" />
+        <mat-error>Ingresá el API token.</mat-error>
+      </mat-form-field>
+      <p class="confluence-connection-hint">
+        Hay que volver a ingresarlo para guardar, aunque la conexión ya esté configurada.
+      </p>
+
+      @if (submitErrorMessage()) {
+        <p class="confluence-connection-error-message" role="alert">{{ submitErrorMessage() }}</p>
+      }
+
+      <button mat-flat-button type="submit" class="confluence-connection-submit" [disabled]="submitting()">
+        {{ submitting() ? 'Guardando...' : 'Probar y guardar conexión' }}
+      </button>
+    </form>
+  }
+</div>

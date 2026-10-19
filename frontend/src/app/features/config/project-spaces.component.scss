@@ -1,0 +1,119 @@
+:host {
+  display: block;
+}
+
+.project-spaces-picker {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+}
+
+.project-spaces-field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.project-spaces-hint {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-sm) 0;
+}
+
+.project-spaces-submit-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: var(--app-space-sm) 0 0;
+}
+
+.project-spaces-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.project-spaces-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  margin: 0;
+  padding: 0;
+}
+
+.project-spaces-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+  padding: var(--app-space-xs) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.project-spaces-row-main {
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+}
+
+.project-spaces-key {
+  font-weight: 600;
+  margin-right: var(--app-space-xs);
+}
+
+.project-spaces-tag {
+  margin-left: var(--app-space-xs);
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+.project-spaces-row-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+}
+
+.project-spaces-status {
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.project-spaces-status.is-active {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
+.project-spaces-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.project-spaces-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.project-spaces-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.project-spaces-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
