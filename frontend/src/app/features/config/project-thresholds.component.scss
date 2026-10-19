@@ -1,0 +1,76 @@
+:host {
+  display: block;
+}
+
+.project-thresholds-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.project-thresholds-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.project-thresholds-table th,
+.project-thresholds-table td {
+  text-align: left;
+  padding: var(--app-space-sm);
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.project-thresholds-table th {
+  font: var(--app-text-card-heading);
+  color: var(--app-color-text-secondary);
+}
+
+.project-thresholds-table tr.is-selected {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+}
+
+.project-thresholds-key {
+  font-weight: 600;
+  margin-right: var(--app-space-xs);
+}
+
+.project-thresholds-actions {
+  display: flex;
+  gap: var(--app-space-xs);
+}
+
+@media (max-width: 767.98px) {
+  .project-thresholds-table thead {
+    display: none;
+  }
+
+  .project-thresholds-table,
+  .project-thresholds-table tbody,
+  .project-thresholds-table tr,
+  .project-thresholds-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .project-thresholds-table tr {
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+    padding: var(--app-space-xs) 0;
+  }
+
+  .project-thresholds-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--app-space-sm);
+    border-bottom: none;
+    padding: calc(var(--app-space-xs) / 2) var(--app-space-sm);
+  }
+
+  .project-thresholds-table td::before {
+    content: attr(data-label);
+    font: var(--app-text-card-heading);
+    color: var(--app-color-text-secondary);
+  }
+}

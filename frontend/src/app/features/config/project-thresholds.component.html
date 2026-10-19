@@ -1,0 +1,36 @@
+<div class="project-thresholds">
+  @if (projects().length === 0) {
+    <p class="project-thresholds-empty">Todavía no incorporaste ningún proyecto.</p>
+  } @else {
+    <table class="project-thresholds-table">
+      <thead>
+        <tr>
+          <th scope="col">Proyecto</th>
+          <th scope="col">País</th>
+          <th scope="col">Publicación automática</th>
+          <th scope="col">Revisión</th>
+          <th scope="col">Similitud</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (project of projects(); track project.project_id) {
+          <tr [class.is-selected]="project.key === selectedProjectKey()">
+            <td data-label="Proyecto">
+              <span class="project-thresholds-key">{{ project.key }}</span>
+              {{ project.name }}
+            </td>
+            <td data-label="País">{{ project.country_code ?? 'Sin país' }}</td>
+            <td data-label="Publicación automática">{{ project.threshold_auto_publish }}</td>
+            <td data-label="Revisión">{{ project.threshold_needs_review }}</td>
+            <td data-label="Similitud">{{ project.similarity_threshold }}</td>
+            <td data-label="Acciones" class="project-thresholds-actions">
+              <button mat-button type="button" (click)="openEditThresholds(project)">Editar umbrales</button>
+              <button mat-button type="button" (click)="viewStatuses.emit(project.key)">Ver estados</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

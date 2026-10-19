@@ -1,0 +1,52 @@
+<div class="projects-tab">
+  @if (state() === 'loading') {
+    <div class="projects-tab-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando los proyectos</span>
+      <div class="projects-tab-skeleton-line" style="width: 100%"></div>
+      <div class="projects-tab-skeleton-line" style="width: 100%"></div>
+      <div class="projects-tab-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="projects-tab-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <section class="projects-tab-section">
+      <div class="projects-tab-section-header">
+        <h2 class="projects-tab-section-title">Proyectos incorporados</h2>
+        <div class="projects-tab-add">
+          <button
+            mat-flat-button
+            type="button"
+            [disabled]="!!addProjectDisabledReason()"
+            (click)="openAddProjectDialog()"
+          >
+            Agregar proyecto
+          </button>
+          @if (addProjectDisabledReason(); as reason) {
+            <p class="projects-tab-add-reason">{{ reason }}</p>
+          }
+        </div>
+      </div>
+
+      <app-project-thresholds
+        [projects]="onboardedProjects()"
+        [selectedProjectKey]="selectedProjectKeyForStatuses()"
+        (viewStatuses)="viewStatuses($event)"
+        (thresholdsSaved)="onThresholdsSaved()"
+      />
+    </section>
+
+    @if (selectedProjectKeyForStatuses(); as projectKey) {
+      <section class="projects-tab-section">
+        <h2 class="projects-tab-section-title">Estados de {{ projectKey }}</h2>
+        <app-project-statuses [projectKey]="projectKey" />
+      </section>
+    }
+  }
+</div>

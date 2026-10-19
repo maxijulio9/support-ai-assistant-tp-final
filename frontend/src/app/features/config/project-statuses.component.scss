@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+
+.project-statuses-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-xs);
+  margin: 0 0 var(--app-space-sm);
+  padding: 0;
+}
+
+.project-statuses-item {
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+  color: var(--mat-sys-on-surface);
+}
+
+.project-statuses-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.project-statuses-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.project-statuses-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.project-statuses-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.project-statuses-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.project-statuses-skeleton-line {
+  height: 1.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

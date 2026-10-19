@@ -1,0 +1,33 @@
+<div class="project-statuses">
+  @if (state() === 'loading') {
+    <div class="project-statuses-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando los estados</span>
+      <div class="project-statuses-skeleton-line" style="width: 100%"></div>
+      <div class="project-statuses-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="project-statuses-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    @if (statuses().length === 0) {
+      <p class="project-statuses-empty">Este proyecto no tiene estados en JSM.</p>
+    } @else {
+      <ul class="project-statuses-list">
+        @for (status of statuses(); track status.id) {
+          <li class="project-statuses-item">{{ status.name }}</li>
+        }
+      </ul>
+    }
+
+    <p class="project-statuses-note">
+      El mapeo completo (qué transición de JSM corresponde a cada estado) todavía no se puede guardar: faltan los
+      valores válidos de system_action.
+    </p>
+  }
+</div>

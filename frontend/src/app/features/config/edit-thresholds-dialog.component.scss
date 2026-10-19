@@ -1,0 +1,17 @@
+.edit-thresholds-field {
+  width: 100%;
+  margin-bottom: var(--app-space-xs);
+}
+
+// subscriptSizing="dynamic" permite que el hint ocupe mas de una linea sin
+// superponerse con el label del campo siguiente; este margen extra deja
+// aire entre el hint y ese campo siguiente.
+.edit-thresholds-field--with-hint {
+  margin-bottom: var(--app-space-sm);
+}
+
+.edit-thresholds-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: 0;
+}
