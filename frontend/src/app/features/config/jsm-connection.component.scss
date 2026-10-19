@@ -30,12 +30,14 @@
 
 .jsm-connection-field {
   width: 100%;
+  margin-bottom: var(--app-space-xs);
 }
 
-.jsm-connection-hint {
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
-  margin: calc(-1 * var(--app-space-xs)) 0 var(--app-space-sm);
+// subscriptSizing="dynamic" permite que el hint ocupe mas de una linea sin
+// superponerse con el campo siguiente; este margen extra deja aire entre
+// el hint (o el error, que lo reemplaza) y ese campo siguiente.
+.jsm-connection-field--with-hint {
+  margin-bottom: var(--app-space-sm);
 }
 
 .jsm-connection-error-message {

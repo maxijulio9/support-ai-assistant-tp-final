@@ -34,11 +34,7 @@
           </mat-select>
         </mat-form-field>
 
-        @if (selectedProjectKey(); as projectKey) {
-          <app-project-spaces [projectKey]="projectKey" />
-        } @else {
-          <p class="confluence-tab-empty">Elegí un proyecto para ver y asignar sus espacios de Confluence.</p>
-        }
+        <app-project-spaces [projectKey]="selectedProjectKey()!" />
       }
     }
   </section>

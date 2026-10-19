@@ -7,17 +7,47 @@
   align-items: flex-start;
   gap: var(--app-space-sm);
   flex-wrap: wrap;
+  margin-bottom: var(--app-space-md);
+}
+
+// Los 3 campos se ponen en fila con separacion horizontal y vertical
+// (gap), y se apilan en una sola columna en pantallas angostas para que
+// nunca se pisen entre si ni con sus hints.
+.project-spaces-extra-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm) var(--app-space-md);
 }
 
 .project-spaces-field {
   width: 100%;
+  flex: 1 1 200px;
+  min-width: 200px;
   max-width: 320px;
+  margin-bottom: var(--app-space-xs);
+}
+
+// subscriptSizing="dynamic" permite que el hint ocupe mas de una linea sin
+// superponerse con el campo siguiente; este margen extra deja aire entre
+// el hint (o el error, que lo reemplaza) y lo que sigue.
+.project-spaces-field--with-hint {
+  margin-bottom: var(--app-space-sm);
 }
 
 .project-spaces-hint {
   font: var(--app-text-secondary);
   color: var(--app-color-text-secondary);
-  margin: var(--app-space-sm) 0;
+  margin: var(--app-space-lg) 0 var(--app-space-sm);
+}
+
+@media (max-width: 767.98px) {
+  .project-spaces-extra-fields {
+    flex-direction: column;
+  }
+
+  .project-spaces-field {
+    max-width: none;
+  }
 }
 
 .project-spaces-submit-error {

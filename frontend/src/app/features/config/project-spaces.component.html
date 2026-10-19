@@ -47,28 +47,42 @@
         </button>
       </div>
 
-      <mat-form-field appearance="outline" class="project-spaces-field">
-        <mat-label>País</mat-label>
-        <mat-select formControlName="countryCode">
-          <mat-option [value]="null">Sin país</mat-option>
-          @for (country of countries(); track country.code) {
-            <mat-option [value]="country.code">{{ country.name }}</mat-option>
-          }
-        </mat-select>
-        <mat-hint>País al que corresponde este espacio, si aplica.</mat-hint>
-      </mat-form-field>
+      <div class="project-spaces-extra-fields">
+        <mat-form-field
+          appearance="outline"
+          class="project-spaces-field project-spaces-field--with-hint"
+          subscriptSizing="dynamic"
+        >
+          <mat-label>País</mat-label>
+          <mat-select formControlName="countryCode">
+            <mat-option [value]="null">Sin país</mat-option>
+            @for (country of countries(); track country.code) {
+              <mat-option [value]="country.code">{{ country.name }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>País al que corresponde este espacio, si aplica.</mat-hint>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="project-spaces-field">
-        <mat-label>Idioma</mat-label>
-        <input matInput formControlName="languageCode" />
-        <mat-hint>Idioma del contenido de este espacio.</mat-hint>
-      </mat-form-field>
+        <mat-form-field
+          appearance="outline"
+          class="project-spaces-field project-spaces-field--with-hint"
+          subscriptSizing="dynamic"
+        >
+          <mat-label>Idioma</mat-label>
+          <input matInput formControlName="languageCode" />
+          <mat-hint>Idioma del contenido de este espacio.</mat-hint>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline" class="project-spaces-field">
-        <mat-label>Descripción</mat-label>
-        <input matInput formControlName="description" />
-        <mat-hint>Descripción libre del espacio, para referencia del admin.</mat-hint>
-      </mat-form-field>
+        <mat-form-field
+          appearance="outline"
+          class="project-spaces-field project-spaces-field--with-hint"
+          subscriptSizing="dynamic"
+        >
+          <mat-label>Descripción</mat-label>
+          <input matInput formControlName="description" />
+          <mat-hint>Descripción libre del espacio, para referencia del admin.</mat-hint>
+        </mat-form-field>
+      </div>
     </form>
 
     @if (submitErrorMessage()) {

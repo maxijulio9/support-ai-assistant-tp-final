@@ -26,24 +26,22 @@
         </mat-select>
       </mat-form-field>
 
-      @if (selectedProjectKey(); as projectKey) {
-        <section class="fields-categories-tab-section">
-          <h2 class="fields-categories-tab-section-title">Categorías</h2>
-          <app-project-categories [projectKey]="projectKey" />
-        </section>
+      @let projectKey = selectedProjectKey()!;
 
-        <section class="fields-categories-tab-section">
-          <h2 class="fields-categories-tab-section-title">Tipos de solicitud</h2>
-          <app-project-request-types [projectKey]="projectKey" />
-        </section>
+      <section class="fields-categories-tab-section">
+        <h2 class="fields-categories-tab-section-title">Categorías</h2>
+        <app-project-categories [projectKey]="projectKey" />
+      </section>
 
-        <section class="fields-categories-tab-section">
-          <h2 class="fields-categories-tab-section-title">Prioridades</h2>
-          <app-project-priorities [projectKey]="projectKey" />
-        </section>
-      } @else {
-        <p class="fields-categories-tab-empty">Elegí un proyecto para ver sus categorías, tipos de solicitud y prioridades.</p>
-      }
+      <section class="fields-categories-tab-section">
+        <h2 class="fields-categories-tab-section-title">Tipos de solicitud</h2>
+        <app-project-request-types [projectKey]="projectKey" />
+      </section>
+
+      <section class="fields-categories-tab-section">
+        <h2 class="fields-categories-tab-section-title">Prioridades</h2>
+        <app-project-priorities [projectKey]="projectKey" />
+      </section>
     }
   }
 </div>

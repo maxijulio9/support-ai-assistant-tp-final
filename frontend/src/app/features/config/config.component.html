@@ -1,7 +1,12 @@
 <div class="config-page">
   <h1 class="config-title">Configuración</h1>
 
-  <mat-tab-group class="config-tabs" animationDuration="0ms">
+  <mat-tab-group
+    class="config-tabs"
+    animationDuration="0ms"
+    [selectedIndex]="selectedTabIndex()"
+    (selectedIndexChange)="onTabChange($event)"
+  >
     <mat-tab label="JSM">
       <div class="config-tab-content">
         <app-jsm-connection />

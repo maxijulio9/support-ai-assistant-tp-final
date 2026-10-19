@@ -40,14 +40,16 @@
         <mat-error>Ingresá el email de la cuenta.</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="confluence-connection-field">
+      <mat-form-field
+        appearance="outline"
+        class="confluence-connection-field confluence-connection-field--with-hint"
+        subscriptSizing="dynamic"
+      >
         <mat-label>API token</mat-label>
         <input matInput type="password" formControlName="apiToken" autocomplete="new-password" />
+        <mat-hint>Hay que volver a ingresarlo para guardar, aunque la conexión ya esté configurada.</mat-hint>
         <mat-error>Ingresá el API token.</mat-error>
       </mat-form-field>
-      <p class="confluence-connection-hint">
-        Hay que volver a ingresarlo para guardar, aunque la conexión ya esté configurada.
-      </p>
 
       @if (submitErrorMessage()) {
         <p class="confluence-connection-error-message" role="alert">{{ submitErrorMessage() }}</p>
