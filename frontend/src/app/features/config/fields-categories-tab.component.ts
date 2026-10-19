@@ -7,6 +7,8 @@ import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { ProjectCategoriesComponent } from './project-categories.component';
+import { ProjectRequestTypesComponent } from './project-request-types.component';
+import { ProjectPrioritiesComponent } from './project-priorities.component';
 
 export type FieldsCategoriesTabState = 'loading' | 'error' | 'loaded';
 
@@ -15,7 +17,14 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 @Component({
   selector: 'app-fields-categories-tab',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, ProjectCategoriesComponent],
+  imports: [
+    MatButtonModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    ProjectCategoriesComponent,
+    ProjectRequestTypesComponent,
+    ProjectPrioritiesComponent,
+  ],
   templateUrl: './fields-categories-tab.component.html',
   styleUrl: './fields-categories-tab.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

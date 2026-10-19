@@ -1,0 +1,97 @@
+:host {
+  display: block;
+}
+
+.project-priorities-warning {
+  font: var(--app-text-secondary);
+  color: var(--app-color-warning);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.project-priorities-empty {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.project-priorities-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  margin: 0 0 var(--app-space-sm);
+  padding: 0;
+}
+
+.project-priorities-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+}
+
+.project-priorities-name {
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+}
+
+.project-priorities-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.project-priorities-locked mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.project-priorities-field {
+  width: 160px;
+}
+
+.project-priorities-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.project-priorities-submit-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.project-priorities-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.project-priorities-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.project-priorities-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.project-priorities-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

@@ -1,0 +1,42 @@
+<div class="project-request-types">
+  @if (state() === 'loading') {
+    <div class="project-request-types-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando los tipos de solicitud</span>
+      <div class="project-request-types-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="project-request-types-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <p class="project-request-types-hint">Se incorporan todos los tipos de solicitud del proyecto en JSM.</p>
+
+    @if (incorporateErrorMessage()) {
+      <p class="project-request-types-submit-error" role="alert">{{ incorporateErrorMessage() }}</p>
+    }
+
+    <button mat-flat-button type="button" [disabled]="incorporating()" (click)="incorporate()">
+      {{ incorporating() ? 'Incorporando...' : 'Incorporar tipos de solicitud' }}
+    </button>
+
+    @if (requestTypes().length === 0) {
+      <p class="project-request-types-empty">Todavía no hay tipos de solicitud incorporados.</p>
+    } @else {
+      <ul class="project-request-types-list">
+        @for (requestType of requestTypes(); track requestType.id) {
+          <li class="project-request-types-row">
+            {{ requestType.name }}
+            <span class="project-request-types-status" [class.is-active]="requestType.is_active">
+              {{ requestType.is_active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

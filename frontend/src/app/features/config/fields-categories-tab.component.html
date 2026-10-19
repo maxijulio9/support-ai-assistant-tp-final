@@ -34,12 +34,12 @@
 
         <section class="fields-categories-tab-section">
           <h2 class="fields-categories-tab-section-title">Tipos de solicitud</h2>
-          <p class="fields-categories-tab-placeholder">Esta sección se habilita en un próximo paso.</p>
+          <app-project-request-types [projectKey]="projectKey" />
         </section>
 
         <section class="fields-categories-tab-section">
           <h2 class="fields-categories-tab-section-title">Prioridades</h2>
-          <p class="fields-categories-tab-placeholder">Esta sección se habilita en un próximo paso.</p>
+          <app-project-priorities [projectKey]="projectKey" />
         </section>
       } @else {
         <p class="fields-categories-tab-empty">Elegí un proyecto para ver sus categorías, tipos de solicitud y prioridades.</p>

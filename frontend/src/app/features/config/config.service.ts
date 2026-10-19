@@ -14,6 +14,10 @@ import { listSelectFieldsApiConfigItsmFieldsGet } from '../../api/fn/internal-ap
 import { listFieldOptionsApiConfigItsmFieldsFieldIdOptionsGet } from '../../api/fn/internal-api/list-field-options-api-config-itsm-fields-field-id-options-get';
 import { configureCategoriesApiConfigItsmProjectsProjectKeyCategoriesPost } from '../../api/fn/internal-api/configure-categories-api-config-itsm-projects-project-key-categories-post';
 import { getProjectConfigurationApiConfigItsmProjectsProjectKeyGet } from '../../api/fn/internal-api/get-project-configuration-api-config-itsm-projects-project-key-get';
+import { getProjectRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesGet } from '../../api/fn/internal-api/get-project-request-types-api-config-itsm-projects-project-key-request-types-get';
+import { configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost } from '../../api/fn/internal-api/configure-request-types-api-config-itsm-projects-project-key-request-types-post';
+import { listPrioritiesApiConfigItsmProjectsProjectKeyPrioritiesGet } from '../../api/fn/internal-api/list-priorities-api-config-itsm-projects-project-key-priorities-get';
+import { configurePriorityMappingApiConfigItsmProjectsProjectKeyPrioritiesPost } from '../../api/fn/internal-api/configure-priority-mapping-api-config-itsm-projects-project-key-priorities-post';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
 import { ItsmConnectionRequest } from '../../api/models/itsm-connection-request';
 import { ItsmConnectionResponse } from '../../api/models/itsm-connection-response';
@@ -27,6 +31,17 @@ import { ProjectConfigResponse } from '../../api/models/project-config-response'
 import { JsmStatus } from '../../api/models/jsm-status';
 import { JsmField } from '../../api/models/jsm-field';
 import { ProjectConfigurationResponse } from '../../api/models/project-configuration-response';
+import { ProjectRequestType } from '../../api/models/project-request-type';
+import { JsmPriority } from '../../api/models/jsm-priority';
+
+// Nivel universal de prioridad como clave, lista de ids reales de JSM como
+// valor: misma forma que usan tanto el POST como el detalle del proyecto.
+export type PriorityMapping = Record<string, string[]>;
+
+export interface PrioritiesWithSuggestion {
+  priorities: JsmPriority[];
+  suggestions: Record<string, string | null>;
+}
 
 // 3 umbrales siempre completos (sin project_id: project_key va a nivel raiz
 // del request), para no depender de los defaults del backend al guardar.
@@ -122,6 +137,34 @@ export class ConfigService {
   getProjectConfiguration(projectKey: string): Observable<ProjectConfigurationResponse> {
     return getProjectConfigurationApiConfigItsmProjectsProjectKeyGet(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
+    }).pipe(map((response) => response.body));
+  }
+
+  listProjectRequestTypes(projectKey: string): Observable<ProjectRequestType[]> {
+    return getProjectRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesGet(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+    }).pipe(map((response) => response.body.request_types));
+  }
+
+  // Sin body: incorpora todos los tipos de solicitud del proyecto en JSM.
+  configureRequestTypes(projectKey: string) {
+    return configureRequestTypesApiConfigItsmProjectsProjectKeyRequestTypesPost(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+    }).pipe(map((response) => response.body));
+  }
+
+  listProjectPriorities(projectKey: string): Observable<PrioritiesWithSuggestion> {
+    return listPrioritiesApiConfigItsmProjectsProjectKeyPrioritiesGet(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+    }).pipe(map((response) => response.body));
+  }
+
+  // El backend solo agrega: un id ya asignado a un nivel no se puede quitar
+  // ni mover a otro nivel por API (mismo tipo de limitacion que categorias).
+  configurePriorityMapping(projectKey: string, mapping: PriorityMapping) {
+    return configurePriorityMappingApiConfigItsmProjectsProjectKeyPrioritiesPost(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+      body: { mapping },
     }).pipe(map((response) => response.body));
   }
 }

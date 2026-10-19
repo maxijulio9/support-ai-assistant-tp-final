@@ -1,0 +1,65 @@
+<div class="project-priorities">
+  @if (state() === 'loading') {
+    <div class="project-priorities-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando prioridades</span>
+      <div class="project-priorities-skeleton-line" style="width: 100%"></div>
+      <div class="project-priorities-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="project-priorities-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    @if (priorities().length === 0) {
+      <p class="project-priorities-empty">No hay prioridades en JSM.</p>
+    } @else {
+      <p class="project-priorities-warning">Las asignaciones guardadas no se pueden cambiar por ahora.</p>
+
+      <ul class="project-priorities-list">
+        @for (priority of priorities(); track priority.id) {
+          <li class="project-priorities-row">
+            <span class="project-priorities-name">{{ priority.name }}</span>
+
+            @if (lockedLevelFor(priority.id); as lockedLevel) {
+              <span class="project-priorities-locked">
+                <mat-icon aria-hidden="true">lock</mat-icon>
+                {{ lockedLevel }}
+              </span>
+            } @else {
+              <mat-form-field appearance="outline" class="project-priorities-field">
+                <mat-label>Nivel</mat-label>
+                <mat-select
+                  [value]="assignmentFor(priority.id)"
+                  (selectionChange)="setAssignment(priority.id, $event.value)"
+                >
+                  @for (level of levels(); track level) {
+                    <mat-option [value]="level">{{ level }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (unassignedNames().length > 0) {
+        <p class="project-priorities-note">
+          Sin nivel asignado: {{ unassignedNames().join(', ') }}.
+        </p>
+      }
+
+      @if (submitErrorMessage()) {
+        <p class="project-priorities-submit-error" role="alert">{{ submitErrorMessage() }}</p>
+      }
+
+      <button mat-flat-button type="button" [disabled]="!canSubmit()" (click)="onSubmit()">
+        {{ submitting() ? 'Guardando...' : 'Guardar prioridades' }}
+      </button>
+    }
+  }
+</div>
