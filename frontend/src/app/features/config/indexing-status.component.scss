@@ -22,11 +22,14 @@
 }
 
 .indexing-status-chip {
-  display: inline-block;
-  padding: 2px var(--app-space-sm);
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--app-space-md);
   border-radius: var(--app-radius-sm);
-  font: var(--app-text-metadata);
-  text-transform: capitalize;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
   background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
   color: var(--app-color-text-secondary);
 }
@@ -34,11 +37,6 @@
 .indexing-status-chip--progress {
   background-color: color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
   color: var(--mat-sys-primary);
-}
-
-.indexing-status-chip--success {
-  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
-  color: var(--app-color-success);
 }
 
 .indexing-status-chip--error {
@@ -50,6 +48,16 @@
   color: var(--mat-sys-error);
   font: var(--app-text-body);
   margin: 0 0 var(--app-space-sm);
+}
+
+.indexing-status-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 var(--app-space-sm);
+}
+
+.indexing-status-note--warning {
+  color: var(--app-color-warning);
 }
 
 .indexing-status-details {

@@ -9,11 +9,15 @@ import { classifyFormError } from '../../shared/form-error';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 
 export type IndexingStatusState = 'loading' | 'error' | 'empty' | 'loaded';
+type StatusTone = 'progress' | 'neutral' | 'error';
 
 const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_DURATION_MS = 5 * 60 * 1000;
-const IN_PROGRESS_STATUSES = new Set(['queued', 'running']);
+// Una corrida "running" con un started_at mas viejo que esto se considera
+// huerfana (el worker probablemente se interrumpio sin dejar un estado
+// terminal). Facil de ajustar si cambia la duracion tipica de una corrida.
+const ORPHAN_RUN_THRESHOLD_MS = 60 * 60 * 1000;
 
 function formatTimestamp(value: string): string {
   const date = new Date(value);
@@ -36,11 +40,78 @@ export class IndexingStatusComponent {
   readonly state = signal<IndexingStatusState>('loading');
   readonly loadErrorMessage = signal<string | null>(null);
   readonly status = signal<IndexingStatusResponse | null>(null);
+
+  // El status /api/indexing/status devuelve la corrida anterior hasta que el
+  // worker crea la nueva, y no hay un id de corrida para distinguirlas. Tras
+  // un start exitoso estos dos signals cubren esa ventana: se sigue
+  // polleando sin aplicar la logica normal hasta ver un started_at mas
+  // nuevo que el guardado antes del POST.
+  readonly awaitingNewRun = signal(false);
+  readonly awaitingTimedOut = signal(false);
+  // Tope alcanzado con la corrida nueva ya detectada (sigue running).
   readonly pollingTimedOut = signal(false);
 
+  private baselineStartedAt: string | null = null;
+
   readonly isInProgress = computed(() => {
+    if (this.awaitingNewRun()) return true;
     const status = this.status();
-    return status !== null && IN_PROGRESS_STATUSES.has(status.status);
+    return status !== null && status.status === 'running' && !this.isOrphanedStatus(status);
+  });
+
+  readonly isOrphaned = computed(() => {
+    if (this.awaitingNewRun()) return false;
+    const status = this.status();
+    return status !== null && this.isOrphanedStatus(status);
+  });
+
+  readonly statusLabel = computed(() => {
+    if (this.awaitingNewRun()) return 'Iniciando...';
+    const status = this.status();
+    if (!status) return '';
+    switch (status.status) {
+      case 'running':
+        return 'En curso';
+      case 'completed':
+        return 'Finalizada';
+      case 'failed':
+        return 'Fallida';
+      default:
+        return status.status;
+    }
+  });
+
+  readonly statusTone = computed<StatusTone>(() => {
+    if (this.awaitingNewRun()) return 'progress';
+    const status = this.status();
+    if (!status) return 'neutral';
+    switch (status.status) {
+      case 'running':
+        return 'progress';
+      case 'failed':
+        return 'error';
+      default:
+        // completed se muestra en tono neutro, no de exito: que el estado
+        // haya quedado en completed no garantiza que el resultado sea valido.
+        return 'neutral';
+    }
+  });
+
+  // Nota corta para dejar en claro que completed no confirma un resultado
+  // correcto, solo que el worker termino sin error.
+  readonly showCompletedNote = computed(
+    () => !this.awaitingNewRun() && this.status()?.status === 'completed',
+  );
+
+  readonly updatedAtLabel = computed(() => {
+    const status = this.status();
+    return status && status.status !== 'running' ? 'Finalizó' : 'Actualizado';
+  });
+
+  readonly updatedAtDisplay = computed(() => {
+    const status = this.status();
+    if (!status || status.status === 'running') return '-';
+    return formatTimestamp(status.updated_at);
   });
 
   // Completed con los dos contadores en 0 es un resultado valido (por
@@ -68,18 +139,15 @@ export class IndexingStatusComponent {
     this.fetchStatus();
   }
 
-  // Lo llama el padre justo despues de un start exitoso, para no esperar el
-  // primer tick del intervalo antes de ver el estado "queued".
+  // Lo llama el padre justo despues de un start exitoso. El estado actual
+  // (si existia) todavia no se toco desde antes del POST, asi que leerlo
+  // aca equivale a guardarlo "antes" de iniciar la corrida nueva.
   notifyStarted(): void {
+    this.baselineStartedAt = this.status()?.started_at ?? null;
+    this.awaitingNewRun.set(true);
+    this.awaitingTimedOut.set(false);
     this.pollingTimedOut.set(false);
     this.fetchStatus();
-  }
-
-  statusTone(status: string): 'progress' | 'success' | 'error' | 'neutral' {
-    if (IN_PROGRESS_STATUSES.has(status)) return 'progress';
-    if (status === 'completed') return 'success';
-    if (status === 'failed') return 'error';
-    return 'neutral';
   }
 
   formatTimestamp(value: string): string {
@@ -101,18 +169,11 @@ export class IndexingStatusComponent {
       .getIndexingStatus()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (status) => {
-          this.status.set(status);
-          this.state.set('loaded');
-          if (IN_PROGRESS_STATUSES.has(status.status)) {
-            this.ensurePolling();
-          } else {
-            this.stopPolling();
-          }
-        },
+        next: (status) => this.handleStatus(status),
         error: (error: unknown) => {
           if (error instanceof HttpErrorResponse && error.status === 404) {
             this.stopPolling();
+            this.awaitingNewRun.set(false);
             this.status.set(null);
             this.state.set('empty');
             return;
@@ -121,11 +182,48 @@ export class IndexingStatusComponent {
           // panel que ya se esta mostrando; el proximo ciclo lo reintenta.
           if (silent) return;
           this.stopPolling();
+          this.awaitingNewRun.set(false);
           const result = classifyFormError(error);
           this.loadErrorMessage.set(result.message ?? GENERIC_ERROR_MESSAGE);
           this.state.set('error');
         },
       });
+  }
+
+  private handleStatus(status: IndexingStatusResponse): void {
+    this.status.set(status);
+    this.state.set('loaded');
+
+    if (this.awaitingNewRun()) {
+      const isNewRun = this.baselineStartedAt === null || this.isNewer(status.started_at, this.baselineStartedAt);
+      if (!isNewRun) {
+        // sigue siendo la corrida vieja: no se aplica la logica normal
+        // todavia, solo se sigue esperando con el mismo intervalo.
+        this.ensurePolling();
+        return;
+      }
+      this.awaitingNewRun.set(false);
+      this.awaitingTimedOut.set(false);
+      // nueva ventana de 5 minutos para seguir esta corrida recien detectada.
+      this.pollDeadline = Date.now() + MAX_POLL_DURATION_MS;
+    }
+
+    if (status.status === 'running' && !this.isOrphanedStatus(status)) {
+      this.ensurePolling();
+    } else {
+      this.stopPolling();
+    }
+  }
+
+  private isNewer(candidate: string, baseline: string): boolean {
+    return new Date(candidate).getTime() > new Date(baseline).getTime();
+  }
+
+  private isOrphanedStatus(status: IndexingStatusResponse): boolean {
+    if (status.status !== 'running') return false;
+    const startedAt = new Date(status.started_at).getTime();
+    if (Number.isNaN(startedAt)) return false;
+    return Date.now() - startedAt > ORPHAN_RUN_THRESHOLD_MS;
   }
 
   private ensurePolling(): void {
@@ -137,8 +235,13 @@ export class IndexingStatusComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         if (Date.now() >= this.pollDeadline) {
+          const wasAwaiting = this.awaitingNewRun();
           this.stopPolling();
-          this.pollingTimedOut.set(true);
+          if (wasAwaiting) {
+            this.awaitingTimedOut.set(true);
+          } else {
+            this.pollingTimedOut.set(true);
+          }
           return;
         }
         this.fetchStatus();
