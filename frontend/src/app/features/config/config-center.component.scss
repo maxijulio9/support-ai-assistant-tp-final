@@ -73,3 +73,19 @@
     grid-template-columns: 1fr;
   }
 }
+
+.config-center-footnote {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.config-center-footnote mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}

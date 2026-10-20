@@ -29,11 +29,12 @@
       }
     </div>
   } @else {
-    <p class="regenerate-dialog-help">El sistema usará tu motivo para generar una nueva respuesta.</p>
+    <p class="regenerate-dialog-help">Al confirmar, se regenera la respuesta con el motivo que escribas abajo.</p>
     <p class="regenerate-dialog-help">
-      La nueva respuesta se publica solo si el sistema la considera suficientemente respaldada; si no, la
-      solicitud se escala a un agente.
+      Si la respuesta nueva tiene confianza alta, se publica automáticamente en el ticket; si no, se escala a una
+      persona.
     </p>
+    <p class="regenerate-dialog-help">Esta solicitud no vuelve a la cola de revisión.</p>
 
     @if (timedOut()) {
       <p class="regenerate-dialog-error" role="alert">

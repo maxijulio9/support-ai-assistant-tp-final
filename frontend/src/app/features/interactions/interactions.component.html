@@ -1,9 +1,6 @@
 <div class="interactions-page">
   <header class="interactions-header">
     <h1 class="interactions-title">Historial</h1>
-    <span matTooltip="Exportación no disponible todavía">
-      <button mat-stroked-button type="button" disabled>Exportar</button>
-    </span>
   </header>
 
   <div class="interactions-filters">
@@ -36,6 +33,13 @@
     @if (hasActiveFilters()) {
       <button mat-button type="button" class="interactions-clear" (click)="clearFilters()">Limpiar filtros</button>
     }
+
+    <span class="interactions-export" matTooltip="Disponible próximamente">
+      <button mat-stroked-button type="button" disabled>
+        <mat-icon>download</mat-icon>
+        Exportar CSV
+      </button>
+    </span>
   </div>
 
   @if (truncated()) {

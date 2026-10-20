@@ -40,6 +40,14 @@
   margin-left: auto;
 }
 
+.interactions-export {
+  margin-left: auto;
+}
+
+.interactions-export button mat-icon {
+  margin-right: 4px;
+}
+
 .interactions-truncated {
   font: var(--app-text-metadata);
   color: var(--app-color-text-secondary);
