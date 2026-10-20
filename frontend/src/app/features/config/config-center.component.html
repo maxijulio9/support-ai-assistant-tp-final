@@ -3,7 +3,7 @@
     <div>
       <h1 class="config-center-title">Configuración</h1>
       <p class="config-center-subtitle">{{ subtitle() }}</p>
-      @if (readinessSummary().allUnset) {
+      @if (readinessSummary().showWelcome) {
         <p class="config-center-suggestion">1. JSM, 2. Confluence, 3. Proyectos</p>
       }
     </div>

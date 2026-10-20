@@ -1,7 +1,9 @@
 import {
+  LLM_SECTION_HAS_BACKEND,
   ReadinessSection,
   connectionCardChip,
   idleSlot,
+  llmReadinessState,
   projectsCardChip,
   projectsReadinessState,
   readinessHeadline,
@@ -16,33 +18,50 @@ function section(overrides: Partial<ReadinessSection>): ReadinessSection {
 
 describe('summarizeReadiness', () => {
   it('cuenta solo las secciones marcadas como counts', () => {
+    // 'extra' es una seccion hipotetica fuera del conteo, no el LLM: el
+    // LLM participa siempre del total (ver los tests de llmReadinessState
+    // y "secciones de puesta en marcha" mas abajo).
     const summary = summarizeReadiness([
       section({ id: 'jsm', state: 'ready' }),
       section({ id: 'confluence', state: 'ready' }),
       section({ id: 'projects', state: 'pending' }),
-      section({ id: 'llm', state: 'unset', counts: false }),
+      section({ id: 'extra', state: 'unset', counts: false }),
     ]);
 
-    expect(summary).toEqual({ readyCount: 2, totalCount: 3, allUnset: false, erroredLabels: [] });
+    expect(summary).toEqual({ readyCount: 2, totalCount: 3, showWelcome: false, erroredLabels: [] });
   });
 
-  it('un pending entre las demas unset rompe el allUnset', () => {
+  it('sistema recien instalado: JSM/Confluence sin dato y Proyectos pendiente (0 incorporados) muestra bienvenida', () => {
+    // Proyectos nunca llega a 'unset' (usa 'pending' incluso con 0
+    // incorporados): showWelcome no exige que todas esten literalmente en
+    // 'unset', solo que ninguna este lista ni en error.
     const summary = summarizeReadiness([
-      section({ id: 'jsm', state: 'unset' }),
-      section({ id: 'confluence', state: 'unset' }),
-      section({ id: 'projects', state: 'pending' }),
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'unset' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'unset' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'pending' }),
     ]);
 
-    expect(summary.allUnset).toBe(false);
+    expect(summary.showWelcome).toBe(true);
   });
 
-  it('allUnset es true solo cuando todas las que cuentan estan en unset', () => {
+  it('con una seccion lista ya no se muestra la bienvenida', () => {
     const summary = summarizeReadiness([
-      section({ id: 'jsm', state: 'unset' }),
-      section({ id: 'confluence', state: 'unset' }),
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'ready' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'unset' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'pending' }),
     ]);
 
-    expect(summary.allUnset).toBe(true);
+    expect(summary.showWelcome).toBe(false);
+  });
+
+  it('con una seccion en error de carga tampoco se muestra la bienvenida', () => {
+    const summary = summarizeReadiness([
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'error' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'unset' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'pending' }),
+    ]);
+
+    expect(summary.showWelcome).toBe(false);
   });
 
   it('un error no cuenta como listo y queda en erroredLabels', () => {
@@ -54,6 +73,64 @@ describe('summarizeReadiness', () => {
 
     expect(summary.readyCount).toBe(1);
     expect(summary.erroredLabels).toEqual(['Confluence']);
+  });
+});
+
+describe('llmReadinessState y las 4 secciones de puesta en marcha', () => {
+  it('LLM_SECTION_HAS_BACKEND esta en false hoy: sin backend, llmReadinessState da unset', () => {
+    expect(LLM_SECTION_HAS_BACKEND).toBe(false);
+    expect(llmReadinessState()).toBe('unset');
+  });
+
+  it('3 de 4: JSM, Confluence y Proyectos listos, LLM cuenta pero nunca queda listo sin backend', () => {
+    const summary = summarizeReadiness([
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'ready' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'ready' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'ready' }),
+      section({ id: 'llm', label: 'Modelo de lenguaje', state: llmReadinessState() }),
+    ]);
+
+    expect(summary).toEqual({ readyCount: 3, totalCount: 4, showWelcome: false, erroredLabels: [] });
+    expect(readinessHeadline(summary)).toBe('3 de 4 secciones listas');
+  });
+
+  it('el LLM sin backend no rompe la bienvenida del sistema recien instalado', () => {
+    const summary = summarizeReadiness([
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'unset' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'unset' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'pending' }),
+      section({ id: 'llm', label: 'Modelo de lenguaje', state: llmReadinessState() }),
+    ]);
+
+    expect(summary.showWelcome).toBe(true);
+  });
+
+  // Simula el dia que exista el backend del LLM (LLM_SECTION_HAS_BACKEND
+  // en true): no depende de la bandera, construye la seccion con 'ready'
+  // directamente para probar que summarizeReadiness la cuenta como a
+  // cualquier otra.
+  it('4 de 4: cuando el LLM tambien tenga backend y quede listo', () => {
+    const summary = summarizeReadiness([
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'ready' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'ready' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'ready' }),
+      section({ id: 'llm', label: 'Modelo de lenguaje', state: 'ready' }),
+    ]);
+
+    expect(summary).toEqual({ readyCount: 4, totalCount: 4, showWelcome: false, erroredLabels: [] });
+    expect(readinessHeadline(summary)).toBe('4 de 4 secciones listas');
+  });
+
+  it('un error en el LLM no cuenta como listo y queda en erroredLabels, igual que las demas', () => {
+    const summary = summarizeReadiness([
+      section({ id: 'jsm', label: 'Jira Service Management', state: 'ready' }),
+      section({ id: 'confluence', label: 'Confluence', state: 'ready' }),
+      section({ id: 'projects', label: 'Proyectos', state: 'ready' }),
+      section({ id: 'llm', label: 'Modelo de lenguaje', state: 'error' }),
+    ]);
+
+    expect(summary.readyCount).toBe(3);
+    expect(summary.erroredLabels).toEqual(['Modelo de lenguaje']);
   });
 });
 

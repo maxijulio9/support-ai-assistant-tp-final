@@ -32,7 +32,14 @@ export interface ReadinessSection {
 export interface ReadinessSummary {
   readyCount: number;
   totalCount: number;
-  allUnset: boolean;
+  // Sistema recien instalado: ninguna seccion contada esta lista y ninguna
+  // esta en error. No exige que todas esten literalmente en 'unset' (por
+  // ejemplo Proyectos con 0 incorporados es 'pending', no 'unset', y el
+  // estado inicial sigue siendo de bienvenida). El LLM no rompe esta
+  // condicion mientras no tenga backend porque llmReadinessState() lo deja
+  // fijo en 'unset' (ni listo ni error); el dia que tenga backend, su
+  // estado real participa igual que el de cualquier otra seccion.
+  showWelcome: boolean;
   erroredLabels: string[];
 }
 
@@ -42,9 +49,9 @@ export function summarizeReadiness(sections: ReadinessSection[]): ReadinessSumma
   const erroredLabels = counted
     .filter((section) => section.state === 'error')
     .map((section) => section.label);
-  const allUnset = counted.length > 0 && counted.every((section) => section.state === 'unset');
+  const showWelcome = counted.length > 0 && readyCount === 0 && erroredLabels.length === 0;
 
-  return { readyCount, totalCount: counted.length, allUnset, erroredLabels };
+  return { readyCount, totalCount: counted.length, showWelcome, erroredLabels };
 }
 
 export function readinessHeadline(summary: ReadinessSummary): string {
@@ -72,6 +79,19 @@ export function projectsReadinessState(slot: SectionSlot<unknown[]>): ReadinessS
   if (slot.state === 'error') return 'error';
   if (slot.state === 'loaded' && (slot.data?.length ?? 0) > 0) return 'ready';
   return 'pending';
+}
+
+// Bandera simple: hoy (false) el Modelo de lenguaje cuenta en el total de
+// la franja de preparacion pero nunca puede quedar "listo" (se fuerza a
+// 'unset', gris atenuado con icono de guion, igual que JSM/Confluence sin
+// conectar) porque no hay backend que consultar. El dia que exista el
+// contrato, cambiar esto a true y reemplazar el 'ready' de abajo por el
+// estado real que resulte de esos datos (conectado/error/etc), el mismo
+// patron que sectionReadinessState usa para JSM y Confluence.
+export const LLM_SECTION_HAS_BACKEND = false;
+
+export function llmReadinessState(): ReadinessState {
+  return LLM_SECTION_HAS_BACKEND ? 'ready' : 'unset';
 }
 
 // Tono de chip que usan las tarjetas del centro (section-card.component).

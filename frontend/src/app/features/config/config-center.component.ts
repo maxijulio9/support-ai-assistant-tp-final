@@ -6,6 +6,7 @@ import { ReadinessStripComponent } from './readiness-strip.component';
 import {
   ReadinessSection,
   connectionCardChip,
+  llmReadinessState,
   projectsCardChip,
   projectsReadinessState,
   sectionReadinessState,
@@ -39,14 +40,19 @@ export class ConfigCenterComponent {
       counts: true,
     },
     { id: 'projects', label: 'Proyectos', state: projectsReadinessState(this.status.projects()), counts: true },
-    { id: 'llm', label: 'Modelo de lenguaje', state: 'unset', counts: false },
+    // Cuenta en el total (4 secciones) aunque todavia no exista el
+    // backend: llmReadinessState() la fuerza a 'unset' hasta entonces, ver
+    // LLM_SECTION_HAS_BACKEND en config-readiness.ts.
+    { id: 'llm', label: 'Modelo de lenguaje', state: llmReadinessState(), counts: true },
   ]);
 
   readonly readinessSummary = computed(() => summarizeReadiness(this.readinessSections()));
 
-  // Mientras alguna de las 3 secciones de puesta en marcha todavia no
+  // Mientras alguna de las 3 secciones con backend hoy todavia no
   // resolvio (ni cargada ni en error), la franja muestra su propio
-  // esqueleto en lugar de un resumen a medio calcular.
+  // esqueleto en lugar de un resumen a medio calcular. El LLM no participa
+  // de este chequeo: su estado es fijo (llmReadinessState()), nunca esta
+  // "cargando".
   readonly readinessLoading = computed(() =>
     [this.status.jsm().state, this.status.confluence().state, this.status.projects().state].some(
       (state) => state === 'idle' || state === 'loading',
@@ -54,7 +60,7 @@ export class ConfigCenterComponent {
   );
 
   readonly subtitle = computed(() =>
-    this.readinessSummary().allUnset
+    this.readinessSummary().showWelcome
       ? 'Configurá las conexiones y herramientas necesarias para poner en marcha el asistente.'
       : 'Conectá las herramientas y definí cómo trabaja el asistente.',
   );
