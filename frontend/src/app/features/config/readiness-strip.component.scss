@@ -1,0 +1,101 @@
+:host {
+  display: block;
+}
+
+.readiness-strip {
+  background-color: var(--mat-sys-surface);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-md);
+}
+
+.readiness-strip-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  margin-bottom: var(--app-space-sm);
+}
+
+.readiness-strip-headline {
+  font: var(--app-text-card-heading);
+  color: var(--mat-sys-on-surface);
+}
+
+.readiness-strip-caption {
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  text-transform: uppercase;
+}
+
+.readiness-strip-bar {
+  display: flex;
+  gap: var(--app-space-xs);
+  margin-bottom: var(--app-space-sm);
+}
+
+.readiness-strip-segment {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.readiness-strip-segment--ready {
+  background-color: var(--app-color-success);
+}
+
+.readiness-strip-segment--pending {
+  background-color: var(--app-color-warning);
+}
+
+.readiness-strip-segment--error {
+  background-color: var(--mat-sys-error);
+}
+
+.readiness-strip-segment--muted {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.readiness-strip-segment--loading {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.readiness-strip-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-md);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.readiness-strip-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+}
+
+.readiness-strip-legend-item mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.readiness-strip-legend-item--ready {
+  color: var(--app-color-success);
+}
+
+.readiness-strip-legend-item--pending {
+  color: var(--app-color-warning);
+}
+
+.readiness-strip-legend-item--error {
+  color: var(--mat-sys-error);
+}
+
+.readiness-strip-legend-item--muted {
+  color: color-mix(in srgb, var(--app-color-text-secondary) 60%, transparent);
+}

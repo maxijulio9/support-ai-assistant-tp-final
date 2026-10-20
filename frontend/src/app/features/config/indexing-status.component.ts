@@ -7,23 +7,18 @@ import { Subscription, interval } from 'rxjs';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
+import {
+  formatIndexingTimestamp,
+  indexingStatusLabel,
+  indexingStatusTone,
+  isOrphanedIndexingStatus,
+} from './indexing-status-display';
 
 export type IndexingStatusState = 'loading' | 'error' | 'empty' | 'loaded';
-type StatusTone = 'progress' | 'neutral' | 'error';
 
 const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLL_DURATION_MS = 5 * 60 * 1000;
-// Una corrida "running" con un started_at mas viejo que esto se considera
-// huerfana (el worker probablemente se interrumpio sin dejar un estado
-// terminal). Facil de ajustar si cambia la duracion tipica de una corrida.
-const ORPHAN_RUN_THRESHOLD_MS = 60 * 60 * 1000;
-
-function formatTimestamp(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' });
-}
 
 @Component({
   selector: 'app-indexing-status',
@@ -56,46 +51,26 @@ export class IndexingStatusComponent {
   readonly isInProgress = computed(() => {
     if (this.awaitingNewRun()) return true;
     const status = this.status();
-    return status !== null && status.status === 'running' && !this.isOrphanedStatus(status);
+    return status !== null && status.status === 'running' && !isOrphanedIndexingStatus(status);
   });
 
   readonly isOrphaned = computed(() => {
     if (this.awaitingNewRun()) return false;
     const status = this.status();
-    return status !== null && this.isOrphanedStatus(status);
+    return status !== null && isOrphanedIndexingStatus(status);
   });
 
   readonly statusLabel = computed(() => {
     if (this.awaitingNewRun()) return 'Iniciando...';
+    // null solo puede pasar antes del primer load, que esta pantalla nunca
+    // llega a renderizar (el chip vive dentro de @if (state() === 'loaded')).
     const status = this.status();
-    if (!status) return '';
-    switch (status.status) {
-      case 'running':
-        return 'En curso';
-      case 'completed':
-        return 'Finalizada';
-      case 'failed':
-        return 'Fallida';
-      default:
-        return status.status;
-    }
+    return status ? indexingStatusLabel(status) : '';
   });
 
-  readonly statusTone = computed<StatusTone>(() => {
-    if (this.awaitingNewRun()) return 'progress';
-    const status = this.status();
-    if (!status) return 'neutral';
-    switch (status.status) {
-      case 'running':
-        return 'progress';
-      case 'failed':
-        return 'error';
-      default:
-        // completed se muestra en tono neutro, no de exito: que el estado
-        // haya quedado en completed no garantiza que el resultado sea valido.
-        return 'neutral';
-    }
-  });
+  readonly statusTone = computed(() =>
+    this.awaitingNewRun() ? 'progress' : indexingStatusTone(this.status()),
+  );
 
   // Nota corta para dejar en claro que completed no confirma un resultado
   // correcto, solo que el worker termino sin error.
@@ -111,7 +86,7 @@ export class IndexingStatusComponent {
   readonly updatedAtDisplay = computed(() => {
     const status = this.status();
     if (!status || status.status === 'running') return '-';
-    return formatTimestamp(status.updated_at);
+    return formatIndexingTimestamp(status.updated_at);
   });
 
   // Completed con los dos contadores en 0 es un resultado valido (por
@@ -151,7 +126,7 @@ export class IndexingStatusComponent {
   }
 
   formatTimestamp(value: string): string {
-    return formatTimestamp(value);
+    return formatIndexingTimestamp(value);
   }
 
   // Silencioso cuando ya hay algo cargado: ni el polling ni un refresh
@@ -208,7 +183,7 @@ export class IndexingStatusComponent {
       this.pollDeadline = Date.now() + MAX_POLL_DURATION_MS;
     }
 
-    if (status.status === 'running' && !this.isOrphanedStatus(status)) {
+    if (status.status === 'running' && !isOrphanedIndexingStatus(status)) {
       this.ensurePolling();
     } else {
       this.stopPolling();
@@ -217,13 +192,6 @@ export class IndexingStatusComponent {
 
   private isNewer(candidate: string, baseline: string): boolean {
     return new Date(candidate).getTime() > new Date(baseline).getTime();
-  }
-
-  private isOrphanedStatus(status: IndexingStatusResponse): boolean {
-    if (status.status !== 'running') return false;
-    const startedAt = new Date(status.started_at).getTime();
-    if (Number.isNaN(startedAt)) return false;
-    return Date.now() - startedAt > ORPHAN_RUN_THRESHOLD_MS;
   }
 
   private ensurePolling(): void {

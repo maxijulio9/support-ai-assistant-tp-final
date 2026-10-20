@@ -1,0 +1,205 @@
+:host {
+  display: block;
+}
+
+.config-detail-breadcrumb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  margin-bottom: var(--app-space-md);
+}
+
+.config-detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+}
+
+.config-detail-breadcrumb a {
+  color: var(--app-color-text-secondary);
+  text-decoration: none;
+}
+
+.config-detail-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.config-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--app-text-body);
+  font-weight: 500;
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+.config-detail-back mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.config-detail-section-select {
+  display: none;
+  width: 100%;
+}
+
+.config-detail-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--app-space-lg);
+  align-items: start;
+}
+
+.config-detail-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.config-detail-nav-caption {
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  text-transform: uppercase;
+  margin-bottom: var(--app-space-xs);
+}
+
+.config-detail-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.config-detail-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+}
+
+a.config-detail-nav-item:hover {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+a.config-detail-nav-item:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.config-detail-nav-item mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--app-color-text-secondary);
+}
+
+.config-detail-nav-item--active {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  color: var(--mat-sys-primary);
+  font-weight: 500;
+}
+
+.config-detail-nav-item--active mat-icon {
+  color: var(--mat-sys-primary);
+}
+
+.config-detail-nav-item--disabled {
+  color: color-mix(in srgb, var(--app-color-text-secondary) 70%, transparent);
+  cursor: default;
+}
+
+.config-detail-nav-item-soon {
+  margin-left: auto;
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+}
+
+.config-detail-main {
+  min-width: 0;
+}
+
+.config-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+  margin-bottom: var(--app-space-md);
+}
+
+.config-detail-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  color: var(--mat-sys-primary);
+  flex-shrink: 0;
+}
+
+.config-detail-title {
+  font: var(--app-text-page-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+  flex-grow: 1;
+}
+
+.config-detail-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+  white-space: nowrap;
+}
+
+.config-detail-chip--success {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
+.config-detail-chip--error {
+  background-color: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
+  color: var(--mat-sys-error);
+}
+
+.config-detail-chip--progress {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 16%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+.config-detail-chip--info {
+  background-color: color-mix(in srgb, var(--mat-sys-secondary) 16%, transparent);
+  color: var(--mat-sys-secondary);
+}
+
+@media (max-width: 767.98px) {
+  .config-detail-section-select {
+    display: block;
+    margin-bottom: var(--app-space-md);
+  }
+
+  .config-detail-nav {
+    display: none;
+  }
+
+  .config-detail-body {
+    grid-template-columns: 1fr;
+  }
+}

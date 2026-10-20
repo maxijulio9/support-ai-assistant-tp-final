@@ -1,0 +1,101 @@
+<div class="config-center">
+  <div class="config-center-header">
+    <div>
+      <h1 class="config-center-title">Configuración</h1>
+      <p class="config-center-subtitle">{{ subtitle() }}</p>
+      @if (readinessSummary().allUnset) {
+        <p class="config-center-suggestion">1. JSM, 2. Confluence, 3. Proyectos</p>
+      }
+    </div>
+    <span class="config-center-admin-only">
+      <mat-icon aria-hidden="true">lock</mat-icon>
+      Solo Administrador
+    </span>
+  </div>
+
+  <app-readiness-strip [sections]="readinessSections()" [loading]="readinessLoading()" />
+
+  <section class="config-center-group">
+    <h2 class="config-center-group-title">Conexiones</h2>
+    <div class="config-center-cards">
+      <app-section-card
+        icon="hub"
+        title="Jira Service Management"
+        description="Conexión con tu instancia y credenciales."
+        routerLink="/config/jsm"
+        [loadState]="jsmLoadState()"
+        [chipLabel]="jsmChip().label"
+        [chipTone]="jsmChip().tone"
+        (retry)="retryJsm()"
+      />
+
+      <app-section-card
+        icon="link"
+        title="Confluence"
+        description="Conexión y espacios de conocimiento."
+        routerLink="/config/confluence"
+        [loadState]="confluenceLoadState()"
+        [chipLabel]="confluenceChip().label"
+        [chipTone]="confluenceChip().tone"
+        (retry)="retryConfluence()"
+      />
+
+      <app-section-card
+        icon="memory"
+        title="Modelo de lenguaje (LLM)"
+        description="Proveedor, modelo y credenciales de la IA."
+        [disabled]="true"
+        chipLabel="Próximamente"
+        chipTone="neutral"
+      />
+    </div>
+  </section>
+
+  <section class="config-center-group">
+    <h2 class="config-center-group-title">Proyectos</h2>
+    <div class="config-center-cards">
+      <app-section-card
+        icon="grid_view"
+        title="Proyectos"
+        description="Proyectos incorporados, umbrales y estados."
+        routerLink="/config/proyectos"
+        [loadState]="projectsLoadState()"
+        [chipLabel]="projectsChip().label"
+        [chipTone]="projectsChip().tone"
+        (retry)="retryProjects()"
+      />
+
+      <app-section-card
+        icon="list_alt"
+        title="Campos y categorías"
+        description="Categorías, tipos de solicitud y prioridades."
+        routerLink="/config/campos"
+        chipLabel="Por proyecto"
+        chipTone="neutral"
+      />
+    </div>
+  </section>
+
+  <section class="config-center-group">
+    <h2 class="config-center-group-title">Conocimiento</h2>
+    <div class="config-center-cards">
+      <app-section-card
+        icon="layers"
+        title="Indexación"
+        description="Actualizá la base de conocimiento."
+        routerLink="/config/indexacion"
+        [loadState]="indexingLoadState()"
+        [chipLabel]="indexingChipLabel()"
+        [chipTone]="indexingChipTone()"
+        (retry)="retryIndexing()"
+      >
+        @if (indexingLastRun(); as lastRun) {
+          <p class="config-center-indexing-note">{{ lastRun }}</p>
+        } @else {
+          <p class="config-center-indexing-note">Todavía no se ejecutó</p>
+        }
+        <p class="config-center-indexing-note">Muestra la última indexación del sistema, de cualquier proyecto.</p>
+      </app-section-card>
+    </div>
+  </section>
+</div>

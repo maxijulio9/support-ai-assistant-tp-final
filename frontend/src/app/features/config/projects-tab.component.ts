@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
 import { ConfigService } from './config.service';
+import { ConfigStatusService } from './config-status.service';
 import { classifyFormError } from '../../shared/form-error';
 import { AvailableProject } from '../../api/models/available-project';
 import { Country } from '../../api/models/country';
@@ -27,6 +28,7 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 })
 export class ProjectsTabComponent {
   private readonly configService = inject(ConfigService);
+  private readonly configStatus = inject(ConfigStatusService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
@@ -81,6 +83,7 @@ export class ProjectsTabComponent {
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) return;
       this.onboardedProjects.set(result.projects);
+      this.configStatus.setProjectsLoaded(result.projects);
 
       if (result.thresholdsSaved) {
         this.snackBar.open('Proyecto incorporado', 'Cerrar', { duration: 4000 });

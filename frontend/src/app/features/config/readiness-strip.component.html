@@ -1,0 +1,42 @@
+<div class="readiness-strip">
+  @if (loading()) {
+    <div class="readiness-strip-header">
+      <span class="readiness-strip-headline">Cargando configuración...</span>
+      <span class="readiness-strip-caption">Preparación del asistente</span>
+    </div>
+    <div class="readiness-strip-bar" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando la preparación del asistente</span>
+      @for (section of sections(); track section.id) {
+        <span class="readiness-strip-segment readiness-strip-segment--loading"></span>
+      }
+    </div>
+  } @else {
+    <div class="readiness-strip-header">
+      <span class="readiness-strip-headline">{{ headline() }}</span>
+      <span class="readiness-strip-caption">Puesta en marcha</span>
+    </div>
+
+    <div class="readiness-strip-bar">
+      @for (section of sections(); track section.id) {
+        <span
+          class="readiness-strip-segment"
+          [class]="'readiness-strip-segment--' + section.state"
+          [class.readiness-strip-segment--muted]="!section.counts"
+        ></span>
+      }
+    </div>
+
+    <ul class="readiness-strip-legend">
+      @for (section of sections(); track section.id) {
+        <li
+          class="readiness-strip-legend-item"
+          [class]="'readiness-strip-legend-item--' + section.state"
+          [class.readiness-strip-legend-item--muted]="!section.counts"
+        >
+          <mat-icon>{{ iconFor(section.state) }}</mat-icon>
+          <span>{{ section.label }}</span>
+        </li>
+      }
+    </ul>
+  }
+</div>

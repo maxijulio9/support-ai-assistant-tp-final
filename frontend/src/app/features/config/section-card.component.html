@@ -1,0 +1,42 @@
+@if (isLink) {
+  <a class="section-card section-card--link" [routerLink]="routerLink()">
+    <ng-container *ngTemplateOutlet="body" />
+  </a>
+} @else {
+  <div class="section-card" [class.section-card--disabled]="disabled()">
+    <ng-container *ngTemplateOutlet="body" />
+  </div>
+}
+
+<ng-template #body>
+  <div class="section-card-icon">
+    <mat-icon>{{ icon() }}</mat-icon>
+  </div>
+
+  <h3 class="section-card-title">{{ title() }}</h3>
+  <p class="section-card-description">{{ description() }}</p>
+
+  @if (loadState() === 'loading') {
+    <div class="section-card-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando {{ title() }}</span>
+      <div class="section-card-skeleton-line" style="width: 60%"></div>
+      <div class="section-card-skeleton-line" style="width: 40%"></div>
+    </div>
+  } @else {
+    @if (loadState() === 'loaded') {
+      <ng-content></ng-content>
+    }
+
+    <div class="section-card-footer">
+      @if (loadState() === 'error') {
+        <span class="section-card-chip section-card-chip--error">No se pudo cargar</span>
+        <button type="button" class="section-card-retry" (click)="retry.emit()">Reintentar</button>
+      } @else {
+        <span class="section-card-chip" [class]="'section-card-chip--' + chipTone()">{{ chipLabel() }}</span>
+        @if (isLink) {
+          <span class="section-card-open">Abrir →</span>
+        }
+      }
+    </div>
+  }
+</ng-template>

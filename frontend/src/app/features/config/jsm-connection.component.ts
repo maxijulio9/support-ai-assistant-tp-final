@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfigService } from './config.service';
+import { ConfigStatusService } from './config-status.service';
 import { classifyFormError } from '../../shared/form-error';
 
 export type JsmConnectionState = 'loading' | 'error' | 'loaded';
@@ -23,6 +24,7 @@ const SUBMIT_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 })
 export class JsmConnectionComponent {
   private readonly configService = inject(ConfigService);
+  private readonly configStatus = inject(ConfigStatusService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -77,6 +79,8 @@ export class JsmConnectionComponent {
           // conexion haya quedado guardada
           this.form.patchValue({ apiToken: '', webhookSecret: '' });
           this.snackBar.open('Conexión guardada', 'Cerrar', { duration: 4000 });
+          // el centro de Configuracion refleja "Conectado" sin recargar
+          this.configStatus.setJsmConnected({ base_url: baseUrl, configured: true, user_email: userEmail });
         },
         error: (error: unknown) => {
           this.submitting.set(false);

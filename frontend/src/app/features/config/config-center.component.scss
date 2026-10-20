@@ -1,0 +1,75 @@
+:host {
+  display: block;
+}
+
+.config-center {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-lg);
+}
+
+.config-center-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  flex-wrap: wrap;
+}
+
+.config-center-title {
+  font: var(--app-text-page-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.config-center-subtitle {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 0;
+}
+
+.config-center-suggestion {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 0;
+}
+
+.config-center-admin-only {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  white-space: nowrap;
+}
+
+.config-center-admin-only mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.config-center-group-title {
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  text-transform: uppercase;
+  margin: 0 0 var(--app-space-sm);
+}
+
+.config-center-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--app-space-md);
+}
+
+.config-center-indexing-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 4px;
+}
+
+@media (max-width: 767.98px) {
+  .config-center-cards {
+    grid-template-columns: 1fr;
+  }
+}

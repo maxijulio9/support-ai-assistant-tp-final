@@ -1,0 +1,64 @@
+<div class="config-detail">
+  <div class="config-detail-breadcrumb-row">
+    <nav class="config-detail-breadcrumb" aria-label="Migas de pan">
+      <a routerLink="/config">Configuración</a>
+      <span aria-hidden="true">&gt;</span>
+      <span>{{ activeItem()?.label }}</span>
+    </nav>
+    <a class="config-detail-back" routerLink="/config">
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
+      Volver
+    </a>
+  </div>
+
+  <mat-form-field appearance="outline" class="config-detail-section-select">
+    <mat-label>Sección</mat-label>
+    <mat-select [value]="activeItem()?.path" (selectionChange)="selectSection($event.value)">
+      @for (item of navItems; track item.label) {
+        <mat-option [value]="item.path" [disabled]="item.disabled">{{ item.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <div class="config-detail-body">
+    <nav class="config-detail-nav" aria-label="Secciones de configuración">
+      <span class="config-detail-nav-caption">Configuración</span>
+      <ul class="config-detail-nav-list">
+        @for (item of navItems; track item.label) {
+          <li>
+            @if (item.disabled || !item.path) {
+              <span class="config-detail-nav-item config-detail-nav-item--disabled">
+                <mat-icon>{{ item.icon }}</mat-icon>
+                {{ item.label }}
+                <span class="config-detail-nav-item-soon">Próximamente</span>
+              </span>
+            } @else {
+              <a
+                class="config-detail-nav-item"
+                [class.config-detail-nav-item--active]="activeItem()?.path === item.path"
+                [routerLink]="['/config', item.path]"
+              >
+                <mat-icon>{{ item.icon }}</mat-icon>
+                {{ item.label }}
+              </a>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="config-detail-main">
+      <div class="config-detail-header">
+        <div class="config-detail-header-icon">
+          <mat-icon>{{ activeItem()?.icon }}</mat-icon>
+        </div>
+        <h1 class="config-detail-title">{{ activeItem()?.label }}</h1>
+        @if (headerChip(); as chip) {
+          <span class="config-detail-chip" [class]="'config-detail-chip--' + chip.tone">{{ chip.label }}</span>
+        }
+      </div>
+
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
