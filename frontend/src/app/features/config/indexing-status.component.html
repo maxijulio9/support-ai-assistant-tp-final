@@ -21,11 +21,26 @@
 
   @if (state() === 'loaded' && status(); as data) {
     <div class="indexing-status-header">
-      <span class="indexing-status-chip" [class]="'indexing-status-chip--' + statusTone(data.status)">
-        {{ data.status }}
-      </span>
+      <div class="indexing-status-chip-group">
+        <span class="indexing-status-chip" [class]="'indexing-status-chip--' + statusTone(data.status)">
+          {{ data.status }}
+        </span>
+        @if (isInProgress()) {
+          <mat-progress-spinner
+            class="indexing-status-spinner"
+            diameter="16"
+            strokeWidth="2"
+            mode="indeterminate"
+            aria-label="Indexación en curso"
+          />
+        }
+      </div>
       <button mat-stroked-button type="button" (click)="refresh()">Actualizar estado</button>
     </div>
+
+    @if (data.error_detail) {
+      <p class="indexing-status-alert" role="alert">{{ data.error_detail }}</p>
+    }
 
     <dl class="indexing-status-details">
       <div class="indexing-status-row">
@@ -40,26 +55,36 @@
         <dt>Actualizado</dt>
         <dd>{{ formatTimestamp(data.updated_at) }}</dd>
       </div>
-      <div class="indexing-status-row">
-        <dt>Documentos procesados</dt>
-        <dd>
-          {{ data.documents_processed }}
-          @if (data.total_documents !== null) {
-            de {{ data.total_documents }}
-          }
-        </dd>
-      </div>
-      <div class="indexing-status-row">
-        <dt>Fragmentos generados</dt>
-        <dd>{{ data.chunks_generated }}</dd>
-      </div>
-      @if (data.error_detail) {
-        <div class="indexing-status-row">
-          <dt>Error</dt>
-          <dd>{{ data.error_detail }}</dd>
-        </div>
-      }
     </dl>
+
+    <div class="indexing-status-secondary">
+      <span class="indexing-status-secondary-label">Informativo</span>
+      <dl class="indexing-status-details indexing-status-details--secondary">
+        <div class="indexing-status-row">
+          <dt>Documentos procesados</dt>
+          <dd>
+            @if (showCountersAsDash()) {
+              -
+            } @else {
+              {{ data.documents_processed }}
+              @if (data.total_documents !== null) {
+                de {{ data.total_documents }}
+              }
+            }
+          </dd>
+        </div>
+        <div class="indexing-status-row">
+          <dt>Fragmentos generados</dt>
+          <dd>
+            @if (showCountersAsDash()) {
+              -
+            } @else {
+              {{ data.chunks_generated }}
+            }
+          </dd>
+        </div>
+      </dl>
+    </div>
 
     @if (pollingTimedOut()) {
       <p class="indexing-status-timeout" role="alert">Actualizá el estado manualmente.</p>

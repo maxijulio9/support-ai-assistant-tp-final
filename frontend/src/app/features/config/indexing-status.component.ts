@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription, interval } from 'rxjs';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
@@ -23,7 +24,7 @@ function formatTimestamp(value: string): string {
 @Component({
   selector: 'app-indexing-status',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './indexing-status.component.html',
   styleUrl: './indexing-status.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +41,19 @@ export class IndexingStatusComponent {
   readonly isInProgress = computed(() => {
     const status = this.status();
     return status !== null && IN_PROGRESS_STATUSES.has(status.status);
+  });
+
+  // Completed con los dos contadores en 0 es un resultado valido (por
+  // ejemplo un espacio sin contenido nuevo), no "no se indexo nada": se
+  // muestra con un guion en vez de "0" para no sugerir lo segundo.
+  readonly showCountersAsDash = computed(() => {
+    const status = this.status();
+    return (
+      status !== null &&
+      status.status === 'completed' &&
+      status.documents_processed === 0 &&
+      status.chunks_generated === 0
+    );
   });
 
   private pollSubscription: Subscription | null = null;
@@ -72,9 +86,16 @@ export class IndexingStatusComponent {
     return formatTimestamp(value);
   }
 
+  // Silencioso cuando ya hay algo cargado: ni el polling ni un refresh
+  // manual posterior al primer load deben tapar el panel con un esqueleto,
+  // los datos se actualizan en el lugar.
   private fetchStatus(): void {
-    this.state.set('loading');
-    this.loadErrorMessage.set(null);
+    const silent = this.state() === 'loaded';
+
+    if (!silent) {
+      this.state.set('loading');
+      this.loadErrorMessage.set(null);
+    }
 
     this.configService
       .getIndexingStatus()
@@ -90,12 +111,16 @@ export class IndexingStatusComponent {
           }
         },
         error: (error: unknown) => {
-          this.stopPolling();
           if (error instanceof HttpErrorResponse && error.status === 404) {
+            this.stopPolling();
             this.status.set(null);
             this.state.set('empty');
             return;
           }
+          // un fallo pasajero durante un ciclo silencioso no debe tapar el
+          // panel que ya se esta mostrando; el proximo ciclo lo reintenta.
+          if (silent) return;
+          this.stopPolling();
           const result = classifyFormError(error);
           this.loadErrorMessage.set(result.message ?? GENERIC_ERROR_MESSAGE);
           this.state.set('error');

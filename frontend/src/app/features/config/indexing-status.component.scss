@@ -11,6 +11,16 @@
   margin-bottom: var(--app-space-sm);
 }
 
+.indexing-status-chip-group {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+}
+
+.indexing-status-spinner {
+  display: inline-flex;
+}
+
 .indexing-status-chip {
   display: inline-block;
   padding: 2px var(--app-space-sm);
@@ -34,6 +44,12 @@
 .indexing-status-chip--error {
   background-color: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
   color: var(--mat-sys-error);
+}
+
+.indexing-status-alert {
+  color: var(--mat-sys-error);
+  font: var(--app-text-body);
+  margin: 0 0 var(--app-space-sm);
 }
 
 .indexing-status-details {
@@ -60,6 +76,31 @@
   margin: 0;
   color: var(--mat-sys-on-surface);
   text-align: right;
+}
+
+// Bloque de contadores, atenuado a proposito: son solo informativos, no se
+// usan para decidir nada en la pantalla ni representan progreso real.
+.indexing-status-secondary {
+  margin-top: var(--app-space-sm);
+}
+
+.indexing-status-secondary-label {
+  display: inline-block;
+  margin-bottom: var(--app-space-xs);
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--app-text-metadata);
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 12%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.indexing-status-details--secondary .indexing-status-row {
+  border-bottom-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.indexing-status-details--secondary .indexing-status-row dt,
+.indexing-status-details--secondary .indexing-status-row dd {
+  color: var(--app-color-text-secondary);
 }
 
 .indexing-status-timeout {
