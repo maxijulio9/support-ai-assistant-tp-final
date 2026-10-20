@@ -24,6 +24,10 @@
 
   // Sombra suave, solo para capas flotantes (modales, dropdowns, tooltips)
   --app-shadow-soft: 0px 2px 6px 0px rgba(24, 32, 43, 0.04);
+  // Misma familia de color que --app-shadow-soft, mas marcada: para
+  // elementos que necesitan despegarse de un fondo con imagen (por ejemplo
+  // la tarjeta de login).
+  --app-shadow-md: 0px 12px 32px 0px rgba(24, 32, 43, 0.16);
 
   // Escala tipografica de Figma, para contenido de la app. No reemplaza la
   // tipografia interna de los componentes de Material, que sigue usando Inter

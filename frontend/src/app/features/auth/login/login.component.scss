@@ -8,11 +8,32 @@
   align-items: center;
   min-height: 100dvh;
   padding: 1rem;
+  box-sizing: border-box;
+  // Color base del tema como fallback: si la imagen no carga, el fondo
+  // queda en este color solido, sin romper el diseño.
+  background-color: var(--app-color-background);
+  // La imagen es decorativa (fondo CSS, no <img>), sin velo encima: la
+  // tarjeta se separa del fondo con su propio sombreado (--app-shadow-md),
+  // no oscureciendo la foto.
+  background-image: url('/images/login-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .login-card {
   width: 100%;
   max-width: 360px;
+  background-color: var(--mat-sys-surface);
+  box-shadow: var(--app-shadow-md);
+}
+
+.login-card mat-card-title {
+  margin-bottom: var(--app-space-xs);
+}
+
+.login-card mat-card-header {
+  margin-bottom: var(--app-space-sm);
 }
 
 .login-field {
