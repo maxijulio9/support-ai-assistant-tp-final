@@ -77,6 +77,7 @@ class InteractionMetricsService:
             "request_info_count": 0,
             "resolved_count": 0,
             "resolved_externally_count": 0,
+            "discarded_count": 0,
             "avg_confidence_score": None,
         }
 
