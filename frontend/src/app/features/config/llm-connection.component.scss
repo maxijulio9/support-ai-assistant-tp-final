@@ -1,0 +1,150 @@
+:host {
+  display: block;
+  max-width: 560px;
+}
+
+.llm-connection-status {
+  background-color: var(--mat-sys-surface);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-md);
+  margin-bottom: var(--app-space-lg);
+}
+
+.llm-connection-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-xs) 0;
+}
+
+.llm-connection-status-label {
+  font: var(--app-text-body);
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.llm-connection-status-detail {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  flex-grow: 1;
+}
+
+.llm-connection-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
+.llm-connection-chip--success {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
+.llm-connection-source {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 0;
+}
+
+.llm-connection-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.llm-connection-block {
+  margin-bottom: var(--app-space-lg);
+}
+
+.llm-connection-block-title {
+  font: var(--app-text-section-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.llm-connection-field {
+  width: 100%;
+  margin-bottom: var(--app-space-xs);
+}
+
+.llm-connection-field--with-hint {
+  margin-bottom: var(--app-space-sm);
+}
+
+.llm-connection-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.llm-connection-models-row {
+  margin-bottom: var(--app-space-sm);
+}
+
+.llm-connection-models-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.llm-connection-progress {
+  margin-bottom: var(--app-space-xs);
+}
+
+.llm-connection-saving-note {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.llm-connection-error-message {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.llm-connection-submit {
+  align-self: flex-start;
+}
+
+.llm-connection-apply-note {
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 0;
+}
+
+.llm-connection-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-sm);
+  padding: var(--app-space-lg) 0;
+  text-align: center;
+}
+
+.llm-connection-error p {
+  font: var(--app-text-body);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.llm-connection-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.llm-connection-skeleton-line {
+  height: 2.5rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}

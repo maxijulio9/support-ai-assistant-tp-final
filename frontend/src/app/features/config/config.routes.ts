@@ -43,6 +43,11 @@ export const CONFIG_ROUTES: Routes = [
         data: { sectionId: 'indexing' },
         loadComponent: () => import('./indexing-tab.component').then((m) => m.IndexingTabComponent),
       },
+      {
+        path: 'llm',
+        data: { sectionId: 'llm' },
+        loadComponent: () => import('./llm-connection.component').then((m) => m.LlmConnectionComponent),
+      },
     ],
   },
 ];

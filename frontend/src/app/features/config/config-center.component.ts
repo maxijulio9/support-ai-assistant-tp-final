@@ -6,7 +6,7 @@ import { ReadinessStripComponent } from './readiness-strip.component';
 import {
   ReadinessSection,
   connectionCardChip,
-  llmReadinessState,
+  llmCardChip,
   projectsCardChip,
   projectsReadinessState,
   sectionReadinessState,
@@ -39,22 +39,30 @@ export class ConfigCenterComponent {
       state: sectionReadinessState(this.status.confluence(), (data) => data.configured),
       counts: true,
     },
-    { id: 'projects', label: 'Proyectos', state: projectsReadinessState(this.status.projects()), counts: true },
-    // Cuenta en el total (4 secciones) aunque todavia no exista el
-    // backend: llmReadinessState() la fuerza a 'unset' hasta entonces, ver
-    // LLM_SECTION_HAS_BACKEND en config-readiness.ts.
-    { id: 'llm', label: 'Modelo de lenguaje', state: llmReadinessState(), counts: true },
+    {
+      id: 'projects',
+      label: 'Proyectos',
+      state: projectsReadinessState(this.status.projects()),
+      counts: true,
+    },
+    {
+      id: 'llm',
+      label: 'Modelo de lenguaje',
+      state: sectionReadinessState(
+        this.status.llm(),
+        (data) => data.generation.configured && data.embeddings.configured,
+      ),
+      counts: true,
+    },
   ]);
 
   readonly readinessSummary = computed(() => summarizeReadiness(this.readinessSections()));
 
-  // Mientras alguna de las 3 secciones con backend hoy todavia no
+  // Mientras alguna de las 4 secciones de puesta en marcha todavia no
   // resolvio (ni cargada ni en error), la franja muestra su propio
-  // esqueleto en lugar de un resumen a medio calcular. El LLM no participa
-  // de este chequeo: su estado es fijo (llmReadinessState()), nunca esta
-  // "cargando".
+  // esqueleto en lugar de un resumen a medio calcular.
   readonly readinessLoading = computed(() =>
-    [this.status.jsm().state, this.status.confluence().state, this.status.projects().state].some(
+    [this.status.jsm().state, this.status.confluence().state, this.status.projects().state, this.status.llm().state].some(
       (state) => state === 'idle' || state === 'loading',
     ),
   );
@@ -79,11 +87,15 @@ export class ConfigCenterComponent {
   readonly indexingChipTone = computed(() => indexingStatusTone(this.status.indexing().data));
   readonly indexingLastRun = computed(() => indexingLastRunLabel(this.status.indexing().data));
 
+  readonly llmLoadState = computed(() => toSectionCardLoadState(this.status.llm().state));
+  readonly llmChip = computed(() => llmCardChip(this.status.llm().data));
+
   constructor() {
     this.status.refresh('jsm');
     this.status.refresh('confluence');
     this.status.refresh('projects');
     this.status.refresh('indexing');
+    this.status.refresh('llm');
   }
 
   retryJsm(): void {
@@ -100,5 +112,9 @@ export class ConfigCenterComponent {
 
   retryIndexing(): void {
     this.status.retry('indexing');
+  }
+
+  retryLlm(): void {
+    this.status.retry('llm');
   }
 }

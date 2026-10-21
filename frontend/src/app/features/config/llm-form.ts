@@ -1,8 +1,11 @@
-// Logica pura del formulario de Modelo de lenguaje. Los tipos de aca abajo
-// son locales y minimos (LlmProvider, LlmFormSnapshot, LlmSavePayload):
-// cuando exista el cliente generado del contrato real se reemplazan por los
-// suyos sin tocar la forma de estas funciones.
-export type LlmProvider = 'openai' | 'gemini';
+// Logica pura del formulario de Modelo de lenguaje. LlmProvider se deriva
+// del cliente generado (no se duplica el literal union); LlmFormSnapshot es
+// el unico tipo que sigue siendo local, porque es la forma del estado del
+// formulario, no la de ningun request/response del contrato.
+import { LlmGenerationInput } from '../../api/models/llm-generation-input';
+import { SaveLlmConfigRequest } from '../../api/models/save-llm-config-request';
+
+export type LlmProvider = LlmGenerationInput['provider'];
 
 export interface LlmFormSnapshot {
   embeddingsApiKey: string;
@@ -10,17 +13,6 @@ export interface LlmFormSnapshot {
   generationApiKey: string;
   chatModelsLoaded: boolean;
   generationModel: string | null;
-}
-
-export interface LlmSavePayload {
-  generation: {
-    provider: LlmProvider;
-    model: string;
-    api_key?: string;
-  };
-  embeddings: {
-    api_key: string;
-  };
 }
 
 // La clave que corresponde usar para "Cargar modelos" segun el proveedor
@@ -87,8 +79,8 @@ export function buildLlmSavePayload(form: {
   generationProvider: LlmProvider;
   generationApiKey: string;
   generationModel: string;
-}): LlmSavePayload {
-  const generation: LlmSavePayload['generation'] = {
+}): SaveLlmConfigRequest {
+  const generation: LlmGenerationInput = {
     provider: form.generationProvider,
     model: form.generationModel,
   };
@@ -113,4 +105,47 @@ export function savedModelCandidate(
 // Preselecciona el candidato solo si aparece en la lista recien cargada.
 export function preselectModel(chatModels: string[], savedModel: string | null): string | null {
   return savedModel !== null && chatModels.includes(savedModel) ? savedModel : null;
+}
+
+// Proveedor crudo del status (es un string generico en el contrato, no un
+// literal union) mostrado con mayuscula legible; un valor desconocido se
+// muestra tal cual, igual que el resto de las etiquetas de la app.
+const PROVIDER_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  gemini: 'Gemini',
+};
+
+export function llmProviderLabel(provider: string): string {
+  return PROVIDER_LABELS[provider] ?? provider;
+}
+
+export type LlmPartChipTone = 'success' | 'neutral';
+
+export interface LlmPartChip {
+  label: string;
+  tone: LlmPartChipTone;
+}
+
+// Mismo criterio que el resto de Configuracion: configured viene en true
+// sin importar si el origen es la base de datos o las variables de entorno,
+// asi que no hace falta distinguir el origen aca para decidir el chip.
+export function llmPartChip(configured: boolean): LlmPartChip {
+  return configured ? { label: 'Configurado', tone: 'success' } : { label: 'Pendiente', tone: 'neutral' };
+}
+
+function formatLlmTimestamp(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+// source === 'environment' nunca trae updated_at (lo confirma el contrato):
+// no hace falta chequearlo para ese caso.
+export function llmSourceLabel(source: string, updatedAt: string | null): string {
+  if (source === 'environment') {
+    return 'Usando variables de entorno del despliegue. Guardar desde acá las reemplaza.';
+  }
+  return updatedAt
+    ? `Configurado desde la base de datos el ${formatLlmTimestamp(updatedAt)}.`
+    : 'Configurado desde la base de datos.';
 }

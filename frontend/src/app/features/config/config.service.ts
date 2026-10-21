@@ -25,6 +25,9 @@ import { listAvailableSpacesApiConfigKnowledgeBaseSpacesAvailableGet } from '../
 import { configureSpacesApiConfigItsmProjectsProjectKeySpacesPost } from '../../api/fn/internal-api/configure-spaces-api-config-itsm-projects-project-key-spaces-post';
 import { startIndexingApiIndexingStartPost } from '../../api/fn/internal-api/start-indexing-api-indexing-start-post';
 import { getIndexingStatusApiIndexingStatusGet } from '../../api/fn/internal-api/get-indexing-status-api-indexing-status-get';
+import { getLlmConfigStatusApiConfigLlmGet } from '../../api/fn/internal-api/get-llm-config-status-api-config-llm-get';
+import { listLlmModelsApiConfigLlmModelsPost } from '../../api/fn/internal-api/list-llm-models-api-config-llm-models-post';
+import { saveLlmConfigApiConfigLlmPost } from '../../api/fn/internal-api/save-llm-config-api-config-llm-post';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
 import { ItsmConnectionRequest } from '../../api/models/itsm-connection-request';
 import { ItsmConnectionResponse } from '../../api/models/itsm-connection-response';
@@ -42,6 +45,11 @@ import { ProjectConfigResponse } from '../../api/models/project-config-response'
 import { JsmStatus } from '../../api/models/jsm-status';
 import { JsmField } from '../../api/models/jsm-field';
 import { ProjectConfigurationResponse } from '../../api/models/project-configuration-response';
+import { LlmConfigResponse } from '../../api/models/llm-config-response';
+import { LlmModelsRequest } from '../../api/models/llm-models-request';
+import { LlmModelsResponse } from '../../api/models/llm-models-response';
+import { SaveLlmConfigRequest } from '../../api/models/save-llm-config-request';
+import { SaveLlmConfigResponse } from '../../api/models/save-llm-config-response';
 import { ProjectRequestType } from '../../api/models/project-request-type';
 import { AvailableRequestType } from '../../api/models/available-request-type';
 import { JsmPriority } from '../../api/models/jsm-priority';
@@ -233,6 +241,28 @@ export class ConfigService {
   // quien llama lo distingue del resto antes de pasarlo por classifyFormError.
   getIndexingStatus(): Observable<IndexingStatusResponse> {
     return getIndexingStatusApiIndexingStatusGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body),
+    );
+  }
+
+  getLlmConfig(): Observable<LlmConfigResponse> {
+    return getLlmConfigStatusApiConfigLlmGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body),
+    );
+  }
+
+  // No valida ni guarda nada: solo confirma la clave contra el proveedor y
+  // devuelve sus modelos de chat.
+  listLlmModels(request: LlmModelsRequest): Observable<LlmModelsResponse> {
+    return listLlmModelsApiConfigLlmModelsPost(this.http, this.apiConfig.rootUrl, { body: request }).pipe(
+      map((response) => response.body),
+    );
+  }
+
+  // Las claves nunca se devuelven en ningun GET: hay que reenviarlas en
+  // cada guardado, el formulario nunca las precarga.
+  saveLlmConfig(request: SaveLlmConfigRequest): Observable<SaveLlmConfigResponse> {
+    return saveLlmConfigApiConfigLlmPost(this.http, this.apiConfig.rootUrl, { body: request }).pipe(
       map((response) => response.body),
     );
   }

@@ -1,9 +1,8 @@
 import {
-  LLM_SECTION_HAS_BACKEND,
   ReadinessSection,
   connectionCardChip,
   idleSlot,
-  llmReadinessState,
+  llmCardChip,
   projectsCardChip,
   projectsReadinessState,
   readinessHeadline,
@@ -12,6 +11,12 @@ import {
   toSectionCardLoadState,
 } from './config-readiness';
 
+// Mismo predicado que usa config-center.component.ts: lista solo cuando
+// generacion y embeddings estan los dos configurados.
+function llmReady(data: { generation: { configured: boolean }; embeddings: { configured: boolean } }): boolean {
+  return data.generation.configured && data.embeddings.configured;
+}
+
 function section(overrides: Partial<ReadinessSection>): ReadinessSection {
   return { id: 'jsm', label: 'Jira Service Management', state: 'unset', counts: true, ...overrides };
 }
@@ -19,8 +24,8 @@ function section(overrides: Partial<ReadinessSection>): ReadinessSection {
 describe('summarizeReadiness', () => {
   it('cuenta solo las secciones marcadas como counts', () => {
     // 'extra' es una seccion hipotetica fuera del conteo, no el LLM: el
-    // LLM participa siempre del total (ver los tests de llmReadinessState
-    // y "secciones de puesta en marcha" mas abajo).
+    // LLM participa siempre del total (ver "las 4 secciones de puesta en
+    // marcha" mas abajo).
     const summary = summarizeReadiness([
       section({ id: 'jsm', state: 'ready' }),
       section({ id: 'confluence', state: 'ready' }),
@@ -76,40 +81,69 @@ describe('summarizeReadiness', () => {
   });
 });
 
-describe('llmReadinessState y las 4 secciones de puesta en marcha', () => {
-  it('LLM_SECTION_HAS_BACKEND esta en false hoy: sin backend, llmReadinessState da unset', () => {
-    expect(LLM_SECTION_HAS_BACKEND).toBe(false);
-    expect(llmReadinessState()).toBe('unset');
+describe('LLM: readiness real con las 4 secciones de puesta en marcha', () => {
+  it('idle/loading da unset (igual que JSM/Confluence sin cargar)', () => {
+    const state = sectionReadinessState(idleSlot<{ generation: { configured: boolean }; embeddings: { configured: boolean } }>(), llmReady);
+    expect(state).toBe('unset');
   });
 
-  it('3 de 4: JSM, Confluence y Proyectos listos, LLM cuenta pero nunca queda listo sin backend', () => {
+  it('cargado pero sin ninguna parte configurada da unset', () => {
+    const state = sectionReadinessState(
+      {
+        state: 'loaded',
+        data: { generation: { configured: false }, embeddings: { configured: false } },
+        errorMessage: null,
+      },
+      llmReady,
+    );
+    expect(state).toBe('unset');
+  });
+
+  it('con una sola parte configurada todavia da unset (hacen falta las dos)', () => {
+    const state = sectionReadinessState(
+      {
+        state: 'loaded',
+        data: { generation: { configured: true }, embeddings: { configured: false } },
+        errorMessage: null,
+      },
+      llmReady,
+    );
+    expect(state).toBe('unset');
+  });
+
+  it('con las dos partes configuradas da ready, sea cual sea el origen (configured ya viene resuelto)', () => {
+    const state = sectionReadinessState(
+      {
+        state: 'loaded',
+        data: { generation: { configured: true }, embeddings: { configured: true } },
+        errorMessage: null,
+      },
+      llmReady,
+    );
+    expect(state).toBe('ready');
+  });
+
+  it('error de carga da error', () => {
+    const state = sectionReadinessState(
+      { state: 'error', data: null, errorMessage: 'x' },
+      llmReady,
+    );
+    expect(state).toBe('error');
+  });
+
+  it('3 de 4: JSM, Confluence y Proyectos listos, LLM todavia no configurado', () => {
     const summary = summarizeReadiness([
       section({ id: 'jsm', label: 'Jira Service Management', state: 'ready' }),
       section({ id: 'confluence', label: 'Confluence', state: 'ready' }),
       section({ id: 'projects', label: 'Proyectos', state: 'ready' }),
-      section({ id: 'llm', label: 'Modelo de lenguaje', state: llmReadinessState() }),
+      section({ id: 'llm', label: 'Modelo de lenguaje', state: 'unset' }),
     ]);
 
     expect(summary).toEqual({ readyCount: 3, totalCount: 4, showWelcome: false, erroredLabels: [] });
     expect(readinessHeadline(summary)).toBe('3 de 4 secciones listas');
   });
 
-  it('el LLM sin backend no rompe la bienvenida del sistema recien instalado', () => {
-    const summary = summarizeReadiness([
-      section({ id: 'jsm', label: 'Jira Service Management', state: 'unset' }),
-      section({ id: 'confluence', label: 'Confluence', state: 'unset' }),
-      section({ id: 'projects', label: 'Proyectos', state: 'pending' }),
-      section({ id: 'llm', label: 'Modelo de lenguaje', state: llmReadinessState() }),
-    ]);
-
-    expect(summary.showWelcome).toBe(true);
-  });
-
-  // Simula el dia que exista el backend del LLM (LLM_SECTION_HAS_BACKEND
-  // en true): no depende de la bandera, construye la seccion con 'ready'
-  // directamente para probar que summarizeReadiness la cuenta como a
-  // cualquier otra.
-  it('4 de 4: cuando el LLM tambien tenga backend y quede listo', () => {
+  it('4 de 4: las 4 secciones, incluido el LLM, listas', () => {
     const summary = summarizeReadiness([
       section({ id: 'jsm', label: 'Jira Service Management', state: 'ready' }),
       section({ id: 'confluence', label: 'Confluence', state: 'ready' }),
@@ -131,6 +165,24 @@ describe('llmReadinessState y las 4 secciones de puesta en marcha', () => {
 
     expect(summary.readyCount).toBe(3);
     expect(summary.erroredLabels).toEqual(['Modelo de lenguaje']);
+  });
+});
+
+describe('llmCardChip', () => {
+  it('sin dato da "Pendiente" en neutro', () => {
+    expect(llmCardChip(null)).toEqual({ label: 'Pendiente', tone: 'neutral' });
+  });
+
+  it('con una sola parte configurada sigue en "Pendiente"', () => {
+    expect(
+      llmCardChip({ generation: { configured: true }, embeddings: { configured: false } }),
+    ).toEqual({ label: 'Pendiente', tone: 'neutral' });
+  });
+
+  it('con las dos partes configuradas da "Configurado" en tono de exito', () => {
+    expect(
+      llmCardChip({ generation: { configured: true }, embeddings: { configured: true } }),
+    ).toEqual({ label: 'Configurado', tone: 'success' });
   });
 });
 

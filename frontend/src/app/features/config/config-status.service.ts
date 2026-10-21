@@ -7,8 +7,9 @@ import { SectionSlot, idleSlot } from './config-readiness';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
+import { LlmConfigResponse } from '../../api/models/llm-config-response';
 
-export type LoadableSectionId = 'jsm' | 'confluence' | 'projects' | 'indexing';
+export type LoadableSectionId = 'jsm' | 'confluence' | 'projects' | 'indexing' | 'llm';
 
 const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 
@@ -26,11 +27,13 @@ export class ConfigStatusService {
   private readonly confluenceSlot = signal<SectionSlot<ConnectionStatusResponse>>(idleSlot());
   private readonly projectsSlot = signal<SectionSlot<OnboardedProject[]>>(idleSlot());
   private readonly indexingSlot = signal<SectionSlot<IndexingStatusResponse>>(idleSlot());
+  private readonly llmSlot = signal<SectionSlot<LlmConfigResponse>>(idleSlot());
 
   readonly jsm: Signal<SectionSlot<ConnectionStatusResponse>> = this.jsmSlot;
   readonly confluence: Signal<SectionSlot<ConnectionStatusResponse>> = this.confluenceSlot;
   readonly projects: Signal<SectionSlot<OnboardedProject[]>> = this.projectsSlot;
   readonly indexing: Signal<SectionSlot<IndexingStatusResponse>> = this.indexingSlot;
+  readonly llm: Signal<SectionSlot<LlmConfigResponse>> = this.llmSlot;
 
   // Para el acceso directo a una seccion (por ejemplo /config/confluence):
   // carga solo si todavia no se pidio nada, sin tocar las demas.
@@ -59,6 +62,10 @@ export class ConfigStatusService {
     this.projectsSlot.set({ state: 'loaded', data, errorMessage: null });
   }
 
+  setLlmConfigured(data: LlmConfigResponse): void {
+    this.llmSlot.set({ state: 'loaded', data, errorMessage: null });
+  }
+
   // Para el boton "Reintentar" de una tarjeta en error: a diferencia de
   // ensureLoaded, fuerza la carga aunque el estado ya no sea 'idle'.
   retry(id: LoadableSectionId): void {
@@ -76,6 +83,8 @@ export class ConfigStatusService {
         return this.projectsSlot;
       case 'indexing':
         return this.indexingSlot;
+      case 'llm':
+        return this.llmSlot;
     }
   }
 
@@ -92,6 +101,9 @@ export class ConfigStatusService {
         return;
       case 'indexing':
         this.runIndexing(silent);
+        return;
+      case 'llm':
+        this.run(this.llmSlot, silent, this.configService.getLlmConfig());
         return;
     }
   }

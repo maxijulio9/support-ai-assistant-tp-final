@@ -44,9 +44,11 @@
         icon="memory"
         title="Modelo de lenguaje (LLM)"
         description="Proveedor, modelo y credenciales de la IA."
-        [disabled]="true"
-        chipLabel="Próximamente"
-        chipTone="neutral"
+        routerLink="/config/llm"
+        [loadState]="llmLoadState()"
+        [chipLabel]="llmChip().label"
+        [chipTone]="llmChip().tone"
+        (retry)="retryLlm()"
       />
     </div>
   </section>

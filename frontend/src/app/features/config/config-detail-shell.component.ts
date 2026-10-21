@@ -10,6 +10,7 @@ import {
   SectionCardChip,
   SectionCardLoadState,
   connectionCardChip,
+  llmCardChip,
   projectsCardChip,
   toSectionCardLoadState,
 } from './config-readiness';
@@ -29,7 +30,7 @@ interface DetailNavItem {
 const DETAIL_NAV_ITEMS: DetailNavItem[] = [
   { path: 'jsm', label: 'Jira Service Management', icon: 'hub', disabled: false },
   { path: 'confluence', label: 'Confluence', icon: 'link', disabled: false },
-  { path: null, label: 'Modelo de lenguaje', icon: 'memory', disabled: true },
+  { path: 'llm', label: 'Modelo de lenguaje', icon: 'memory', disabled: false },
   { path: 'proyectos', label: 'Proyectos', icon: 'grid_view', disabled: false },
   { path: 'campos', label: 'Campos y categorías', icon: 'list_alt', disabled: false },
   { path: 'indexacion', label: 'Indexación', icon: 'layers', disabled: false },
@@ -40,6 +41,7 @@ const PATH_TO_SECTION_ID: Partial<Record<ConfigSectionPath, LoadableSectionId>> 
   confluence: 'confluence',
   proyectos: 'projects',
   indexacion: 'indexing',
+  llm: 'llm',
 };
 
 // Shell montado una sola vez para todas las secciones de detalle (jsm,
@@ -96,6 +98,8 @@ export class ConfigDetailShellComponent {
         const data = this.status.indexing().data;
         return { label: indexingStatusLabel(data), tone: indexingStatusTone(data) };
       }
+      case 'llm':
+        return llmCardChip(this.status.llm().data);
       default:
         return null;
     }

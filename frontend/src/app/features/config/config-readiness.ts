@@ -81,19 +81,6 @@ export function projectsReadinessState(slot: SectionSlot<unknown[]>): ReadinessS
   return 'pending';
 }
 
-// Bandera simple: hoy (false) el Modelo de lenguaje cuenta en el total de
-// la franja de preparacion pero nunca puede quedar "listo" (se fuerza a
-// 'unset', gris atenuado con icono de guion, igual que JSM/Confluence sin
-// conectar) porque no hay backend que consultar. El dia que exista el
-// contrato, cambiar esto a true y reemplazar el 'ready' de abajo por el
-// estado real que resulte de esos datos (conectado/error/etc), el mismo
-// patron que sectionReadinessState usa para JSM y Confluence.
-export const LLM_SECTION_HAS_BACKEND = false;
-
-export function llmReadinessState(): ReadinessState {
-  return LLM_SECTION_HAS_BACKEND ? 'ready' : 'unset';
-}
-
 // Tono de chip que usan las tarjetas del centro (section-card.component).
 // info (azul, tema) es el unico tono que no tiene un correlato en
 // ReadinessState: lo usa la tarjeta de Proyectos cuando hay al menos uno
@@ -122,4 +109,14 @@ export function connectionCardChip(data: { configured: boolean } | null): Sectio
 export function projectsCardChip(data: unknown[] | null): SectionCardChip {
   const count = data?.length ?? 0;
   return { label: `${count} incorporados`, tone: count > 0 ? 'info' : 'neutral' };
+}
+
+// "Configurado" solo cuando las dos partes (generacion y embeddings) lo
+// estan; da lo mismo si el origen es la base de datos o las variables de
+// entorno (configured ya viene en true en ambos casos).
+export function llmCardChip(
+  data: { generation: { configured: boolean }; embeddings: { configured: boolean } } | null,
+): SectionCardChip {
+  const bothConfigured = data !== null && data.generation.configured && data.embeddings.configured;
+  return bothConfigured ? { label: 'Configurado', tone: 'success' } : { label: 'Pendiente', tone: 'neutral' };
 }

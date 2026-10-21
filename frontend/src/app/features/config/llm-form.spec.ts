@@ -5,6 +5,9 @@ import {
   canSaveLlmConfiguration,
   effectiveKeyEditedFlag,
   generationKeyFor,
+  llmPartChip,
+  llmProviderLabel,
+  llmSourceLabel,
   modelsStillValid,
   preselectModel,
   savedModelCandidate,
@@ -185,5 +188,44 @@ describe('preselectModel', () => {
 
   it('con una lista vacia (200 sin modelos) nunca preselecciona nada', () => {
     expect(preselectModel([], 'gpt-4.1-mini')).toBeNull();
+  });
+});
+
+describe('llmProviderLabel', () => {
+  it('mapea openai y gemini', () => {
+    expect(llmProviderLabel('openai')).toBe('OpenAI');
+    expect(llmProviderLabel('gemini')).toBe('Gemini');
+  });
+
+  it('un proveedor desconocido se muestra crudo', () => {
+    expect(llmProviderLabel('azure')).toBe('azure');
+  });
+});
+
+describe('llmPartChip', () => {
+  it('configured true da "Configurado" en tono de exito', () => {
+    expect(llmPartChip(true)).toEqual({ label: 'Configurado', tone: 'success' });
+  });
+
+  it('configured false da "Pendiente" en neutro', () => {
+    expect(llmPartChip(false)).toEqual({ label: 'Pendiente', tone: 'neutral' });
+  });
+});
+
+describe('llmSourceLabel', () => {
+  it('source environment: aviso fijo, sin importar updatedAt', () => {
+    expect(llmSourceLabel('environment', null)).toBe(
+      'Usando variables de entorno del despliegue. Guardar desde acá las reemplaza.',
+    );
+  });
+
+  it('source database con fecha: la incluye formateada', () => {
+    const label = llmSourceLabel('database', '2024-01-01T00:00:00Z');
+    expect(label).toContain('Configurado desde la base de datos el');
+    expect(label.endsWith('.')).toBe(true);
+  });
+
+  it('source database sin fecha: mensaje sin fecha', () => {
+    expect(llmSourceLabel('database', null)).toBe('Configurado desde la base de datos.');
   });
 });

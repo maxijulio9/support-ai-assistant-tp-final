@@ -3,7 +3,7 @@ import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 
 // Paths reales de las secciones bajo /config. El viejo ?tab= usaba estos
 // mismos strings como key, asi que la migracion es solo "usalo como path".
-export const CONFIG_SECTION_PATHS = ['jsm', 'proyectos', 'campos', 'confluence', 'indexacion'] as const;
+export const CONFIG_SECTION_PATHS = ['jsm', 'proyectos', 'campos', 'confluence', 'indexacion', 'llm'] as const;
 
 export type ConfigSectionPath = (typeof CONFIG_SECTION_PATHS)[number];
 

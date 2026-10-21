@@ -1,0 +1,143 @@
+<div class="llm-connection">
+  @if (loadState() === 'loading') {
+    <div class="llm-connection-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando la configuración del modelo de lenguaje</span>
+      <div class="llm-connection-skeleton-line" style="width: 100%"></div>
+      <div class="llm-connection-skeleton-line" style="width: 100%"></div>
+      <div class="llm-connection-skeleton-line" style="width: 60%"></div>
+    </div>
+  }
+
+  @if (loadState() === 'error') {
+    <div class="llm-connection-error" role="alert">
+      <p>{{ status().errorMessage }}</p>
+      <button mat-stroked-button type="button" (click)="retryLoad()">Reintentar</button>
+    </div>
+  }
+
+  @if (loadState() === 'loaded' && llmConfig(); as data) {
+    <div class="llm-connection-status">
+      <div class="llm-connection-status-row">
+        <span class="llm-connection-status-label">Generación</span>
+        <span class="llm-connection-status-detail">
+          {{ llmProviderLabel(data.generation.provider) }}, {{ data.generation.model }}
+        </span>
+        @if (generationChip(); as chip) {
+          <span class="llm-connection-chip" [class]="'llm-connection-chip--' + chip.tone">{{ chip.label }}</span>
+        }
+      </div>
+      <div class="llm-connection-status-row">
+        <span class="llm-connection-status-label">Embeddings</span>
+        <span class="llm-connection-status-detail">
+          {{ llmProviderLabel(data.embeddings.provider) }}, {{ data.embeddings.model }}
+        </span>
+        @if (embeddingsChip(); as chip) {
+          <span class="llm-connection-chip" [class]="'llm-connection-chip--' + chip.tone">{{ chip.label }}</span>
+        }
+      </div>
+      @if (sourceLabel(); as source) {
+        <p class="llm-connection-source">{{ source }}</p>
+      }
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="llm-connection-form">
+      <section class="llm-connection-block">
+        <h2 class="llm-connection-block-title">Embeddings (OpenAI)</h2>
+
+        <mat-form-field appearance="outline" class="llm-connection-field" subscriptSizing="dynamic">
+          <mat-label>Modelo de embeddings</mat-label>
+          <input matInput [value]="embeddingsModel()" readonly />
+          <mat-hint>Lo define el sistema. No se puede cambiar por ahora.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field
+          appearance="outline"
+          class="llm-connection-field llm-connection-field--with-hint"
+          subscriptSizing="dynamic"
+        >
+          <mat-label>API key de OpenAI</mat-label>
+          <input matInput type="password" formControlName="embeddingsApiKey" autocomplete="new-password" />
+          <mat-hint>
+            Es obligatoria siempre, aunque la generación use Gemini, porque los embeddings se generan con OpenAI.
+            Hay que volver a ingresarla para guardar, aunque ya esté configurada.
+          </mat-hint>
+          <mat-error>Ingresá la API key de OpenAI.</mat-error>
+        </mat-form-field>
+      </section>
+
+      <section class="llm-connection-block">
+        <h2 class="llm-connection-block-title">Generación de respuestas</h2>
+
+        <mat-form-field appearance="outline" class="llm-connection-field">
+          <mat-label>Proveedor</mat-label>
+          <mat-select formControlName="generationProvider">
+            <mat-option value="openai">OpenAI</mat-option>
+            <mat-option value="gemini">Gemini</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        @if (isGeminiSelected()) {
+          <mat-form-field
+            appearance="outline"
+            class="llm-connection-field llm-connection-field--with-hint"
+            subscriptSizing="dynamic"
+          >
+            <mat-label>API key de Gemini</mat-label>
+            <input matInput type="password" formControlName="generationApiKey" autocomplete="new-password" />
+            <mat-hint>Hay que volver a ingresarla para guardar, aunque ya esté configurada.</mat-hint>
+            <mat-error>Ingresá la API key de Gemini.</mat-error>
+          </mat-form-field>
+          <p class="llm-connection-note">
+            La integración con Gemini usa una interfaz compatible con OpenAI que Google marca como beta.
+          </p>
+        } @else {
+          <p class="llm-connection-note">Se usa la misma clave de OpenAI de arriba.</p>
+        }
+
+        <div class="llm-connection-models-row">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="!canLoad() || chatModelsState() === 'loading'"
+            (click)="loadModels()"
+          >
+            {{ chatModelsState() === 'loading' ? 'Cargando modelos...' : 'Cargar modelos' }}
+          </button>
+        </div>
+
+        @if (chatModelsErrorMessage()) {
+          <p class="llm-connection-models-error" role="alert">{{ chatModelsErrorMessage() }}</p>
+        }
+
+        @if (chatModelsEmpty()) {
+          <p class="llm-connection-models-error" role="alert">La cuenta no tiene modelos de chat disponibles.</p>
+        }
+
+        <mat-form-field appearance="outline" class="llm-connection-field">
+          <mat-label>Modelo de generación</mat-label>
+          <mat-select formControlName="generationModel">
+            @for (model of chatModels(); track model) {
+              <mat-option [value]="model">{{ model }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>Elegí un modelo de generación.</mat-error>
+        </mat-form-field>
+      </section>
+
+      @if (saving()) {
+        <mat-progress-bar mode="indeterminate" class="llm-connection-progress"></mat-progress-bar>
+        <p class="llm-connection-saving-note">Guardando, esto puede tardar varios segundos...</p>
+      }
+
+      @if (saveErrorMessage()) {
+        <p class="llm-connection-error-message" role="alert">{{ saveErrorMessage() }}</p>
+      }
+
+      <button mat-flat-button type="submit" class="llm-connection-submit" [disabled]="!canSave() || saving()">
+        {{ saving() ? 'Guardando...' : 'Probar y guardar' }}
+      </button>
+
+      <p class="llm-connection-apply-note">El cambio se aplica en toda la plataforma en menos de un minuto, sin reiniciar.</p>
+    </form>
+  }
+</div>

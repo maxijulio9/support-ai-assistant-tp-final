@@ -19,6 +19,10 @@ describe('resolveLegacyTabRedirectPath', () => {
     expect(resolveLegacyTabRedirectPath('indexacion')).toBe('indexacion');
   });
 
+  it('resuelve llm', () => {
+    expect(resolveLegacyTabRedirectPath('llm')).toBe('llm');
+  });
+
   it('da null con una key invalida', () => {
     expect(resolveLegacyTabRedirectPath('no-existe')).toBeNull();
   });
