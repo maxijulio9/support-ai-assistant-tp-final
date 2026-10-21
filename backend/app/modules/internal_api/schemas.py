@@ -39,8 +39,9 @@ class ProjectConfigResponse(BaseModel):
 
 
 class ApproveRequest(BaseModel):
-    """Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta tal cual esta."""
+    """Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta generada tal cual esta o la version editada si viene edited_response."""
     reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa, sin FK hasta que exista M9")
+    edited_response: str | None = Field(default=None, description="respuesta editada por el agente, si viene se publica en lugar de la generada, no puede quedar vacia despues de recortar espacios ni superar los 5000 caracteres, si es igual a la generada se trata como una aprobacion comun")
 
 
 class RegenerateRequest(BaseModel):
@@ -295,7 +296,7 @@ class IndexingStatusResponse(BaseModel):
 
 class ResolutionChannelCount(BaseModel):
     """Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."""
-    resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     count: int = Field(description="cantidad de interacciones con ese canal de resolucion")
 
 class ErrorResponse(BaseModel):
@@ -511,9 +512,10 @@ class SaveLlmConfigResponse(BaseModel):
 
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     interaction_id: str = Field(description="id de la interaccion")
     system_decision: str | None = Field(description="decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues")
-    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     issue_key: str = Field(description="key del ticket original en JSM, por ejemplo TARG-123")
     ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
     summary: str | None = Field(description="resumen del ticket original")
@@ -522,6 +524,7 @@ class InteractionListItem(BaseModel):
     decision: str | None = Field(description="decision final del pipeline para esta interaccion")
     confidence_score: float | None = Field(description="confidence_score de la respuesta generada")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
+    was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, la respuesta original del sistema se conserva en generated_response del detalle")
 
 
 class InteractionListResponse(BaseModel):
@@ -538,6 +541,7 @@ class RetrievedChunkDetail(BaseModel):
 
 class InteractionDetailResponse(BaseModel):
     """Detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     interaction_id: str = Field(description="id de la interaccion")
     issue_key: str = Field(description="key del ticket original en JSM, por ejemplo TARG-123")
     ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
@@ -546,9 +550,11 @@ class InteractionDetailResponse(BaseModel):
     priority: str | None = Field(description="prioridad del ticket")
     decision: str | None = Field(description="decision final del pipeline para esta interaccion")
     system_decision: str | None = Field(description="decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues")
-    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     confidence_score: float | None = Field(description="confidence_score de la respuesta generada")
     text_input: str | None = Field(description="texto original del ticket, usado como input del pipeline")
     generated_response: str | None = Field(description="respuesta generada por el sistema")
+    edited_response: str | None = Field(default=None, description="respuesta que se publico cuando el agente la edito antes de aprobarla, o null si no se edito")
+    was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
     chunks: list[RetrievedChunkDetail] = Field(description="fragmentos de la base de conocimiento usados como contexto")
