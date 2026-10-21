@@ -33,6 +33,8 @@ export type { RegenerateInteractionApiInteractionsInteractionIdRegeneratePost$Pa
 export { regenerateInteractionApiInteractionsInteractionIdRegeneratePost as regenerateInteractionApiInteractionsInteractionIdRegeneratePost } from './fn/internal-api/regenerate-interaction-api-interactions-interaction-id-regenerate-post';
 export type { EscalateInteractionApiInteractionsInteractionIdEscalatePost$Params as EscalateInteractionApiInteractionsInteractionIdEscalatePost$Params } from './fn/internal-api/escalate-interaction-api-interactions-interaction-id-escalate-post';
 export { escalateInteractionApiInteractionsInteractionIdEscalatePost as escalateInteractionApiInteractionsInteractionIdEscalatePost } from './fn/internal-api/escalate-interaction-api-interactions-interaction-id-escalate-post';
+export type { DiscardInteractionApiInteractionsInteractionIdDiscardPost$Params as DiscardInteractionApiInteractionsInteractionIdDiscardPost$Params } from './fn/internal-api/discard-interaction-api-interactions-interaction-id-discard-post';
+export { discardInteractionApiInteractionsInteractionIdDiscardPost as discardInteractionApiInteractionsInteractionIdDiscardPost } from './fn/internal-api/discard-interaction-api-interactions-interaction-id-discard-post';
 export type { GetItsmConnectionApiConfigItsmGet$Params as GetItsmConnectionApiConfigItsmGet$Params } from './fn/internal-api/get-itsm-connection-api-config-itsm-get';
 export { getItsmConnectionApiConfigItsmGet as getItsmConnectionApiConfigItsmGet } from './fn/internal-api/get-itsm-connection-api-config-itsm-get';
 export type { ConfigureItsmConnectionApiConfigItsmPost$Params as ConfigureItsmConnectionApiConfigItsmPost$Params } from './fn/internal-api/configure-itsm-connection-api-config-itsm-post';

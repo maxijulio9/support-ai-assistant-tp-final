@@ -3,12 +3,12 @@
 
 
 /**
- * Response comun a las 3 acciones de revision (approve, regenerate, escalate).
+ * Response comun a las 4 acciones de revision (approve, regenerate, escalate y discard).
  */
 export interface InteractionReviewResponse {
 
   /**
-   * accion final que tomo el sistema, por ejemplo AUTO_PUBLISH o ESCALATE
+   * accion final que tomo el sistema, por ejemplo AUTO_PUBLISH, ESCALATE o DISCARDED
    */
   action_type: string;
 

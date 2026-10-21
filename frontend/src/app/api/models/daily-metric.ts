@@ -23,6 +23,11 @@ export interface DailyMetric {
   date: string;
 
   /**
+   * cantidad de interacciones cuya sugerencia descarto una persona ese dia
+   */
+  discarded_count: number;
+
+  /**
    * cantidad de interacciones escaladas ese dia
    */
   escalate_count: number;

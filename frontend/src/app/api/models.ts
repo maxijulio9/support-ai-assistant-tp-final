@@ -27,6 +27,7 @@ export type { Country } from './models/country';
 export type { CreateUserRequest } from './models/create-user-request';
 export type { DailyMetric } from './models/daily-metric';
 export type { DailyMetricsResponse } from './models/daily-metrics-response';
+export type { DiscardRequest } from './models/discard-request';
 export type { ErrorResponse } from './models/error-response';
 export type { EscalateRequest } from './models/escalate-request';
 export type { FieldOptionsResponse } from './models/field-options-response';

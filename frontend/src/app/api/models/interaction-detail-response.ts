@@ -34,6 +34,11 @@ export interface InteractionDetailResponse {
   decision: (string | null);
 
   /**
+   * respuesta que se publico cuando el agente la edito antes de aprobarla, o null si no se edito
+   */
+  edited_response: (string | null);
+
+  /**
    * respuesta generada por el sistema
    */
   generated_response: (string | null);
@@ -54,7 +59,7 @@ export interface InteractionDetailResponse {
   priority: (string | null);
 
   /**
-   * como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar
+   * como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar
    */
   resolution_channel: (string | null);
 
@@ -77,4 +82,9 @@ export interface InteractionDetailResponse {
    * enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion
    */
   ticket_url: (string | null);
+
+  /**
+   * true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema
+   */
+  was_edited: boolean;
 }

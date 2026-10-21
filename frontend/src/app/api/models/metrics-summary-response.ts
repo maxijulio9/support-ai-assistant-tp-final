@@ -29,6 +29,11 @@ export interface MetricsSummaryResponse {
   by_resolution_channel: Array<ResolutionChannelCount>;
 
   /**
+   * cantidad de interacciones cuya sugerencia descarto una persona, el ticket queda abierto en JSM para atenderlo a mano, la suma de los conteos por decision, este incluido, da total_interactions
+   */
+  discarded_count: number;
+
+  /**
    * cantidad de interacciones escaladas a un agente humano
    */
   escalate_count: number;

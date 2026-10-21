@@ -43,7 +43,7 @@ export interface InteractionListItem {
   priority: (string | null);
 
   /**
-   * como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar
+   * como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar
    */
   resolution_channel: (string | null);
 
@@ -61,4 +61,9 @@ export interface InteractionListItem {
    * enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion
    */
   ticket_url: (string | null);
+
+  /**
+   * true si el agente edito la respuesta antes de aprobarla, la respuesta original del sistema se conserva en generated_response del detalle
+   */
+  was_edited: boolean;
 }

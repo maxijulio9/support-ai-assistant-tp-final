@@ -632,6 +632,16 @@
               }
             }
           },
+          "400": {
+            "description": "La respuesta editada esta vacia o supera el maximo de caracteres",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -742,6 +752,90 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InteractionReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interactions/{interaction_id}/discard": {
+      "post": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Discard Interaction",
+        "operationId": "discard_interaction_api_interactions__interaction_id__discard_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "interaction_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Interaction Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/DiscardRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionReviewResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La interaccion no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2701,11 +2795,23 @@
             ],
             "title": "Reviewed By",
             "description": "referencia logica al agente que revisa, sin FK hasta que exista M9"
+          },
+          "edited_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited Response",
+            "description": "respuesta editada por el agente, si viene se publica en lugar de la generada, no puede quedar vacia despues de recortar espacios ni superar los 5000 caracteres, si es igual a la generada se trata como una aprobacion comun"
           }
         },
         "type": "object",
         "title": "ApproveRequest",
-        "description": "Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta tal cual esta."
+        "description": "Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta generada tal cual esta o la version editada si viene edited_response."
       },
       "AvailableProject": {
         "properties": {
@@ -3323,6 +3429,12 @@
             "title": "Resolved Externally Count",
             "description": "cantidad de interacciones resueltas por un humano fuera del sistema ese dia"
           },
+          "discarded_count": {
+            "type": "integer",
+            "title": "Discarded Count",
+            "description": "cantidad de interacciones cuya sugerencia descarto una persona ese dia",
+            "default": 0
+          },
           "avg_confidence_score": {
             "anyOf": [
               {
@@ -3346,6 +3458,7 @@
           "request_info_count",
           "resolved_count",
           "resolved_externally_count",
+          "discarded_count",
           "avg_confidence_score"
         ],
         "title": "DailyMetric",
@@ -3374,6 +3487,25 @@
         ],
         "title": "DailyMetricsResponse",
         "description": "Serie diaria de metricas, para el dashboard."
+      },
+      "DiscardRequest": {
+        "properties": {
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason",
+            "description": "motivo opcional del descarte, el revisor se toma del token y no se manda"
+          }
+        },
+        "type": "object",
+        "title": "DiscardRequest",
+        "description": "Request para descartar la sugerencia de una interaccion en NEEDS_REVIEW, sin publicar, regenerar ni escalar nada."
       },
       "ErrorResponse": {
         "properties": {
@@ -3688,7 +3820,7 @@
               }
             ],
             "title": "Resolution Channel",
-            "description": "como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
+            "description": "como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
           },
           "confidence_score": {
             "anyOf": [
@@ -3726,6 +3858,24 @@
             "title": "Generated Response",
             "description": "respuesta generada por el sistema"
           },
+          "edited_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited Response",
+            "description": "respuesta que se publico cuando el agente la edito antes de aprobarla, o null si no se edito"
+          },
+          "was_edited": {
+            "type": "boolean",
+            "title": "Was Edited",
+            "description": "true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema",
+            "default": false
+          },
           "created_at": {
             "anyOf": [
               {
@@ -3761,6 +3911,8 @@
           "confidence_score",
           "text_input",
           "generated_response",
+          "edited_response",
+          "was_edited",
           "created_at",
           "chunks"
         ],
@@ -3796,7 +3948,7 @@
               }
             ],
             "title": "Resolution Channel",
-            "description": "como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
+            "description": "como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
           },
           "issue_key": {
             "type": "string",
@@ -3886,6 +4038,12 @@
             ],
             "title": "Created At",
             "description": "marca de tiempo de creacion de la interaccion"
+          },
+          "was_edited": {
+            "type": "boolean",
+            "title": "Was Edited",
+            "description": "true si el agente edito la respuesta antes de aprobarla, la respuesta original del sistema se conserva en generated_response del detalle",
+            "default": false
           }
         },
         "type": "object",
@@ -3900,7 +4058,8 @@
           "priority",
           "decision",
           "confidence_score",
-          "created_at"
+          "created_at",
+          "was_edited"
         ],
         "title": "InteractionListItem",
         "description": "Un item del listado paginado de interacciones."
@@ -3932,7 +4091,7 @@
           "action_type": {
             "type": "string",
             "title": "Action Type",
-            "description": "accion final que tomo el sistema, por ejemplo AUTO_PUBLISH o ESCALATE"
+            "description": "accion final que tomo el sistema, por ejemplo AUTO_PUBLISH, ESCALATE o DISCARDED"
           }
         },
         "type": "object",
@@ -3941,7 +4100,7 @@
           "action_type"
         ],
         "title": "InteractionReviewResponse",
-        "description": "Response comun a las 3 acciones de revision (approve, regenerate, escalate)."
+        "description": "Response comun a las 4 acciones de revision (approve, regenerate, escalate y discard)."
       },
       "ItsmConnectionRequest": {
         "properties": {
@@ -4751,6 +4910,12 @@
             "title": "Resolved Externally Count",
             "description": "cantidad de tickets resueltos por un humano fuera del sistema"
           },
+          "discarded_count": {
+            "type": "integer",
+            "title": "Discarded Count",
+            "description": "cantidad de interacciones cuya sugerencia descarto una persona, el ticket queda abierto en JSM para atenderlo a mano, la suma de los conteos por decision, este incluido, da total_interactions",
+            "default": 0
+          },
           "automatic_resolution_rate": {
             "type": "number",
             "title": "Automatic Resolution Rate",
@@ -4780,6 +4945,7 @@
           "without_decision_count",
           "by_resolution_channel",
           "resolved_externally_count",
+          "discarded_count",
           "automatic_resolution_rate",
           "avg_confidence_score"
         ],
@@ -5496,7 +5662,7 @@
               }
             ],
             "title": "Resolution Channel",
-            "description": "canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
+            "description": "canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar"
           },
           "count": {
             "type": "integer",

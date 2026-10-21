@@ -3,9 +3,14 @@
 
 
 /**
- * Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta tal cual esta.
+ * Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta generada tal cual esta o la version editada si viene edited_response.
  */
 export interface ApproveRequest {
+
+  /**
+   * respuesta editada por el agente, si viene se publica en lugar de la generada, no puede quedar vacia despues de recortar espacios ni superar los 5000 caracteres, si es igual a la generada se trata como una aprobacion comun
+   */
+  edited_response?: (string | null);
 
   /**
    * referencia logica al agente que revisa, sin FK hasta que exista M9
