@@ -72,7 +72,7 @@ from app.modules.internal_api.services.project_thresholds_service import Project
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
 from app.modules.internal_api.services.connection_status_service import ConnectionStatusService
 from app.modules.internal_api.services.llm_config_service import LlmConfigService
-from app.modules.internal_api.services.interaction_review_service import InteractionNotPendingError
+from app.modules.internal_api.services.interaction_review_service import InteractionNotPendingError, InvalidEditedResponseError
 from app.modules.internal_api.clients.llm_provider_checker import LlmProviderError, ProviderUnavailableError
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
@@ -111,11 +111,17 @@ async def configure_project(request: ProjectConfigRequest, admin: AppUser = Depe
     return ProjectConfigResponse(status="ok", mappings_configured=mappings_configured)
 
 
-# aprueba una interaccion en needs_review, publica la respuesta tal cual esta
-@router.post("/api/interactions/{interaction_id}/approve", response_model=InteractionReviewResponse)
+# aprueba una interaccion en needs_review, publica la respuesta generada tal cual esta o la version editada por el agente si viene edited_response
+@router.post("/api/interactions/{interaction_id}/approve", response_model=InteractionReviewResponse,
+             responses={400: {"model": ErrorResponse, "description": "La respuesta editada esta vacia o supera el maximo de caracteres"}})
 async def approve_interaction(interaction_id: str, request: ApproveRequest, usuario: AppUser = Depends(get_current_user)):
     try:
-        action_type = await _review_service.approve_interaction(interaction_id, request.reviewed_by)
+        if request.edited_response is not None:
+            action_type = await _review_service.approve_interaction(interaction_id, request.reviewed_by, request.edited_response)
+        else:
+            action_type = await _review_service.approve_interaction(interaction_id, request.reviewed_by)
+    except InvalidEditedResponseError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception:
