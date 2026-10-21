@@ -55,10 +55,15 @@ class EscalateRequest(BaseModel):
     reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa")
 
 
+class DiscardRequest(BaseModel):
+    """Request para descartar la sugerencia de una interaccion en NEEDS_REVIEW, sin publicar, regenerar ni escalar nada."""
+    rejection_reason: str | None = Field(default=None, description="motivo opcional del descarte, el revisor se toma del token y no se manda")
+
+
 class InteractionReviewResponse(BaseModel):
-    """Response comun a las 3 acciones de revision (approve, regenerate, escalate)."""
+    """Response comun a las 4 acciones de revision (approve, regenerate, escalate y discard)."""
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
-    action_type: str = Field(description="accion final que tomo el sistema, por ejemplo AUTO_PUBLISH o ESCALATE")
+    action_type: str = Field(description="accion final que tomo el sistema, por ejemplo AUTO_PUBLISH, ESCALATE o DISCARDED")
 
 
 class ItsmConnectionRequest(BaseModel):
