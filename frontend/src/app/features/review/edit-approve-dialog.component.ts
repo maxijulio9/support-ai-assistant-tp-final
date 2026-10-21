@@ -9,6 +9,11 @@ import { MAX_EDITED_RESPONSE_LENGTH, isEditedResponseValid, resolveEditedRespons
 
 export interface EditApproveDialogData {
   generatedResponse: string | null;
+  // Se usan al reabrir el dialogo despues de un error que no es 404 ni 409
+  // (ver reviewActionErrorOutcome en review-actions.ts): initialText trae
+  // lo que el usuario ya habia escrito, para no perderlo.
+  initialText?: string;
+  errorMessage?: string | null;
 }
 
 // Sin conectar: no inyecta ReviewService ni llama HTTP. Resuelve si el
@@ -29,8 +34,11 @@ export class EditApproveDialogComponent {
   private readonly data = inject<EditApproveDialogData>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<EditApproveDialogComponent, EditApproveDialogResult>);
 
-  readonly textControl = new FormControl(this.data.generatedResponse ?? '', { nonNullable: true });
+  readonly textControl = new FormControl(this.data.initialText ?? this.data.generatedResponse ?? '', {
+    nonNullable: true,
+  });
   readonly maxLength = MAX_EDITED_RESPONSE_LENGTH;
+  readonly errorMessage = this.data.errorMessage ?? null;
 
   private readonly textValue = toSignal(this.textControl.valueChanges, {
     initialValue: this.textControl.value,

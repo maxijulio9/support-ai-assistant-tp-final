@@ -5,6 +5,8 @@ import {
   isEditedResponseValid,
   normalizeResponseText,
   resolveEditedResponse,
+  reviewActionErrorMessage,
+  reviewActionErrorOutcome,
 } from './review-actions';
 
 describe('normalizeResponseText', () => {
@@ -88,5 +90,40 @@ describe('buildDiscardBody', () => {
   it('nunca incluye un campo de revisor: el revisor sale del token', () => {
     const body = buildDiscardBody('Motivo');
     expect(Object.keys(body)).toEqual(['rejection_reason']);
+  });
+});
+
+describe('reviewActionErrorOutcome', () => {
+  it('not-found y conflict refrescan la cola', () => {
+    expect(reviewActionErrorOutcome('not-found')).toBe('refresh-queue');
+    expect(reviewActionErrorOutcome('conflict')).toBe('refresh-queue');
+  });
+
+  it('bad-request, red, servidor y cualquier otro caso reabren', () => {
+    expect(reviewActionErrorOutcome('bad-request')).toBe('reopen');
+    expect(reviewActionErrorOutcome('network')).toBe('reopen');
+    expect(reviewActionErrorOutcome('server')).toBe('reopen');
+    expect(reviewActionErrorOutcome('validation')).toBe('reopen');
+    expect(reviewActionErrorOutcome('forbidden')).toBe('reopen');
+    expect(reviewActionErrorOutcome('unknown')).toBe('reopen');
+  });
+});
+
+describe('reviewActionErrorMessage', () => {
+  it('bad-request con detail: devuelve el detail tal cual', () => {
+    expect(reviewActionErrorMessage('bad-request', 'El texto no puede superar los 5000 caracteres')).toBe(
+      'El texto no puede superar los 5000 caracteres',
+    );
+  });
+
+  it('bad-request sin detail: mensaje generico', () => {
+    expect(reviewActionErrorMessage('bad-request', null)).toBe('No se pudo guardar. Intentá de nuevo.');
+  });
+
+  it('cualquier otra categoria: mensaje generico, aunque venga un detail', () => {
+    expect(reviewActionErrorMessage('network', null)).toBe('No se pudo guardar. Intentá de nuevo.');
+    expect(reviewActionErrorMessage('server', 'algo que no deberia mostrarse')).toBe(
+      'No se pudo guardar. Intentá de nuevo.',
+    );
   });
 });

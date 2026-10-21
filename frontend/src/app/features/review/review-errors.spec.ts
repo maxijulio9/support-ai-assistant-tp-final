@@ -1,8 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { classifyReviewError } from './review-errors';
+import { classifyReviewError, reviewErrorDetail } from './review-errors';
 
-function httpError(status: number): HttpErrorResponse {
-  return new HttpErrorResponse({ status });
+function httpError(status: number, body?: unknown): HttpErrorResponse {
+  return new HttpErrorResponse({ status, error: body });
 }
 
 describe('classifyReviewError', () => {
@@ -12,6 +12,10 @@ describe('classifyReviewError', () => {
 
   it('403 es forbidden', () => {
     expect(classifyReviewError(httpError(403))).toBe('forbidden');
+  });
+
+  it('400 es bad-request', () => {
+    expect(classifyReviewError(httpError(400))).toBe('bad-request');
   });
 
   it('409 es conflict', () => {
@@ -38,5 +42,26 @@ describe('classifyReviewError', () => {
   it('algo que no es un HttpErrorResponse es unknown', () => {
     expect(classifyReviewError(new Error('otra cosa'))).toBe('unknown');
     expect(classifyReviewError(null)).toBe('unknown');
+  });
+});
+
+describe('reviewErrorDetail', () => {
+  it('devuelve el detail cuando viene como string', () => {
+    expect(reviewErrorDetail(httpError(400, { detail: 'El texto no puede quedar vacío' }))).toBe(
+      'El texto no puede quedar vacío',
+    );
+  });
+
+  it('null si no hay body o no trae detail', () => {
+    expect(reviewErrorDetail(httpError(400))).toBeNull();
+    expect(reviewErrorDetail(httpError(400, {}))).toBeNull();
+  });
+
+  it('null si detail no es un string', () => {
+    expect(reviewErrorDetail(httpError(400, { detail: ['a', 'b'] }))).toBeNull();
+  });
+
+  it('null si no es un HttpErrorResponse', () => {
+    expect(reviewErrorDetail(new Error('otra cosa'))).toBeNull();
   });
 });

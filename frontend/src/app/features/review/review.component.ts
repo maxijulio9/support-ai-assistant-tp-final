@@ -5,14 +5,20 @@ import { Subject, catchError, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/auth/auth.service';
 import { ReviewService, resolveReviewedBy } from './review.service';
-import { classifyReviewError } from './review-errors';
+import { classifyReviewError, reviewErrorDetail } from './review-errors';
+import { reviewActionErrorMessage, reviewActionErrorOutcome } from './review-actions';
 import { ReviewQueueComponent, QueueState } from './review-queue.component';
 import { ReviewDetailComponent, DetailState } from './review-detail.component';
 import { RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult } from './regenerate-dialog.component';
+import { DiscardDialogComponent, DiscardDialogResult } from './discard-dialog.component';
+import { DiscardSuccessDialogComponent, DiscardSuccessDialogData } from './discard-success-dialog.component';
+import { EditApproveDialogComponent, EditApproveDialogData, EditApproveDialogResult } from './edit-approve-dialog.component';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
 const PAGE_SIZE = 6;
+
+const NOT_PENDING_MESSAGE = 'Esta solicitud ya no está pendiente de revisión';
 
 @Component({
   selector: 'app-review',
@@ -37,7 +43,10 @@ export class ReviewComponent {
   readonly searchTerm = signal('');
   readonly priorityFilter = signal<string | null>(null);
   readonly page = signal(1);
-  readonly submittingApprove = signal(false);
+  // Cubre las 4 acciones (aprobar, regenerar, descartar, editar y aprobar):
+  // mientras cualquiera de ellas tiene un POST en vuelo, los 4 botones del
+  // detalle quedan deshabilitados para evitar un doble envio.
+  readonly submittingAction = signal(false);
 
   private readonly selectionRequest$ = new Subject<string>();
 
@@ -129,8 +138,8 @@ export class ReviewComponent {
   }
 
   selectItem(id: string | null): void {
-    // Mientras se esta aprobando, las tarjetas ignoran la seleccion.
-    if (this.submittingApprove()) return;
+    // Mientras hay una accion en curso, las tarjetas ignoran la seleccion.
+    if (this.submittingAction()) return;
 
     this.selectedId.set(id);
     if (id === null) {
@@ -147,12 +156,12 @@ export class ReviewComponent {
   }
 
   approve(): void {
-    if (this.submittingApprove()) return;
+    if (this.submittingAction()) return;
     // Se captura el id al hacer clic, no se relee selectedId() al terminar.
     const approvedId = this.selectedId();
     if (!approvedId) return;
 
-    this.submittingApprove.set(true);
+    this.submittingAction.set(true);
     const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
 
     this.reviewService
@@ -160,12 +169,12 @@ export class ReviewComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.submittingApprove.set(false);
+          this.submittingAction.set(false);
           this.snackBar.open('Respuesta aprobada y enviada', 'Cerrar', { duration: 4000 });
           this.removeFromQueue(approvedId);
         },
         error: (error: unknown) => {
-          this.submittingApprove.set(false);
+          this.submittingAction.set(false);
           this.handleApproveError(error);
         },
       });
@@ -211,6 +220,98 @@ export class ReviewComponent {
     });
   }
 
+  openDiscardDialog(): void {
+    if (this.submittingAction()) return;
+    const id = this.selectedId();
+    if (!id) return;
+
+    const dialogRef = this.dialog.open<DiscardDialogComponent, undefined, DiscardDialogResult>(
+      DiscardDialogComponent,
+      { disableClose: true, width: '480px' },
+    );
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.submitDiscard(id, result.rejectionReason);
+    });
+  }
+
+  openEditApproveDialog(initialText?: string, errorMessage?: string | null): void {
+    if (this.submittingAction()) return;
+    const id = this.selectedId();
+    if (!id) return;
+    const generatedResponse = this.detail()?.generated_response ?? null;
+
+    const dialogRef = this.dialog.open<EditApproveDialogComponent, EditApproveDialogData, EditApproveDialogResult>(
+      EditApproveDialogComponent,
+      { data: { generatedResponse, initialText, errorMessage }, disableClose: true, width: '560px' },
+    );
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.submitEditApprove(id, result.editedResponse);
+    });
+  }
+
+  private submitDiscard(interactionId: string, rejectionReason: string | undefined): void {
+    this.submittingAction.set(true);
+
+    this.reviewService
+      .discard(interactionId, rejectionReason)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.submittingAction.set(false);
+          this.openDiscardSuccessDialog(interactionId);
+        },
+        error: (error: unknown) => {
+          this.submittingAction.set(false);
+          this.handleDiscardError(error);
+        },
+      });
+  }
+
+  // Al cerrar este dialogo (clic afuera, Escape o el boton de cerrar: los 3
+  // habilitados, sin disableClose), la interaccion descartada ya no esta
+  // en la cola: se saca y se selecciona la siguiente, mismo mecanismo que
+  // ya usa removeFromQueue para el approve comun.
+  private openDiscardSuccessDialog(discardedId: string): void {
+    const current = this.detail();
+    const data: DiscardSuccessDialogData = {
+      issueKey: current?.issue_key ?? '',
+      ticketUrl: current?.ticket_url ?? null,
+    };
+
+    const successRef = this.dialog.open<DiscardSuccessDialogComponent, DiscardSuccessDialogData>(
+      DiscardSuccessDialogComponent,
+      { data, width: '420px' },
+    );
+
+    successRef.afterClosed().subscribe(() => {
+      this.removeFromQueue(discardedId);
+    });
+  }
+
+  private submitEditApprove(interactionId: string, editedResponse: string | null): void {
+    this.submittingAction.set(true);
+    const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
+
+    this.reviewService
+      .approve(interactionId, reviewedBy, editedResponse)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.submittingAction.set(false);
+          this.snackBar.open('Respuesta editada aprobada y enviada', 'Cerrar', { duration: 4000 });
+          this.removeFromQueue(interactionId);
+        },
+        error: (error: unknown) => {
+          this.submittingAction.set(false);
+          this.handleEditApproveError(editedResponse, error);
+        },
+      });
+  }
+
   // Ante un error de red o del servidor al aprobar, no reintentamos solos:
   // el backend no detecta duplicados (confirmado: get_interaction_context en
   // backend/app/modules/internal_api/repositories/interaction_repository.py
@@ -234,6 +335,10 @@ export class ReviewComponent {
         this.snackBar.open('Esta solicitud ya no existe', 'Cerrar', { duration: 4000 });
         this.loadQueue();
         return;
+      case 'conflict':
+        this.snackBar.open(NOT_PENDING_MESSAGE, 'Cerrar', { duration: 4000 });
+        this.loadQueue();
+        return;
       case 'forbidden':
         this.snackBar.open('No tenés permisos para aprobar esta respuesta', 'Cerrar', { duration: 4000 });
         return;
@@ -243,6 +348,38 @@ export class ReviewComponent {
       default:
         this.snackBar.open('Ocurrió un error inesperado. Intentá de nuevo.', 'Cerrar', { duration: 4000 });
     }
+  }
+
+  // 404 y 409: la solicitud ya no esta pendiente (no existe mas, o alguien
+  // ya la resolvio), se refresca la cola sin reabrir ningun dialogo. El
+  // resto de los errores no tiene un dialogo que reabrir (el motivo es
+  // opcional y corto), asi que alcanza con el snackbar generico.
+  private handleDiscardError(error: unknown): void {
+    const category = classifyReviewError(error);
+    if (reviewActionErrorOutcome(category) === 'refresh-queue') {
+      this.snackBar.open(NOT_PENDING_MESSAGE, 'Cerrar', { duration: 4000 });
+      this.loadQueue();
+      return;
+    }
+    this.snackBar.open('No se pudo descartar la respuesta. Intentá de nuevo.', 'Cerrar', { duration: 4000 });
+  }
+
+  // 404 y 409: igual que discard, se refresca la cola. El resto (400 con
+  // detail legible, red, 503, etc.) reabre el dialogo con el texto que el
+  // usuario ya habia escrito: perder una edicion larga es peor que el
+  // costo de reabrir.
+  private handleEditApproveError(attemptedText: string | null, error: unknown): void {
+    const category = classifyReviewError(error);
+
+    if (reviewActionErrorOutcome(category) === 'refresh-queue') {
+      this.snackBar.open(NOT_PENDING_MESSAGE, 'Cerrar', { duration: 4000 });
+      this.loadQueue();
+      return;
+    }
+
+    const detail = reviewErrorDetail(error);
+    const message = reviewActionErrorMessage(category, detail);
+    this.openEditApproveDialog(attemptedText ?? undefined, message);
   }
 
   private removeFromQueue(id: string): void {
@@ -263,7 +400,7 @@ export class ReviewComponent {
     this.clampPage();
   }
 
-  // Igual que selectItem pero sin el bloqueo de submittingApprove: se usa
+  // Igual que selectItem pero sin el bloqueo de submittingAction: se usa
   // despues de que una operacion ya termino, nunca mientras esta en curso.
   private selectItemIgnoringLock(id: string | null): void {
     this.selectedId.set(id);

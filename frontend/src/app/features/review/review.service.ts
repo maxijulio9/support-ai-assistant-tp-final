@@ -7,6 +7,7 @@ import { getInteractionDetailApiInteractionsInteractionIdGet } from '../../api/f
 import { approveInteractionApiInteractionsInteractionIdApprovePost } from '../../api/fn/internal-api/approve-interaction-api-interactions-interaction-id-approve-post';
 import { regenerateInteractionApiInteractionsInteractionIdRegeneratePost } from '../../api/fn/internal-api/regenerate-interaction-api-interactions-interaction-id-regenerate-post';
 import { discardInteractionApiInteractionsInteractionIdDiscardPost } from '../../api/fn/internal-api/discard-interaction-api-interactions-interaction-id-discard-post';
+import { buildApproveBody, buildDiscardBody } from './review-actions';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 import { InteractionReviewResponse } from '../../api/models/interaction-review-response';
@@ -66,24 +67,17 @@ export class ReviewService {
     reviewedBy: string | undefined,
     editedResponse?: string | null,
   ): Observable<InteractionReviewResponse> {
-    const body: { reviewed_by?: string; edited_response?: string } = {};
-    if (reviewedBy) body.reviewed_by = reviewedBy;
-    if (editedResponse) body.edited_response = editedResponse;
-
     return approveInteractionApiInteractionsInteractionIdApprovePost(this.http, this.apiConfig.rootUrl, {
       interaction_id: interactionId,
-      body,
+      body: buildApproveBody(reviewedBy, editedResponse ?? null),
     }).pipe(map((response) => response.body));
   }
 
   // El revisor sale del token, nunca se manda en el body.
   discard(interactionId: string, rejectionReason: string | undefined): Observable<InteractionReviewResponse> {
-    const body: { rejection_reason?: string } = {};
-    if (rejectionReason) body.rejection_reason = rejectionReason;
-
     return discardInteractionApiInteractionsInteractionIdDiscardPost(this.http, this.apiConfig.rootUrl, {
       interaction_id: interactionId,
-      body,
+      body: buildDiscardBody(rejectionReason ?? ''),
     }).pipe(map((response) => response.body));
   }
 

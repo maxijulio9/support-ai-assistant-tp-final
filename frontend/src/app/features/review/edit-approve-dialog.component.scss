@@ -1,3 +1,9 @@
 .edit-approve-dialog-field {
   width: 100%;
 }
+
+.edit-approve-dialog-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: var(--app-space-xs) 0 0;
+}

@@ -34,9 +34,11 @@
       class="review-page-detail"
       [detail]="detail()"
       [state]="detailState()"
-      [submitting]="submittingApprove()"
+      [submitting]="submittingAction()"
       (approve)="approve()"
       (regenerate)="openRegenerateDialog()"
+      (discard)="openDiscardDialog()"
+      (editApprove)="openEditApproveDialog()"
       (retry)="retryDetail()"
     />
   </div>

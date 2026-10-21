@@ -6,6 +6,10 @@
     <textarea matInput [formControl]="textControl" [maxlength]="maxLength" rows="8"></textarea>
     <mat-hint align="end">{{ textLength() }}/{{ maxLength }}</mat-hint>
   </mat-form-field>
+
+  @if (errorMessage) {
+    <p class="edit-approve-dialog-error" role="alert">{{ errorMessage }}</p>
+  }
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
