@@ -305,6 +305,7 @@ class ErrorResponse(BaseModel):
 
 class MetricsSummaryResponse(BaseModel):
     """Resumen agregado de metricas de interacciones, para el dashboard."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     total_interactions: int = Field(description="cantidad total de interacciones procesadas en el periodo")
     auto_publish_count: int = Field(description="cantidad de interacciones publicadas automaticamente")
     needs_review_count: int = Field(description="cantidad de interacciones que quedaron pendientes de revision")
@@ -314,6 +315,7 @@ class MetricsSummaryResponse(BaseModel):
     without_decision_count: int = Field(description="cantidad de interacciones sin decision registrada en el periodo, no se suman a total_interactions ni a ningun otro conteo")
     by_resolution_channel: list[ResolutionChannelCount] = Field(description="cantidad de interacciones por canal de resolucion, su suma coincide con total_interactions, el grupo con canal null reune las que todavia no se resolvieron y las anteriores a que se registrara el canal")
     resolved_externally_count: int = Field(description="cantidad de tickets resueltos por un humano fuera del sistema")
+    discarded_count: int = Field(default=0, description="cantidad de interacciones cuya sugerencia descarto una persona, el ticket queda abierto en JSM para atenderlo a mano, la suma de los conteos por decision, este incluido, da total_interactions")
     automatic_resolution_rate: float = Field(description="porcentaje de interacciones resueltas sin intervencion humana")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones del periodo")
 
@@ -333,6 +335,7 @@ class MetricsByCategoryResponse(BaseModel):
 
 class DailyMetric(BaseModel):
     """Metricas de un dia del calendario, en el huso horario de la respuesta."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     date: str = Field(description="dia del calendario en formato AAAA-MM-DD, en el huso horario de la respuesta")
     total_interactions: int = Field(description="cantidad de interacciones con decision de ese dia")
     auto_publish_count: int = Field(description="cantidad de interacciones publicadas automaticamente ese dia")
@@ -341,6 +344,7 @@ class DailyMetric(BaseModel):
     request_info_count: int = Field(description="cantidad de interacciones donde se pidio mas informacion ese dia")
     resolved_count: int = Field(description="cantidad de interacciones resueltas por el sistema ese dia")
     resolved_externally_count: int = Field(description="cantidad de interacciones resueltas por un humano fuera del sistema ese dia")
+    discarded_count: int = Field(default=0, description="cantidad de interacciones cuya sugerencia descarto una persona ese dia")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de ese dia, o null si ninguna interaccion tiene puntaje")
 
 
