@@ -10,6 +10,7 @@ from app.core.resolution_channels import (
     RESOLUTION_CHANNEL_REVIEWED_REGENERATED,
     RESOLUTION_CHANNEL_ESCALATED_BY_HUMAN,
     RESOLUTION_CHANNEL_DISCARDED_BY_HUMAN,
+    RESOLUTION_CHANNEL_REVIEWED_EDITED,
 )
 from app.modules.internal_api.repositories.interaction_repository import InteractionRepository
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
@@ -31,6 +32,14 @@ class InteractionNotPendingError(Exception):
     pass
 
 
+MAX_EDITED_RESPONSE_LENGTH = 5000
+
+
+# la respuesta editada que mando el agente no es valida, esta vacia o supera el maximo de caracteres
+class InvalidEditedResponseError(Exception):
+    pass
+
+
 class InteractionReviewService:
 
     def __init__(self):
@@ -40,19 +49,33 @@ class InteractionReviewService:
         #self.jsm_executor = JsmExecutor()
         self.credentials_repository = JsmCredentialsRepository()
         
-    # aprueba la interaccion, publica la respuesta ya generada tal cual esta
-    async def approve_interaction(self, interaction_id: str, reviewed_by: str | None) -> str:
+    # aprueba la interaccion, publica la respuesta generada tal cual esta o la version editada por el agente
+    # el texto original del sistema queda intacto en generated_response y el editado se guarda en edited_response
+    async def approve_interaction(self, interaction_id: str, reviewed_by: str | None, edited_response: str | None = None) -> str:
+        edited_text = self._validate_edited_response(edited_response)
+
         context = self.interaction_repository.get_interaction_context(interaction_id)
         if context is None:
             raise ValueError(f"interaction '{interaction_id}' no encontrada")
 
         jsm_executor = self._get_jsm_executor()
-        await jsm_executor.post_comment(context["issue_key"], context["generated_response"], public=True)
+        response_text = context["generated_response"]
+        channel = RESOLUTION_CHANNEL_REVIEWED_APPROVED
+
+        # un texto ediatdo igual al generado se trata como una aprobacion comun
+        if edited_text is not None and edited_text != (context["generated_response"] or "").strip():
+            response_text = edited_text
+            channel = RESOLUTION_CHANNEL_REVIEWED_EDITED
+        else:
+            edited_text = None
+
+        await jsm_executor.post_comment(context["issue_key"], response_text, public=True)
         self._update_interaction(
             interaction_id,
             decision=ACTION_AUTO_PUBLISH,
             reviewed_by=reviewed_by,
-            resolution_channel=RESOLUTION_CHANNEL_REVIEWED_APPROVED,
+            resolution_channel=channel,
+            edited_response=edited_text,
         )
 
         return ACTION_AUTO_PUBLISH
@@ -164,11 +187,28 @@ class InteractionReviewService:
         finally:
             db.close()
 
+    # valida el texto editado por el agente, devulve el texto recortado o none si no se mando ninguno
+    # lanza InvalidEditedResponseError si queda vacio o supera el maximo de caracteres
+    def _validate_edited_response(self, edited_response: str | None) -> str | None:
+        if edited_response is None:
+            return None
+
+        cleaned = edited_response.strip()
+
+        if not cleaned:
+            raise InvalidEditedResponseError("La respuesta editada no puede estar vacia")
+
+        if len(cleaned) > MAX_EDITED_RESPONSE_LENGTH:
+            raise InvalidEditedResponseError(f"La respuesta editada no puede superar los {MAX_EDITED_RESPONSE_LENGTH} caracteres")
+
+        return cleaned
+
     # actualiza la interaccion con el resultado de la revision humana
     # system_decision no se toca nunca, queda con lo que decidio el sistema, y resolution_channel dice como se resolvio
     def _update_interaction(self, interaction_id: str, decision: str, reviewed_by: str | None,
                              rejection_reason: str | None = None, generated_response: str | None = None,
-                             confidence_score: float | None = None, resolution_channel: str | None = None):
+                             confidence_score: float | None = None, resolution_channel: str | None = None,
+                             edited_response: str | None = None):
         db = next(get_db())
 
         try:
@@ -180,7 +220,8 @@ class InteractionReviewService:
                     rejection_reason = COALESCE(:rejection_reason, rejection_reason),
                     generated_response = COALESCE(:generated_response, generated_response),
                     confidence_score = COALESCE(:confidence_score, confidence_score),
-                    resolution_channel = COALESCE(:resolution_channel, resolution_channel)
+                    resolution_channel = COALESCE(:resolution_channel, resolution_channel),
+                    edited_response = COALESCE(:edited_response, edited_response)
                 WHERE id = :interaction_id
             """)
             db.execute(query, {
@@ -191,6 +232,7 @@ class InteractionReviewService:
                 "generated_response": generated_response,
                 "confidence_score": confidence_score,
                 "resolution_channel": resolution_channel,
+                "edited_response": edited_response,
             })
             db.commit()
             logger.info(f"interaction '{interaction_id}' actualizada, decision={decision}")
