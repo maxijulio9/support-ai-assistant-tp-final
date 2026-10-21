@@ -6,6 +6,7 @@ import { listInteractionsApiInteractionsGet } from '../../api/fn/internal-api/li
 import { getInteractionDetailApiInteractionsInteractionIdGet } from '../../api/fn/internal-api/get-interaction-detail-api-interactions-interaction-id-get';
 import { approveInteractionApiInteractionsInteractionIdApprovePost } from '../../api/fn/internal-api/approve-interaction-api-interactions-interaction-id-approve-post';
 import { regenerateInteractionApiInteractionsInteractionIdRegeneratePost } from '../../api/fn/internal-api/regenerate-interaction-api-interactions-interaction-id-regenerate-post';
+import { discardInteractionApiInteractionsInteractionIdDiscardPost } from '../../api/fn/internal-api/discard-interaction-api-interactions-interaction-id-discard-post';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 import { InteractionReviewResponse } from '../../api/models/interaction-review-response';
@@ -56,10 +57,33 @@ export class ReviewService {
 
   // El backend publica generated_response tal cual esta (ApproveRequest no
   // tiene ningun campo de texto), asi que aprobar siempre manda el original.
-  approve(interactionId: string, reviewedBy: string | undefined): Observable<InteractionReviewResponse> {
+  // editedResponse llega null cuando el dialogo de edicion ya resolvio que
+  // el texto es identico al generado (resolveEditedResponse en
+  // review-actions.ts): en ese caso se omite, y el backend lo trata como
+  // una aprobacion comun.
+  approve(
+    interactionId: string,
+    reviewedBy: string | undefined,
+    editedResponse?: string | null,
+  ): Observable<InteractionReviewResponse> {
+    const body: { reviewed_by?: string; edited_response?: string } = {};
+    if (reviewedBy) body.reviewed_by = reviewedBy;
+    if (editedResponse) body.edited_response = editedResponse;
+
     return approveInteractionApiInteractionsInteractionIdApprovePost(this.http, this.apiConfig.rootUrl, {
       interaction_id: interactionId,
-      body: reviewedBy ? { reviewed_by: reviewedBy } : {},
+      body,
+    }).pipe(map((response) => response.body));
+  }
+
+  // El revisor sale del token, nunca se manda en el body.
+  discard(interactionId: string, rejectionReason: string | undefined): Observable<InteractionReviewResponse> {
+    const body: { rejection_reason?: string } = {};
+    if (rejectionReason) body.rejection_reason = rejectionReason;
+
+    return discardInteractionApiInteractionsInteractionIdDiscardPost(this.http, this.apiConfig.rootUrl, {
+      interaction_id: interactionId,
+      body,
     }).pipe(map((response) => response.body));
   }
 
