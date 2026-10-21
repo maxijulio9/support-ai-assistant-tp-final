@@ -6,6 +6,7 @@ pais asociado y umbrales de confianza/similitud por proyecto.
 """
 
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal
 
 
 class ProjectThresholds(BaseModel):
@@ -441,6 +442,62 @@ class ConnectionStatusResponse(BaseModel):
     configured: bool = Field(description="true si la conexion esta completa, con url, email y token guardados")
     base_url: str | None = Field(description="url de la instancia, o null si todavia no se configuro")
     user_email: str | None = Field(description="email de la cuenta usada para autenticar, o null si todavia no se configuro, el token y el secreto del webhook nunca se devuelven")
+
+
+class LlmGenerationStatus(BaseModel):
+    """Estado de la configuracion del modelo que genera las respuestas."""
+    provider: str = Field(description="proveedor del modelo de generacion, openai o gemini")
+    model: str = Field(description="modelo de chat que genera las respuestas")
+    configured: bool = Field(description="true si hay una clave disponible para ese proveedor")
+
+
+class LlmEmbeddingsStatus(BaseModel):
+    """Estado de la configuracion del modelo de embeddings, que usa siempre OpenAI."""
+    provider: str = Field(description="proveedor de los embeddings, siempre openai")
+    model: str = Field(description="modelo de embeddings, es fijo y de solo lectura")
+    configured: bool = Field(description="true si hay una clave de OpenAI disponible")
+
+
+class LlmConfigResponse(BaseModel):
+    """Estado actual de la configuracion del LLM, nunca incluye las claves."""
+    generation: LlmGenerationStatus = Field(description="modelo que genera las respuestas")
+    embeddings: LlmEmbeddingsStatus = Field(description="modelo de embeddings, siempre de OpenAI")
+    source: str = Field(description="database si se guardo desde el dashboard o environment si viene de las variables de entorno")
+    updated_at: str | None = Field(description="marca de tiempo del ultimo guardado desde el dashboard, o null si viene de las variables de entorno")
+
+
+class LlmModelsRequest(BaseModel):
+    """Request para validar una clave de un proveedor y listar sus modelos de chat, sin guardar nada."""
+    provider: Literal["openai", "gemini"] = Field(description="proveedor de la clave")
+    api_key: str = Field(min_length=1, description="API key del proveedor")
+
+
+class LlmModelsResponse(BaseModel):
+    """Modelos de chat disponibles en la cuenta del proveedor."""
+    chat_models: list[str] = Field(description="ids de los modelos de chat de la cuenta, ordenados, la compatibilidad con el sistema se comprueba al guardar")
+
+
+class LlmGenerationInput(BaseModel):
+    """Configuracion del modelo que genera las respuestas."""
+    provider: Literal["openai", "gemini"] = Field(description="proveedor del modelo de generacion")
+    model: str = Field(min_length=1, description="modelo de chat elegido")
+    api_key: str | None = Field(default=None, description="API key del proveedor elegido, solo es obligatoria con gemini, con openai se usa la misma de los embeddings")
+
+
+class LlmEmbeddingsInput(BaseModel):
+    """Configuracion de los embeddings, que usan siempre OpenAI."""
+    api_key: str = Field(min_length=1, description="API key de OpenAI, obligatoria siempre")
+
+
+class SaveLlmConfigRequest(BaseModel):
+    """Request para guardar la configuracion del LLM."""
+    generation: LlmGenerationInput
+    embeddings: LlmEmbeddingsInput
+
+
+class SaveLlmConfigResponse(BaseModel):
+    """Response de confirmacion del guardado de la configuracion del LLM."""
+    status: str = Field(description="resultado de la operacion, ok si las claves y el modelo se validaron y guardaron")
 
 
 class InteractionListItem(BaseModel):
