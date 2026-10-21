@@ -156,6 +156,14 @@
   color: var(--app-color-text-secondary);
 }
 
+.interactions-edited-chip {
+  display: block;
+  margin-top: 2px;
+  font: var(--app-text-metadata);
+  color: var(--app-color-text-secondary);
+  white-space: nowrap;
+}
+
 .interactions-empty {
   font: var(--app-text-body);
   color: var(--app-color-text-secondary);

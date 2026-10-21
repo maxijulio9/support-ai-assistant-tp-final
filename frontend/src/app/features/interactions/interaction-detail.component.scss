@@ -88,6 +88,14 @@ a.interaction-detail-key:focus-visible {
   color: var(--app-color-text-secondary);
 }
 
+.interaction-detail-edited-chip {
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+  border-radius: var(--app-radius-sm);
+  padding: 2px var(--app-space-xs);
+  font: var(--app-text-metadata);
+}
+
 .interaction-detail-title {
   align-self: flex-start;
   font: var(--app-text-page-title);
@@ -155,6 +163,12 @@ a.interaction-detail-key:focus-visible {
   color: var(--app-color-text-secondary);
 }
 
+.interaction-detail-channel {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
 .interaction-detail-confidence {
   display: flex;
   flex-direction: column;
@@ -197,6 +211,10 @@ a.interaction-detail-key:focus-visible {
 
 .interaction-detail-block--suggested {
   background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+}
+
+.interaction-detail-block--edited {
+  background-color: color-mix(in srgb, var(--app-color-success) 8%, transparent);
 }
 
 .interaction-detail-text {

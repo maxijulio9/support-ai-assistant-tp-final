@@ -63,6 +63,9 @@
       @if (data.priority) {
         <span class="interaction-detail-priority">{{ data.priority }}</span>
       }
+      @if (data.was_edited) {
+        <span class="interaction-detail-edited-chip">Editada por el agente</span>
+      }
     </header>
 
     <h1 #heading tabindex="-1" class="interaction-detail-title">{{ data.summary }}</h1>
@@ -76,6 +79,9 @@
           {{ status.label }}
         </span>
       </div>
+      <p class="interaction-detail-channel">
+        Canal de resolución: {{ resolutionChannelLabel(data.resolution_channel) }}
+      </p>
       <div class="interaction-detail-confidence">
         @if (confidence !== null) {
           <span class="interaction-detail-confidence-label">Confianza {{ confidence }}%</span>
@@ -102,6 +108,13 @@
           <p class="interaction-detail-text interaction-detail-text--empty">No hay respuesta generada</p>
         }
       </section>
+
+      @if (data.was_edited && data.edited_response !== null) {
+        <section class="interaction-detail-block interaction-detail-block--edited">
+          <h2>Respuesta publicada (editada)</h2>
+          <p class="interaction-detail-text">{{ data.edited_response }}</p>
+        </section>
+      }
 
       @if (data.decision === 'NEEDS_REVIEW') {
         <div class="interaction-detail-actions">

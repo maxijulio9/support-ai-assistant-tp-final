@@ -120,6 +120,9 @@
                   <span class="interactions-status-dot"></span>
                   {{ status.label }}
                 </span>
+                @if (item.was_edited) {
+                  <span class="interactions-edited-chip">Editada por el agente</span>
+                }
               </td>
               <td>
                 <a [routerLink]="['/interactions', item.interaction_id]" class="interactions-subject-link">{{
