@@ -2368,6 +2368,122 @@
         }
       }
     },
+    "/api/config/llm": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Llm Config Status",
+        "operationId": "get_llm_config_status_api_config_llm_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmConfigResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Save Llm Config",
+        "operationId": "save_llm_config_api_config_llm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveLlmConfigRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveLlmConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/config/llm/models": {
+      "post": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "List Llm Models",
+        "operationId": "list_llm_models_api_config_llm_models_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmModelsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmModelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/interactions": {
       "get": {
         "tags": [
@@ -4336,6 +4452,196 @@
         ],
         "title": "JsmWebhookPayload"
       },
+      "LlmConfigResponse": {
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/LlmGenerationStatus",
+            "description": "modelo que genera las respuestas"
+          },
+          "embeddings": {
+            "$ref": "#/components/schemas/LlmEmbeddingsStatus",
+            "description": "modelo de embeddings, siempre de OpenAI"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "database si se guardo desde el dashboard o environment si viene de las variables de entorno"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At",
+            "description": "marca de tiempo del ultimo guardado desde el dashboard, o null si viene de las variables de entorno"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generation",
+          "embeddings",
+          "source",
+          "updated_at"
+        ],
+        "title": "LlmConfigResponse",
+        "description": "Estado actual de la configuracion del LLM, nunca incluye las claves."
+      },
+      "LlmEmbeddingsInput": {
+        "properties": {
+          "api_key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Api Key",
+            "description": "API key de OpenAI, obligatoria siempre"
+          }
+        },
+        "type": "object",
+        "required": [
+          "api_key"
+        ],
+        "title": "LlmEmbeddingsInput",
+        "description": "Configuracion de los embeddings, que usan siempre OpenAI."
+      },
+      "LlmEmbeddingsStatus": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "proveedor de los embeddings, siempre openai"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "modelo de embeddings, es fijo y de solo lectura"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured",
+            "description": "true si hay una clave de OpenAI disponible"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "model",
+          "configured"
+        ],
+        "title": "LlmEmbeddingsStatus",
+        "description": "Estado de la configuracion del modelo de embeddings, que usa siempre OpenAI."
+      },
+      "LlmGenerationInput": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "gemini"
+            ],
+            "title": "Provider",
+            "description": "proveedor del modelo de generacion"
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Model",
+            "description": "modelo de chat elegido"
+          },
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key",
+            "description": "API key del proveedor elegido, solo es obligatoria con gemini, con openai se usa la misma de los embeddings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "LlmGenerationInput",
+        "description": "Configuracion del modelo que genera las respuestas."
+      },
+      "LlmGenerationStatus": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider",
+            "description": "proveedor del modelo de generacion, openai o gemini"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "description": "modelo de chat que genera las respuestas"
+          },
+          "configured": {
+            "type": "boolean",
+            "title": "Configured",
+            "description": "true si hay una clave disponible para ese proveedor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "model",
+          "configured"
+        ],
+        "title": "LlmGenerationStatus",
+        "description": "Estado de la configuracion del modelo que genera las respuestas."
+      },
+      "LlmModelsRequest": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "gemini"
+            ],
+            "title": "Provider",
+            "description": "proveedor de la clave"
+          },
+          "api_key": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Api Key",
+            "description": "API key del proveedor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "api_key"
+        ],
+        "title": "LlmModelsRequest",
+        "description": "Request para validar una clave de un proveedor y listar sus modelos de chat, sin guardar nada."
+      },
+      "LlmModelsResponse": {
+        "properties": {
+          "chat_models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Chat Models",
+            "description": "ids de los modelos de chat de la cuenta, ordenados, la compatibilidad con el sistema se comprueba al guardar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chat_models"
+        ],
+        "title": "LlmModelsResponse",
+        "description": "Modelos de chat disponibles en la cuenta del proveedor."
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -5239,6 +5545,38 @@
         ],
         "title": "RetrievedChunkDetail",
         "description": "Un chunk recuperado de la base de conocimiento, parte del detalle de una interaccion."
+      },
+      "SaveLlmConfigRequest": {
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/LlmGenerationInput"
+          },
+          "embeddings": {
+            "$ref": "#/components/schemas/LlmEmbeddingsInput"
+          }
+        },
+        "type": "object",
+        "required": [
+          "generation",
+          "embeddings"
+        ],
+        "title": "SaveLlmConfigRequest",
+        "description": "Request para guardar la configuracion del LLM."
+      },
+      "SaveLlmConfigResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "resultado de la operacion, ok si las claves y el modelo se validaron y guardaron"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "SaveLlmConfigResponse",
+        "description": "Response de confirmacion del guardado de la configuracion del LLM."
       },
       "SelectFieldsResponse": {
         "properties": {
