@@ -42,6 +42,7 @@ from app.modules.internal_api.schemas import (
     StartIndexingResponse,
     IndexingStatusResponse,
     ErrorResponse,
+    DiscardRequest,
     LlmConfigResponse,
     LlmModelsRequest,
     LlmModelsResponse,
@@ -71,6 +72,7 @@ from app.modules.internal_api.services.project_thresholds_service import Project
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
 from app.modules.internal_api.services.connection_status_service import ConnectionStatusService
 from app.modules.internal_api.services.llm_config_service import LlmConfigService
+from app.modules.internal_api.services.interaction_review_service import InteractionNotPendingError
 from app.modules.internal_api.clients.llm_provider_checker import LlmProviderError, ProviderUnavailableError
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
@@ -147,6 +149,25 @@ async def escalate_interaction(interaction_id: str, request: EscalateRequest, us
 
     return InteractionReviewResponse(status="ok", action_type=action_type)
 
+
+
+# descarta la sugerencia de una interaccion pendiente, no publica nada, no regenera y no escala, el ticket queda abierto en jsm
+@router.post("/api/interactions/{interaction_id}/discard", response_model=InteractionReviewResponse,
+             responses={404: {"model": ErrorResponse, "description": "La interaccion no existe"},
+                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
+async def discard_interaction(interaction_id: str, request: DiscardRequest | None = None, usuario: AppUser = Depends(get_current_user)):
+    rejection_reason = ((request.rejection_reason if request is not None else None) or "").strip() or None
+
+    try:
+        action_type = _review_service.discard_interaction(interaction_id, rejection_reason, str(usuario.id))
+    except InteractionNotPendingError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo descartar la interacción")
+
+    return InteractionReviewResponse(status="ok", action_type=action_type)
 # configura la conexion con jsm, valida las credenciales antes de guardarlas
 @router.post("/api/config/itsm", response_model=ItsmConnectionResponse)
 async def configure_itsm_connection(request: ItsmConnectionRequest, admin: AppUser = Depends(require_admin)):
