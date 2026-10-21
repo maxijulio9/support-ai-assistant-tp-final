@@ -53,6 +53,7 @@ class InteractionMetricsRepository:
             request_info_count = 0
             resolved_count = 0
             resolved_externally_count = 0
+            discarded_count = 0
             confidence_scores = []
             channel_counts = {}
 
@@ -74,6 +75,8 @@ class InteractionMetricsRepository:
                     resolved_count += 1
                 elif row.decision == "RESOLVED_EXTERNALLY":
                     resolved_externally_count += 1
+                elif row.decision == "DISCARDED":
+                    discarded_count += 1
 
                 if row.confidence_score is not None:
                     confidence_scores.append(row.confidence_score)
@@ -107,6 +110,7 @@ class InteractionMetricsRepository:
                 "request_info_count": request_info_count,
                 "resolved_count": resolved_count,
                 "resolved_externally_count": resolved_externally_count,
+                "discarded_count": discarded_count,
                 "without_decision_count": without_decision_count,
                 "automatic_resolution_rate": automatic_resolution_rate,
                 "avg_confidence_score": avg_confidence_score,
@@ -227,6 +231,7 @@ class InteractionMetricsRepository:
                 "REQUEST_INFO": "request_info_count",
                 "RESOLVED": "resolved_count",
                 "RESOLVED_EXTERNALLY": "resolved_externally_count",
+                "DISCARDED": "discarded_count",
             }
             days = {}
             scores_by_day = {}
@@ -244,6 +249,7 @@ class InteractionMetricsRepository:
                         "request_info_count": 0,
                         "resolved_count": 0,
                         "resolved_externally_count": 0,
+                        "discarded_count": 0,
                     }
                     scores_by_day[day] = []
 

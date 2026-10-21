@@ -31,6 +31,7 @@ class InteractionListingRepository:
                     i.system_decision,
                     i.resolution_channel,
                     i.confidence_score,
+                    i.edited_response,
                     i.created_at
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
@@ -71,6 +72,7 @@ class InteractionListingRepository:
                     "system_decision": row.system_decision,
                     "resolution_channel": row.resolution_channel,
                     "confidence_score": row.confidence_score,
+                    "was_edited": row.edited_response is not None,
                     "created_at": row.created_at.isoformat() if row.created_at else None,
                 }
                 for row in rows
@@ -95,6 +97,7 @@ class InteractionListingRepository:
                     i.confidence_score,
                     i.text_input,
                     i.generated_response,
+                    i.edited_response,
                     i.created_at
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
@@ -125,6 +128,8 @@ class InteractionListingRepository:
                 "confidence_score": row.confidence_score,
                 "text_input": row.text_input,
                 "generated_response": row.generated_response,
+                "edited_response": row.edited_response,
+                "was_edited": row.edited_response is not None,
                 "created_at": row.created_at.isoformat() if row.created_at else None,
                 "chunks": [
                     {

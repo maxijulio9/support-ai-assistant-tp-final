@@ -39,8 +39,9 @@ class ProjectConfigResponse(BaseModel):
 
 
 class ApproveRequest(BaseModel):
-    """Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta tal cual esta."""
+    """Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta generada tal cual esta o la version editada si viene edited_response."""
     reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa, sin FK hasta que exista M9")
+    edited_response: str | None = Field(default=None, description="respuesta editada por el agente, si viene se publica en lugar de la generada, no puede quedar vacia despues de recortar espacios ni superar los 5000 caracteres, si es igual a la generada se trata como una aprobacion comun")
 
 
 class RegenerateRequest(BaseModel):
@@ -55,10 +56,15 @@ class EscalateRequest(BaseModel):
     reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa")
 
 
+class DiscardRequest(BaseModel):
+    """Request para descartar la sugerencia de una interaccion en NEEDS_REVIEW, sin publicar, regenerar ni escalar nada."""
+    rejection_reason: str | None = Field(default=None, description="motivo opcional del descarte, el revisor se toma del token y no se manda")
+
+
 class InteractionReviewResponse(BaseModel):
-    """Response comun a las 3 acciones de revision (approve, regenerate, escalate)."""
+    """Response comun a las 4 acciones de revision (approve, regenerate, escalate y discard)."""
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
-    action_type: str = Field(description="accion final que tomo el sistema, por ejemplo AUTO_PUBLISH o ESCALATE")
+    action_type: str = Field(description="accion final que tomo el sistema, por ejemplo AUTO_PUBLISH, ESCALATE o DISCARDED")
 
 
 class ItsmConnectionRequest(BaseModel):
@@ -290,7 +296,7 @@ class IndexingStatusResponse(BaseModel):
 
 class ResolutionChannelCount(BaseModel):
     """Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."""
-    resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    resolution_channel: str | None = Field(description="canal de resolucion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     count: int = Field(description="cantidad de interacciones con ese canal de resolucion")
 
 class ErrorResponse(BaseModel):
@@ -300,6 +306,7 @@ class ErrorResponse(BaseModel):
 
 class MetricsSummaryResponse(BaseModel):
     """Resumen agregado de metricas de interacciones, para el dashboard."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     total_interactions: int = Field(description="cantidad total de interacciones procesadas en el periodo")
     auto_publish_count: int = Field(description="cantidad de interacciones publicadas automaticamente")
     needs_review_count: int = Field(description="cantidad de interacciones que quedaron pendientes de revision")
@@ -309,6 +316,7 @@ class MetricsSummaryResponse(BaseModel):
     without_decision_count: int = Field(description="cantidad de interacciones sin decision registrada en el periodo, no se suman a total_interactions ni a ningun otro conteo")
     by_resolution_channel: list[ResolutionChannelCount] = Field(description="cantidad de interacciones por canal de resolucion, su suma coincide con total_interactions, el grupo con canal null reune las que todavia no se resolvieron y las anteriores a que se registrara el canal")
     resolved_externally_count: int = Field(description="cantidad de tickets resueltos por un humano fuera del sistema")
+    discarded_count: int = Field(default=0, description="cantidad de interacciones cuya sugerencia descarto una persona, el ticket queda abierto en JSM para atenderlo a mano, la suma de los conteos por decision, este incluido, da total_interactions")
     automatic_resolution_rate: float = Field(description="porcentaje de interacciones resueltas sin intervencion humana")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones del periodo")
 
@@ -328,6 +336,7 @@ class MetricsByCategoryResponse(BaseModel):
 
 class DailyMetric(BaseModel):
     """Metricas de un dia del calendario, en el huso horario de la respuesta."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     date: str = Field(description="dia del calendario en formato AAAA-MM-DD, en el huso horario de la respuesta")
     total_interactions: int = Field(description="cantidad de interacciones con decision de ese dia")
     auto_publish_count: int = Field(description="cantidad de interacciones publicadas automaticamente ese dia")
@@ -336,6 +345,7 @@ class DailyMetric(BaseModel):
     request_info_count: int = Field(description="cantidad de interacciones donde se pidio mas informacion ese dia")
     resolved_count: int = Field(description="cantidad de interacciones resueltas por el sistema ese dia")
     resolved_externally_count: int = Field(description="cantidad de interacciones resueltas por un humano fuera del sistema ese dia")
+    discarded_count: int = Field(default=0, description="cantidad de interacciones cuya sugerencia descarto una persona ese dia")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de ese dia, o null si ninguna interaccion tiene puntaje")
 
 
@@ -502,9 +512,10 @@ class SaveLlmConfigResponse(BaseModel):
 
 class InteractionListItem(BaseModel):
     """Un item del listado paginado de interacciones."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     interaction_id: str = Field(description="id de la interaccion")
     system_decision: str | None = Field(description="decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues")
-    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     issue_key: str = Field(description="key del ticket original en JSM, por ejemplo TARG-123")
     ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
     summary: str | None = Field(description="resumen del ticket original")
@@ -513,6 +524,7 @@ class InteractionListItem(BaseModel):
     decision: str | None = Field(description="decision final del pipeline para esta interaccion")
     confidence_score: float | None = Field(description="confidence_score de la respuesta generada")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
+    was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, la respuesta original del sistema se conserva en generated_response del detalle")
 
 
 class InteractionListResponse(BaseModel):
@@ -529,6 +541,7 @@ class RetrievedChunkDetail(BaseModel):
 
 class InteractionDetailResponse(BaseModel):
     """Detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     interaction_id: str = Field(description="id de la interaccion")
     issue_key: str = Field(description="key del ticket original en JSM, por ejemplo TARG-123")
     ticket_url: str | None = Field(description="enlace al ticket en JSM, o null si no se pudo resolver la url base de la conexion")
@@ -537,9 +550,11 @@ class InteractionDetailResponse(BaseModel):
     priority: str | None = Field(description="prioridad del ticket")
     decision: str | None = Field(description="decision final del pipeline para esta interaccion")
     system_decision: str | None = Field(description="decision original del pipeline para esta interaccion, no cambia aunque una persona la revise despues")
-    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
+    resolution_channel: str | None = Field(description="como se resolvio la interaccion (AUTO, REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY), o null si todavia no se resolvio o no se puede determinar")
     confidence_score: float | None = Field(description="confidence_score de la respuesta generada")
     text_input: str | None = Field(description="texto original del ticket, usado como input del pipeline")
     generated_response: str | None = Field(description="respuesta generada por el sistema")
+    edited_response: str | None = Field(default=None, description="respuesta que se publico cuando el agente la edito antes de aprobarla, o null si no se edito")
+    was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
     chunks: list[RetrievedChunkDetail] = Field(description="fragmentos de la base de conocimiento usados como contexto")
