@@ -5,6 +5,7 @@ import json
 import logging
 from openai import OpenAI
 from app.core.config import settings
+from app.core.llm_config import get_llm_config
 from app.modules.ticket_analyzer.schemas import ClassificationResult, ConversationTurn
 
 logger = logging.getLogger(__name__)
@@ -47,17 +48,21 @@ Solicitud del usuario:
 class LlmClient:
 
     def __init__(self):
-        if settings.llm_provider == "gemini":
-            api_key = settings.gemini_api_key
-            base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
-            model = settings.gemini_llm_model
-        else:
-            api_key = settings.openai_api_key
-            base_url = "https://api.openai.com/v1"
-            model = settings.openai_llm_model
+        self.client = None
+        self.model = None
+        self._signature = None
+        self._refresh()
 
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
-        self.model = model
+    # vuelve a leer la configuracion efectiva y reconstruye el cliente solo si cambio la clave, la url o el modelo
+    # se llama al empezar cada metodo publico, asi un cambio guardado desde el dashboard se aplica sin reiniciar el servicio
+    def _refresh(self):
+        config = get_llm_config()
+        signature = (config.api_key, config.base_url, config.chat_model)
+
+        if signature != self._signature:
+            self.client = OpenAI(api_key=config.api_key, base_url=config.base_url)
+            self.model = config.chat_model
+            self._signature = signature
     # def __init__(self):
     #     self.client = OpenAI(api_key=settings.openai_api_key)
     #     self.model = settings.openai_llm_model
@@ -85,6 +90,7 @@ class LlmClient:
     # llama al llm y parsea la respuesta como ClassificationResult
     # reintenta hasta 2 veces si el json es invalido
     def classify(self, text: str, conversation_history: list[ConversationTurn] = [], categories: list[str] = []) -> ClassificationResult | None:
+        self._refresh()
         prompt = self._build_prompt(text, conversation_history, categories)
 
         for attempt in range(3):
@@ -157,6 +163,7 @@ class LlmClient:
     # traduce un texto a un idioma destino, para buscar contra kb en otro idioma
     # reintenta hasta 2 veces si la llamada falla
     def translate(self, text: str, target_language: str) -> str | None:
+        self._refresh()
         prompt = f"Traduci el siguiente texto al idioma con codigo '{target_language}'. Devolve UNICAMENTE el texto traducido, sin comillas ni texto adicional.\n\nTexto:\n{text}"
 
         for attempt in range(3):
@@ -180,6 +187,7 @@ class LlmClient:
     
     # genera un acknowledgment corto para el cliente cuando el ticket escala, prompt restrictivo para gastar pocos tokens
     def generate_escalation_acknowledgment(self, summary: str, description: str | None = None) -> str | None:
+        self._refresh()
         texto = f"{summary} {description or ''}".strip()
         prompt = (
             "Sos un agente de soporte. Escribi una respuesta breve confirmando al cliente que recibimos su consulta "

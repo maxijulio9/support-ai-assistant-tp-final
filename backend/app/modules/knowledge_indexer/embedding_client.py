@@ -5,6 +5,7 @@
 import logging
 from openai import OpenAI
 from app.core.config import settings
+from app.core.llm_config import get_llm_config
 
 logger = logging.getLogger(__name__)
 
@@ -12,11 +13,25 @@ logger = logging.getLogger(__name__)
 class EmbeddingClient:
 
     def __init__(self):
-        self.client = OpenAI(api_key=settings.openai_api_key)
-        self.model = settings.openai_embedding_model
+        self.client = None
+        self.model = None
+        self._signature = None
+        self._refresh()
+
+    # vuelve a leer la configuracion efectiva y reconstruye el cliente solo si cambio la clave de openai o el modelo de embeddings
+    # los embeddings usan siempre openai, aunque la generacion de respuestas use otro proveedor
+    def _refresh(self):
+        config = get_llm_config()
+        signature = (config.embedding_api_key, config.embedding_model)
+
+        if signature != self._signature:
+            self.client = OpenAI(api_key=config.embedding_api_key)
+            self.model = config.embedding_model
+            self._signature = signature
 
     # genera el vector numerico que representa el texto dado
     def generate_embedding(self, texto: str) -> list[float]:
+        self._refresh()
         response = self.client.embeddings.create(
             model=self.model,
             input=texto,

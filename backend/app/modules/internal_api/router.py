@@ -42,6 +42,11 @@ from app.modules.internal_api.schemas import (
     StartIndexingResponse,
     IndexingStatusResponse,
     ErrorResponse,
+    LlmConfigResponse,
+    LlmModelsRequest,
+    LlmModelsResponse,
+    SaveLlmConfigRequest,
+    SaveLlmConfigResponse,
     MetricsSummaryResponse,
     MetricsByCategoryResponse,
     InteractionListResponse,
@@ -65,6 +70,8 @@ from app.modules.internal_api.services.interaction_metrics_service import Intera
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
 from app.modules.internal_api.services.connection_status_service import ConnectionStatusService
+from app.modules.internal_api.services.llm_config_service import LlmConfigService
+from app.modules.internal_api.clients.llm_provider_checker import LlmProviderError, ProviderUnavailableError
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
 
@@ -85,6 +92,7 @@ _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
 _project_configuration_reader_service = ProjectConfigurationReaderService()
 _connection_status_service = ConnectionStatusService()
+_llm_config_service = LlmConfigService()
 _listing_service = InteractionListingService()
 
 
@@ -483,6 +491,49 @@ async def get_confluence_connection(admin: AppUser = Depends(require_admin)):
         raise HTTPException(status_code=503, detail="No se pudo consultar la conexion con Confluence")
 
     return ConnectionStatusResponse(**connection)
+
+
+# estado actual de la configuracion del llm, nunca devuelve las claves
+@router.get("/api/config/llm", response_model=LlmConfigResponse)
+async def get_llm_config_status(admin: AppUser = Depends(require_admin)):
+    try:
+        status = _llm_config_service.get_status()
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar la configuracion del LLM")
+
+    return LlmConfigResponse(**status)
+
+
+# valida una clave contra el proveedor y lista los modelos de chat de la cuenta, sin guardar nada
+@router.post("/api/config/llm/models", response_model=LlmModelsResponse)
+async def list_llm_models(request: LlmModelsRequest, admin: AppUser = Depends(require_admin)):
+    try:
+        chat_models = await _llm_config_service.list_models(request.provider, request.api_key)
+    except ProviderUnavailableError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except LlmProviderError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar el proveedor")
+
+    return LlmModelsResponse(chat_models=chat_models)
+
+
+# valida las claves y el modelo contra los proveedores y guarda la configuracion del llm cifrada
+@router.post("/api/config/llm", response_model=SaveLlmConfigResponse)
+async def save_llm_config(request: SaveLlmConfigRequest, admin: AppUser = Depends(require_admin)):
+    try:
+        await _llm_config_service.save(
+            request.generation.provider, request.generation.model, request.generation.api_key, request.embeddings.api_key
+        )
+    except ProviderUnavailableError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except (LlmProviderError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo guardar la configuracion del LLM")
+
+    return SaveLlmConfigResponse(status="ok")
 
 
 # lista interacciones paginadas, con filtros, para el dashboard
