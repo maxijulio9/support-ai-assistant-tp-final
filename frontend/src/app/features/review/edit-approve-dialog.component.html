@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>Editar y aprobar</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="edit-approve-dialog-field">
+    <mat-label>Respuesta</mat-label>
+    <textarea matInput [formControl]="textControl" [maxlength]="maxLength" rows="8"></textarea>
+    <mat-hint align="end">{{ textLength() }}/{{ maxLength }}</mat-hint>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancelar</button>
+  <button mat-flat-button type="button" [disabled]="!isValid()" (click)="confirm()">Aprobar con cambios</button>
+</mat-dialog-actions>

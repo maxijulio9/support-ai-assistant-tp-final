@@ -48,16 +48,16 @@
     <section class="review-detail-block review-detail-block--suggested">
       <div class="review-detail-block-header">
         <h2>Respuesta sugerida por el sistema</h2>
-        <span matTooltip="Edición no disponible todavía">
-          <button mat-button type="button" disabled>Editar</button>
+        <span matTooltip="Disponible próximamente">
+          <button mat-button type="button" disabled>Editar y aprobar</button>
         </span>
       </div>
       <p class="review-detail-text">{{ data.generated_response }}</p>
     </section>
 
     <div class="review-detail-actions">
-      <span matTooltip="Descartar no disponible todavía">
-        <button mat-button type="button" disabled>Rechazar</button>
+      <span matTooltip="Disponible próximamente">
+        <button mat-button type="button" disabled>Descartar</button>
       </span>
       <button mat-stroked-button type="button" [disabled]="submitting()" (click)="regenerate.emit()">
         Regenerar respuesta

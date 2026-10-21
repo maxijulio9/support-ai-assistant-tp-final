@@ -1,0 +1,23 @@
+<div class="discard-success-dialog">
+  <button
+    mat-icon-button
+    type="button"
+    class="discard-success-dialog-close"
+    aria-label="Cerrar"
+    (click)="close()"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <h2 mat-dialog-title class="discard-success-dialog-title">Respuesta descartada</h2>
+
+  <mat-dialog-content class="discard-success-dialog-content">
+    @if (ticketUrl) {
+      <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="discard-success-dialog-link">
+        {{ issueKey }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+      </a>
+    } @else {
+      <span class="discard-success-dialog-issue-key">{{ issueKey }}</span>
+    }
+  </mat-dialog-content>
+</div>

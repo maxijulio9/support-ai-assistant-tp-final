@@ -1,6 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-export type ReviewErrorCategory = 'not-found' | 'forbidden' | 'validation' | 'network' | 'server' | 'unknown';
+export type ReviewErrorCategory =
+  | 'not-found'
+  | 'forbidden'
+  | 'validation'
+  | 'conflict'
+  | 'network'
+  | 'server'
+  | 'unknown';
 
 // No se reutiliza classifyAuthError (core/auth/auth-errors.ts): esa funcion
 // se penso para la pantalla de login y agrupa 403, 404 y 422 en una sola
@@ -12,6 +19,7 @@ export function classifyReviewError(error: unknown): ReviewErrorCategory {
   }
   if (error.status === 404) return 'not-found';
   if (error.status === 403) return 'forbidden';
+  if (error.status === 409) return 'conflict';
   if (error.status === 422) return 'validation';
   if (error.status === 0) return 'network';
   if (error.status >= 500) return 'server';
