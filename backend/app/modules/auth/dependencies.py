@@ -2,6 +2,7 @@
 # dependencia de FastAPI para proteger endpoints con JWT
 
 from fastapi import Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.modules.auth.jwt_handler import decode_token
@@ -26,7 +27,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(_
     if await is_denylisted(payload["jti"]):
         raise HTTPException(status_code=401, detail="Credenciales invalidas")
 
-    user = _app_user_repository.get_by_id(payload["sub"])
+    # la consulta es sincrona, se corre en un hilo aparte para que no bloquee el servidor mientras espera a la bse
+    user = await run_in_threadpool(_app_user_repository.get_by_id, payload["sub"])
 
     if user is None or not user.is_active:
         raise HTTPException(status_code=401, detail="Credenciales invalidas")
