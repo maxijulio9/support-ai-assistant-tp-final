@@ -11,6 +11,7 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { MetricsService } from '../metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
 import { DECISION_SEGMENTS, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
+import { resolveSegmentColorVar } from '../../../shared/decision-colors';
 import { agreedThresholds } from '../confidence-thresholds';
 import { sortByConfidence } from '../category-confidence-order';
 import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
@@ -108,6 +109,8 @@ export class DecisionesConfianzaComponent {
   readonly activeFilters = signal<MetricsFilters>({ category: null, decision: null });
   readonly hasActiveFilters = computed(() => this.activeFilters().category !== null || this.activeFilters().decision !== null);
 
+  readonly colorVarFor = resolveSegmentColorVar;
+
   // --- Distribucion de decisiones ---
   // "percent" (redondeado, con el ajuste de roundedSegmentPercentages) es el
   // que se muestra como texto, para que la leyenda sume 100,0. "widthPercent"
@@ -125,7 +128,6 @@ export class DecisionesConfianzaComponent {
     return DECISION_SEGMENTS.map((segment, index) => ({
       value: segment.key,
       label: segment.label,
-      tone: segment.tone,
       count: counts[index],
       percent: percents[index],
       widthPercent: widthPercents[index],

@@ -2,42 +2,18 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input
 import { DecimalPipe } from '@angular/common';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
-
-export const OTHER_SEGMENT_KEY = 'OTHER';
+import { resolveSegmentColor, resolveSegmentColorVar } from '../../shared/decision-colors';
 
 export interface DonutSegment {
   label: string;
   value: number;
   // Clave de decision (AUTO_PUBLISH, NEEDS_REVIEW, etc.) u OTHER_SEGMENT_KEY
-  // para el segmento que agrupa lo que no tiene color propio. No es el tono
-  // DecisionTone del chip de Historial: el donut necesita un color por
-  // decision, no por tono, para que Descartada y Otras (las dos con tono
-  // "neutral" en interaction-status.ts) no terminen compartiendo el mismo
-  // gris.
+  // (decision-colors.ts) para el segmento que agrupa lo que no tiene color
+  // propio. No es el tono DecisionTone del chip de Historial: el donut
+  // necesita un color por decision, no por tono, para que Descartada y
+  // Otras (las dos con tono "neutral" en interaction-status.ts) no terminen
+  // compartiendo el mismo gris.
   key: string;
-}
-
-// Un color de _tokens.scss por decision real, mas OTHER_SEGMENT_KEY como
-// resguardo para el segmento "Otras" y para cualquier clave sin mapear.
-const DECISION_COLOR_VAR: Record<string, string> = {
-  AUTO_PUBLISH: '--app-color-decision-auto-publish',
-  NEEDS_REVIEW: '--app-color-decision-needs-review',
-  ESCALATE: '--app-color-decision-escalate',
-  REQUEST_INFO: '--app-color-decision-request-info',
-  DISCARDED: '--app-color-decision-discarded',
-  [OTHER_SEGMENT_KEY]: '--app-color-decision-other',
-};
-
-// Se usa desde el canvas de echarts (que no puede resolver var(--token) solo,
-// hace falta el color literal) y desde la leyenda (con el nombre de la
-// variable tal cual, en un var() real), para que porcion y punto de leyenda
-// siempre salgan del mismo token.
-export function resolveSegmentColorVar(key: string): string {
-  return DECISION_COLOR_VAR[key] ?? DECISION_COLOR_VAR[OTHER_SEGMENT_KEY];
-}
-
-function resolveSegmentColor(key: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(resolveSegmentColorVar(key)).trim();
 }
 
 @Component({
