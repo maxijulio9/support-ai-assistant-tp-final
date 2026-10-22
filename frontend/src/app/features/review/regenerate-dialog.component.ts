@@ -19,11 +19,13 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TimeoutError, map, timeout } from 'rxjs';
 import { ReviewService } from './review.service';
 import { classifyReviewError } from './review-errors';
+import { dialogTitleWithIssueKey } from './review-actions';
 
 export interface RegenerateDialogData {
   interactionId: string;
   reviewedBy: string | undefined;
   previousResponse: string | null;
+  issueKey: string | null;
 }
 
 export type RegenerateDialogResult = { actionType: string } | 'not-found' | 'timeout-refresh' | undefined;
@@ -82,6 +84,13 @@ export class RegenerateDialogComponent {
   // Cuando regenerate termina en ESCALATE, el dialogo no se cierra: pasa a
   // mostrar este resultado en vez del formulario.
   readonly resultState = signal<'form' | 'escalated'>('form');
+
+  readonly title = computed(() =>
+    dialogTitleWithIssueKey(
+      this.resultState() === 'escalated' ? 'Respuesta no publicada' : 'Regenerar respuesta',
+      this.data.issueKey,
+    ),
+  );
   readonly escalatedDetailState = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly escalatedResponseText = signal<string | null>(null);
 

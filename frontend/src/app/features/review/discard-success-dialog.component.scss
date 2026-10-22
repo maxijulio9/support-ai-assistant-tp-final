@@ -4,19 +4,28 @@
   padding-top: var(--app-space-sm);
 }
 
+// El touch target invisible de mat-icon-button mide 48px y queda centrado
+// sobre el boton de 40px, asi que sobresale 4px de cada lado. Con right: 0
+// ese sobrante caia justo afuera del borde de mat-dialog-surface, que solo
+// declara overflow-y: auto: la especificacion de CSS fuerza el overflow-x
+// a auto tambien cuando el otro eje no es visible, y esos 4px de sobra
+// bastaban para mostrar la barra de scroll horizontal. Corriendo el boton
+// 4px hacia adentro, el touch target queda justo al borde, sin sobrar nada.
 .discard-success-dialog-close {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 4px;
+  right: 4px;
 }
 
 .discard-success-dialog-title {
   margin: var(--app-space-sm) 0;
 }
 
-.discard-success-dialog-content {
-  display: flex;
-  justify-content: center;
+.discard-success-dialog-text {
+  margin: 0;
+  text-align: left;
+  font: var(--app-text-body);
+  color: var(--mat-sys-on-surface);
 }
 
 .discard-success-dialog-link {
@@ -26,6 +35,5 @@
 }
 
 .discard-success-dialog-issue-key {
-  font: var(--app-text-body);
-  color: var(--mat-sys-on-surface);
+  font-weight: 500;
 }

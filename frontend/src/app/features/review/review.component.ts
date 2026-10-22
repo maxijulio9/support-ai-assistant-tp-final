@@ -10,7 +10,7 @@ import { reviewActionErrorMessage, reviewActionErrorOutcome } from './review-act
 import { ReviewQueueComponent, QueueState } from './review-queue.component';
 import { ReviewDetailComponent, DetailState } from './review-detail.component';
 import { RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult } from './regenerate-dialog.component';
-import { DiscardDialogComponent, DiscardDialogResult } from './discard-dialog.component';
+import { DiscardDialogComponent, DiscardDialogData, DiscardDialogResult } from './discard-dialog.component';
 import { DiscardSuccessDialogComponent, DiscardSuccessDialogData } from './discard-success-dialog.component';
 import { EditApproveDialogComponent, EditApproveDialogData, EditApproveDialogResult } from './edit-approve-dialog.component';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
@@ -185,10 +185,11 @@ export class ReviewComponent {
     if (!id) return;
     const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
     const previousResponse = this.detail()?.generated_response ?? null;
+    const issueKey = this.detail()?.issue_key ?? null;
 
     const dialogRef = this.dialog.open<RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult>(
       RegenerateDialogComponent,
-      { data: { interactionId: id, reviewedBy, previousResponse }, disableClose: true, width: '480px' },
+      { data: { interactionId: id, reviewedBy, previousResponse, issueKey }, disableClose: true, width: '480px' },
     );
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -224,10 +225,11 @@ export class ReviewComponent {
     if (this.submittingAction()) return;
     const id = this.selectedId();
     if (!id) return;
+    const issueKey = this.detail()?.issue_key ?? null;
 
-    const dialogRef = this.dialog.open<DiscardDialogComponent, undefined, DiscardDialogResult>(
+    const dialogRef = this.dialog.open<DiscardDialogComponent, DiscardDialogData, DiscardDialogResult>(
       DiscardDialogComponent,
-      { disableClose: true, width: '480px' },
+      { data: { issueKey }, disableClose: true, width: '480px' },
     );
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -241,10 +243,11 @@ export class ReviewComponent {
     const id = this.selectedId();
     if (!id) return;
     const generatedResponse = this.detail()?.generated_response ?? null;
+    const issueKey = this.detail()?.issue_key ?? null;
 
     const dialogRef = this.dialog.open<EditApproveDialogComponent, EditApproveDialogData, EditApproveDialogResult>(
       EditApproveDialogComponent,
-      { data: { generatedResponse, initialText, errorMessage }, disableClose: true, width: '560px' },
+      { data: { generatedResponse, issueKey, initialText, errorMessage }, disableClose: true, width: '560px' },
     );
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -284,7 +287,7 @@ export class ReviewComponent {
 
     const successRef = this.dialog.open<DiscardSuccessDialogComponent, DiscardSuccessDialogData>(
       DiscardSuccessDialogComponent,
-      { data, width: '420px' },
+      { data, width: '480px' },
     );
 
     successRef.afterClosed().subscribe(() => {

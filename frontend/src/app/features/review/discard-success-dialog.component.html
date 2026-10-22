@@ -12,12 +12,23 @@
   <h2 mat-dialog-title class="discard-success-dialog-title">Respuesta descartada</h2>
 
   <mat-dialog-content class="discard-success-dialog-content">
-    @if (ticketUrl) {
-      <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="discard-success-dialog-link">
-        {{ issueKey }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
-      </a>
-    } @else {
-      <span class="discard-success-dialog-issue-key">{{ issueKey }}</span>
-    }
+    <p class="discard-success-dialog-text">
+      La sugerencia se descartó y no se publicó nada. El ticket
+      @if (ticketUrl) {
+        <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="discard-success-dialog-link">
+          {{ issueKey }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+        </a>
+      } @else {
+        <span class="discard-success-dialog-issue-key">{{ issueKey }}</span>
+      }
+      sigue abierto en Jira para atenderlo a mano.
+    </p>
   </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="close()">Cerrar</button>
+    @if (ticketUrl) {
+      <a mat-flat-button [href]="ticketUrl" target="_blank" rel="noopener noreferrer">Abrir ticket en Jira</a>
+    }
+  </mat-dialog-actions>
 </div>

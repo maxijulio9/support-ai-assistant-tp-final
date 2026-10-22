@@ -5,10 +5,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MAX_EDITED_RESPONSE_LENGTH, isEditedResponseValid, resolveEditedResponse } from './review-actions';
+import {
+  MAX_EDITED_RESPONSE_LENGTH,
+  dialogTitleWithIssueKey,
+  isEditedResponseValid,
+  resolveEditedResponse,
+} from './review-actions';
 
 export interface EditApproveDialogData {
   generatedResponse: string | null;
+  issueKey: string | null;
   // Se usan al reabrir el dialogo despues de un error que no es 404 ni 409
   // (ver reviewActionErrorOutcome en review-actions.ts): initialText trae
   // lo que el usuario ya habia escrito, para no perderlo.
@@ -34,6 +40,7 @@ export class EditApproveDialogComponent {
   private readonly data = inject<EditApproveDialogData>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<EditApproveDialogComponent, EditApproveDialogResult>);
 
+  readonly title = dialogTitleWithIssueKey('Editar y aprobar', this.data.issueKey);
   readonly textControl = new FormControl(this.data.initialText ?? this.data.generatedResponse ?? '', {
     nonNullable: true,
   });

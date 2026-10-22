@@ -1,9 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { dialogTitleWithIssueKey } from './review-actions';
+
+export interface DiscardDialogData {
+  issueKey: string | null;
+}
 
 // Sin conectar: no inyecta ReviewService ni llama HTTP. Solo junta el
 // motivo opcional y cierra con el resultado; quien abre el dialogo decide
@@ -21,8 +26,10 @@ const REASON_MAX_LENGTH = 500;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DiscardDialogComponent {
+  private readonly data = inject<DiscardDialogData>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject(MatDialogRef<DiscardDialogComponent, DiscardDialogResult>);
 
+  readonly title = dialogTitleWithIssueKey('Descartar respuesta', this.data.issueKey);
   readonly reasonControl = new FormControl('', { nonNullable: true });
   readonly reasonMaxLength = REASON_MAX_LENGTH;
 

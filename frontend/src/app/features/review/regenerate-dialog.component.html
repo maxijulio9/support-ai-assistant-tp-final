@@ -1,6 +1,4 @@
-<h2 mat-dialog-title #resultTitle tabindex="-1">
-  {{ resultState() === 'escalated' ? 'Respuesta no publicada' : 'Regenerar respuesta' }}
-</h2>
+<h2 mat-dialog-title #resultTitle tabindex="-1">{{ title() }}</h2>
 
 <mat-dialog-content>
   @if (resultState() === 'escalated') {

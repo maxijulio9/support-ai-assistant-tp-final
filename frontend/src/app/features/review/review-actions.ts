@@ -4,6 +4,13 @@
 // con un error de discard o de aprobar con edicion.
 import { ReviewErrorCategory } from './review-errors';
 
+// Si hay issue key, se agrega al titulo del dialogo para que quede claro
+// sobre que ticket se esta actuando. Si viene vacia o ausente, el titulo
+// queda como estaba, sin romper.
+export function dialogTitleWithIssueKey(baseTitle: string, issueKey: string | null | undefined): string {
+  return issueKey ? `${baseTitle} ${issueKey}` : baseTitle;
+}
+
 export const MAX_EDITED_RESPONSE_LENGTH = 5000;
 
 export function normalizeResponseText(value: string): string {
