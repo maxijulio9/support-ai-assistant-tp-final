@@ -12,6 +12,7 @@ import { MetricsService } from '../metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
 import { DECISION_SEGMENTS, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
 import { resolveSegmentColorVar } from '../../../shared/decision-colors';
+import { resolveSegmentTextColorVar } from '../../../shared/decision-text-color';
 import { agreedThresholds } from '../confidence-thresholds';
 import { sortByConfidence } from '../category-confidence-order';
 import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
@@ -110,6 +111,7 @@ export class DecisionesConfianzaComponent {
   readonly hasActiveFilters = computed(() => this.activeFilters().category !== null || this.activeFilters().decision !== null);
 
   readonly colorVarFor = resolveSegmentColorVar;
+  readonly textColorVarFor = resolveSegmentTextColorVar;
 
   // --- Distribucion de decisiones ---
   // "percent" (redondeado, con el ajuste de roundedSegmentPercentages) es el

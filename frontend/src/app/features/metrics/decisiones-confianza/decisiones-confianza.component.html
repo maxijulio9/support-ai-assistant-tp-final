@@ -78,6 +78,7 @@
               class="dc-distribution-segment"
               [style.width.%]="row.widthPercent"
               [style.background-color]="'var(' + colorVarFor(row.value) + ')'"
+              [style.color]="'var(' + textColorVarFor(row.value) + ')'"
             >
               @if (row.widthPercent >= 5) {
                 <span>{{ row.percent | number: '1.1-1' }}%</span>
