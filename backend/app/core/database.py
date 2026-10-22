@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 # crea la conexion a la base de datos usando la url del .env
 # TODO: cuando exista M7, la url se va a leer desde sqlite en vez del .env
-engine = create_engine(settings.database_url, pool_pre_ping=True)
+# el dashboard dispara varios pedidos a la vez y cada uno usa dos sesiones, con pocas conexiones en el pool
+# se abrian conexiones nuevas en cada pantalla y cada una tarda mas de un segundo en abrirse
+engine = create_engine(settings.database_url, pool_pre_ping=True, pool_size=10, max_overflow=10)
 
 # fabrica de sesiones, cada sesion es como abrir una conversacion con la bd
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
