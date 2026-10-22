@@ -5,13 +5,14 @@ export interface DecisionStatus {
   tone: DecisionTone;
 }
 
-// Valores reales de "decision", definidos en
-// backend/app/modules/response_generator/schemas.py:8-11.
+// Valores reales de "decision", definidos en el schema de decision del
+// backend (backend/app/modules/response_generator/schemas.py).
 const DECISION_STATUS: Record<string, DecisionStatus> = {
   AUTO_PUBLISH: { label: 'Publicada', tone: 'success' },
   NEEDS_REVIEW: { label: 'Pendiente de revisión', tone: 'warning' },
   ESCALATE: { label: 'Escalada', tone: 'error' },
   REQUEST_INFO: { label: 'Información solicitada', tone: 'neutral' },
+  DISCARDED: { label: 'Descartada', tone: 'neutral' },
 };
 
 // decision no mapeada: se muestra el texto crudo con tono neutro. decision
@@ -21,7 +22,7 @@ export function decisionStatus(decision: string | null): DecisionStatus {
   return DECISION_STATUS[decision] ?? { label: decision, tone: 'neutral' };
 }
 
-// Opciones fijas del filtro de Estado: las 4 decisiones reales del contrato,
+// Opciones fijas del filtro de Estado: las 5 decisiones reales del contrato,
 // en el mismo orden en que se declaran arriba.
 export const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = Object.entries(DECISION_STATUS).map(
   ([value, status]) => ({ value, label: status.label }),

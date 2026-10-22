@@ -1,14 +1,15 @@
 import { DecisionTone, decisionStatus, STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
 
-// Los 6 conteos por decision que trae tanto MetricsSummaryResponse como
+// Los 7 conteos por decision que trae tanto MetricsSummaryResponse como
 // DailyMetric, con el mismo nombre de campo en los dos: una interfaz
 // estructural alcanza para que decisionSegmentValue sirva para cualquiera
-// de los dos sin que una dependa de la otra.
+// de los dos sin que una dependa de la otra. Los 7 suman total_interactions.
 export interface DecisionSegmentCounts {
   auto_publish_count: number;
   needs_review_count: number;
   escalate_count: number;
   request_info_count: number;
+  discarded_count: number;
   resolved_count: number;
   resolved_externally_count: number;
 }
@@ -23,10 +24,9 @@ export interface DecisionSegment {
 
 const RESOLVED_GROUP_KEY = 'RESOLVED_GROUP';
 
-// Las 4 decisiones de siempre, mismo orden y color que decisionStatus, mas
-// un quinto segmento que agrupa las dos decisiones que decisionStatus no
-// cubre (resolved_count y resolved_externally_count no son parte de las 4
-// decisiones mapeadas en interaction-status.ts).
+// Las 5 decisiones mapeadas en interaction-status.ts, mismo orden y color
+// que decisionStatus, mas un sexto segmento que agrupa las dos decisiones
+// que decisionStatus no cubre (resolved_count y resolved_externally_count).
 export const DECISION_SEGMENTS: DecisionSegment[] = [
   ...STATUS_FILTER_OPTIONS.map((option) => ({
     key: option.value,
@@ -41,6 +41,7 @@ const COUNT_FIELD: Record<string, keyof DecisionSegmentCounts> = {
   NEEDS_REVIEW: 'needs_review_count',
   ESCALATE: 'escalate_count',
   REQUEST_INFO: 'request_info_count',
+  DISCARDED: 'discarded_count',
 };
 
 export function decisionSegmentValue(counts: DecisionSegmentCounts, key: string): number {
@@ -72,8 +73,8 @@ export interface DecisionFilterOption {
   label: string;
 }
 
-// Las 6 decisiones reales del contrato, cada una como opcion propia. A
-// diferencia de DECISION_SEGMENTS (5, agrupa RESOLVED y RESOLVED_EXTERNALLY
+// Las 7 decisiones reales del contrato, cada una como opcion propia. A
+// diferencia de DECISION_SEGMENTS (6, agrupa RESOLVED y RESOLVED_EXTERNALLY
 // en "Resueltas"), el filtro "decision" del backend acepta un solo valor
 // por pedido, asi que no hay forma honesta de ofrecer una opcion combinada
 // para el filtro.

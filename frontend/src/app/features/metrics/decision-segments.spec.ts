@@ -1,4 +1,23 @@
-import { DecisionSegmentCounts, decisionSegmentValue, roundedSegmentPercentages } from './decision-segments';
+import { DECISION_SEGMENTS, DecisionSegmentCounts, decisionSegmentValue, roundedSegmentPercentages } from './decision-segments';
+
+describe('DECISION_SEGMENTS', () => {
+  it('tiene 6 segmentos: las 5 decisiones mapeadas mas el grupo de resueltas', () => {
+    expect(DECISION_SEGMENTS.length).toBe(6);
+    expect(DECISION_SEGMENTS.map((segment) => segment.key)).toEqual([
+      'AUTO_PUBLISH',
+      'NEEDS_REVIEW',
+      'ESCALATE',
+      'REQUEST_INFO',
+      'DISCARDED',
+      'RESOLVED_GROUP',
+    ]);
+  });
+
+  it('DISCARDED tiene el label "Descartada" y tono neutral', () => {
+    const discarded = DECISION_SEGMENTS.find((segment) => segment.key === 'DISCARDED');
+    expect(discarded).toEqual({ key: 'DISCARDED', label: 'Descartada', tone: 'neutral' });
+  });
+});
 
 describe('decisionSegmentValue', () => {
   const counts: DecisionSegmentCounts = {
@@ -6,19 +25,32 @@ describe('decisionSegmentValue', () => {
     needs_review_count: 2,
     escalate_count: 5,
     request_info_count: 3,
+    discarded_count: 6,
     resolved_count: 4,
     resolved_externally_count: 1,
   };
 
-  it('devuelve el campo correspondiente para cada una de las 4 decisiones mapeadas', () => {
+  it('devuelve el campo correspondiente para cada una de las 5 decisiones mapeadas', () => {
     expect(decisionSegmentValue(counts, 'AUTO_PUBLISH')).toBe(10);
     expect(decisionSegmentValue(counts, 'NEEDS_REVIEW')).toBe(2);
     expect(decisionSegmentValue(counts, 'ESCALATE')).toBe(5);
     expect(decisionSegmentValue(counts, 'REQUEST_INFO')).toBe(3);
+    expect(decisionSegmentValue(counts, 'DISCARDED')).toBe(6);
   });
 
   it('el grupo "Resueltas" suma resolved_count y resolved_externally_count', () => {
     expect(decisionSegmentValue(counts, 'RESOLVED_GROUP')).toBe(5);
+  });
+
+  it('los 7 conteos (6 segmentos, el grupo de resueltas cuenta como 2) suman total_interactions', () => {
+    const total = 10 + 2 + 5 + 3 + 6 + 4 + 1;
+    const sumOfSegments = DECISION_SEGMENTS.reduce((sum, segment) => sum + decisionSegmentValue(counts, segment.key), 0);
+    expect(sumOfSegments).toBe(total);
+  });
+
+  it('un segmento en 0 no rompe nada: sigue devolviendo 0, no undefined ni NaN', () => {
+    const zeroCounts: DecisionSegmentCounts = { ...counts, discarded_count: 0 };
+    expect(decisionSegmentValue(zeroCounts, 'DISCARDED')).toBe(0);
   });
 });
 
@@ -44,6 +76,13 @@ describe('roundedSegmentPercentages', () => {
     // -0.1 tiene que caer en 29 (el mayor), no en el primero porque ya lo es.
     const result = roundedSegmentPercentages([29, 1, 19, 7, 3], 59);
     expect(result).toEqual([49.1, 1.7, 32.2, 11.9, 5.1]);
+    expect(result.reduce((a, b) => a + b, 0)).toBeCloseTo(100, 10);
+  });
+
+  it('un segmento en 0 (por ejemplo discarded_count todavia sin uso) da 0%, no NaN ni undefined, y no rompe la suma', () => {
+    const result = roundedSegmentPercentages([10, 0, 5], 15);
+    expect(result[1]).toBe(0);
+    expect(result.every((value) => Number.isFinite(value))).toBe(true);
     expect(result.reduce((a, b) => a + b, 0)).toBeCloseTo(100, 10);
   });
 });
