@@ -10,6 +10,31 @@
   --app-color-text-secondary: #6b6e77; // reemplaza el #747780 de Figma, no llegaba a AA
   --app-color-background: #f6f7f9; // reemplaza el #f3f4f6 hardcodeado
 
+  // Colores por decision: solo para el donut de "Distribucion de decisiones"
+  // en Inicio y su leyenda (decisions-donut.component.ts). No se reusan los
+  // --app-color-success/warning/text-secondary de arriba a proposito: esos
+  // tambien pintan botones, snackbars y el chip de Historial (DECISION_STATUS
+  // en interaction-status.ts), y cambiarlos ahi habria afectado ese chip.
+  // Elegidos vivos y simulados contra protanopia, deuteranopia y tritanopia
+  // (no dependen solo de rojo vs verde: tambien varian en luminosidad) para
+  // que cada porcion del donut se distinga de las demas.
+  --app-color-decision-auto-publish: #16a34a; // Publicada, verde vivo
+  --app-color-decision-needs-review: #d97706; // Pendiente de revision, ambar vivo
+  --app-color-decision-escalate: #dc2626; // Escalada, rojo vivo
+  --app-color-decision-request-info: #2563eb; // Informacion solicitada, azul vivo
+  --app-color-decision-discarded: #a21caf; // Descartada, magenta vivo
+  // Resuelta y Resuelta externamente no aparecen hoy como porciones propias
+  // en el donut de Inicio (dashboard.component.ts las suma dentro de
+  // "Otras"): quedan definidas para cuando se separen o se usen en otra
+  // pantalla, por eso no estan tan afinadas contra tritanopia como las de
+  // arriba.
+  --app-color-decision-resolved: #0891b2; // Resuelta, cian
+  --app-color-decision-resolved-externally: #0d9488; // Resuelta externamente, verde azulado
+  // "Otras" agrupa decisiones sin mapear: por eso es el unico segmento que
+  // se queda en gris neutro, el mismo que usa el resto de la app para texto
+  // secundario.
+  --app-color-decision-other: var(--app-color-text-secondary);
+
   // Radio (coincide con --mat-sys-corner-small/medium/large de Material)
   --app-radius-sm: 8px;
   --app-radius-md: 12px;

@@ -71,22 +71,6 @@
   border-radius: 50%;
 }
 
-.decisions-donut-dot--success {
-  background-color: var(--app-color-success);
-}
-
-.decisions-donut-dot--warning {
-  background-color: var(--app-color-warning);
-}
-
-.decisions-donut-dot--error {
-  background-color: var(--mat-sys-error);
-}
-
-.decisions-donut-dot--neutral {
-  background-color: var(--app-color-text-secondary);
-}
-
 .decisions-donut-legend-value {
   font: var(--app-text-card-heading);
   color: var(--mat-sys-on-surface);

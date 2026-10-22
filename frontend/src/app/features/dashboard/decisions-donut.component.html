@@ -17,7 +17,7 @@
     @for (segment of segments(); track segment.label) {
       <li class="decisions-donut-legend-item">
         <span class="decisions-donut-legend-row">
-          <span [class]="'decisions-donut-dot decisions-donut-dot--' + segment.tone"></span>
+          <span class="decisions-donut-dot" [style.background-color]="'var(' + colorVarFor(segment.key) + ')'"></span>
           {{ segment.label }}
         </span>
         <span class="decisions-donut-legend-value">

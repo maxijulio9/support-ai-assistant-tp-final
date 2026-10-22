@@ -8,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardService } from './dashboard.service';
 import { computePeriodRanges, PeriodOption } from './period';
-import { DecisionsDonutComponent, DonutSegment } from './decisions-donut.component';
+import { DecisionsDonutComponent, DonutSegment, OTHER_SEGMENT_KEY } from './decisions-donut.component';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { formatRelativeTime } from '../../shared/format-relative-time';
@@ -113,13 +113,13 @@ export class DashboardComponent {
     const segments = STATUS_FILTER_OPTIONS.map((option) => ({
       label: option.label,
       value: (s[DECISION_COUNT_FIELD[option.value]] as number) ?? 0,
-      tone: decisionStatus(option.value).tone,
+      key: option.value,
     }));
 
     const known = segments.reduce((sum, segment) => sum + segment.value, 0);
     const other = s.total_interactions - known;
     if (other > 0) {
-      segments.push({ label: 'Otras', value: other, tone: 'neutral' });
+      segments.push({ label: 'Otras', value: other, key: OTHER_SEGMENT_KEY });
     }
     return segments;
   });
