@@ -94,6 +94,8 @@ class NormalizedEvent(BaseModel):
     created_at: Optional[str] = None
     comment_body: Optional[str] = None
     comment_author_id: Optional[str] = None
+    # hora real en que el webhook entro al sistema, en utc con formato iso
+    received_at: Optional[str] = None
 
 
     
