@@ -167,13 +167,15 @@ class SelectFieldsResponse(BaseModel):
 
 class ConfigureCategoriesRequest(BaseModel):
     """Request para confirmar las categorias elegidas por el admin para un proyecto."""
-    categories: list[str] = Field(description="valores crudos de las categorias en JSM, tal cual, sin modificar")
+    categories: list[str] = Field(description="valores crudos de las categorias en JSM, tal cual, sin modificar, la lista es el conjunto activo del proyecto: las que vienen se vinculan o se reactivan, las vinculadas que no vienen se desactivan sin borrarse, una lista vacia o con nombres en blanco se rechaza con 400")
 
 
 class ConfigureCategoriesResponse(BaseModel):
     """Response de confirmacion de categorias configuradas."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
-    categories_configured: int = Field(description="cantidad de categorias que quedaron vinculadas al proyecto")
+    categories_configured: int = Field(description="cantidad de categorias que quedaron activas en el proyecto, es la cantidad de la lista sin repetidos")
+    categories_deactivated: int = Field(default=0, description="cantidad de categorias que estaban activas y se desactivaron en esta llamada, sin borrarse")
 
 
 class FieldOptionsResponse(BaseModel):
