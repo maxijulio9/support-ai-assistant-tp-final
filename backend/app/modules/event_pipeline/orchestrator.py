@@ -3,6 +3,7 @@
 
 
 import logging
+import time
 from sqlalchemy import text
 from app.core.database import get_db
 from app.core.jsm_status_actions import JSM_STATUS_ACTION_ESCALATE, JSM_STATUS_ACTION_AWAITING_CUSTOMER, JSM_STATUS_ACTION_RESOLVED
@@ -48,6 +49,7 @@ class Orchestrator:
     async def process_event(self, event: NormalizedEvent) -> dict:
         
         logger.info(f"[{event.issue_key}] iniciando procesamiento del evento {event.event_type}")
+        started_at = time.perf_counter()
 
         # obtener credenciales de JSM
         credentials = self.credentials_repository.get_credentials()
@@ -69,6 +71,9 @@ class Orchestrator:
         # persiste el resultado del analisis en la bd relacional, guarda el id para completarlo despues
         interaction_id = self.interaction_logger.log_analysis(analysis)
 
+        # guarda la hora real de entrada del evento y la de creacion del ticket en jsm, para medir los tiempos de repsuesta
+        self.interaction_logger.record_event_times(interaction_id, getattr(event, "received_at", None), getattr(event, "created_at", None))
+
         # si m2 ya determino que esto escala directo (out of scope o resolved_by l2),
         # nos ahorramos la consulta a m3 y la generacion de m4, que igual terminarian escalando
         if analysis.escalate_direct:
@@ -79,6 +84,7 @@ class Orchestrator:
                 confidence_score=None,
                 decision=ACTION_ESCALATE,
             )
+            self.interaction_logger.record_processing_time(interaction_id, int((time.perf_counter() - started_at) * 1000))
 
             transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
             
@@ -91,6 +97,7 @@ class Orchestrator:
                     acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
                     if acknowledgment:
                         await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
+                        self.interaction_logger.mark_first_response(interaction_id, resolved=False)
 
                     internal_note = self._build_internal_escalation_note(analysis, "out_of_scope_o_l2")
                     await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
@@ -115,6 +122,8 @@ class Orchestrator:
                 confidence_score=None,
                 decision="RESOLVED",
             )
+            self.interaction_logger.mark_resolved(interaction_id)
+            self.interaction_logger.record_processing_time(interaction_id, int((time.perf_counter() - started_at) * 1000))
 
             transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED, analysis.issue_type_id)
             
@@ -170,6 +179,7 @@ class Orchestrator:
 
         # persiste el detalle de cada chunk recuperado, para poder auditar el contexto real usado despues
         self.interaction_logger.save_retrieved_chunks(interaction_id, retrieval_result.chunks)
+        self.interaction_logger.record_processing_time(interaction_id, int((time.perf_counter() - started_at) * 1000))
         
         # m5 ejecuta la accion segun lo que decidio m4
         # auto_publish, needs_review y request_info publican un comentario, la diferencia es si es publico o nota interna
@@ -178,6 +188,9 @@ class Orchestrator:
             is_public = generated_response.action_type != ACTION_NEEDS_REVIEW
             try:
                 await self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
+                # primer comentario publico de la interaccion, si es la respuesta automatica tambien la resuelve
+                if is_public:
+                    self.interaction_logger.mark_first_response(interaction_id, resolved=generated_response.action_type == ACTION_AUTO_PUBLISH)
                 logger.info(f"[{event.issue_key}] m5 publico el comentario,es public={is_public}")
 
                 # si ya se le respondio al cliente (o se le pidio mas info), transiciona a un estado de espera
@@ -206,6 +219,7 @@ class Orchestrator:
                     acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
                     if acknowledgment:
                         await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
+                        self.interaction_logger.mark_first_response(interaction_id, resolved=False)
 
                     internal_note = self._build_internal_escalation_note(analysis, generated_response.escalation_reason)
                     await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
