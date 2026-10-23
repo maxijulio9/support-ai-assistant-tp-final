@@ -12,7 +12,7 @@ class KbIndexingStatusRepository:
         db = next(get_db())
         try:
             row = db.execute(text("""
-                SELECT space_keys, status, total_documents, documents_processed,
+                SELECT id, space_keys, status, total_documents, documents_processed,
                        chunks_generated, error_detail, started_at, updated_at
                 FROM kb_indexing_status
                 ORDER BY started_at DESC
@@ -23,6 +23,7 @@ class KbIndexingStatusRepository:
                 return None
 
             return {
+                "id": str(row.id),
                 "space_keys": list(row.space_keys),
                 "status": row.status,
                 "total_documents": row.total_documents,
