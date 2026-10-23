@@ -259,16 +259,21 @@ async def list_field_options(field_id: str, admin: AppUser = Depends(require_adm
 
 
 # confirma las categorias que el admin eligio para su proyecto
-@router.post("/api/config/itsm/projects/{project_key}/categories", response_model=ConfigureCategoriesResponse)
+@router.post("/api/config/itsm/projects/{project_key}/categories", response_model=ConfigureCategoriesResponse,
+             responses={400: {"model": ErrorResponse, "description": "El proyecto no existe, la lista de categorias esta vacia o tiene nombres en blanco"}})
 def configure_categories(project_key: str, request: ConfigureCategoriesRequest, admin: AppUser = Depends(require_admin)):
     try:
-        categories_configured = _project_onboarding_service.configure_categories(project_key, request.categories)
+        result = _project_onboarding_service.configure_categories(project_key, request.categories)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
         raise HTTPException(status_code=503, detail="No se pudo configurar las categorias")
 
-    return ConfigureCategoriesResponse(status="ok", categories_configured=categories_configured)
+    return ConfigureCategoriesResponse(
+        status="ok",
+        categories_configured=result["categories_configured"],
+        categories_deactivated=result["categories_deactivated"],
+    )
 
 # trae y persiste automaticamente los tipos de solicitud reales de un proyecto, sin necesitar seleccion del admin
 @router.post("/api/config/itsm/projects/{project_key}/request-types", response_model=ConfigureRequestTypesResponse)
