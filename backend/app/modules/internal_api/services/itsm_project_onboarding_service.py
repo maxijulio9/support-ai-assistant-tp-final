@@ -54,8 +54,18 @@ class ItsmProjectOnboardingService:
         return await self.jsm_project_client.get_field_options(field_id=field_id, **credentials)
 
     # vincula el proyecto a las categorias que el admin confirmo
-    def configure_categories(self, project_key: str, categories: list[str]) -> int:
-        return self.category_configuration_repository.configure_categories(project_key, categories)
+    # la lista es el conjunto activo del proyecto, las categorias que no vienen se desactivan sin borrarse
+    # una lista vacia o con nombres en blanco se rechza, y los repetidos se descartan conservando el orden
+    def configure_categories(self, project_key: str, categories: list[str]) -> dict:
+        names = list(dict.fromkeys(categories))
+
+        if not names:
+            raise ValueError("Hay que indicar al menos una categoría")
+
+        if any(not name.strip() for name in names):
+            raise ValueError("Las categorías no pueden estar vacías")
+
+        return self.category_configuration_repository.configure_categories(project_key, names)
     
     
     # trae los tipos de solicitud reales del proyecto y los persiste, sin lista incorpora todos

@@ -167,13 +167,15 @@ class SelectFieldsResponse(BaseModel):
 
 class ConfigureCategoriesRequest(BaseModel):
     """Request para confirmar las categorias elegidas por el admin para un proyecto."""
-    categories: list[str] = Field(description="valores crudos de las categorias en JSM, tal cual, sin modificar")
+    categories: list[str] = Field(description="valores crudos de las categorias en JSM, tal cual, sin modificar, la lista es el conjunto activo del proyecto: las que vienen se vinculan o se reactivan, las vinculadas que no vienen se desactivan sin borrarse, una lista vacia o con nombres en blanco se rechaza con 400")
 
 
 class ConfigureCategoriesResponse(BaseModel):
     """Response de confirmacion de categorias configuradas."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     status: str = Field(description="resultado de la operacion, 'ok' si salio bien")
-    categories_configured: int = Field(description="cantidad de categorias que quedaron vinculadas al proyecto")
+    categories_configured: int = Field(description="cantidad de categorias que quedaron activas en el proyecto, es la cantidad de la lista sin repetidos")
+    categories_deactivated: int = Field(default=0, description="cantidad de categorias que estaban activas y se desactivaron en esta llamada, sin borrarse")
 
 
 class FieldOptionsResponse(BaseModel):
@@ -281,17 +283,20 @@ class StartIndexingRequest(BaseModel):
 class StartIndexingResponse(BaseModel):
     """Response de confirmacion, la indexacion corre en background."""
     status: str = Field(description="siempre 'queued', la indexacion se encola para el worker")
+    id: str = Field(description="id de la corrida, la fila ya existe aunque el worker todavia no la haya tomado, es el mismo id que devuelve GET /api/indexing/status para esa corrida")
+    started_at: str = Field(description="marca de tiempo del pedido, el momento en que se encolo la corrida")
 
 
 class IndexingStatusResponse(BaseModel):
     """Response con el estado del ultimo trabajo de indexacion, para el polling del dashboard (CU31)."""
+    id: str = Field(description="id de la corrida, es el que devuelve POST /api/indexing/start al encolarla")
     space_keys: list[str] = Field(description="spaces que cubrio este trabajo de indexacion")
-    status: str = Field(description="estado del trabajo, por ejemplo running, completed o failed")
-    total_documents: int | None = Field(default=None, description="cantidad total de documentos a procesar, si ya se conoce")
+    status: str = Field(description="estado del trabajo: queued si esta encolado y el worker todavia no lo tomo, running, completed o failed, una corrida en queued o running sin ninguna actualizacion desde hace 10 minutos se informa como failed")
+    total_documents: int | None = Field(default=None, description="cantidad total de documentos a procesar, es null hasta que termina la extraccion de las paginas")
     documents_processed: int = Field(description="cantidad de documentos ya procesados")
     chunks_generated: int = Field(description="cantidad de chunks generados hasta el momento")
-    error_detail: str | None = Field(default=None, description="detalle del error, si el trabajo fallo")
-    started_at: str = Field(description="marca de tiempo de inicio del trabajo")
+    error_detail: str | None = Field(default=None, description="detalle del error tal cual lo informo la excepcion, texto tecnico de hasta 2000 caracteres, una corrida abandonada informa que no llego a iniciarse o que se interrumpio antes de terminar")
+    started_at: str = Field(description="marca de tiempo del pedido de la corrida, el momento en que se encolo")
     updated_at: str = Field(description="marca de tiempo de la ultima actualizacion del trabajo")
 
 class ResolutionChannelCount(BaseModel):
