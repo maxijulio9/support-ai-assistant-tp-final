@@ -64,18 +64,27 @@ async def process_comment_created(arq_context, issue_key: str):
 
 # tarea para disparar la indexacion de spaces de confluence desde m7
 # recibe la lista de space_keys que el admin selecciono desde la ui
-async def process_kb_indexing(arq_context, space_keys: list[str]):
+async def process_kb_indexing(arq_context, space_keys: list[str], run_id: str | None = None):
     logger.info(f"worker: iniciando indexacion de spaces {space_keys}")
 
     from app.modules.knowledge_indexer.service import KnowledgeIndexer
     from app.modules.event_pipeline.indexing_status_repository import IndexingStatusRepository
 
     status_repo = IndexingStatusRepository()
-    job_id = status_repo.create_job(space_keys)
+    # con run_id la fila ya existe, se creo al encolar, sin run_id (trabajos encolados antes de este cambio) se crea aca
+    if run_id:
+        status_repo.mark_running(run_id)
+        job_id = run_id
+    else:
+        job_id = status_repo.create_job(space_keys)
+
+    # lleva el progreso a la fila de la corrida, el indexador no se interrumpe si una actualizacion falla
+    def report_progress(**progress):
+        status_repo.update_progress(job_id, **progress)
 
     try:
         indexer = KnowledgeIndexer()
-        indexer.index_spaces(space_keys)
+        indexer.index_spaces(space_keys, on_progress=report_progress)
 
         status_repo.mark_completed(job_id)
         logger.info(f"worker: indexacion completada para spaces {space_keys}")
