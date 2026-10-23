@@ -25,6 +25,7 @@ import { listAvailableSpacesApiConfigKnowledgeBaseSpacesAvailableGet } from '../
 import { configureSpacesApiConfigItsmProjectsProjectKeySpacesPost } from '../../api/fn/internal-api/configure-spaces-api-config-itsm-projects-project-key-spaces-post';
 import { startIndexingApiIndexingStartPost } from '../../api/fn/internal-api/start-indexing-api-indexing-start-post';
 import { getIndexingStatusApiIndexingStatusGet } from '../../api/fn/internal-api/get-indexing-status-api-indexing-status-get';
+import { listIndexedSpacesApiIndexingSpacesGet } from '../../api/fn/internal-api/list-indexed-spaces-api-indexing-spaces-get';
 import { getLlmConfigStatusApiConfigLlmGet } from '../../api/fn/internal-api/get-llm-config-status-api-config-llm-get';
 import { listLlmModelsApiConfigLlmModelsPost } from '../../api/fn/internal-api/list-llm-models-api-config-llm-models-post';
 import { saveLlmConfigApiConfigLlmPost } from '../../api/fn/internal-api/save-llm-config-api-config-llm-post';
@@ -55,6 +56,7 @@ import { AvailableRequestType } from '../../api/models/available-request-type';
 import { JsmPriority } from '../../api/models/jsm-priority';
 import { StartIndexingResponse } from '../../api/models/start-indexing-response';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
+import { IndexedSpace } from '../../api/models/indexed-space';
 
 // Nivel universal de prioridad como clave, lista de ids reales de JSM como
 // valor: misma forma que usan tanto el POST como el detalle del proyecto.
@@ -242,6 +244,15 @@ export class ConfigService {
   getIndexingStatus(): Observable<IndexingStatusResponse> {
     return getIndexingStatusApiIndexingStatusGet(this.http, this.apiConfig.rootUrl).pipe(
       map((response) => response.body),
+    );
+  }
+
+  // Sin project_key: siempre todos los espacios del sistema, mismo criterio
+  // que ya usa getIndexingStatus (la ultima corrida tambien es del sistema
+  // completo, no de un proyecto).
+  listIndexedSpaces(): Observable<IndexedSpace[]> {
+    return listIndexedSpacesApiIndexingSpacesGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body.spaces),
     );
   }
 

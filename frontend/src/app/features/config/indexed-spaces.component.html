@@ -1,0 +1,64 @@
+<div class="indexed-spaces">
+  <h2 class="indexed-spaces-title">Espacios indexados</h2>
+  <p class="indexed-spaces-note">Estado de cada espacio, de todos los proyectos.</p>
+
+  @if (state() === 'loading') {
+    <div class="indexed-spaces-skeleton" role="status" aria-hidden="true">
+      <span class="visually-hidden">Cargando los espacios indexados</span>
+      <div class="indexed-spaces-skeleton-line" style="width: 100%"></div>
+      <div class="indexed-spaces-skeleton-line" style="width: 100%"></div>
+    </div>
+  }
+
+  @if (state() === 'error') {
+    <div class="indexed-spaces-error" role="alert">
+      <p>{{ loadErrorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="retry()">Reintentar</button>
+    </div>
+  }
+
+  @if (state() === 'empty') {
+    <p class="indexed-spaces-empty">Todavía no hay espacios indexados.</p>
+  }
+
+  @if (state() === 'loaded') {
+    <ul class="indexed-spaces-list">
+      @for (space of spaces(); track space.space_key) {
+        <li class="indexed-spaces-row">
+          <div class="indexed-spaces-row-main">
+            <span class="indexed-spaces-key">{{ space.space_key }}</span>
+            <span class="indexed-spaces-description">{{ descriptionLabel(space.description) }}</span>
+          </div>
+
+          <div class="indexed-spaces-row-meta">
+            <span>{{ countryLabel(space.country_code) }}</span>
+            <span>{{ languageLabel(space.language_code) }}</span>
+            <span>{{ space.documents }} documentos</span>
+            <span>{{ space.chunks }} fragmentos</span>
+            <span>{{ lastUpdatedLabel(space.last_updated_at) }}</span>
+            <span class="indexed-spaces-chip" [class]="'indexed-spaces-chip--' + runTone(space.last_run)">
+              {{ runLabel(space.last_run) }}
+            </span>
+          </div>
+
+          @if (space.last_run?.error_detail; as errorDetail) {
+            @let preview = truncateError(errorDetail);
+            <p class="indexed-spaces-alert" role="alert">
+              {{ isExpanded(space.space_key) || !preview.isTruncated ? errorDetail : preview.preview }}
+              @if (preview.isTruncated) {
+                <button
+                  mat-button
+                  type="button"
+                  class="indexed-spaces-error-toggle"
+                  (click)="toggleExpanded(space.space_key)"
+                >
+                  {{ isExpanded(space.space_key) ? 'Ver menos' : 'Ver más' }}
+                </button>
+              }
+            </p>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

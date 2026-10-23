@@ -6,6 +6,7 @@ import {
   indexingLastRunLabel,
   indexingStatusLabel,
   indexingStatusTone,
+  justFinishedIndexing,
   truncatedErrorDetail,
 } from './indexing-status-display';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
@@ -196,5 +197,42 @@ describe('truncatedErrorDetail', () => {
   it('acepta un maxLength distinto del default', () => {
     const result = truncatedErrorDetail('0123456789', 5);
     expect(result).toEqual({ preview: '01234…', isTruncated: true });
+  });
+});
+
+describe('justFinishedIndexing', () => {
+  it('false en la primera carga, sin estado anterior, aunque el actual ya sea terminal', () => {
+    expect(justFinishedIndexing(null, 'completed')).toBe(false);
+    expect(justFinishedIndexing(null, 'failed')).toBe(false);
+  });
+
+  it('false en la primera carga sin ningun estado', () => {
+    expect(justFinishedIndexing(null, null)).toBe(false);
+  });
+
+  it('true cuando pasa de running a completed', () => {
+    expect(justFinishedIndexing('running', 'completed')).toBe(true);
+  });
+
+  it('true cuando pasa de queued a failed', () => {
+    expect(justFinishedIndexing('queued', 'failed')).toBe(true);
+  });
+
+  it('false cuando sigue en curso (running a running, o queued a running)', () => {
+    expect(justFinishedIndexing('running', 'running')).toBe(false);
+    expect(justFinishedIndexing('queued', 'running')).toBe(false);
+  });
+
+  it('false cuando ya estaba en un estado terminal (no es una transicion nueva)', () => {
+    expect(justFinishedIndexing('completed', 'completed')).toBe(false);
+    expect(justFinishedIndexing('failed', 'failed')).toBe(false);
+  });
+
+  it('false cuando el anterior terminal arranca una corrida nueva (failed a queued)', () => {
+    expect(justFinishedIndexing('failed', 'queued')).toBe(false);
+  });
+
+  it('false si el anterior es un valor desconocido, no cuenta como en curso', () => {
+    expect(justFinishedIndexing('archived', 'completed')).toBe(false);
   });
 });

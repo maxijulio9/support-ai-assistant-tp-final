@@ -80,4 +80,8 @@
     <p class="indexing-tab-note">Muestra la última indexación del sistema, de cualquier proyecto.</p>
     <app-indexing-status />
   </section>
+
+  <section class="indexing-tab-section">
+    <app-indexed-spaces [lastRunStatus]="statusComponent()?.status() ?? null" />
+  </section>
 </div>

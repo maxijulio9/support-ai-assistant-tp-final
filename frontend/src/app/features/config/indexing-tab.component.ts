@@ -19,6 +19,7 @@ import { classifyFormError } from '../../shared/form-error';
 import { resolveSelectedProjectKey } from './project-selection';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { IndexingStatusComponent } from './indexing-status.component';
+import { IndexedSpacesComponent } from './indexed-spaces.component';
 
 export type IndexingTabState = 'loading' | 'error' | 'loaded';
 export type LinkedSpacesState = 'loading' | 'error' | 'loaded';
@@ -28,7 +29,7 @@ const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.'
 @Component({
   selector: 'app-indexing-tab',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, IndexingStatusComponent],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, IndexingStatusComponent, IndexedSpacesComponent],
   templateUrl: './indexing-tab.component.html',
   styleUrl: './indexing-tab.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

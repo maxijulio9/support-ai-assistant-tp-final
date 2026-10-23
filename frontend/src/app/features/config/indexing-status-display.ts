@@ -5,6 +5,14 @@ export type IndexingDisplayTone = 'progress' | 'success' | 'neutral' | 'error';
 
 export const ERROR_DETAIL_PREVIEW_LENGTH = 180;
 
+// Forma minima para indexingStatusLabel/indexingStatusTone: ambas solo leen
+// el campo status, asi que no hace falta un IndexingStatusResponse
+// completo. Permite reusarlas con la corrida de un espacio (IndexedSpaceRun
+// en indexed-spaces-display.ts), que no tiene space_keys ni contadores.
+export interface IndexingRunLike {
+  status: string;
+}
+
 export function formatIndexingTimestamp(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -14,7 +22,7 @@ export function formatIndexingTimestamp(value: string): string {
 // status === null cubre tanto "todavia no se cargo" como el 404 confirmado
 // de que nunca se disparo una indexacion ("Sin corridas"); quien llama
 // distingue ambos casos por fuera (por su propio estado de carga).
-export function indexingStatusLabel(status: IndexingStatusResponse | null): string {
+export function indexingStatusLabel(status: IndexingRunLike | null): string {
   if (!status) return 'Sin corridas';
   switch (status.status) {
     case 'queued':
@@ -30,7 +38,7 @@ export function indexingStatusLabel(status: IndexingStatusResponse | null): stri
   }
 }
 
-export function indexingStatusTone(status: IndexingStatusResponse | null): IndexingDisplayTone {
+export function indexingStatusTone(status: IndexingRunLike | null): IndexingDisplayTone {
   if (!status) return 'neutral';
   switch (status.status) {
     case 'queued':
@@ -87,6 +95,17 @@ export function buildOptimisticIndexingStatus(
     total_documents: null,
     error_detail: null,
   };
+}
+
+// true solo cuando el estado anterior estaba en curso (queued o running) y
+// el actual ya es terminal (completed o failed): una corrida que recien
+// termino. previousStatus null (primera carga, todavia no se observo
+// ningun estado) siempre da false, para no disparar una recarga de mas
+// apenas se monta la pantalla.
+export function justFinishedIndexing(previousStatus: string | null, currentStatus: string | null): boolean {
+  const wasInProgress = previousStatus === 'queued' || previousStatus === 'running';
+  const isTerminal = currentStatus === 'completed' || currentStatus === 'failed';
+  return wasInProgress && isTerminal;
 }
 
 // error_detail puede llegar con hasta 2000 caracteres, texto tecnico: se
