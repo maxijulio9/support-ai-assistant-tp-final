@@ -2,6 +2,7 @@
 # Contiene la clase WebhookReceiver, responsable de la validación, normalización y despacho de eventos recibidos desde JSM vía webhook
 
 import time
+from datetime import datetime, timezone
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, NormalizedEvent
 from app.core.redis_client import get_redis
 from app.core.config import settings
@@ -57,6 +58,7 @@ class WebhookReceiver:
             reporter_email=fields.reporter.emailAddress if fields.reporter else None,
             request_type=request_type,
             created_at=fields.created,
+            received_at=datetime.now(timezone.utc).isoformat(),
             comment_body=comment_body,
             comment_author_id=comment_author_id,
         )
