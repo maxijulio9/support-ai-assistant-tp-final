@@ -320,7 +320,7 @@ def test_status_repository_returns_the_id(mock_get_db):
     moment = datetime(2026, 10, 22, 21, 40, tzinfo=timezone.utc)
     db.execute.return_value.fetchone.return_value = SimpleNamespace(
         id="run-1", space_keys=["TA"], status="running", total_documents=7, documents_processed=3,
-        chunks_generated=9, error_detail=None, started_at=moment, updated_at=moment,
+        chunks_generated=9, error_detail=None, started_at=moment, updated_at=moment, is_stale=False,
     )
     mock_get_db.return_value = iter([db])
 
