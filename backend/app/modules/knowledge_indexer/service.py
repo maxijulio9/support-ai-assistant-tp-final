@@ -43,11 +43,24 @@ class KnowledgeIndexer:
 
 
     
+    # avisa el progreso a quien lo pidio, un fallo al infomar nunca debe interrumpir la indexacion
+    def _notify(self, on_progress, **progress):
+        if on_progress is None:
+            return
+
+        try:
+            on_progress(**progress)
+        except Exception as e:
+            logger.warning(f"no se pudo informar el progreso de la indexacion: {e}")
+
     # recorre todos los spaces indicados, indexa cada pagina de punta a punta:
     #extrae, limpia, divide en chunks, genera embeddings y persiste en la bd vectorial    def index_spaces(self, space_keys: list[str]):
-    def index_spaces(self, space_keys: list[str]):
+    def index_spaces(self, space_keys: list[str], on_progress=None):
         paginas = self.extract_pages(space_keys)
+        self._notify(on_progress, total_documents=len(paginas))
         db = next(get_db())
+        processed = 0
+        generated = 0
 
         try:
             for pagina in paginas:
@@ -57,6 +70,10 @@ class KnowledgeIndexer:
                 for i, chunk_texto in enumerate(chunks):
                     embedding = self.embedding_client.generate_embedding(chunk_texto)
                     self.storage.save_chunk(db, pagina, chunk_texto, embedding, i, total_chunks)
+
+                processed += 1
+                generated += total_chunks
+                self._notify(on_progress, documents_processed=processed, chunks_generated=generated)
 
             db.commit()
             logger.info(f"indexacion completa: {len(paginas)} paginas procesadas")
