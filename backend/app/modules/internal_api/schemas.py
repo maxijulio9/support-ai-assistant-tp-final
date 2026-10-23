@@ -283,17 +283,20 @@ class StartIndexingRequest(BaseModel):
 class StartIndexingResponse(BaseModel):
     """Response de confirmacion, la indexacion corre en background."""
     status: str = Field(description="siempre 'queued', la indexacion se encola para el worker")
+    id: str = Field(description="id de la corrida, la fila ya existe aunque el worker todavia no la haya tomado, es el mismo id que devuelve GET /api/indexing/status para esa corrida")
+    started_at: str = Field(description="marca de tiempo del pedido, el momento en que se encolo la corrida")
 
 
 class IndexingStatusResponse(BaseModel):
     """Response con el estado del ultimo trabajo de indexacion, para el polling del dashboard (CU31)."""
+    id: str = Field(description="id de la corrida, es el que devuelve POST /api/indexing/start al encolarla")
     space_keys: list[str] = Field(description="spaces que cubrio este trabajo de indexacion")
-    status: str = Field(description="estado del trabajo, por ejemplo running, completed o failed")
-    total_documents: int | None = Field(default=None, description="cantidad total de documentos a procesar, si ya se conoce")
+    status: str = Field(description="estado del trabajo: queued si esta encolado y el worker todavia no lo tomo, running, completed o failed")
+    total_documents: int | None = Field(default=None, description="cantidad total de documentos a procesar, es null hasta que termina la extraccion de las paginas")
     documents_processed: int = Field(description="cantidad de documentos ya procesados")
     chunks_generated: int = Field(description="cantidad de chunks generados hasta el momento")
     error_detail: str | None = Field(default=None, description="detalle del error, si el trabajo fallo")
-    started_at: str = Field(description="marca de tiempo de inicio del trabajo")
+    started_at: str = Field(description="marca de tiempo del pedido de la corrida, el momento en que se encolo")
     updated_at: str = Field(description="marca de tiempo de la ultima actualizacion del trabajo")
 
 class ResolutionChannelCount(BaseModel):
