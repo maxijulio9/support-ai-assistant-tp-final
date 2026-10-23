@@ -15,7 +15,10 @@
   }
 
   @if (state() === 'loaded') {
-    <p class="project-categories-warning">Las categorías guardadas no se pueden quitar por ahora.</p>
+    <p class="project-categories-hint">
+      Las categorías que destildes dejan de ofrecerse para clasificar tickets nuevos. Los tickets ya clasificados no
+      cambian.
+    </p>
 
     @if (fields().length === 0) {
       <p class="project-categories-empty">No hay campos de selección en JSM.</p>
@@ -51,22 +54,20 @@
         <ul class="project-categories-list">
           @for (option of options(); track option) {
             <li class="project-categories-row">
-              <mat-checkbox
-                [checked]="isLocked(option) || isNewlySelected(option)"
-                [disabled]="isLocked(option)"
-                (change)="toggleOption(option, $event.checked)"
-              >
+              <mat-checkbox [checked]="isPendingActive(option)" (change)="toggleOption(option, $event.checked)">
                 {{ option }}
               </mat-checkbox>
-              @if (isLocked(option)) {
-                <span class="project-categories-locked">
-                  <mat-icon aria-hidden="true">lock</mat-icon>
-                  Guardada
-                </span>
-              }
             </li>
           }
         </ul>
+
+        @if (preservedMessage()) {
+          <p class="project-categories-preserved">{{ preservedMessage() }}</p>
+        }
+
+        @if (blockedReason()) {
+          <p class="project-categories-blocked" role="alert">{{ blockedReason() }}</p>
+        }
 
         @if (submitErrorMessage()) {
           <p class="project-categories-submit-error" role="alert">{{ submitErrorMessage() }}</p>

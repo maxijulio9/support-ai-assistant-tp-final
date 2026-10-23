@@ -3,11 +3,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
+import {
+  categoriesHaveChanges,
+  categoriesOutsideFieldMessage,
+  categoriesOutsideOptions,
+  categorySaveBlockedReason,
+  categorySaveSuccessMessage,
+  mergedActiveCategories,
+} from './project-categories-form';
 import { JsmField } from '../../api/models/jsm-field';
 
 export type ProjectCategoriesState = 'loading' | 'error' | 'loaded';
@@ -18,7 +25,7 @@ const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.'
 @Component({
   selector: 'app-project-categories',
   standalone: true,
-  imports: [MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatSelectModule],
   templateUrl: './project-categories.component.html',
   styleUrl: './project-categories.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,21 +49,47 @@ export class ProjectCategoriesComponent {
 
   readonly fields = signal<JsmField[]>([]);
 
-  // Nombres de categoria ya vinculados y activos para este proyecto: por la
-  // limitacion conocida del backend (solo agrega, no hay API para desactivar
-  // ni quitar), estos quedan bloqueados en el checklist, no se destildan.
-  private readonly savedCategoryNames = signal<ReadonlySet<string>>(new Set());
+  // Nombres de categoria activos segun el ultimo guardado o carga: la
+  // referencia contra la que se compara para saber si hay cambios sin
+  // guardar, y a lo que vuelve el set de trabajo si el guardado falla al
+  // refrescar.
+  private readonly activeNamesAtLoad = signal<ReadonlySet<string>>(new Set());
+
+  // Set de trabajo: arranca igual a activeNamesAtLoad en cada carga o
+  // guardado exitoso, y nunca se reinicia al cambiar de campo (solo al
+  // cambiar de proyecto), para no perder un toggle hecho bajo otro campo.
+  private readonly pendingActiveNames = signal<ReadonlySet<string>>(new Set());
 
   readonly selectedFieldId = signal<string | null>(null);
   readonly optionsState = signal<FieldOptionsState>('idle');
   readonly optionsErrorMessage = signal<string | null>(null);
   readonly options = signal<string[]>([]);
-  private readonly newlySelected = signal<ReadonlySet<string>>(new Set());
 
   readonly submitting = signal(false);
   readonly submitErrorMessage = signal<string | null>(null);
 
-  readonly canSubmit = computed(() => this.newlySelected().size > 0 && !this.submitting());
+  // Categorias activas en el set de trabajo que no pertenecen a las
+  // opciones del campo elegido: no tienen fila propia, pero se preservan
+  // igual al guardar (ver mergedActiveCategories en onSubmit).
+  private readonly preservedNames = computed(() =>
+    categoriesOutsideOptions(this.pendingActiveNames(), this.options()),
+  );
+  readonly preservedMessage = computed(() => categoriesOutsideFieldMessage(this.preservedNames().length));
+
+  private readonly hasChanges = computed(() =>
+    categoriesHaveChanges(this.pendingActiveNames(), this.activeNamesAtLoad()),
+  );
+
+  readonly canSubmit = computed(
+    () => this.hasChanges() && this.pendingActiveNames().size > 0 && !this.submitting(),
+  );
+
+  // Solo se muestra si el admin ya destildo todo lo que habia activo: un
+  // proyecto que todavia no tiene ninguna categoria activa al cargar no
+  // muestra este mensaje hasta que haya un cambio real.
+  readonly blockedReason = computed(() =>
+    this.hasChanges() ? categorySaveBlockedReason(this.pendingActiveNames()) : null,
+  );
 
   constructor() {
     this.fetchFields();
@@ -72,17 +105,12 @@ export class ProjectCategoriesComponent {
     if (this.detailState() === 'error') this.fetchDetail(this.projectKey());
   }
 
-  isLocked(option: string): boolean {
-    return this.savedCategoryNames().has(option);
-  }
-
-  isNewlySelected(option: string): boolean {
-    return this.newlySelected().has(option);
+  isPendingActive(option: string): boolean {
+    return this.pendingActiveNames().has(option);
   }
 
   onSelectField(fieldId: string): void {
     this.selectedFieldId.set(fieldId);
-    this.newlySelected.set(new Set());
     this.optionsState.set('loading');
     this.optionsErrorMessage.set(null);
 
@@ -108,9 +136,7 @@ export class ProjectCategoriesComponent {
   }
 
   toggleOption(option: string, checked: boolean): void {
-    if (this.isLocked(option)) return;
-
-    this.newlySelected.update((current) => {
+    this.pendingActiveNames.update((current) => {
       const next = new Set(current);
       if (checked) {
         next.add(option);
@@ -127,17 +153,14 @@ export class ProjectCategoriesComponent {
     this.submitting.set(true);
     this.submitErrorMessage.set(null);
 
-    // Union de lo ya guardado mas lo nuevo elegido: hoy es inocuo reenviar
-    // lo ya guardado (el backend solo agrega y lo ya vinculado no se
-    // reactiva ni se duplica), y el dia que el backend trate la lista como
-    // el conjunto activo completo, esto ya queda correcto sin tocar la pantalla.
-    const categories = [...new Set([...this.savedCategoryNames(), ...this.newlySelected()])];
+    const checkedInCurrentField = this.options().filter((option) => this.pendingActiveNames().has(option));
+    const categories = mergedActiveCategories(checkedInCurrentField, this.preservedNames());
 
     this.configService
       .configureCategories(this.projectKey(), categories)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.refreshAfterSave(),
+        next: (response) => this.refreshAfterSave(response.categories_deactivated),
         error: (error: unknown) => {
           this.submitting.set(false);
           const result = classifyFormError(error);
@@ -146,18 +169,19 @@ export class ProjectCategoriesComponent {
       });
   }
 
-  private refreshAfterSave(): void {
+  private refreshAfterSave(categoriesDeactivated: number): void {
     this.configService
       .getProjectConfiguration(this.projectKey())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (detail) => {
           this.submitting.set(false);
-          this.savedCategoryNames.set(
-            new Set(detail.categories.filter((category) => category.is_active).map((category) => category.name)),
+          const activeNames = new Set(
+            detail.categories.filter((category) => category.is_active).map((category) => category.name),
           );
-          this.newlySelected.set(new Set());
-          this.snackBar.open('Categorías guardadas', 'Cerrar', { duration: 4000 });
+          this.activeNamesAtLoad.set(activeNames);
+          this.pendingActiveNames.set(activeNames);
+          this.snackBar.open(categorySaveSuccessMessage(categoriesDeactivated), 'Cerrar', { duration: 4000 });
         },
         error: () => {
           this.submitting.set(false);
@@ -192,16 +216,17 @@ export class ProjectCategoriesComponent {
     this.selectedFieldId.set(null);
     this.options.set([]);
     this.optionsState.set('idle');
-    this.newlySelected.set(new Set());
 
     this.configService
       .getProjectConfiguration(projectKey)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (detail) => {
-          this.savedCategoryNames.set(
-            new Set(detail.categories.filter((category) => category.is_active).map((category) => category.name)),
+          const activeNames = new Set(
+            detail.categories.filter((category) => category.is_active).map((category) => category.name),
           );
+          this.activeNamesAtLoad.set(activeNames);
+          this.pendingActiveNames.set(activeNames);
           this.detailState.set('loaded');
         },
         error: (error: unknown) => {
