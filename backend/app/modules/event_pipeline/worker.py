@@ -28,6 +28,7 @@ async def process_issue_created(arq_context, event_data: dict):
         created_at=event_data.get("created_at"),
         comment_body=event_data.get("comment_body"),
         comment_author_id=event_data.get("comment_author_id"),
+        received_at=event_data.get("received_at"),
     )
 
     result = await orchestrator.process_event(event)
