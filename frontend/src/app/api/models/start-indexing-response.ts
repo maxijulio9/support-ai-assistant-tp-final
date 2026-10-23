@@ -8,6 +8,16 @@
 export interface StartIndexingResponse {
 
   /**
+   * id de la corrida, la fila ya existe aunque el worker todavia no la haya tomado, es el mismo id que devuelve GET /api/indexing/status para esa corrida
+   */
+  id: string;
+
+  /**
+   * marca de tiempo del pedido, el momento en que se encolo la corrida
+   */
+  started_at: string;
+
+  /**
    * siempre 'queued', la indexacion se encola para el worker
    */
   status: string;

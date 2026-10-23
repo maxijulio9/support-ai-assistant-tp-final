@@ -8,9 +8,14 @@
 export interface ConfigureCategoriesResponse {
 
   /**
-   * cantidad de categorias que quedaron vinculadas al proyecto
+   * cantidad de categorias que quedaron activas en el proyecto, es la cantidad de la lista sin repetidos
    */
   categories_configured: number;
+
+  /**
+   * cantidad de categorias que estaban activas y se desactivaron en esta llamada, sin borrarse
+   */
+  categories_deactivated: number;
 
   /**
    * resultado de la operacion, 'ok' si salio bien

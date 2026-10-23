@@ -8,7 +8,7 @@
 export interface ConfigureCategoriesRequest {
 
   /**
-   * valores crudos de las categorias en JSM, tal cual, sin modificar
+   * valores crudos de las categorias en JSM, tal cual, sin modificar, la lista es el conjunto activo del proyecto: las que vienen se vinculan o se reactivan, las vinculadas que no vienen se desactivan sin borrarse, una lista vacia o con nombres en blanco se rechaza con 400
    */
   categories: Array<string>;
 }

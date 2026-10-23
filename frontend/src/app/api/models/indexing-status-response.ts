@@ -18,9 +18,14 @@ export interface IndexingStatusResponse {
   documents_processed: number;
 
   /**
-   * detalle del error, si el trabajo fallo
+   * detalle del error tal cual lo informo la excepcion, texto tecnico de hasta 2000 caracteres, una corrida abandonada informa que no llego a iniciarse o que se interrumpio antes de terminar
    */
   error_detail?: (string | null);
+
+  /**
+   * id de la corrida, es el que devuelve POST /api/indexing/start al encolarla
+   */
+  id: string;
 
   /**
    * spaces que cubrio este trabajo de indexacion
@@ -28,17 +33,17 @@ export interface IndexingStatusResponse {
   space_keys: Array<string>;
 
   /**
-   * marca de tiempo de inicio del trabajo
+   * marca de tiempo del pedido de la corrida, el momento en que se encolo
    */
   started_at: string;
 
   /**
-   * estado del trabajo, por ejemplo running, completed o failed
+   * estado del trabajo: queued si esta encolado y el worker todavia no lo tomo, running, completed o failed, una corrida en queued o running sin ninguna actualizacion desde hace 10 minutos se informa como failed
    */
   status: string;
 
   /**
-   * cantidad total de documentos a procesar, si ya se conoce
+   * cantidad total de documentos a procesar, es null hasta que termina la extraccion de las paginas
    */
   total_documents?: (number | null);
 
