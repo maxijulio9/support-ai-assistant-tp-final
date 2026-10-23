@@ -1,6 +1,7 @@
 # M6: InteractionLogger, persiste el resultado del pipeline en la bd relacional
 
 import logging
+from datetime import datetime, timezone
 from sqlalchemy import text
 from app.core.database import get_db
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
@@ -249,3 +250,121 @@ class InteractionLogger:
 
         finally:
             db.close()
+
+    # guarda la hora real de entrada del evnto al sistema y la de creacion del ticket en jsm, para medir los tiempos de respuesta
+    # received_at pisa el valor por defecto de system_event, que se completaba al guardar el analisis y no cuando entra el webhook
+    # la fecha de creacion del ticket se guarda una sola vez, y un fallo aca nunca interrumpe el pipeline
+    def record_event_times(self, interaction_id: str | None, received_at: str | None, jira_created_at: str | None):
+        if not interaction_id:
+            return
+
+        received = self._parse_timestamp(received_at)
+        created = self._parse_timestamp(jira_created_at)
+
+        if received is None and created is None:
+            return
+
+        db = next(get_db())
+        try:
+            if received is not None:
+                db.execute(text("""
+                    UPDATE system_event
+                    SET received_at = :received_at
+                    WHERE id = (SELECT system_event_id FROM interaction WHERE id = :interaction_id)
+                """), {"interaction_id": interaction_id, "received_at": received})
+
+            if created is not None:
+                db.execute(text("""
+                    UPDATE ticket
+                    SET jira_created_at = COALESCE(jira_created_at, :jira_created_at)
+                    WHERE id = (SELECT ticket_id FROM interaction WHERE id = :interaction_id)
+                """), {"interaction_id": interaction_id, "jira_created_at": created})
+
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al guardar las horas del evento de la interaccion {interaction_id}: {e}")
+
+        finally:
+            db.close()
+
+    # marca la hora del primer comentario publico de la interaccion, solo la primera vez
+    # con resolved en true tambien marca la resolucion, que es lo que pasa cuando se publica la respuesta automatica
+    def mark_first_response(self, interaction_id: str | None, resolved: bool):
+        if not interaction_id:
+            return
+
+        db = next(get_db())
+        try:
+            db.execute(text("""
+                UPDATE interaction
+                SET first_response_at = COALESCE(first_response_at, NOW()),
+                    resolved_at = CASE WHEN :resolved THEN COALESCE(resolved_at, NOW()) ELSE resolved_at END
+                WHERE id = :interaction_id
+            """), {"interaction_id": interaction_id, "resolved": resolved})
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al marcar la primera respuesta de la interaccion {interaction_id}: {e}")
+
+        finally:
+            db.close()
+
+    # marca la hora de resolucion de la interaccion, solo la primera vez, por ejemplo cuando el cliente cierra la conversacion
+    def mark_resolved(self, interaction_id: str | None):
+        if not interaction_id:
+            return
+
+        db = next(get_db())
+        try:
+            db.execute(
+                text("UPDATE interaction SET resolved_at = COALESCE(resolved_at, NOW()) WHERE id = :interaction_id"),
+                {"interaction_id": interaction_id},
+            )
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al marcar la resolucion de la interaccion {interaction_id}: {e}")
+
+        finally:
+            db.close()
+
+    # guarda el tiempo que tardo el sistema en procesar la interaccion, desde que arranca el pipeline hasta que se guarda la decision
+    # no incluye la espera en la cola ni el debounce de los comentarios
+    def record_processing_time(self, interaction_id: str | None, processing_time_ms: int):
+        if not interaction_id:
+            return
+
+        db = next(get_db())
+        try:
+            db.execute(
+                text("UPDATE interaction SET processing_time_ms = :processing_time_ms WHERE id = :interaction_id"),
+                {"interaction_id": interaction_id, "processing_time_ms": processing_time_ms},
+            )
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al guardar el tiempo de procesamiento de la interaccion {interaction_id}: {e}")
+
+        finally:
+            db.close()
+
+    # convierte una fecha que llega como texto, con o sin zona horaria, en un datetime con zona, devuelve none si no se puede leer
+    def _parse_timestamp(self, value: str | None) -> datetime | None:
+        if not value:
+            return None
+
+        try:
+            parsed = datetime.fromisoformat(value)
+        except ValueError:
+            return None
+
+        if parsed.tzinfo is None:
+            # sin zona horaria se asume utc
+            return parsed.replace(tzinfo=timezone.utc)
+
+        return parsed
