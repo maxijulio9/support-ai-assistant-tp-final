@@ -81,6 +81,7 @@ class KnowledgeIndexer:
         except Exception as e:
             db.rollback()
             logger.error(f"error durante la indexacion: {e}")
+            raise
 
         finally:
             db.close()
