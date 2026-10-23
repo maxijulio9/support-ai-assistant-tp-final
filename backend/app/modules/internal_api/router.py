@@ -392,11 +392,11 @@ def configure_spaces(project_key: str, request: ConfigureSpacesRequest, admin: A
 @router.post("/api/indexing/start", response_model=StartIndexingResponse, status_code=202)
 async def start_indexing(request: StartIndexingRequest, admin: AppUser = Depends(require_admin)):
     try:
-        await _indexing_trigger_service.start_indexing(request.space_keys)
+        run = await _indexing_trigger_service.start_indexing(request.space_keys)
     except Exception:
         raise HTTPException(status_code=503, detail="No se pudo encolar la indexacion")
 
-    return StartIndexingResponse(status="queued")
+    return StartIndexingResponse(status="queued", id=run["id"], started_at=run["started_at"])
 
 # consulta el estado del ultimo trabajo de indexacion
 @router.get("/api/indexing/status", response_model=IndexingStatusResponse, responses={404: {"model": ErrorResponse, "description": "Todavia no se disparo ninguna indexacion"}})
