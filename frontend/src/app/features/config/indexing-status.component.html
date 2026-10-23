@@ -38,24 +38,25 @@
       <button mat-stroked-button type="button" (click)="refresh()">Actualizar estado</button>
     </div>
 
-    @if (awaitingNewRun()) {
-      @if (awaitingTimedOut()) {
-        <p class="indexing-status-timeout" role="alert">
-          No se detectó la nueva indexación. Actualizá el estado manualmente.
+    @if (status(); as data) {
+      @if (errorPreview(); as preview) {
+        <p class="indexing-status-alert" role="alert">
+          {{ errorExpanded() || !preview.isTruncated ? preview.full : preview.preview }}
+          @if (preview.isTruncated) {
+            <button mat-button type="button" class="indexing-status-error-toggle" (click)="toggleErrorExpanded()">
+              {{ errorExpanded() ? 'Ver menos' : 'Ver más' }}
+            </button>
+          }
         </p>
-      }
-    } @else if (status(); as data) {
-      @if (data.error_detail) {
-        <p class="indexing-status-alert" role="alert">{{ data.error_detail }}</p>
       }
 
       @if (showCompletedNote()) {
         <p class="indexing-status-note">Finalizada. El resultado todavía no se verifica.</p>
       }
 
-      @if (isOrphaned()) {
-        <p class="indexing-status-note indexing-status-note--warning">
-          Esta indexación figura en curso desde hace mucho tiempo y puede haberse interrumpido.
+      @if (showFailedCountersNote()) {
+        <p class="indexing-status-note">
+          Los contadores indican hasta dónde llegó la corrida, no necesariamente lo que quedó guardado.
         </p>
       }
 
@@ -80,8 +81,8 @@
           <div class="indexing-status-row">
             <dt>Documentos procesados</dt>
             <dd>
-              @if (showCountersAsDash()) {
-                -
+              @if (showNoDataLabel()) {
+                Sin datos
               } @else {
                 {{ data.documents_processed }}
                 @if (data.total_documents !== null) {
@@ -93,8 +94,8 @@
           <div class="indexing-status-row">
             <dt>Fragmentos generados</dt>
             <dd>
-              @if (showCountersAsDash()) {
-                -
+              @if (showNoDataLabel()) {
+                Sin datos
               } @else {
                 {{ data.chunks_generated }}
               }

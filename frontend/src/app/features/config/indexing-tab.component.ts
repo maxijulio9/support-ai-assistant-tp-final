@@ -98,17 +98,21 @@ export class IndexingTabComponent {
   onStart(): void {
     if (!this.canStart()) return;
 
+    // Se lee antes de vaciar selectedSpaceKeys: notifyStarted la necesita
+    // para completar el estado optimista (ver buildOptimisticIndexingStatus).
+    const spaceKeys = this.selectedSpaceKeys();
+
     this.submitting.set(true);
     this.submitErrorMessage.set(null);
 
     this.configService
-      .startIndexing(this.selectedSpaceKeys())
+      .startIndexing(spaceKeys)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.submitting.set(false);
           this.selectedSpaceKeys.set([]);
-          this.statusComponent()?.notifyStarted();
+          this.statusComponent()?.notifyStarted(response, spaceKeys);
         },
         error: (error: unknown) => {
           this.submitting.set(false);

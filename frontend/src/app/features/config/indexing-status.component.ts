@@ -7,11 +7,14 @@ import { Subscription, interval } from 'rxjs';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
+import { StartIndexingResponse } from '../../api/models/start-indexing-response';
 import {
+  buildOptimisticIndexingStatus,
   formatIndexingTimestamp,
+  hasNoIndexingData,
   indexingStatusLabel,
   indexingStatusTone,
-  isOrphanedIndexingStatus,
+  truncatedErrorDetail,
 } from './indexing-status-display';
 
 export type IndexingStatusState = 'loading' | 'error' | 'empty' | 'loaded';
@@ -36,70 +39,57 @@ export class IndexingStatusComponent {
   readonly loadErrorMessage = signal<string | null>(null);
   readonly status = signal<IndexingStatusResponse | null>(null);
 
-  // El status /api/indexing/status devuelve la corrida anterior hasta que el
-  // worker crea la nueva, y no hay un id de corrida para distinguirlas. Tras
-  // un start exitoso estos dos signals cubren esa ventana: se sigue
-  // polleando sin aplicar la logica normal hasta ver un started_at mas
-  // nuevo que el guardado antes del POST.
-  readonly awaitingNewRun = signal(false);
-  readonly awaitingTimedOut = signal(false);
-  // Tope alcanzado con la corrida nueva ya detectada (sigue running).
+  // Tope alcanzado sin llegar a un estado terminal.
   readonly pollingTimedOut = signal(false);
 
-  private baselineStartedAt: string | null = null;
+  // Se reinicia cuando cambia la corrida mostrada (id distinto), para no
+  // dejar expandido el detalle de una corrida vieja al mostrar otra.
+  readonly errorExpanded = signal(false);
+  private lastSeenRunId: string | null = null;
 
   readonly isInProgress = computed(() => {
-    if (this.awaitingNewRun()) return true;
     const status = this.status();
-    return status !== null && status.status === 'running' && !isOrphanedIndexingStatus(status);
-  });
-
-  readonly isOrphaned = computed(() => {
-    if (this.awaitingNewRun()) return false;
-    const status = this.status();
-    return status !== null && isOrphanedIndexingStatus(status);
+    return status !== null && (status.status === 'running' || status.status === 'queued');
   });
 
   readonly statusLabel = computed(() => {
-    if (this.awaitingNewRun()) return 'Iniciando...';
-    // null solo puede pasar antes del primer load, que esta pantalla nunca
-    // llega a renderizar (el chip vive dentro de @if (state() === 'loaded')).
     const status = this.status();
     return status ? indexingStatusLabel(status) : '';
   });
 
-  readonly statusTone = computed(() =>
-    this.awaitingNewRun() ? 'progress' : indexingStatusTone(this.status()),
-  );
+  readonly statusTone = computed(() => indexingStatusTone(this.status()));
 
   // Nota corta para dejar en claro que completed no confirma un resultado
   // correcto, solo que el worker termino sin error.
-  readonly showCompletedNote = computed(
-    () => !this.awaitingNewRun() && this.status()?.status === 'completed',
-  );
+  readonly showCompletedNote = computed(() => this.status()?.status === 'completed');
 
-  readonly updatedAtLabel = computed(() => {
+  // En failed, los contadores indican hasta donde llego la corrida, no lo
+  // que quedo guardado. No se muestra si ya se esta mostrando "Sin datos"
+  // (corridas viejas, sin contadores que interpretar).
+  readonly showFailedCountersNote = computed(() => {
     const status = this.status();
-    return status && status.status !== 'running' ? 'Finalizó' : 'Actualizado';
+    return status !== null && status.status === 'failed' && !hasNoIndexingData(status);
   });
+
+  readonly updatedAtLabel = computed(() => (this.isInProgress() ? 'Actualizado' : 'Finalizó'));
 
   readonly updatedAtDisplay = computed(() => {
     const status = this.status();
-    if (!status || status.status === 'running') return '-';
+    if (!status || this.isInProgress()) return '-';
     return formatIndexingTimestamp(status.updated_at);
   });
 
-  // Completed con los dos contadores en 0 es un resultado valido (por
-  // ejemplo un espacio sin contenido nuevo), no "no se indexo nada": se
-  // muestra con un guion en vez de "0" para no sugerir lo segundo.
-  readonly showCountersAsDash = computed(() => {
+  // Corridas viejas, de antes de registrar estos datos: en vez de "0" (que
+  // sugeriria que no se proceso nada), se muestra como "Sin datos".
+  readonly showNoDataLabel = computed(() => {
     const status = this.status();
-    return (
-      status !== null &&
-      status.status === 'completed' &&
-      status.documents_processed === 0 &&
-      status.chunks_generated === 0
-    );
+    return status !== null && hasNoIndexingData(status);
+  });
+
+  readonly errorPreview = computed(() => {
+    const detail = this.status()?.error_detail;
+    if (!detail) return null;
+    return { full: detail, ...truncatedErrorDetail(detail) };
   });
 
   private pollSubscription: Subscription | null = null;
@@ -114,14 +104,17 @@ export class IndexingStatusComponent {
     this.fetchStatus();
   }
 
-  // Lo llama el padre justo despues de un start exitoso. El estado actual
-  // (si existia) todavia no se toco desde antes del POST, asi que leerlo
-  // aca equivale a guardarlo "antes" de iniciar la corrida nueva.
-  notifyStarted(): void {
-    this.baselineStartedAt = this.status()?.started_at ?? null;
-    this.awaitingNewRun.set(true);
-    this.awaitingTimedOut.set(false);
+  toggleErrorExpanded(): void {
+    this.errorExpanded.update((value) => !value);
+  }
+
+  // Lo llama el padre justo despues de un start exitoso. La fila de la
+  // corrida nueva ya existe al responder el POST, asi que se muestra de
+  // una con lo que trae esa respuesta, y enseguida se pide el GET real.
+  notifyStarted(response: StartIndexingResponse, spaceKeys: string[]): void {
     this.pollingTimedOut.set(false);
+    this.applyStatus(buildOptimisticIndexingStatus(response, spaceKeys));
+    this.state.set('loaded');
     this.fetchStatus();
   }
 
@@ -148,7 +141,6 @@ export class IndexingStatusComponent {
         error: (error: unknown) => {
           if (error instanceof HttpErrorResponse && error.status === 404) {
             this.stopPolling();
-            this.awaitingNewRun.set(false);
             this.status.set(null);
             this.state.set('empty');
             return;
@@ -157,7 +149,6 @@ export class IndexingStatusComponent {
           // panel que ya se esta mostrando; el proximo ciclo lo reintenta.
           if (silent) return;
           this.stopPolling();
-          this.awaitingNewRun.set(false);
           const result = classifyFormError(error);
           this.loadErrorMessage.set(result.message ?? GENERIC_ERROR_MESSAGE);
           this.state.set('error');
@@ -165,35 +156,31 @@ export class IndexingStatusComponent {
       });
   }
 
+  // Lo que devuelve el GET siempre se muestra tal cual, sea la misma
+  // corrida, una mas nueva, o cualquier otra: no hay ninguna comparacion
+  // contra un estado anterior.
   private handleStatus(status: IndexingStatusResponse): void {
-    this.status.set(status);
+    this.applyStatus(status);
     this.state.set('loaded');
 
-    if (this.awaitingNewRun()) {
-      const isNewRun = this.baselineStartedAt === null || this.isNewer(status.started_at, this.baselineStartedAt);
-      if (!isNewRun) {
-        // sigue siendo la corrida vieja: no se aplica la logica normal
-        // todavia, solo se sigue esperando con el mismo intervalo.
-        this.ensurePolling();
-        return;
-      }
-      this.awaitingNewRun.set(false);
-      this.awaitingTimedOut.set(false);
-      // nueva ventana de 5 minutos para seguir esta corrida recien detectada.
-      this.pollDeadline = Date.now() + MAX_POLL_DURATION_MS;
-    }
-
-    if (status.status === 'running' && !isOrphanedIndexingStatus(status)) {
+    if (status.status === 'running' || status.status === 'queued') {
       this.ensurePolling();
     } else {
       this.stopPolling();
     }
   }
 
-  private isNewer(candidate: string, baseline: string): boolean {
-    return new Date(candidate).getTime() > new Date(baseline).getTime();
+  private applyStatus(status: IndexingStatusResponse): void {
+    if (status.id !== this.lastSeenRunId) {
+      this.errorExpanded.set(false);
+    }
+    this.lastSeenRunId = status.id;
+    this.status.set(status);
   }
 
+  // Tope generico de "no pollear para siempre": sin relacion con detectar
+  // una corrida nueva. Al cortarse, el boton "Actualizar estado" del
+  // encabezado sigue disponible para consultar a mano.
   private ensurePolling(): void {
     if (this.pollSubscription) return;
 
@@ -203,13 +190,8 @@ export class IndexingStatusComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         if (Date.now() >= this.pollDeadline) {
-          const wasAwaiting = this.awaitingNewRun();
           this.stopPolling();
-          if (wasAwaiting) {
-            this.awaitingTimedOut.set(true);
-          } else {
-            this.pollingTimedOut.set(true);
-          }
+          this.pollingTimedOut.set(true);
           return;
         }
         this.fetchStatus();

@@ -50,14 +50,15 @@
   margin: 0 0 var(--app-space-sm);
 }
 
+.indexing-status-error-toggle {
+  margin-left: var(--app-space-xs);
+  vertical-align: baseline;
+}
+
 .indexing-status-note {
   font: var(--app-text-secondary);
   color: var(--app-color-text-secondary);
   margin: var(--app-space-xs) 0 var(--app-space-sm);
-}
-
-.indexing-status-note--warning {
-  color: var(--app-color-warning);
 }
 
 .indexing-status-details {

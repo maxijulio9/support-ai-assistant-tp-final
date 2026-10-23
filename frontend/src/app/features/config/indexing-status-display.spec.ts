@@ -1,12 +1,15 @@
 import {
+  ERROR_DETAIL_PREVIEW_LENGTH,
+  buildOptimisticIndexingStatus,
   formatIndexingTimestamp,
+  hasNoIndexingData,
   indexingLastRunLabel,
   indexingStatusLabel,
   indexingStatusTone,
-  isOrphanedIndexingStatus,
-  ORPHAN_RUN_THRESHOLD_MS,
+  truncatedErrorDetail,
 } from './indexing-status-display';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
+import { StartIndexingResponse } from '../../api/models/start-indexing-response';
 
 function statusResponse(overrides: Partial<IndexingStatusResponse> = {}): IndexingStatusResponse {
   return {
@@ -23,76 +26,175 @@ function statusResponse(overrides: Partial<IndexingStatusResponse> = {}): Indexi
   };
 }
 
-describe('indexing-status-display', () => {
-  describe('indexingStatusLabel', () => {
-    it('rotula "Sin corridas" cuando no hay estado', () => {
-      expect(indexingStatusLabel(null)).toBe('Sin corridas');
-    });
-
-    it('rotula "En curso" para running', () => {
-      expect(indexingStatusLabel(statusResponse({ status: 'running' }))).toBe('En curso');
-    });
-
-    it('rotula "Finalizada" para completed', () => {
-      expect(indexingStatusLabel(statusResponse({ status: 'completed' }))).toBe('Finalizada');
-    });
-
-    it('rotula "Fallida" para failed', () => {
-      expect(indexingStatusLabel(statusResponse({ status: 'failed' }))).toBe('Fallida');
-    });
+describe('indexingStatusLabel', () => {
+  it('rotula "Sin corridas" cuando no hay estado', () => {
+    expect(indexingStatusLabel(null)).toBe('Sin corridas');
   });
 
-  describe('indexingStatusTone', () => {
-    it('es neutro cuando no hay estado', () => {
-      expect(indexingStatusTone(null)).toBe('neutral');
-    });
-
-    it('es progress para running', () => {
-      expect(indexingStatusTone(statusResponse({ status: 'running' }))).toBe('progress');
-    });
-
-    it('es neutro para completed, no de exito', () => {
-      expect(indexingStatusTone(statusResponse({ status: 'completed' }))).toBe('neutral');
-    });
-
-    it('es error para failed', () => {
-      expect(indexingStatusTone(statusResponse({ status: 'failed' }))).toBe('error');
-    });
+  it('rotula "En cola" para queued', () => {
+    expect(indexingStatusLabel(statusResponse({ status: 'queued' }))).toBe('En cola');
   });
 
-  describe('isOrphanedIndexingStatus', () => {
-    it('no es huerfana si no esta running', () => {
-      const status = statusResponse({ status: 'completed', started_at: '2000-01-01T00:00:00Z' });
-      expect(isOrphanedIndexingStatus(status, Date.now())).toBe(false);
-    });
-
-    it('es huerfana si running lleva mas del umbral', () => {
-      const now = Date.now();
-      const status = statusResponse({
-        status: 'running',
-        started_at: new Date(now - ORPHAN_RUN_THRESHOLD_MS - 1000).toISOString(),
-      });
-      expect(isOrphanedIndexingStatus(status, now)).toBe(true);
-    });
-
-    it('no es huerfana si running todavia esta dentro del umbral', () => {
-      const now = Date.now();
-      const status = statusResponse({
-        status: 'running',
-        started_at: new Date(now - 1000).toISOString(),
-      });
-      expect(isOrphanedIndexingStatus(status, now)).toBe(false);
-    });
+  it('rotula "En curso" para running', () => {
+    expect(indexingStatusLabel(statusResponse({ status: 'running' }))).toBe('En curso');
   });
 
-  describe('indexingLastRunLabel', () => {
-    it('es null cuando nunca hubo una corrida', () => {
-      expect(indexingLastRunLabel(null)).toBeNull();
-    });
+  it('rotula "Finalizada" para completed', () => {
+    expect(indexingStatusLabel(statusResponse({ status: 'completed' }))).toBe('Finalizada');
+  });
 
-    it('incluye la fecha formateada de started_at cuando hay una corrida', () => {
-      const status = statusResponse({ started_at: '2024-01-01T00:00:00Z' });
-      expect(indexingLastRunLabel(status)).toBe(`Última corrida: ${formatIndexingTimestamp(status.started_at)}`);
+  it('rotula "Fallida" para failed', () => {
+    expect(indexingStatusLabel(statusResponse({ status: 'failed' }))).toBe('Fallida');
+  });
+
+  it('una decision desconocida se muestra con su valor crudo, sin romper', () => {
+    expect(indexingStatusLabel(statusResponse({ status: 'archived' }))).toBe('archived');
+  });
+});
+
+describe('indexingStatusTone', () => {
+  it('es neutro cuando no hay estado', () => {
+    expect(indexingStatusTone(null)).toBe('neutral');
+  });
+
+  it('es progress para queued', () => {
+    expect(indexingStatusTone(statusResponse({ status: 'queued' }))).toBe('progress');
+  });
+
+  it('es progress para running', () => {
+    expect(indexingStatusTone(statusResponse({ status: 'running' }))).toBe('progress');
+  });
+
+  it('es neutro para completed, no de exito', () => {
+    expect(indexingStatusTone(statusResponse({ status: 'completed' }))).toBe('neutral');
+  });
+
+  it('es error para failed', () => {
+    expect(indexingStatusTone(statusResponse({ status: 'failed' }))).toBe('error');
+  });
+
+  it('un valor desconocido no rompe, se muestra neutro', () => {
+    expect(indexingStatusTone(statusResponse({ status: 'archived' }))).toBe('neutral');
+  });
+});
+
+describe('indexingLastRunLabel', () => {
+  it('es null cuando nunca hubo una corrida', () => {
+    expect(indexingLastRunLabel(null)).toBeNull();
+  });
+
+  it('incluye la fecha formateada de started_at cuando hay una corrida', () => {
+    const status = statusResponse({ started_at: '2024-01-01T00:00:00Z' });
+    expect(indexingLastRunLabel(status)).toBe(`Última corrida: ${formatIndexingTimestamp(status.started_at)}`);
+  });
+});
+
+describe('hasNoIndexingData', () => {
+  it('true para completed con los dos contadores en 0 y total null', () => {
+    const status = statusResponse({
+      status: 'completed',
+      documents_processed: 0,
+      chunks_generated: 0,
+      total_documents: null,
     });
+    expect(hasNoIndexingData(status)).toBe(true);
+  });
+
+  it('true para failed con los dos contadores en 0 y total null', () => {
+    const status = statusResponse({
+      status: 'failed',
+      documents_processed: 0,
+      chunks_generated: 0,
+      total_documents: null,
+    });
+    expect(hasNoIndexingData(status)).toBe(true);
+  });
+
+  it('false para completed si algun contador no es 0', () => {
+    const status = statusResponse({
+      status: 'completed',
+      documents_processed: 5,
+      chunks_generated: 0,
+      total_documents: null,
+    });
+    expect(hasNoIndexingData(status)).toBe(false);
+  });
+
+  it('false para completed si total_documents no es null', () => {
+    const status = statusResponse({
+      status: 'completed',
+      documents_processed: 0,
+      chunks_generated: 0,
+      total_documents: 10,
+    });
+    expect(hasNoIndexingData(status)).toBe(false);
+  });
+
+  it('false para running aunque los contadores esten en 0 y total en null: todavia no tuvo tiempo', () => {
+    const status = statusResponse({
+      status: 'running',
+      documents_processed: 0,
+      chunks_generated: 0,
+      total_documents: null,
+    });
+    expect(hasNoIndexingData(status)).toBe(false);
+  });
+
+  it('false para queued aunque los contadores esten en 0 y total en null', () => {
+    const status = statusResponse({
+      status: 'queued',
+      documents_processed: 0,
+      chunks_generated: 0,
+      total_documents: null,
+    });
+    expect(hasNoIndexingData(status)).toBe(false);
+  });
+});
+
+describe('buildOptimisticIndexingStatus', () => {
+  it('completa el estado a partir de la respuesta del POST y los espacios enviados', () => {
+    const response: StartIndexingResponse = {
+      id: 'run-2',
+      started_at: '2024-02-01T00:00:00Z',
+      status: 'queued',
+    };
+    const result = buildOptimisticIndexingStatus(response, ['TA', 'DEV']);
+
+    expect(result).toEqual({
+      id: 'run-2',
+      status: 'queued',
+      started_at: '2024-02-01T00:00:00Z',
+      updated_at: '2024-02-01T00:00:00Z',
+      space_keys: ['TA', 'DEV'],
+      documents_processed: 0,
+      chunks_generated: 0,
+      total_documents: null,
+      error_detail: null,
+    });
+  });
+});
+
+describe('truncatedErrorDetail', () => {
+  it('texto corto: no se trunca', () => {
+    const result = truncatedErrorDetail('Error breve');
+    expect(result).toEqual({ preview: 'Error breve', isTruncated: false });
+  });
+
+  it('texto exactamente en el limite: no se trunca', () => {
+    const detail = 'a'.repeat(ERROR_DETAIL_PREVIEW_LENGTH);
+    const result = truncatedErrorDetail(detail);
+    expect(result).toEqual({ preview: detail, isTruncated: false });
+  });
+
+  it('texto largo: se trunca con elipsis', () => {
+    const detail = 'a'.repeat(ERROR_DETAIL_PREVIEW_LENGTH + 50);
+    const result = truncatedErrorDetail(detail);
+    expect(result.isTruncated).toBe(true);
+    expect(result.preview).toBe(`${'a'.repeat(ERROR_DETAIL_PREVIEW_LENGTH)}…`);
+  });
+
+  it('acepta un maxLength distinto del default', () => {
+    const result = truncatedErrorDetail('0123456789', 5);
+    expect(result).toEqual({ preview: '01234…', isTruncated: true });
   });
 });

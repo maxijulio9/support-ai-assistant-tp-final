@@ -4,6 +4,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { IndexingStatusComponent } from './indexing-status.component';
 import { ConfigService } from './config.service';
+import { ERROR_DETAIL_PREVIEW_LENGTH } from './indexing-status-display';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 
 function statusResponse(overrides: Partial<IndexingStatusResponse> = {}): IndexingStatusResponse {
@@ -57,6 +58,17 @@ describe('IndexingStatusComponent', () => {
     expect(getIndexingStatus).toHaveBeenCalledTimes(3);
   });
 
+  it('queued cuenta como en progreso y pollea igual que running', async () => {
+    getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'queued' })));
+    await createComponent();
+
+    expect(fixture.componentInstance.isInProgress()).toBe(true);
+    expect(getIndexingStatus).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(3000);
+    expect(getIndexingStatus).toHaveBeenCalledTimes(2);
+  });
+
   it('se detiene al llegar a un estado terminal', async () => {
     let call = 0;
     getIndexingStatus.mockImplementation(() => {
@@ -76,7 +88,7 @@ describe('IndexingStatusComponent', () => {
     expect(getIndexingStatus).toHaveBeenCalledTimes(2);
   });
 
-  it('respeta el tope de 5 minutos si nunca llega a un estado terminal', async () => {
+  it('respeta el tope de 5 minutos si nunca llega a un estado terminal, y despues el boton de actualizar sigue disponible', async () => {
     getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'running' })));
     await createComponent();
 
@@ -88,6 +100,13 @@ describe('IndexingStatusComponent', () => {
     const callsAtTimeout = getIndexingStatus.mock.calls.length;
     vi.advanceTimersByTime(3000);
     expect(getIndexingStatus).toHaveBeenCalledTimes(callsAtTimeout);
+
+    const refreshButtons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('button'));
+    const refreshButton = refreshButtons.find((button) => button.textContent?.includes('Actualizar estado'));
+    expect(refreshButton).toBeTruthy();
+
+    refreshButton?.click();
+    expect(getIndexingStatus).toHaveBeenCalledTimes(callsAtTimeout + 1);
   });
 
   it('corta el polling al destruir el componente', async () => {
@@ -135,29 +154,38 @@ describe('IndexingStatusComponent', () => {
     expect(fixture.componentInstance.state()).toBe('loaded');
   });
 
-  it('muestra los contadores con un guion cuando el estado es completed y ambos vienen en 0', async () => {
+  it('muestra "Sin datos" cuando el estado es completed y los contadores vienen en 0 con total null', async () => {
     getIndexingStatus.mockReturnValue(
-      of(statusResponse({ status: 'completed', documents_processed: 0, chunks_generated: 0 })),
+      of(statusResponse({ status: 'completed', documents_processed: 0, chunks_generated: 0, total_documents: null })),
     );
     await createComponent();
 
-    expect(fixture.componentInstance.showCountersAsDash()).toBe(true);
+    expect(fixture.componentInstance.showNoDataLabel()).toBe(true);
 
     const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.indexing-status-row'));
     const processedRow = rows.find((row) => row.textContent?.includes('Documentos procesados'));
     const chunksRow = rows.find((row) => row.textContent?.includes('Fragmentos generados'));
 
-    expect(processedRow?.querySelector('dd')?.textContent?.trim()).toBe('-');
-    expect(chunksRow?.querySelector('dd')?.textContent?.trim()).toBe('-');
+    expect(processedRow?.querySelector('dd')?.textContent?.trim()).toBe('Sin datos');
+    expect(chunksRow?.querySelector('dd')?.textContent?.trim()).toBe('Sin datos');
   });
 
-  it('no muestra un guion si completed trae algun contador distinto de 0', async () => {
+  it('"Sin datos" tambien aplica a una corrida failed vieja, sin contadores registrados', async () => {
+    getIndexingStatus.mockReturnValue(
+      of(statusResponse({ status: 'failed', documents_processed: 0, chunks_generated: 0, total_documents: null })),
+    );
+    await createComponent();
+
+    expect(fixture.componentInstance.showNoDataLabel()).toBe(true);
+  });
+
+  it('no muestra "Sin datos" si completed trae algun contador distinto de 0', async () => {
     getIndexingStatus.mockReturnValue(
       of(statusResponse({ status: 'completed', documents_processed: 5, chunks_generated: 12 })),
     );
     await createComponent();
 
-    expect(fixture.componentInstance.showCountersAsDash()).toBe(false);
+    expect(fixture.componentInstance.showNoDataLabel()).toBe(false);
 
     const rows: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.indexing-status-row'));
     const processedRow = rows.find((row) => row.textContent?.includes('Documentos procesados'));
@@ -165,7 +193,31 @@ describe('IndexingStatusComponent', () => {
     expect(processedRow?.querySelector('dd')?.textContent?.trim()).toContain('5');
   });
 
-  it('muestra el error_detail como aviso con el token de error del tema', async () => {
+  it('muestra la nota de contadores en failed cuando hay valores', async () => {
+    getIndexingStatus.mockReturnValue(
+      of(statusResponse({ status: 'failed', documents_processed: 3, chunks_generated: 7, total_documents: 10 })),
+    );
+    await createComponent();
+
+    expect(fixture.componentInstance.showFailedCountersNote()).toBe(true);
+
+    const notes: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.indexing-status-note'));
+    expect(notes.some((note) => note.textContent?.includes('hasta dónde llegó la corrida'))).toBe(true);
+  });
+
+  it('no muestra la nota de contadores en failed si se esta mostrando "Sin datos"', async () => {
+    getIndexingStatus.mockReturnValue(
+      of(statusResponse({ status: 'failed', documents_processed: 0, chunks_generated: 0, total_documents: null })),
+    );
+    await createComponent();
+
+    expect(fixture.componentInstance.showFailedCountersNote()).toBe(false);
+
+    const notes: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('.indexing-status-note'));
+    expect(notes.some((note) => note.textContent?.includes('hasta dónde llegó la corrida'))).toBe(false);
+  });
+
+  it('muestra el error_detail corto completo, sin boton de expandir', async () => {
     getIndexingStatus.mockReturnValue(
       of(statusResponse({ status: 'failed', error_detail: 'No se pudo conectar a Confluence' })),
     );
@@ -175,6 +227,52 @@ describe('IndexingStatusComponent', () => {
     expect(alert).toBeTruthy();
     expect(alert.getAttribute('role')).toBe('alert');
     expect(alert.textContent).toContain('No se pudo conectar a Confluence');
+    expect(alert.querySelector('.indexing-status-error-toggle')).toBeNull();
+  });
+
+  it('un error_detail largo se muestra truncado, con boton para expandir y volver a recortar', async () => {
+    const longDetail = 'x'.repeat(ERROR_DETAIL_PREVIEW_LENGTH + 50);
+    getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'failed', error_detail: longDetail })));
+    await createComponent();
+
+    let alert: HTMLElement = fixture.nativeElement.querySelector('.indexing-status-alert');
+    expect(alert.textContent).not.toContain(longDetail);
+
+    const toggle = () => fixture.nativeElement.querySelector('.indexing-status-error-toggle') as HTMLButtonElement;
+    expect(toggle().textContent?.trim()).toBe('Ver más');
+
+    toggle().click();
+    fixture.detectChanges();
+
+    alert = fixture.nativeElement.querySelector('.indexing-status-alert');
+    expect(alert.textContent).toContain(longDetail);
+    expect(toggle().textContent?.trim()).toBe('Ver menos');
+
+    toggle().click();
+    fixture.detectChanges();
+
+    alert = fixture.nativeElement.querySelector('.indexing-status-alert');
+    expect(alert.textContent).not.toContain(longDetail);
+  });
+
+  it('la expansion del error_detail se reinicia cuando cambia el id de la corrida mostrada', async () => {
+    const longDetail = 'x'.repeat(ERROR_DETAIL_PREVIEW_LENGTH + 50);
+    getIndexingStatus.mockReturnValue(
+      of(statusResponse({ status: 'failed', id: 'run-1', error_detail: longDetail })),
+    );
+    await createComponent();
+
+    fixture.componentInstance.toggleErrorExpanded();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.errorExpanded()).toBe(true);
+
+    getIndexingStatus.mockReturnValue(
+      of(statusResponse({ status: 'failed', id: 'run-2', error_detail: longDetail })),
+    );
+    fixture.componentInstance.refresh();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.errorExpanded()).toBe(false);
   });
 
   it('no muestra el aviso de error cuando error_detail es null', async () => {
@@ -213,96 +311,46 @@ describe('IndexingStatusComponent', () => {
     expect(finishedRow).toBeTruthy();
   });
 
-  it('(a) tras notifyStarted, un GET que devuelve la corrida vieja terminada no detiene el polling', async () => {
-    const oldStatus = statusResponse({ status: 'completed', started_at: '2024-01-01T00:00:00Z' });
-    getIndexingStatus.mockReturnValue(of(oldStatus));
+  it('notifyStarted muestra el estado del POST (queued, con su id y espacios) antes de que llegue el GET', async () => {
+    getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'completed', id: 'run-old' })));
     await createComponent();
 
-    expect(fixture.componentInstance.isInProgress()).toBe(false);
-
-    fixture.componentInstance.notifyStarted();
-    fixture.detectChanges();
-    expect(fixture.componentInstance.awaitingNewRun()).toBe(true);
-    expect(getIndexingStatus).toHaveBeenCalledTimes(2);
-
-    // el GET sigue devolviendo la corrida vieja, ya terminada: no debe cortar el polling
-    vi.advanceTimersByTime(3000);
-    expect(getIndexingStatus).toHaveBeenCalledTimes(3);
-    expect(fixture.componentInstance.awaitingNewRun()).toBe(true);
-
-    vi.advanceTimersByTime(3000);
-    expect(getIndexingStatus).toHaveBeenCalledTimes(4);
-  });
-
-  it('(b) cuando llega un started_at mas nuevo que el guardado, se adopta y sigue segun su propio estado', async () => {
-    const oldStartedAt = '2024-01-01T00:00:00Z';
-    // Reciente respecto del reloj de la prueba: no debe contarse como huerfana.
-    const newStartedAt = new Date().toISOString();
-    let call = 0;
+    let pending!: Subject<IndexingStatusResponse>;
     getIndexingStatus.mockImplementation(() => {
-      call++;
-      if (call <= 2) return of(statusResponse({ status: 'completed', started_at: oldStartedAt }));
-      return of(statusResponse({ status: 'running', started_at: newStartedAt }));
+      pending = new Subject<IndexingStatusResponse>();
+      return pending.asObservable();
     });
-    await createComponent();
 
-    fixture.componentInstance.notifyStarted();
-    fixture.detectChanges();
-    expect(getIndexingStatus).toHaveBeenCalledTimes(2);
-    expect(fixture.componentInstance.awaitingNewRun()).toBe(true);
-
-    // 3er llamado: aparece la corrida nueva, running
-    vi.advanceTimersByTime(3000);
-    fixture.detectChanges();
-    expect(getIndexingStatus).toHaveBeenCalledTimes(3);
-    expect(fixture.componentInstance.awaitingNewRun()).toBe(false);
-    expect(fixture.componentInstance.isInProgress()).toBe(true);
-    expect(fixture.componentInstance.status()?.started_at).toBe(newStartedAt);
-
-    // sigue polleando porque la corrida nueva esta running
-    vi.advanceTimersByTime(3000);
-    expect(getIndexingStatus).toHaveBeenCalledTimes(4);
-  });
-
-  it('(c) respeta el tope de 5 minutos si nunca se detecta la corrida nueva', async () => {
-    getIndexingStatus.mockReturnValue(
-      of(statusResponse({ status: 'completed', started_at: '2024-01-01T00:00:00Z' })),
+    fixture.componentInstance.notifyStarted(
+      { id: 'run-new', started_at: '2024-03-01T00:00:00Z', status: 'queued' },
+      ['TA', 'DEV'],
     );
-    await createComponent();
-
-    fixture.componentInstance.notifyStarted();
     fixture.detectChanges();
 
-    vi.advanceTimersByTime(5 * 60 * 1000);
+    expect(fixture.componentInstance.status()?.id).toBe('run-new');
+    expect(fixture.componentInstance.statusLabel()).toBe('En cola');
+    expect(fixture.componentInstance.status()?.space_keys).toEqual(['TA', 'DEV']);
+    expect(fixture.componentInstance.isInProgress()).toBe(true);
+
+    pending.next(statusResponse({ id: 'run-new', status: 'queued', space_keys: ['TA', 'DEV'] }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.isInProgress()).toBe(true);
+  });
+
+  it('el GET siempre manda: si devuelve un id distinto al del POST, se muestra lo que trae el GET', async () => {
+    getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'completed', id: 'run-old' })));
+    await createComponent();
+
+    getIndexingStatus.mockReturnValue(
+      of(statusResponse({ id: 'run-even-mas-nueva', status: 'running', space_keys: ['OTRO'] })),
+    );
+    fixture.componentInstance.notifyStarted(
+      { id: 'run-mia', started_at: '2024-03-01T00:00:00Z', status: 'queued' },
+      ['TA'],
+    );
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.awaitingTimedOut()).toBe(true);
-    expect(fixture.componentInstance.awaitingNewRun()).toBe(true);
-
-    const callsAtTimeout = getIndexingStatus.mock.calls.length;
-    vi.advanceTimersByTime(3000);
-    expect(getIndexingStatus).toHaveBeenCalledTimes(callsAtTimeout);
-  });
-
-  it('(d) running con started_at de mas de 1 hora se trata como huerfana: sin polling y sin bloquear el boton', async () => {
-    const oldStartedAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-    getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'running', started_at: oldStartedAt })));
-    await createComponent();
-
-    expect(fixture.componentInstance.isOrphaned()).toBe(true);
-    expect(fixture.componentInstance.isInProgress()).toBe(false);
-
-    const note: HTMLElement = fixture.nativeElement.querySelector('.indexing-status-note--warning');
-    expect(note).toBeTruthy();
-
-    vi.advanceTimersByTime(10000);
-    expect(getIndexingStatus).toHaveBeenCalledTimes(1);
-  });
-
-  it('(e) completed se rotula "Finalizada"', async () => {
-    getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'completed' })));
-    await createComponent();
-
-    expect(fixture.componentInstance.statusLabel()).toBe('Finalizada');
+    expect(fixture.componentInstance.status()?.id).toBe('run-even-mas-nueva');
+    expect(fixture.componentInstance.status()?.space_keys).toEqual(['OTRO']);
   });
 });
