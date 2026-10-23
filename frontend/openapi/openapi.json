@@ -1701,6 +1701,70 @@
         ]
       }
     },
+    "/api/indexing/spaces": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "List Indexed Spaces",
+        "operationId": "list_indexed_spaces_api_indexing_spaces_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexedSpacesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El proyecto indicado no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/metrics/summary": {
       "get": {
         "tags": [
@@ -3670,6 +3734,161 @@
         ],
         "title": "HeatmapResponse",
         "description": "Mapa de calor de las interacciones por dia de la semana y hora, para el dashboard."
+      },
+      "IndexedSpace": {
+        "properties": {
+          "space_key": {
+            "type": "string",
+            "title": "Space Key",
+            "description": "key del space en Confluence"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "descripcion del space, o null si no tiene"
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code",
+            "description": "codigo del pais del space, o null si es transversal o no se definio"
+          },
+          "language_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language Code",
+            "description": "idioma del contenido del space, o null si no se definio"
+          },
+          "documents": {
+            "type": "integer",
+            "title": "Documents",
+            "description": "paginas distintas con fragmentos guardados, 0 si el space nunca se indexo"
+          },
+          "chunks": {
+            "type": "integer",
+            "title": "Chunks",
+            "description": "cantidad de fragmentos guardados, 0 si el space nunca se indexo"
+          },
+          "last_updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Updated At",
+            "description": "ultima vez que se escribio contenido de este space, incluidas las reindexaciones de una sola pagina, o null si nunca se indexo"
+          },
+          "last_run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IndexedSpaceRun"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "corrida de indexacion mas reciente que incluyo este space, o null si ninguna lo incluyo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "space_key",
+          "description",
+          "country_code",
+          "language_code",
+          "documents",
+          "chunks",
+          "last_updated_at",
+          "last_run"
+        ],
+        "title": "IndexedSpace",
+        "description": "Estado de indexacion de un space de la base de conocimiento, calculado sobre los fragmentos realmente guardados."
+      },
+      "IndexedSpaceRun": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "id de la corrida, el mismo que devuelve GET /api/indexing/status"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "estado de la corrida: queued, running, completed o failed, una corrida en queued o running sin actualizaciones desde hace 10 minutos se informa como failed"
+          },
+          "started_at": {
+            "type": "string",
+            "title": "Started At",
+            "description": "marca de tiempo del pedido de la corrida"
+          },
+          "updated_at": {
+            "type": "string",
+            "title": "Updated At",
+            "description": "marca de tiempo de la ultima actualizacion de la corrida"
+          },
+          "error_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Detail",
+            "description": "detalle del error si la corrida fallo, o null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "started_at",
+          "updated_at",
+          "error_detail"
+        ],
+        "title": "IndexedSpaceRun",
+        "description": "La corrida de indexacion mas reciente que incluyo a un space."
+      },
+      "IndexedSpacesResponse": {
+        "properties": {
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/IndexedSpace"
+            },
+            "type": "array",
+            "title": "Spaces",
+            "description": "spaces de la base de conocimiento ordenados por key, o solo los del proyecto indicado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "spaces"
+        ],
+        "title": "IndexedSpacesResponse",
+        "description": "Estado de indexacion de cada space, para que el dashboard muestre todos y no solo la ultima corrida."
       },
       "IndexingStatusResponse": {
         "properties": {

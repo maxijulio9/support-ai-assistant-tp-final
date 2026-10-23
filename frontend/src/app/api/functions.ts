@@ -75,6 +75,8 @@ export type { StartIndexingApiIndexingStartPost$Params as StartIndexingApiIndexi
 export { startIndexingApiIndexingStartPost as startIndexingApiIndexingStartPost } from './fn/internal-api/start-indexing-api-indexing-start-post';
 export type { GetIndexingStatusApiIndexingStatusGet$Params as GetIndexingStatusApiIndexingStatusGet$Params } from './fn/internal-api/get-indexing-status-api-indexing-status-get';
 export { getIndexingStatusApiIndexingStatusGet as getIndexingStatusApiIndexingStatusGet } from './fn/internal-api/get-indexing-status-api-indexing-status-get';
+export type { ListIndexedSpacesApiIndexingSpacesGet$Params as ListIndexedSpacesApiIndexingSpacesGet$Params } from './fn/internal-api/list-indexed-spaces-api-indexing-spaces-get';
+export { listIndexedSpacesApiIndexingSpacesGet as listIndexedSpacesApiIndexingSpacesGet } from './fn/internal-api/list-indexed-spaces-api-indexing-spaces-get';
 export type { GetMetricsSummaryApiMetricsSummaryGet$Params as GetMetricsSummaryApiMetricsSummaryGet$Params } from './fn/internal-api/get-metrics-summary-api-metrics-summary-get';
 export { getMetricsSummaryApiMetricsSummaryGet as getMetricsSummaryApiMetricsSummaryGet } from './fn/internal-api/get-metrics-summary-api-metrics-summary-get';
 export type { GetMetricsDailyApiMetricsDailyGet$Params as GetMetricsDailyApiMetricsDailyGet$Params } from './fn/internal-api/get-metrics-daily-api-metrics-daily-get';
