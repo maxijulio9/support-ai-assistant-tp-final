@@ -7,6 +7,16 @@ from app.core.database import get_db
 
 logger = logging.getLogger(__name__)
 
+# minutos sin ninguna actualizacion a partir de los cuales una corrida en queued o running se considera abandonada
+# el tiempo maximo por trabajo del worker es de 5 minutos, y una corrida viva se actualiza en cada pagina
+STALE_AFTER_MINUTES = 10
+
+STALE_QUEUED_DETAIL = "La corrida no llegó a iniciarse"
+STALE_RUNNING_DETAIL = "La corrida se interrumpió antes de terminar"
+
+# el detalle del error de una corrida se recorta, para no guardar mensajes enormes
+MAX_ERROR_DETAIL_LENGTH = 2000
+
 _progress_engine = None
 
 
@@ -27,6 +37,7 @@ class IndexingStatusRepository:
     def create_job(self, space_keys: list[str]) -> str:
         db = next(get_db())
         try:
+            self._close_stale_jobs(db)
             row = db.execute(
                 text("INSERT INTO kb_indexing_status (space_keys, status) VALUES (:space_keys, 'running') RETURNING id"),
                 {"space_keys": space_keys},
@@ -41,6 +52,7 @@ class IndexingStatusRepository:
     def create_queued_job(self, space_keys: list[str]) -> dict:
         db = next(get_db())
         try:
+            self._close_stale_jobs(db)
             row = db.execute(
                 text("INSERT INTO kb_indexing_status (space_keys, status) VALUES (:space_keys, 'queued') RETURNING id, started_at"),
                 {"space_keys": space_keys},
@@ -55,6 +67,7 @@ class IndexingStatusRepository:
     def mark_running(self, job_id: str):
         db = next(get_db())
         try:
+            self._close_stale_jobs(db, except_id=job_id)
             db.execute(
                 text("""
                     UPDATE kb_indexing_status
@@ -109,14 +122,35 @@ class IndexingStatusRepository:
         finally:
             db.close()
 
-    # marca el trabajo como fallido, con el detalle del error
+    # marca el trabajo como fallido, con el detalle del error recortado
     def mark_failed(self, job_id: str, error_detail: str):
         db = next(get_db())
         try:
             db.execute(
                 text("UPDATE kb_indexing_status SET status = 'failed', error_detail = :error_detail, updated_at = NOW() WHERE id = :id"),
-                {"id": job_id, "error_detail": error_detail},
+                {"id": job_id, "error_detail": error_detail[:MAX_ERROR_DETAIL_LENGTH]},
             )
             db.commit()
         finally:
             db.close()
+
+    # cierra las corridas abandonadas, las que estan en queued o running sin ninguna actualizacion desde hace STALE_AFTER_MINUTES
+    # usa la sesion de quien llama, asi se confirma junto con su propia escritura, y except_id deja afuera a la corrida en curso
+    def _close_stale_jobs(self, db, except_id: str | None = None):
+        db.execute(
+            text("""
+                UPDATE kb_indexing_status
+                SET status = 'failed',
+                    error_detail = COALESCE(error_detail, CASE WHEN status = 'queued' THEN :queued_detail ELSE :running_detail END),
+                    updated_at = NOW()
+                WHERE status IN ('queued', 'running')
+                  AND updated_at < NOW() - make_interval(mins => :minutes)
+                  AND (CAST(:except_id AS uuid) IS NULL OR id <> CAST(:except_id AS uuid))
+            """),
+            {
+                "minutes": STALE_AFTER_MINUTES,
+                "queued_detail": STALE_QUEUED_DETAIL,
+                "running_detail": STALE_RUNNING_DETAIL,
+                "except_id": except_id,
+            },
+        )
