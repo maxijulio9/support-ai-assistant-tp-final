@@ -76,6 +76,7 @@ class InteractionReviewService:
             reviewed_by=reviewed_by,
             resolution_channel=channel,
             edited_response=edited_text,
+            responded=True,
         )
 
         return ACTION_AUTO_PUBLISH
@@ -109,6 +110,7 @@ class InteractionReviewService:
             generated_response=result.response_text,
             confidence_score=result.confidence_score,
             resolution_channel=RESOLUTION_CHANNEL_REVIEWED_REGENERATED,
+            responded=result.action_type == ACTION_AUTO_PUBLISH,
         )
 
         return result.action_type
@@ -208,7 +210,8 @@ class InteractionReviewService:
     def _update_interaction(self, interaction_id: str, decision: str, reviewed_by: str | None,
                              rejection_reason: str | None = None, generated_response: str | None = None,
                              confidence_score: float | None = None, resolution_channel: str | None = None,
-                             edited_response: str | None = None):
+                             edited_response: str | None = None,
+                             responded: bool = False):
         db = next(get_db())
 
         try:
@@ -221,7 +224,9 @@ class InteractionReviewService:
                     generated_response = COALESCE(:generated_response, generated_response),
                     confidence_score = COALESCE(:confidence_score, confidence_score),
                     resolution_channel = COALESCE(:resolution_channel, resolution_channel),
-                    edited_response = COALESCE(:edited_response, edited_response)
+                    edited_response = COALESCE(:edited_response, edited_response),
+                    first_response_at = CASE WHEN :responded THEN COALESCE(first_response_at, NOW()) ELSE first_response_at END,
+                    resolved_at = CASE WHEN :responded THEN COALESCE(resolved_at, NOW()) ELSE resolved_at END
                 WHERE id = :interaction_id
             """)
             db.execute(query, {
@@ -233,6 +238,7 @@ class InteractionReviewService:
                 "confidence_score": confidence_score,
                 "resolution_channel": resolution_channel,
                 "edited_response": edited_response,
+                "responded": responded,
             })
             db.commit()
             logger.info(f"interaction '{interaction_id}' actualizada, decision={decision}")

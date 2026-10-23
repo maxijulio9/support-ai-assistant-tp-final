@@ -287,6 +287,32 @@ class StartIndexingResponse(BaseModel):
     started_at: str = Field(description="marca de tiempo del pedido, el momento en que se encolo la corrida")
 
 
+class IndexedSpaceRun(BaseModel):
+    """La corrida de indexacion mas reciente que incluyo a un space."""
+    id: str = Field(description="id de la corrida, el mismo que devuelve GET /api/indexing/status")
+    status: str = Field(description="estado de la corrida: queued, running, completed o failed, una corrida en queued o running sin actualizaciones desde hace 10 minutos se informa como failed")
+    started_at: str = Field(description="marca de tiempo del pedido de la corrida")
+    updated_at: str = Field(description="marca de tiempo de la ultima actualizacion de la corrida")
+    error_detail: str | None = Field(description="detalle del error si la corrida fallo, o null")
+
+
+class IndexedSpace(BaseModel):
+    """Estado de indexacion de un space de la base de conocimiento, calculado sobre los fragmentos realmente guardados."""
+    space_key: str = Field(description="key del space en Confluence")
+    description: str | None = Field(description="descripcion del space, o null si no tiene")
+    country_code: str | None = Field(description="codigo del pais del space, o null si es transversal o no se definio")
+    language_code: str | None = Field(description="idioma del contenido del space, o null si no se definio")
+    documents: int = Field(description="paginas distintas con fragmentos guardados, 0 si el space nunca se indexo")
+    chunks: int = Field(description="cantidad de fragmentos guardados, 0 si el space nunca se indexo")
+    last_updated_at: str | None = Field(description="ultima vez que se escribio contenido de este space, incluidas las reindexaciones de una sola pagina, o null si nunca se indexo")
+    last_run: IndexedSpaceRun | None = Field(description="corrida de indexacion mas reciente que incluyo este space, o null si ninguna lo incluyo")
+
+
+class IndexedSpacesResponse(BaseModel):
+    """Estado de indexacion de cada space, para que el dashboard muestre todos y no solo la ultima corrida."""
+    spaces: list[IndexedSpace] = Field(description="spaces de la base de conocimiento ordenados por key, o solo los del proyecto indicado")
+
+
 class IndexingStatusResponse(BaseModel):
     """Response con el estado del ultimo trabajo de indexacion, para el polling del dashboard (CU31)."""
     id: str = Field(description="id de la corrida, es el que devuelve POST /api/indexing/start al encolarla")

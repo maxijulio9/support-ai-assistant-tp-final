@@ -33,7 +33,7 @@ class AgentResolutionRepository:
 
             db.execute(text("""
                 UPDATE interaction
-                SET decision = 'RESOLVED_EXTERNALLY', resolution_channel = :resolution_channel, reviewed_at = NOW()
+                SET decision = 'RESOLVED_EXTERNALLY', resolution_channel = :resolution_channel, reviewed_at = NOW(), resolved_at = COALESCE(resolved_at, NOW())
                 WHERE id = :id
             """), {"id": row.id, "resolution_channel": RESOLUTION_CHANNEL_RESOLVED_EXTERNALLY})
             db.commit()
