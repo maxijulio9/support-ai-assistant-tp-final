@@ -123,7 +123,8 @@ CREATE TABLE IF NOT EXISTS ticket (
     reporter_account_id VARCHAR(128),
     assignee_account_id VARCHAR(128),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    received_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    received_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    jira_created_at         TIMESTAMPTZ
 );
 
 -- evento recibido desde jsm via webhook
@@ -159,7 +160,9 @@ CREATE TABLE IF NOT EXISTS interaction (
     rejection_reason        TEXT,
     system_decision         VARCHAR(50),
     resolution_channel      VARCHAR(50),
-    edited_response         TEXT
+    edited_response         TEXT,
+    first_response_at       TIMESTAMPTZ,
+    resolved_at             TIMESTAMPTZ
 );
 
 -- tabla para almacenar credenciales externas que van a estar encriptadas

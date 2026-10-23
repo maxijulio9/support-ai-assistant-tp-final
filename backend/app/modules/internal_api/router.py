@@ -42,6 +42,7 @@ from app.modules.internal_api.schemas import (
     StartIndexingResponse,
     IndexingStatusResponse,
     ErrorResponse,
+    IndexedSpacesResponse,
     DiscardRequest,
     LlmConfigResponse,
     LlmModelsRequest,
@@ -67,6 +68,7 @@ from app.modules.internal_api.services.confluence_connection_service import Conf
 from app.modules.internal_api.services.space_config_service import SpaceConfigurationService
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
+from app.modules.internal_api.repositories.kb_space_status_repository import KbSpaceStatusRepository
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
@@ -90,6 +92,7 @@ _confluence_connection_service = ConfluenceConnectionService()
 _space_config_service = SpaceConfigurationService()
 _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
+_kb_space_status_repository = KbSpaceStatusRepository()
 _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
 _project_configuration_reader_service = ProjectConfigurationReaderService()
@@ -407,6 +410,20 @@ def get_indexing_status(admin: AppUser = Depends(require_admin)):
         raise HTTPException(status_code=404, detail="Todavia no se disparo ninguna indexacion")
 
     return IndexingStatusResponse(**status)
+
+
+# estado de indexacion de cada space de la kb, con lo que realmente hay guardado, o solo los de un proyecto si viene project_key
+@router.get("/api/indexing/spaces", response_model=IndexedSpacesResponse,
+            responses={400: {"model": ErrorResponse, "description": "El proyecto indicado no existe"}})
+def list_indexed_spaces(project_key: str | None = None, admin: AppUser = Depends(require_admin)):
+    try:
+        spaces = _kb_space_status_repository.list_spaces(project_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=503, detail="No se pudo consultar el estado de los espacios")
+
+    return IndexedSpacesResponse(spaces=spaces)
 
 
 # resumen agregado de metricas de interacciones, para el dashboard 
