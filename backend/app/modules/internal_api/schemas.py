@@ -291,11 +291,11 @@ class IndexingStatusResponse(BaseModel):
     """Response con el estado del ultimo trabajo de indexacion, para el polling del dashboard (CU31)."""
     id: str = Field(description="id de la corrida, es el que devuelve POST /api/indexing/start al encolarla")
     space_keys: list[str] = Field(description="spaces que cubrio este trabajo de indexacion")
-    status: str = Field(description="estado del trabajo: queued si esta encolado y el worker todavia no lo tomo, running, completed o failed")
+    status: str = Field(description="estado del trabajo: queued si esta encolado y el worker todavia no lo tomo, running, completed o failed, una corrida en queued o running sin ninguna actualizacion desde hace 10 minutos se informa como failed")
     total_documents: int | None = Field(default=None, description="cantidad total de documentos a procesar, es null hasta que termina la extraccion de las paginas")
     documents_processed: int = Field(description="cantidad de documentos ya procesados")
     chunks_generated: int = Field(description="cantidad de chunks generados hasta el momento")
-    error_detail: str | None = Field(default=None, description="detalle del error, si el trabajo fallo")
+    error_detail: str | None = Field(default=None, description="detalle del error tal cual lo informo la excepcion, texto tecnico de hasta 2000 caracteres, una corrida abandonada informa que no llego a iniciarse o que se interrumpio antes de terminar")
     started_at: str = Field(description="marca de tiempo del pedido de la corrida, el momento en que se encolo")
     updated_at: str = Field(description="marca de tiempo de la ultima actualizacion del trabajo")
 
