@@ -9,6 +9,7 @@ import { IndexingStatusResponse } from '../../api/models/indexing-status-respons
 function statusResponse(overrides: Partial<IndexingStatusResponse> = {}): IndexingStatusResponse {
   const now = new Date().toISOString();
   return {
+    id: 'run-1',
     space_keys: ['TA'],
     status: 'running',
     total_documents: null,
