@@ -282,16 +282,13 @@ describe('IndexingStatusComponent', () => {
     expect(fixture.nativeElement.querySelector('.indexing-status-alert')).toBeNull();
   });
 
-  it('rotula completed como "Finalizada" con tono neutro, no de exito', async () => {
+  it('rotula completed como "Finalizada" con tono de exito', async () => {
     getIndexingStatus.mockReturnValue(of(statusResponse({ status: 'completed' })));
     await createComponent();
 
     const chip: HTMLElement = fixture.nativeElement.querySelector('.indexing-status-chip');
     expect(chip.textContent?.trim()).toBe('Finalizada');
-    expect(chip.classList.contains('indexing-status-chip--neutral')).toBe(true);
-
-    const note: HTMLElement = fixture.nativeElement.querySelector('.indexing-status-note');
-    expect(note?.textContent).toContain('Finalizada. El resultado todavía no se verifica.');
+    expect(chip.classList.contains('indexing-status-chip--success')).toBe(true);
   });
 
   it('no muestra "Actualizado" mientras esta running, y lo rotula "Finalizó" al terminar', async () => {

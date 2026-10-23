@@ -1,7 +1,7 @@
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 import { StartIndexingResponse } from '../../api/models/start-indexing-response';
 
-export type IndexingDisplayTone = 'progress' | 'neutral' | 'error';
+export type IndexingDisplayTone = 'progress' | 'success' | 'neutral' | 'error';
 
 export const ERROR_DETAIL_PREVIEW_LENGTH = 180;
 
@@ -36,11 +36,11 @@ export function indexingStatusTone(status: IndexingStatusResponse | null): Index
     case 'queued':
     case 'running':
       return 'progress';
+    case 'completed':
+      return 'success';
     case 'failed':
       return 'error';
     default:
-      // completed se muestra en tono neutro, no de exito: que el estado
-      // haya quedado en completed no garantiza que el resultado sea valido.
       return 'neutral';
   }
 }

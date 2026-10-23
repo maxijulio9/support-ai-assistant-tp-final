@@ -65,8 +65,8 @@ describe('indexingStatusTone', () => {
     expect(indexingStatusTone(statusResponse({ status: 'running' }))).toBe('progress');
   });
 
-  it('es neutro para completed, no de exito', () => {
-    expect(indexingStatusTone(statusResponse({ status: 'completed' }))).toBe('neutral');
+  it('es success para completed', () => {
+    expect(indexingStatusTone(statusResponse({ status: 'completed' }))).toBe('success');
   });
 
   it('es error para failed', () => {

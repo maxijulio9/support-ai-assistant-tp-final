@@ -39,6 +39,11 @@
   color: var(--mat-sys-primary);
 }
 
+.indexing-status-chip--success {
+  background-color: color-mix(in srgb, var(--app-color-success) 16%, transparent);
+  color: var(--app-color-success);
+}
+
 .indexing-status-chip--error {
   background-color: color-mix(in srgb, var(--mat-sys-error) 16%, transparent);
   color: var(--mat-sys-error);

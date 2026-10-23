@@ -59,10 +59,6 @@ export class IndexingStatusComponent {
 
   readonly statusTone = computed(() => indexingStatusTone(this.status()));
 
-  // Nota corta para dejar en claro que completed no confirma un resultado
-  // correcto, solo que el worker termino sin error.
-  readonly showCompletedNote = computed(() => this.status()?.status === 'completed');
-
   // En failed, los contadores indican hasta donde llego la corrida, no lo
   // que quedo guardado. No se muestra si ya se esta mostrando "Sin datos"
   // (corridas viejas, sin contadores que interpretar).
