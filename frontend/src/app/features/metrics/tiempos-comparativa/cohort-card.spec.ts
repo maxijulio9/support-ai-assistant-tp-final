@@ -6,13 +6,14 @@ import {
   hasAnyTickets,
   pickCohorts,
 } from './cohort-card';
-import { CohortLike, StatsLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
+import { TimeStats } from '../../../api/models/time-stats';
 
-function stats(count: number, p50: number | null, p90: number | null, rate: number | null = null): StatsLike {
+function stats(count: number, p50: number | null, p90: number | null, rate: number | null = null): TimeStats {
   return { count, mean_seconds: p50, p50_seconds: p50, p90_seconds: p90, within_target_rate: rate };
 }
 
-function cohort(key: string, firstResponse: StatsLike, tickets = firstResponse.count, kind = 'answer'): CohortLike {
+function cohort(key: string, firstResponse: TimeStats, tickets = firstResponse.count, kind = 'answer'): CohortResponseTimes {
   return {
     cohort: key,
     first_response_kind: kind,
@@ -170,7 +171,7 @@ describe('cohortAccentVar', () => {
 });
 
 describe('cierre de la tarjeta', () => {
-  function withClosure(key: string, basis: string, closure: StatsLike, tickets = closure.count): CohortLike {
+  function withClosure(key: string, basis: string, closure: TimeStats, tickets = closure.count): CohortResponseTimes {
     return { ...cohort(key, stats(10, 20, 40), tickets), closure_basis: basis, closure };
   }
 

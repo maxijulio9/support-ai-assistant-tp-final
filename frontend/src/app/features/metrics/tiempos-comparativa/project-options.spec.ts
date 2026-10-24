@@ -1,49 +1,55 @@
 import { buildProjectOptions } from './project-options';
 
-const ONBOARDED = [
-  { project_id: 'aaaaaaaa-1111', key: 'TARG', name: 'Soporte Argentina' },
-  { project_id: 'bbbbbbbb-2222', key: 'TMEX', name: 'Soporte México' },
-];
+function project(id: string, key: string, name: string) {
+  return { project_id: id, key, name };
+}
 
 describe('buildProjectOptions', () => {
-  it('une por project_id y rotula con nombre y clave', () => {
-    expect(buildProjectOptions(['bbbbbbbb-2222', 'aaaaaaaa-1111'], ONBOARDED)).toEqual([
-      { projectId: 'bbbbbbbb-2222', label: 'Soporte México (TMEX)' },
-      { projectId: 'aaaaaaaa-1111', label: 'Soporte Argentina (TARG)' },
+  it('rotula con nombre y clave', () => {
+    expect(buildProjectOptions([project('p1', 'TARG', 'Soporte Argentina')])).toEqual([
+      { projectId: 'p1', label: 'Soporte Argentina (TARG)' },
     ]);
   });
 
-  it('conserva el orden de los umbrales, no el de los proyectos configurados', () => {
-    const options = buildProjectOptions(['bbbbbbbb-2222', 'aaaaaaaa-1111'], ONBOARDED);
+  it('ordena por nombre, no por el orden en que llegan', () => {
+    const options = buildProjectOptions([
+      project('p2', 'TMEX', 'Soporte México'),
+      project('p1', 'TARG', 'Soporte Argentina'),
+      project('p3', 'TCHI', 'Soporte Chile'),
+    ]);
 
-    expect(options.map((option) => option.projectId)).toEqual(['bbbbbbbb-2222', 'aaaaaaaa-1111']);
+    expect(options.map((option) => option.label)).toEqual([
+      'Soporte Argentina (TARG)',
+      'Soporte Chile (TCHI)',
+      'Soporte México (TMEX)',
+    ]);
   });
 
-  it('si la lista de proyectos configurados falla, usa el rotulo corto del id', () => {
-    expect(buildProjectOptions(['aaaaaaaa-1111'], null)).toEqual([{ projectId: 'aaaaaaaa-1111', label: 'Proyecto aaaaaaaa' }]);
+  it('el orden no distingue mayusculas ni acentos', () => {
+    const options = buildProjectOptions([project('p1', 'B', 'zeta'), project('p2', 'A', 'Álamo'), project('p3', 'C', 'alfa')]);
+
+    expect(options.map((option) => option.projectId)).toEqual(['p2', 'p3', 'p1']);
   });
 
-  it('un proyecto que no figura en la lista usa el rotulo corto y no afecta a los demas', () => {
-    const options = buildProjectOptions(['aaaaaaaa-1111', 'cccccccc-3333'], ONBOARDED);
+  it('con el mismo nombre desempata por clave', () => {
+    const options = buildProjectOptions([project('p1', 'TWO', 'Soporte'), project('p2', 'ONE', 'Soporte')]);
 
-    expect(options[0].label).toBe('Soporte Argentina (TARG)');
-    expect(options[1].label).toBe('Proyecto cccccccc');
+    expect(options.map((option) => option.projectId)).toEqual(['p2', 'p1']);
   });
 
-  it('con solo nombre o solo clave usa el que haya', () => {
-    expect(buildProjectOptions(['p1'], [{ project_id: 'p1', key: '', name: 'Soporte' }])[0].label).toBe('Soporte');
-    expect(buildProjectOptions(['p2'], [{ project_id: 'p2', key: 'TARG', name: '  ' }])[0].label).toBe('TARG');
+  it('no modifica la lista recibida', () => {
+    const input = [project('p2', 'B', 'Beta'), project('p1', 'A', 'Alfa')];
+    buildProjectOptions(input);
+
+    expect(input.map((item) => item.project_id)).toEqual(['p2', 'p1']);
   });
 
-  it('con nombre y clave vacios cae en el rotulo corto', () => {
-    expect(buildProjectOptions(['abc'], [{ project_id: 'abc', key: '', name: '' }])[0].label).toBe('Proyecto abc');
-  });
-
-  it('un id corto no se rellena ni rompe', () => {
-    expect(buildProjectOptions(['xy'], null)[0].label).toBe('Proyecto xy');
+  it('con nombre o clave en blanco usa el que haya', () => {
+    expect(buildProjectOptions([project('p1', '  ', 'Soporte')])[0].label).toBe('Soporte');
+    expect(buildProjectOptions([project('p2', 'TARG', '')])[0].label).toBe('TARG');
   });
 
   it('sin proyectos devuelve una lista vacia', () => {
-    expect(buildProjectOptions([], ONBOARDED)).toEqual([]);
+    expect(buildProjectOptions([])).toEqual([]);
   });
 });

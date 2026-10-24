@@ -1,12 +1,13 @@
 import { closureBasisText, closureNote, closurePlaceholder } from './closure';
 import { buildStatsView } from './stats-view';
-import { CohortLike, StatsLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
+import { TimeStats } from '../../../api/models/time-stats';
 
-function stats(count: number): StatsLike {
+function stats(count: number): TimeStats {
   return { count, mean_seconds: 10, p50_seconds: 10, p90_seconds: 20, within_target_rate: null };
 }
 
-function cohort(key: string, basis: string): CohortLike {
+function cohort(key: string, basis: string): CohortResponseTimes {
   return {
     cohort: key,
     first_response_kind: 'answer',

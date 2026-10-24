@@ -1,5 +1,5 @@
 import { formatDuration } from './response-times-format';
-import { StatsLike } from './response-times.types';
+import { TimeStats } from '../../../api/models/time-stats';
 
 // Por debajo de esta cantidad de tickets el p90 se muestra como orientativo.
 export const P90_INDICATIVE_BELOW = 20;
@@ -17,7 +17,7 @@ export interface StatsView {
 // El backend ya manda los percentiles en null cuando count no llega a
 // min_sample, pero el estado sale de count para no depender de eso: sin
 // tickets es "empty", con pocos es "insufficient".
-export function statsState(stats: StatsLike, minSample: number): StatsState {
+export function statsState(stats: TimeStats, minSample: number): StatsState {
   if (stats.count <= 0) return 'empty';
   if (stats.count < minSample) return 'insufficient';
   return 'ok';
@@ -27,7 +27,7 @@ function durationOrNull(seconds: number | null): string | null {
   return seconds === null ? null : formatDuration(seconds);
 }
 
-export function buildStatsView(stats: StatsLike, minSample: number): StatsView {
+export function buildStatsView(stats: TimeStats, minSample: number): StatsView {
   const state = statsState(stats, minSample);
   if (state !== 'ok') {
     return { state, n: stats.count, median: null, p90: null, p90Indicative: false };

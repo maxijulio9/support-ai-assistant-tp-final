@@ -1,4 +1,5 @@
-import { CohortLike, StatsLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
+import { TimeStats } from '../../../api/models/time-stats';
 
 export type Granularity = 'daily' | 'weekly';
 
@@ -13,7 +14,7 @@ export interface SeriesPoint {
   lowSample: boolean;
 }
 
-function toPoint(key: string, stats: StatsLike, minSample: number): SeriesPoint {
+function toPoint(key: string, stats: TimeStats, minSample: number): SeriesPoint {
   return {
     key,
     count: stats.count,
@@ -24,7 +25,7 @@ function toPoint(key: string, stats: StatsLike, minSample: number): SeriesPoint 
 }
 
 // Orden cronologico: las claves son fechas ISO, que ordenan como texto.
-export function buildSeriesPoints(cohort: CohortLike | undefined, granularity: Granularity, minSample: number): SeriesPoint[] {
+export function buildSeriesPoints(cohort: CohortResponseTimes | undefined, granularity: Granularity, minSample: number): SeriesPoint[] {
   if (!cohort) return [];
 
   const points =

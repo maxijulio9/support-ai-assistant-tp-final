@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, throwError } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { getMetricsByCategoryApiMetricsByCategoryGet } from '../../api/fn/internal-api/get-metrics-by-category-api-metrics-by-category-get';
 import { getMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet } from '../../api/fn/internal-api/get-metrics-confidence-distribution-api-metrics-confidence-distribution-get';
 import { getMetricsDailyApiMetricsDailyGet } from '../../api/fn/internal-api/get-metrics-daily-api-metrics-daily-get';
 import { getMetricsHeatmapApiMetricsHeatmapGet } from '../../api/fn/internal-api/get-metrics-heatmap-api-metrics-heatmap-get';
+import { getMetricsResponseTimesApiMetricsResponseTimesGet } from '../../api/fn/internal-api/get-metrics-response-times-api-metrics-response-times-get';
 import { getMetricsSummaryApiMetricsSummaryGet } from '../../api/fn/internal-api/get-metrics-summary-api-metrics-summary-get';
 import { getMetricsThresholdsApiMetricsThresholdsGet } from '../../api/fn/internal-api/get-metrics-thresholds-api-metrics-thresholds-get';
 import { CategoryMetric } from '../../api/models/category-metric';
@@ -15,9 +16,8 @@ import { HeatmapCell } from '../../api/models/heatmap-cell';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
 import { ProjectThresholdsItem } from '../../api/models/project-thresholds-item';
 import { MetricsFilters } from './metrics-filters';
-import { ResponseTimesUnavailableError } from './tiempos-comparativa/response-times-error';
 import { ResponseTimesFilters } from './tiempos-comparativa/response-times-filters';
-import { ResponseTimesLike } from './tiempos-comparativa/response-times.types';
+import { ResponseTimesResponse } from '../../api/models/response-times-response';
 
 @Injectable({ providedIn: 'root' })
 export class MetricsService {
@@ -88,15 +88,20 @@ export class MetricsService {
     );
   }
 
-  // Tiempos de respuesta por cohorte. Sin funcion generada para este endpoint
-  // todavia no se escribe la llamada a mano: falla con un error local hasta
-  // que el cliente la incluya. No acepta decision, el contrato no la define.
+  // Tiempos de respuesta por cohorte. No acepta decision, el contrato no la
+  // define para este endpoint.
   getResponseTimes(
-    _fromDate: string,
-    _toDate: string,
-    _tz: string,
-    _filters?: ResponseTimesFilters,
-  ): Observable<ResponseTimesLike> {
-    return throwError(() => new ResponseTimesUnavailableError());
+    fromDate: string,
+    toDate: string,
+    tz: string,
+    filters?: ResponseTimesFilters,
+  ): Observable<ResponseTimesResponse> {
+    return getMetricsResponseTimesApiMetricsResponseTimesGet(this.http, this.apiConfig.rootUrl, {
+      project_id: filters?.projectId ?? undefined,
+      category: filters?.category ?? undefined,
+      from_date: fromDate,
+      to_date: toDate,
+      tz,
+    }).pipe(map((response) => response.body));
   }
 }

@@ -1,5 +1,6 @@
 import { buildStatsView, StatsView } from './stats-view';
-import { CategoryRowLike, CohortLike } from './response-times.types';
+import { CategoryResponseTimes } from '../../../api/models/category-response-times';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
 
 export interface CategoryComparisonRow {
   category: string;
@@ -19,11 +20,11 @@ const MISSING_SIDE: StatsView = { state: 'empty', n: 0, median: null, p90: null,
 // cohorte queda con el otro lado en "empty" (sin tickets). Compara solo la
 // primera respuesta, la unica metrica con la misma regla en las dos cohortes.
 export function buildCategoryComparison(
-  automatic: CohortLike | undefined,
-  baseline: CohortLike | undefined,
+  automatic: CohortResponseTimes | undefined,
+  baseline: CohortResponseTimes | undefined,
   minSample: number,
 ): CategoryComparisonRow[] {
-  const sideByCategory = (rows: CategoryRowLike[]) =>
+  const sideByCategory = (rows: CategoryResponseTimes[]) =>
     new Map(
       rows.map((row) => [
         row.category,
@@ -57,6 +58,6 @@ export function buildCategoryComparison(
 }
 
 // Para avisar arriba cuando no hay nada contra que comparar.
-export function baselineHasTickets(baseline: CohortLike | undefined): boolean {
+export function baselineHasTickets(baseline: CohortResponseTimes | undefined): boolean {
   return (baseline?.tickets ?? 0) > 0;
 }

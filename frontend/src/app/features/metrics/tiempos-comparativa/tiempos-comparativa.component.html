@@ -42,9 +42,7 @@
       <mat-icon aria-hidden="true" class="tc-message-icon tc-message-icon--error">error</mat-icon>
       <h2>No pudimos cargar los tiempos de respuesta</h2>
       <p>{{ errorMessage() }}</p>
-      @if (canRetry()) {
-        <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
-      }
+      <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
     </div>
   }
 

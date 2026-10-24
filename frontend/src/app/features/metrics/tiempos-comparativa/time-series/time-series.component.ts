@@ -7,7 +7,7 @@ import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
 import { cohortAccentVar } from '../cohort-card';
 import { cohortDescription, cohortLabel } from '../response-times-format';
-import { ResponseTimesLike } from '../response-times.types';
+import { ResponseTimesResponse } from '../../../../api/models/response-times-response';
 import { Granularity, buildSeriesPoints, hasSeriesData } from '../time-series';
 import { SeriesChartColors, buildSeriesChartOptions, resolveSeriesScale } from '../time-series-chart';
 
@@ -30,7 +30,7 @@ function readColor(variable: string): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimeSeriesComponent {
-  readonly data = input.required<ResponseTimesLike>();
+  readonly data = input.required<ResponseTimesResponse>();
 
   readonly granularity = signal<Granularity>('weekly');
   private readonly selectedCohort = signal(DEFAULT_COHORT);

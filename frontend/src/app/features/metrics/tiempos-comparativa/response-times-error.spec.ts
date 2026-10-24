@@ -1,10 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-  RESPONSE_TIMES_ERROR_MESSAGE,
-  RESPONSE_TIMES_UNAVAILABLE_MESSAGE,
-  ResponseTimesUnavailableError,
-  responseTimesErrorMessage,
-} from './response-times-error';
+import { RESPONSE_TIMES_ERROR_MESSAGE, responseTimesErrorMessage } from './response-times-error';
 
 describe('responseTimesErrorMessage', () => {
   it('422 con detail de texto muestra ese texto', () => {
@@ -37,7 +32,4 @@ describe('responseTimesErrorMessage', () => {
     expect(responseTimesErrorMessage(new Error('x'))).toBe(RESPONSE_TIMES_ERROR_MESSAGE);
   });
 
-  it('el error local de endpoint no disponible tiene su propio mensaje', () => {
-    expect(responseTimesErrorMessage(new ResponseTimesUnavailableError())).toBe(RESPONSE_TIMES_UNAVAILABLE_MESSAGE);
-  });
 });

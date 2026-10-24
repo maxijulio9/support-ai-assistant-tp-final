@@ -1,6 +1,6 @@
 import { formatPercent } from './response-times-format';
 import { buildStatsView, StatsView } from './stats-view';
-import { OutcomeLike } from './response-times.types';
+import { OutcomeResponseTimes } from '../../../api/models/outcome-response-times';
 
 const OUTCOME_ORDER = [
   'REVIEWED_APPROVED',
@@ -8,6 +8,7 @@ const OUTCOME_ORDER = [
   'REVIEWED_REGENERATED',
   'ESCALATED_BY_HUMAN',
   'DISCARDED_BY_HUMAN',
+  'RESOLVED_EXTERNALLY',
 ];
 
 const OUTCOME_LABELS: Record<string, string> = {
@@ -16,6 +17,7 @@ const OUTCOME_LABELS: Record<string, string> = {
   REVIEWED_REGENERATED: 'Regenerada',
   ESCALATED_BY_HUMAN: 'Escalada por una persona',
   DISCARDED_BY_HUMAN: 'Descartada por una persona',
+  RESOLVED_EXTERNALLY: 'Resuelta por fuera del sistema',
 };
 
 export const PENDING_OUTCOME_LABEL = 'Pendiente';
@@ -56,7 +58,7 @@ function orderOf(channel: string | null): number {
 
 // Orden fijo para los canales conocidos, los desconocidos despues (con su
 // valor tal cual como rotulo) y los pendientes (null) al final.
-export function buildOutcomeRows(outcomes: OutcomeLike[], minSample: number): OutcomeRow[] {
+export function buildOutcomeRows(outcomes: OutcomeResponseTimes[], minSample: number): OutcomeRow[] {
   const total = outcomes.reduce((sum, outcome) => sum + outcome.tickets, 0);
 
   return [...outcomes]

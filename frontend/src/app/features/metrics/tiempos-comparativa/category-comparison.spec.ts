@@ -1,11 +1,12 @@
 import { baselineHasTickets, buildCategoryComparison } from './category-comparison';
-import { CohortLike, StatsLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
+import { TimeStats } from '../../../api/models/time-stats';
 
-function stats(count: number, p50: number | null = null, p90: number | null = null): StatsLike {
+function stats(count: number, p50: number | null = null, p90: number | null = null): TimeStats {
   return { count, mean_seconds: p50, p50_seconds: p50, p90_seconds: p90, within_target_rate: null };
 }
 
-function cohort(key: string, categories: Record<string, StatsLike>, tickets = 0): CohortLike {
+function cohort(key: string, categories: Record<string, TimeStats>, tickets = 0): CohortResponseTimes {
   return {
     cohort: key,
     first_response_kind: 'answer',
@@ -92,7 +93,7 @@ describe('buildCategoryComparison', () => {
 });
 
 describe('cierre por categoria', () => {
-  function withClosure(key: string, rows: Record<string, [StatsLike, StatsLike]>): CohortLike {
+  function withClosure(key: string, rows: Record<string, [TimeStats, TimeStats]>): CohortResponseTimes {
     return {
       ...cohort(key, {}),
       by_category: Object.entries(rows).map(([category, [firstResponse, closure]]) => ({

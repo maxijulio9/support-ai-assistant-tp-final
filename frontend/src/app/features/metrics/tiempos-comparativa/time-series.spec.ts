@@ -1,11 +1,12 @@
 import { buildSeriesPoints, hasSeriesData } from './time-series';
-import { CohortLike, StatsLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
+import { TimeStats } from '../../../api/models/time-stats';
 
-function stats(count: number, p50: number | null = null, p90: number | null = null): StatsLike {
+function stats(count: number, p50: number | null = null, p90: number | null = null): TimeStats {
   return { count, mean_seconds: p50, p50_seconds: p50, p90_seconds: p90, within_target_rate: null };
 }
 
-function cohort(daily: [string, StatsLike][], weekly: [string, StatsLike][] = []): CohortLike {
+function cohort(daily: [string, TimeStats][], weekly: [string, TimeStats][] = []): CohortResponseTimes {
   return {
     cohort: 'automatic',
     first_response_kind: 'answer',

@@ -1,17 +1,15 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, Subject, catchError, combineLatest, distinctUntilChanged, forkJoin, map, of, startWith, switchMap, tap } from 'rxjs';
+import { EMPTY, Subject, catchError, combineLatest, distinctUntilChanged, map, of, startWith, switchMap, tap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
-import { ConfigService } from '../../config/config.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
 import { resolveMetricsFilters } from '../metrics-filters';
-import { OnboardedProject } from '../../../api/models/onboarded-project';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 import { CohortCardComponent } from './cohort-card/cohort-card.component';
 import { CategoryComparisonComponent } from './category-comparison/category-comparison.component';
@@ -22,14 +20,10 @@ import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakd
 import { buildOutcomeRows } from './outcomes-breakdown';
 import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
 import { ProjectOption, buildProjectOptions } from './project-options';
-import {
-  RESPONSE_TIMES_ERROR_MESSAGE,
-  ResponseTimesUnavailableError,
-  responseTimesErrorMessage,
-} from './response-times-error';
+import { RESPONSE_TIMES_ERROR_MESSAGE, responseTimesErrorMessage } from './response-times-error';
 import { ALL_PROJECTS, buildResponseTimesFilters, resolveProjectSelection } from './response-times-filters';
 import { cohortLabel, formatDuration } from './response-times-format';
-import { ResponseTimesLike } from './response-times.types';
+import { ResponseTimesResponse } from '../../../api/models/response-times-response';
 
 export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
 
@@ -45,7 +39,6 @@ export class TiemposComparativaComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly metricsService = inject(MetricsService);
-  private readonly configService = inject(ConfigService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly allProjectsValue = ALL_PROJECTS;
@@ -55,10 +48,8 @@ export class TiemposComparativaComponent {
   readonly optionsReady = signal(false);
   readonly projectOptions = signal<ProjectOption[]>([]);
   readonly selection = signal<string>(ALL_PROJECTS);
-  readonly data = signal<ResponseTimesLike | null>(null);
+  readonly data = signal<ResponseTimesResponse | null>(null);
   readonly errorMessage = signal<string>(RESPONSE_TIMES_ERROR_MESSAGE);
-  // El error local de endpoint no disponible no mejora al reintentar
-  readonly canRetry = signal(true);
 
   readonly hasProjects = computed(() => this.projectOptions().length > 0);
   readonly isAllProjects = computed(() => this.selection() === ALL_PROJECTS);
@@ -100,19 +91,11 @@ export class TiemposComparativaComponent {
   private readonly retry$ = new Subject<void>();
 
   constructor() {
-    // Los umbrales dan los ids y la lista de proyectos configurados los
-    // nombres. Si alguna falla no se bloquea la pantalla: sin umbrales queda
-    // solo "Todos", y sin nombres se usa el rotulo corto del id.
-    const options$ = forkJoin([
-      this.metricsService.getThresholds().pipe(catchError(() => of<ProjectThresholdsItem[]>([]))),
-      this.configService.listOnboardedProjects().pipe(catchError(() => of<OnboardedProject[] | null>(null))),
-    ]).pipe(
-      map(([thresholds, onboarded]) =>
-        buildProjectOptions(
-          thresholds.map((item) => item.project_id),
-          onboarded,
-        ),
-      ),
+    // Los umbrales traen id, clave y nombre de cada proyecto. Si la carga
+    // falla no se bloquea la pantalla: queda solo "Todos los proyectos".
+    const options$ = this.metricsService.getThresholds().pipe(
+      catchError(() => of<ProjectThresholdsItem[]>([])),
+      map((projects) => buildProjectOptions(projects)),
       tap((options) => {
         this.projectOptions.set(options);
         this.optionsReady.set(true);
@@ -156,7 +139,6 @@ export class TiemposComparativaComponent {
               catchError((error) => {
                 this.data.set(null);
                 this.errorMessage.set(responseTimesErrorMessage(error));
-                this.canRetry.set(!(error instanceof ResponseTimesUnavailableError));
                 this.state.set('error');
                 return EMPTY;
               }),

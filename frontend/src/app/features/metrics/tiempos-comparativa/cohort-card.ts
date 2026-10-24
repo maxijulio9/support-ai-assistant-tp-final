@@ -2,7 +2,8 @@ import { resolveSegmentColorVar } from '../../../shared/decision-colors';
 import { cohortDescription, cohortLabel, firstResponseKindLabel, formatPercent, withinTargetLabel } from './response-times-format';
 import { closureBasisText, closurePlaceholder } from './closure';
 import { buildStatsView, StatsView } from './stats-view';
-import { CohortLike, ResponseTimesLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
+import { ResponseTimesResponse } from '../../../api/models/response-times-response';
 
 export interface WithinTarget {
   text: string;
@@ -80,7 +81,7 @@ export function cohortTicketsText(view: StatsView, tickets: number): string {
   return view.n === tickets ? String(view.n) : `${view.n} con tiempo (de ${tickets})`;
 }
 
-function buildCohortClosure(cohort: CohortLike, minSample: number): CohortClosure {
+function buildCohortClosure(cohort: CohortResponseTimes, minSample: number): CohortClosure {
   const view = buildStatsView(cohort.closure, minSample);
   return {
     view,
@@ -91,7 +92,7 @@ function buildCohortClosure(cohort: CohortLike, minSample: number): CohortClosur
 
 // El porcentaje dentro del objetivo solo se muestra si hay objetivo (hay
 // proyecto elegido), el backend lo calculo y la muestra alcanza.
-export function buildCohortCard(cohort: CohortLike, minSample: number, targetSeconds: number | null): CohortCard {
+export function buildCohortCard(cohort: CohortResponseTimes, minSample: number, targetSeconds: number | null): CohortCard {
   const firstResponse = buildStatsView(cohort.first_response, minSample);
   const rate = cohort.first_response.within_target_rate;
   const showTarget = targetSeconds !== null && rate !== null && firstResponse.state === 'ok';
@@ -115,11 +116,11 @@ export function buildCohortCard(cohort: CohortLike, minSample: number, targetSec
 export const MAIN_COHORTS: readonly string[] = ['automatic', 'reviewed', 'baseline'];
 export const SYSTEM_RESPONSE_COHORTS: readonly string[] = ['escalated', 'info_requested'];
 
-export function pickCohorts(cohorts: CohortLike[], keys: readonly string[]): CohortLike[] {
+export function pickCohorts(cohorts: CohortResponseTimes[], keys: readonly string[]): CohortResponseTimes[] {
   return keys.flatMap((key) => cohorts.filter((cohort) => cohort.cohort === key));
 }
 
 // Sin tickets en ninguna cohorte la pantalla muestra un estado vacio.
-export function hasAnyTickets(data: ResponseTimesLike): boolean {
+export function hasAnyTickets(data: ResponseTimesResponse): boolean {
   return data.cohorts.some((cohort) => cohort.tickets > 0);
 }

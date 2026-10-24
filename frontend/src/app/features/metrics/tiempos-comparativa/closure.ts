@@ -1,5 +1,5 @@
 import { cohortLabel } from './response-times-format';
-import { CohortLike } from './response-times.types';
+import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
 import { StatsView } from './stats-view';
 
 const LAST_CUSTOMER_COMMENT = 'last_customer_comment';
@@ -23,7 +23,7 @@ export function closureBasisText(basis: string): string {
 // Aclaracion de toda la seccion de cierre. Arma una frase por cada forma de
 // medirlo que hay en las cohortes y, si hay mas de una, avisa que no son
 // estrictamente comparables.
-export function closureNote(cohorts: CohortLike[]): string {
+export function closureNote(cohorts: CohortResponseTimes[]): string {
   const sentences: string[] = [];
 
   const customerLabels = cohorts.filter((cohort) => cohort.closure_basis === LAST_CUSTOMER_COMMENT).map((cohort) => cohortLabel(cohort.cohort));

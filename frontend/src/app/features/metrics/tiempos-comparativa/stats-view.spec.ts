@@ -1,7 +1,7 @@
 import { buildStatsView, P90_INDICATIVE_BELOW, statsPlaceholder, statsState } from './stats-view';
-import { StatsLike } from './response-times.types';
+import { TimeStats } from '../../../api/models/time-stats';
 
-function stats(count: number, p50: number | null = null, p90: number | null = null): StatsLike {
+function stats(count: number, p50: number | null = null, p90: number | null = null): TimeStats {
   return { count, mean_seconds: p50, p50_seconds: p50, p90_seconds: p90, within_target_rate: null };
 }
 
