@@ -43,7 +43,7 @@ def test_save_config_success(mock_get_db):
     result = service.save_config(thresholds, mappings)
 
     assert result == 1
-    assert mock_db.execute.call_count == 2  # 1 update de thresholds + 1 insert de mapping
+    assert mock_db.execute.call_count == 3  # 1 select de los mapeos guardados + 1 update de thresholds + 1 insert de mapping
     mock_db.commit.assert_called_once()
     mock_db.close.assert_called_once()
 
