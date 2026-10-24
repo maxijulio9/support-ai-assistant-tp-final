@@ -7,6 +7,7 @@ function project(id: string, autoPublish: number, needsReview: number): ProjectT
     threshold_auto_publish: autoPublish,
     threshold_needs_review: needsReview,
     similarity_threshold: 0.4,
+    first_response_target_seconds: 30,
   };
 }
 

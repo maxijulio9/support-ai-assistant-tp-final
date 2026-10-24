@@ -207,6 +207,7 @@ describe('thresholdsFromProject', () => {
     similarity_threshold: 0.35,
     threshold_auto_publish: 0.85,
     threshold_needs_review: 0.6,
+    first_response_target_seconds: 30,
   };
 
   it('devuelve siempre los tres umbrales guardados del proyecto', () => {
