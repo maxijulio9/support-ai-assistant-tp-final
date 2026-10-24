@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-# from app.modules.jsm_client.router import router as jsm_router
 from app.modules.webhook_receiver.router import router as webhook_router
 from app.modules.auth.router import router as auth_router
 from app.modules.auth.bootstrap import bootstrap_admin
@@ -12,7 +11,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# app.include_router(jsm_router) 
 app.include_router(webhook_router)
 app.include_router(auth_router)
 app.include_router(internal_api_router)
