@@ -73,10 +73,13 @@ export interface PrioritiesWithSuggestion {
 
 // 3 umbrales siempre completos (sin project_id: project_key va a nivel raiz
 // del request), para no depender de los defaults del backend al guardar.
+// first_response_target_seconds es distinto: si no se manda, el backend
+// conserva el valor guardado, asi que solo lo envia quien lo edita.
 export interface ProjectThresholdValues {
   threshold_auto_publish: number;
   threshold_needs_review: number;
   similarity_threshold: number;
+  first_response_target_seconds?: number;
 }
 
 // Wrapper de /api/config/* y /api/indexing/*: se va completando a medida que

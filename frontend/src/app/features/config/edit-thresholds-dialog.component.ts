@@ -13,7 +13,8 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ConfigService } from './config.service';
-import { classifyFormError } from '../../shared/form-error';
+import { formSaveErrorMessage } from '../../shared/form-error';
+import { firstResponseTargetError } from './first-response-target';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 
 export interface EditThresholdsDialogData {
@@ -33,6 +34,13 @@ function needsReviewNotAboveAutoPublishValidator(control: AbstractControl): Vali
   const autoPublish = parent.get('thresholdAutoPublish')?.value;
   if (typeof autoPublish !== 'number' || typeof control.value !== 'number') return null;
   return control.value <= autoPublish ? null : { aboveAutoPublish: true };
+}
+
+// Reusa las claves required, integer y min de firstResponseTargetError como
+// errores del control, para que la plantilla los lea con hasError.
+function firstResponseTargetValidator(control: AbstractControl): ValidationErrors | null {
+  const error = firstResponseTargetError(control.value);
+  return error ? { [error]: true } : null;
 }
 
 @Component({
@@ -72,6 +80,10 @@ export class EditThresholdsDialogComponent {
       nonNullable: true,
       validators: [Validators.required, Validators.min(0), Validators.max(1)],
     }),
+    firstResponseTarget: new FormControl(this.data.project.first_response_target_seconds, {
+      nonNullable: true,
+      validators: [firstResponseTargetValidator],
+    }),
   });
 
   constructor() {
@@ -93,13 +105,15 @@ export class EditThresholdsDialogComponent {
     this.submitting.set(true);
     this.form.disable();
 
-    const { thresholdAutoPublish, thresholdNeedsReview, similarityThreshold } = this.form.getRawValue();
+    const { thresholdAutoPublish, thresholdNeedsReview, similarityThreshold, firstResponseTarget } =
+      this.form.getRawValue();
 
     this.configService
       .configureProjectThresholds(this.data.project.key, {
         threshold_auto_publish: thresholdAutoPublish,
         threshold_needs_review: thresholdNeedsReview,
         similarity_threshold: similarityThreshold,
+        first_response_target_seconds: firstResponseTarget,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -110,8 +124,7 @@ export class EditThresholdsDialogComponent {
         error: (error: unknown) => {
           this.submitting.set(false);
           this.form.enable();
-          const result = classifyFormError(error);
-          this.errorMessage.set(result.message ?? SUBMIT_ERROR_MESSAGE);
+          this.errorMessage.set(formSaveErrorMessage(error, SUBMIT_ERROR_MESSAGE));
         },
       });
   }

@@ -15,7 +15,7 @@ import {
   statusMappingsHaveChanges,
   validateStatusMappings,
 } from './project-statuses-form';
-import { classifyFormError } from '../../shared/form-error';
+import { classifyFormError, formSaveErrorMessage } from '../../shared/form-error';
 import { JsmStatus } from '../../api/models/jsm-status';
 import { StatusActionItem } from '../../api/models/status-action-item';
 
@@ -121,9 +121,7 @@ export class ProjectStatusesComponent {
         },
         error: (error: unknown) => {
           if (projectKey !== this.projectKey()) return;
-          const result = classifyFormError(error);
-          const detail = result.category === 'validation-message' ? result.message : null;
-          this.submitErrorMessage.set(detail ?? SAVE_ERROR_MESSAGE);
+          this.submitErrorMessage.set(formSaveErrorMessage(error, SAVE_ERROR_MESSAGE));
           this.saving.set(false);
           this.form.enable({ emitEvent: false });
         },

@@ -7,6 +7,7 @@ import {
   EditThresholdsDialogData,
   EditThresholdsDialogResult,
 } from './edit-thresholds-dialog.component';
+import { formatFirstResponseTarget } from './first-response-target';
 
 @Component({
   selector: 'app-project-thresholds',
@@ -21,6 +22,8 @@ export class ProjectThresholdsComponent {
 
   readonly projects = input.required<OnboardedProject[]>();
   readonly selectedProjectKey = input<string | null>(null);
+
+  readonly formatFirstResponseTarget = formatFirstResponseTarget;
 
   readonly viewStatuses = output<string>();
   readonly thresholdsSaved = output<void>();

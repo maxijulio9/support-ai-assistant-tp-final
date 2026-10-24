@@ -2,6 +2,7 @@
   @if (projects().length === 0) {
     <p class="project-thresholds-empty">Todavía no incorporaste ningún proyecto.</p>
   } @else {
+    <div class="project-thresholds-scroll">
     <table class="project-thresholds-table">
       <thead>
         <tr>
@@ -10,6 +11,7 @@
           <th scope="col">Publicación automática</th>
           <th scope="col">Revisión</th>
           <th scope="col">Similitud</th>
+          <th scope="col">Primera respuesta</th>
           <th scope="col">Acciones</th>
         </tr>
       </thead>
@@ -24,6 +26,7 @@
             <td data-label="Publicación automática">{{ project.threshold_auto_publish }}</td>
             <td data-label="Revisión">{{ project.threshold_needs_review }}</td>
             <td data-label="Similitud">{{ project.similarity_threshold }}</td>
+            <td data-label="Primera respuesta">{{ formatFirstResponseTarget(project.first_response_target_seconds) }}</td>
             <td data-label="Acciones" class="project-thresholds-actions">
               <button mat-button type="button" (click)="openEditThresholds(project)">Editar umbrales</button>
               <button mat-button type="button" (click)="viewStatuses.emit(project.key)">Ver estados</button>
@@ -32,5 +35,6 @@
         }
       </tbody>
     </table>
+    </div>
   }
 </div>

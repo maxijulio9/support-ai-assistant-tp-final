@@ -8,8 +8,15 @@
   margin: 0;
 }
 
+// En anchos medios la tabla de 7 columnas no entra sin apretarse: scrollea
+// dentro de su contenedor en vez de ensanchar la pagina.
+.project-thresholds-scroll {
+  overflow-x: auto;
+}
+
 .project-thresholds-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
@@ -42,6 +49,10 @@
 }
 
 @media (max-width: 767.98px) {
+  .project-thresholds-table {
+    min-width: 0;
+  }
+
   .project-thresholds-table thead {
     display: none;
   }

@@ -32,3 +32,18 @@ export function classifyFormError(error: unknown): FormErrorResult {
 
   return { category: 'unknown', message: null };
 }
+
+// Mensaje para un guardado fallido: el detail del backend tal cual en un
+// 400, 404 o 409 y tambien en un 503, donde classifyFormError usa un texto
+// fijo pero el backend explica el motivo (por ejemplo que no se pudo
+// persistir). Si no hay detail legible, el mensaje fijo del 503 o el
+// generico que pasa quien llama.
+export function formSaveErrorMessage(error: unknown, fallback: string): string {
+  const result = classifyFormError(error);
+  if (result.category === 'validation-message') return result.message ?? fallback;
+  if (result.category === 'service-unavailable') {
+    const detail = error instanceof HttpErrorResponse && typeof error.error?.detail === 'string' ? error.error.detail : null;
+    return detail ?? result.message ?? fallback;
+  }
+  return fallback;
+}

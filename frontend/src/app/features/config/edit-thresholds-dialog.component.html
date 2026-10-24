@@ -49,6 +49,24 @@
       </mat-error>
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="edit-thresholds-field edit-thresholds-field--with-hint" subscriptSizing="dynamic">
+      <mat-label>Objetivo de primera respuesta</mat-label>
+      <input matInput type="number" step="1" min="1" formControlName="firstResponseTarget" />
+      <mat-hint>
+        Tiempo objetivo, en segundos, desde que se crea el ticket en JSM hasta el primer comentario público. Es solo
+        una referencia para la comparativa de tiempos: el sistema no lo aplica ni genera alertas.
+      </mat-hint>
+      <mat-error>
+        @if (form.controls.firstResponseTarget.hasError('required')) {
+          Ingresá un valor.
+        } @else if (form.controls.firstResponseTarget.hasError('integer')) {
+          Tiene que ser un número entero de segundos.
+        } @else if (form.controls.firstResponseTarget.hasError('min')) {
+          Tiene que ser de 1 segundo o más.
+        }
+      </mat-error>
+    </mat-form-field>
+
     @if (errorMessage()) {
       <p class="edit-thresholds-error" role="alert">{{ errorMessage() }}</p>
     }
