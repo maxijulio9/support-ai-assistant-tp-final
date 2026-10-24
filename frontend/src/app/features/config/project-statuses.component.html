@@ -15,19 +15,43 @@
   }
 
   @if (state() === 'loaded') {
-    @if (statuses().length === 0) {
+    @if (rows().length === 0) {
       <p class="project-statuses-empty">Este proyecto no tiene estados en JSM.</p>
     } @else {
+      @for (warning of validation().warnings; track warning) {
+        <p class="project-statuses-warning" role="status">{{ warning }}</p>
+      }
+
       <ul class="project-statuses-list">
-        @for (status of statuses(); track status.id) {
-          <li class="project-statuses-item">{{ status.name }}</li>
+        @for (row of rows(); track row.statusId) {
+          <li class="project-statuses-row">
+            <span class="project-statuses-name" [id]="'status-name-' + row.statusId">{{ row.name }}</span>
+
+            <mat-form-field class="project-statuses-field" subscriptSizing="dynamic">
+              <mat-label>Acción</mat-label>
+              <mat-select [formControl]="controlFor(row.statusId)" [aria-labelledby]="'status-name-' + row.statusId">
+                <mat-option [value]="noActionValue">Sin acción</mat-option>
+                @for (action of actions(); track action.value) {
+                  <mat-option [value]="action.value">{{ action.value }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>{{ hintFor(row.statusId) }}</mat-hint>
+              <mat-error>{{ validation().rowErrors[row.statusId] }}</mat-error>
+            </mat-form-field>
+          </li>
         }
       </ul>
-    }
 
-    <p class="project-statuses-note">
-      El mapeo completo (qué transición de JSM corresponde a cada estado) todavía no se puede guardar: faltan los
-      valores válidos de system_action.
-    </p>
+      @if (submitErrorMessage(); as message) {
+        <p class="project-statuses-submit-error" role="alert">{{ message }}</p>
+      }
+
+      <div class="project-statuses-actions">
+        <button mat-button type="button" [disabled]="!canDiscard()" (click)="onDiscard()">Descartar</button>
+        <button mat-flat-button type="button" [disabled]="!canSave()" (click)="onSave()">
+          {{ saving() ? 'Guardando...' : 'Guardar mapeo' }}
+        </button>
+      </div>
+    }
   }
 </div>

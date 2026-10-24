@@ -5,30 +5,67 @@
 .project-statuses-list {
   list-style: none;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--app-space-xs);
-  margin: 0 0 var(--app-space-sm);
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  margin: 0;
   padding: 0;
 }
 
-.project-statuses-item {
-  padding: 2px var(--app-space-xs);
-  border-radius: var(--app-radius-sm);
-  font: var(--app-text-metadata);
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+.project-statuses-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--app-space-sm);
+  align-items: start;
+}
+
+.project-statuses-name {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  font: var(--app-text-body);
   color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.project-statuses-field {
+  width: 100%;
+}
+
+.project-statuses-submit-error {
+  color: var(--mat-sys-error);
+  font: var(--app-text-secondary);
+  margin: var(--app-space-sm) 0 0;
+}
+
+.project-statuses-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--app-space-xs);
+  margin-top: var(--app-space-sm);
+}
+
+.project-statuses-warning {
+  font: var(--app-text-secondary);
+  color: var(--app-color-warning);
+  margin: 0 0 var(--app-space-sm);
+}
+
+@media (max-width: 767.98px) {
+  .project-statuses-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--app-space-xs);
+  }
+
+  .project-statuses-name {
+    min-height: auto;
+  }
 }
 
 .project-statuses-empty {
   font: var(--app-text-body);
   color: var(--app-color-text-secondary);
   margin: 0 0 var(--app-space-sm);
-}
-
-.project-statuses-note {
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
-  margin: 0;
 }
 
 .project-statuses-error {

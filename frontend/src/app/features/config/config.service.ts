@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { getItsmConnectionApiConfigItsmGet } from '../../api/fn/internal-api/get-itsm-connection-api-config-itsm-get';
 import { configureItsmConnectionApiConfigItsmPost } from '../../api/fn/internal-api/configure-itsm-connection-api-config-itsm-post';
@@ -10,6 +10,7 @@ import { onboardProjectsApiConfigItsmProjectsOnboardPost } from '../../api/fn/in
 import { listOnboardedProjectsApiConfigItsmProjectsGet } from '../../api/fn/internal-api/list-onboarded-projects-api-config-itsm-projects-get';
 import { configureProjectApiConfigItsmProjectsPost } from '../../api/fn/internal-api/configure-project-api-config-itsm-projects-post';
 import { listProjectStatusesApiConfigItsmProjectsProjectKeyStatusesGet } from '../../api/fn/internal-api/list-project-statuses-api-config-itsm-projects-project-key-statuses-get';
+import { listStatusActionsApiConfigItsmStatusActionsGet } from '../../api/fn/internal-api/list-status-actions-api-config-itsm-status-actions-get';
 import { listSelectFieldsApiConfigItsmFieldsGet } from '../../api/fn/internal-api/list-select-fields-api-config-itsm-fields-get';
 import { listFieldOptionsApiConfigItsmFieldsFieldIdOptionsGet } from '../../api/fn/internal-api/list-field-options-api-config-itsm-fields-field-id-options-get';
 import { configureCategoriesApiConfigItsmProjectsProjectKeyCategoriesPost } from '../../api/fn/internal-api/configure-categories-api-config-itsm-projects-project-key-categories-post';
@@ -44,6 +45,8 @@ import { OnboardedProject } from '../../api/models/onboarded-project';
 import { ProjectThresholds } from '../../api/models/project-thresholds';
 import { ProjectConfigResponse } from '../../api/models/project-config-response';
 import { JsmStatus } from '../../api/models/jsm-status';
+import { ProjectStatusMapping } from '../../api/models/project-status-mapping';
+import { StatusActionItem } from '../../api/models/status-action-item';
 import { JsmField } from '../../api/models/jsm-field';
 import { ProjectConfigurationResponse } from '../../api/models/project-configuration-response';
 import { LlmConfigResponse } from '../../api/models/llm-config-response';
@@ -57,6 +60,7 @@ import { JsmPriority } from '../../api/models/jsm-priority';
 import { StartIndexingResponse } from '../../api/models/start-indexing-response';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 import { IndexedSpace } from '../../api/models/indexed-space';
+import { thresholdsFromProject } from './project-statuses-form';
 
 // Nivel universal de prioridad como clave, lista de ids reales de JSM como
 // valor: misma forma que usan tanto el POST como el detalle del proyecto.
@@ -120,7 +124,7 @@ export class ConfigService {
 
   // status_mappings va siempre vacio: el backend confirmo que asi conserva
   // los mapeos ya guardados y solo escribe los umbrales. El mapeo de
-  // estados todavia no se construye en esta pantalla (ver project-statuses).
+  // estados se guarda aparte, con saveProjectStatusMappings.
   configureProjectThresholds(
     projectKey: string,
     thresholds: ProjectThresholdValues,
@@ -134,6 +138,34 @@ export class ConfigService {
     return listProjectStatusesApiConfigItsmProjectsProjectKeyStatusesGet(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
     }).pipe(map((response) => response.body.statuses));
+  }
+
+  listStatusActions(): Observable<StatusActionItem[]> {
+    return listStatusActionsApiConfigItsmStatusActionsGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body.actions),
+    );
+  }
+
+  // Upsert por fila: las filas que no viajan se conservan. El detalle se
+  // pide justo antes para reenviar los umbrales del ultimo estado guardado,
+  // porque el POST los exige y pisa lo que no se envie. Es una sola
+  // transaccion: si falla, no se guarda ni el mapeo ni los umbrales.
+  saveProjectStatusMappings(
+    projectKey: string,
+    mappings: ProjectStatusMapping[],
+  ): Observable<ProjectConfigResponse> {
+    return this.getProjectConfiguration(projectKey).pipe(
+      switchMap((detail) =>
+        configureProjectApiConfigItsmProjectsPost(this.http, this.apiConfig.rootUrl, {
+          body: {
+            project_key: projectKey,
+            thresholds: thresholdsFromProject(detail.project),
+            status_mappings: mappings,
+          },
+        }),
+      ),
+      map((response) => response.body),
+    );
   }
 
   listSelectFields(): Observable<JsmField[]> {
