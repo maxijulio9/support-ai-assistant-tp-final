@@ -40,7 +40,7 @@ async def test_approve_interaction_sets_approved_channel(
     mock_jsm = MagicMock(post_comment=AsyncMock())
     mock_jsm_class.return_value = mock_jsm
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
 
     result = await InteractionReviewService().approve_interaction("int-1", "user-1")
 
@@ -73,7 +73,7 @@ async def test_regenerate_interaction_publishes_and_sets_regenerated_channel_whe
     mock_jsm = MagicMock(post_comment=AsyncMock())
     mock_jsm_class.return_value = mock_jsm
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
 
     result = await InteractionReviewService().regenerate_interaction("int-1", "motivo del rechazo", "user-1")
 
@@ -103,7 +103,7 @@ async def test_regenerate_interaction_does_not_publish_and_sets_regenerated_chan
     mock_history_class.return_value.get = AsyncMock(return_value=[])
     mock_generator_class.return_value.regenerate.return_value = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_ESCALATE)
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
 
     result = await InteractionReviewService().regenerate_interaction("int-1", "motivo del rechazo", "user-1")
 
@@ -126,7 +126,7 @@ def test_escalate_interaction_sets_escalated_by_human_channel(
 ):
     mock_repo_class.return_value.get_interaction_context.return_value = _build_context()
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
 
     result = InteractionReviewService().escalate_interaction("int-1", "motivo", "user-1")
 
