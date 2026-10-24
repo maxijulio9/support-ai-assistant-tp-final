@@ -110,7 +110,9 @@ _listing_service = InteractionListingService()
 
 
 # configura los umbrales y el mapeo de estados de un proyecto
-@router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse)
+@router.post("/api/config/itsm/projects", response_model=ProjectConfigResponse,
+             responses={400: {"model": ErrorResponse, "description": "El proyecto no existe, un mapeo o una accion de estado no son validos, o hay mas de un estado activo con la misma accion"},
+                        503: {"model": ErrorResponse, "description": "No se pudo persistir la configuracion"}})
 def configure_project(request: ProjectConfigRequest, admin: AppUser = Depends(require_admin)):
     try:
         mappings_configured = _service.save_config(request.thresholds, request.status_mappings, request.project_key)
@@ -133,7 +135,9 @@ def list_status_actions(admin: AppUser = Depends(require_admin)):
 # aprueba una interaccion en needs_review, publica la respuesta generada tal cual esta o la version editada por el agente si viene edited_response
 @router.post("/api/interactions/{interaction_id}/approve", response_model=InteractionReviewResponse,
              responses={400: {"model": ErrorResponse, "description": "La respuesta editada esta vacia o supera el maximo de caracteres"},
-                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
+                        404: {"model": ErrorResponse, "description": "La interaccion no existe"},
+                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"},
+                        503: {"model": ErrorResponse, "description": "No se pudo aprobar la interaccion, o todavia no se configuro la conexion con JSM"}})
 async def approve_interaction(interaction_id: str, request: ApproveRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         if request.edited_response is not None:
@@ -157,7 +161,9 @@ async def approve_interaction(interaction_id: str, request: ApproveRequest, usua
 
 # regenera una interaccion rechazada, con el motivo del rechazo
 @router.post("/api/interactions/{interaction_id}/regenerate", response_model=InteractionReviewResponse,
-             responses={409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
+             responses={404: {"model": ErrorResponse, "description": "La interaccion no existe"},
+                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"},
+                        503: {"model": ErrorResponse, "description": "No se pudo regenerar la interaccion, o todavia no se configuro la conexion con JSM"}})
 async def regenerate_interaction(interaction_id: str, request: RegenerateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         action_type = await _review_service.regenerate_interaction(interaction_id, request.rejection_reason, str(usuario.id))
@@ -176,7 +182,9 @@ async def regenerate_interaction(interaction_id: str, request: RegenerateRequest
 
 # escala una interaccion directo a un humano, sin generar nada nuevo
 @router.post("/api/interactions/{interaction_id}/escalate", response_model=InteractionReviewResponse,
-             responses={409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
+             responses={404: {"model": ErrorResponse, "description": "La interaccion no existe"},
+                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"},
+                        503: {"model": ErrorResponse, "description": "No se pudo escalar la interaccion"}})
 def escalate_interaction(interaction_id: str, request: EscalateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         action_type = _review_service.escalate_interaction(interaction_id, request.rejection_reason, str(usuario.id))
@@ -195,7 +203,8 @@ def escalate_interaction(interaction_id: str, request: EscalateRequest, usuario:
 # descarta la sugerencia de una interaccion pendiente, no publica nada, no regenera y no escala, el ticket queda abierto en jsm
 @router.post("/api/interactions/{interaction_id}/discard", response_model=InteractionReviewResponse,
              responses={404: {"model": ErrorResponse, "description": "La interaccion no existe"},
-                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
+                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"},
+                        503: {"model": ErrorResponse, "description": "No se pudo descartar la interaccion"}})
 def discard_interaction(interaction_id: str, request: DiscardRequest | None = None, usuario: AppUser = Depends(get_current_user)):
     rejection_reason = ((request.rejection_reason if request is not None else None) or "").strip() or None
 
