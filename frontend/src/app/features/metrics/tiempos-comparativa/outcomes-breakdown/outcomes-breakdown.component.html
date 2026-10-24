@@ -1,0 +1,22 @@
+<div class="outcomes" [style.--outcome-accent]="accent">
+  @if (rows().length === 0) {
+    <p class="outcomes-empty">Sin tickets en el período</p>
+  } @else {
+    <ul class="outcomes-list">
+      @for (row of rows(); track row.channel ?? 'pending') {
+        <li class="outcome-row">
+          <div class="outcome-header">
+            <span class="outcome-label">{{ row.label }}</span>
+            <span class="outcome-count">{{ row.ticketsText }} ({{ row.shareText }})</span>
+          </div>
+          <div class="outcome-bar" aria-hidden="true">
+            <div class="outcome-bar-fill" [style.width.%]="row.share * 100"></div>
+          </div>
+          <p class="outcome-first-response" [class.outcome-first-response--none]="!row.hasFirstResponse">
+            {{ row.firstResponseText }}
+          </p>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -66,6 +66,15 @@
       </div>
     </section>
 
+    <section class="tc-section" aria-labelledby="tc-outcomes-title">
+      <h2 id="tc-outcomes-title" class="tc-section-title">Cómo terminaron los tickets con revisión</h2>
+      <p class="tc-section-text">
+        Resultado de cada ticket en que el sistema sugirió la respuesta y una persona resolvió, con la mediana de primera
+        respuesta de cada resultado. «Pendiente» son los que todavía esperan una decisión.
+      </p>
+      <app-outcomes-breakdown [rows]="outcomeRows()" />
+    </section>
+
     <section class="tc-section" aria-labelledby="tc-system-title">
       <h2 id="tc-system-title" class="tc-section-title">Respuestas que no resuelven el ticket</h2>
       <p class="tc-section-text">

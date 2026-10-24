@@ -1,3 +1,4 @@
+import { formatPercent } from './response-times-format';
 import { buildStatsView, StatsView } from './stats-view';
 import { OutcomeLike } from './response-times.types';
 
@@ -23,14 +24,28 @@ export const PENDING_OUTCOME_LABEL = 'Pendiente';
 // no tienen primera respuesta.
 const WITHOUT_FIRST_RESPONSE = new Set(['ESCALATED_BY_HUMAN', 'DISCARDED_BY_HUMAN']);
 
+export const NO_FIRST_RESPONSE_TEXT = 'Sin primera respuesta';
+
 export interface OutcomeRow {
   channel: string | null;
   label: string;
   tickets: number;
+  ticketsText: string;
   // Proporcion de 0 a 1 sobre el total de tickets de la lista
   share: number;
+  shareText: string;
   hasFirstResponse: boolean;
   firstResponse: StatsView | null;
+  // Lo que se muestra de la primera respuesta: la mediana, o el motivo por el
+  // que no hay cifra
+  firstResponseText: string;
+}
+
+function firstResponseText(view: StatsView | null): string {
+  if (view === null) return NO_FIRST_RESPONSE_TEXT;
+  if (view.state === 'insufficient') return 'n insuficiente';
+  if (view.state === 'empty') return 'Sin datos de tiempo';
+  return view.median === null ? 'Sin dato' : `Mediana ${view.median}`;
 }
 
 function orderOf(channel: string | null): number {
@@ -49,13 +64,18 @@ export function buildOutcomeRows(outcomes: OutcomeLike[], minSample: number): Ou
     .map((outcome) => {
       const channel = outcome.resolution_channel;
       const hasFirstResponse = channel === null || !WITHOUT_FIRST_RESPONSE.has(channel);
+      const share = total === 0 ? 0 : outcome.tickets / total;
+      const firstResponse = hasFirstResponse ? buildStatsView(outcome.first_response, minSample) : null;
       return {
         channel,
         label: channel === null ? PENDING_OUTCOME_LABEL : (OUTCOME_LABELS[channel] ?? channel),
         tickets: outcome.tickets,
-        share: total === 0 ? 0 : outcome.tickets / total,
+        ticketsText: `${outcome.tickets} ${outcome.tickets === 1 ? 'ticket' : 'tickets'}`,
+        share,
+        shareText: formatPercent(share),
         hasFirstResponse,
-        firstResponse: hasFirstResponse ? buildStatsView(outcome.first_response, minSample) : null,
+        firstResponse,
+        firstResponseText: firstResponseText(firstResponse),
       };
     });
 }

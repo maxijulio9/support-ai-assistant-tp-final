@@ -1,4 +1,4 @@
-import { PENDING_OUTCOME_LABEL, buildOutcomeRows } from './outcomes-breakdown';
+import { NO_FIRST_RESPONSE_TEXT, PENDING_OUTCOME_LABEL, buildOutcomeRows } from './outcomes-breakdown';
 import { OutcomeLike, StatsLike } from './response-times.types';
 
 function stats(count: number, p50: number | null = null): StatsLike {
@@ -60,5 +60,31 @@ describe('buildOutcomeRows', () => {
 
   it('sin tickets en total la proporcion es 0 y no NaN', () => {
     expect(buildOutcomeRows([outcome('REVIEWED_APPROVED', 0, stats(0))], 5)[0].share).toBe(0);
+  });
+
+  it('las filas sin primera respuesta dicen "Sin primera respuesta" en lugar de cifras', () => {
+    const rows = buildOutcomeRows([outcome('ESCALATED_BY_HUMAN', 2, stats(0)), outcome('DISCARDED_BY_HUMAN', 1, stats(0))], 5);
+
+    expect(rows.map((row) => row.firstResponseText)).toEqual([NO_FIRST_RESPONSE_TEXT, NO_FIRST_RESPONSE_TEXT]);
+  });
+
+  it('con muestra suficiente muestra la mediana formateada', () => {
+    const [row] = buildOutcomeRows([outcome('REVIEWED_APPROVED', 8, stats(8, 125))], 5);
+
+    expect(row.firstResponseText).toBe('Mediana 2 min 5 s');
+  });
+
+  it('distingue n insuficiente de sin datos de tiempo', () => {
+    const rows = buildOutcomeRows([outcome('REVIEWED_APPROVED', 3, stats(3)), outcome('REVIEWED_EDITED', 2, stats(0))], 5);
+
+    expect(rows[0].firstResponseText).toBe('n insuficiente');
+    expect(rows[1].firstResponseText).toBe('Sin datos de tiempo');
+  });
+
+  it('el texto de tickets va en singular con 1 y la proporcion en porcentaje entero', () => {
+    const rows = buildOutcomeRows([outcome('REVIEWED_APPROVED', 1, stats(1)), outcome('REVIEWED_EDITED', 2, stats(2))], 5);
+
+    expect(rows.map((row) => row.ticketsText)).toEqual(['1 ticket', '2 tickets']);
+    expect(rows.map((row) => row.shareText)).toEqual(['33%', '67%']);
   });
 });
