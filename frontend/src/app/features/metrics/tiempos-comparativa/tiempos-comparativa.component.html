@@ -100,7 +100,9 @@
       <h2 id="tc-outcomes-title" class="tc-section-title">Cómo terminaron los tickets con revisión</h2>
       <p class="tc-section-text">
         Resultado de cada ticket en que el sistema sugirió la respuesta y una persona resolvió, con la mediana de primera
-        respuesta de cada resultado. «Pendiente» son los que todavía esperan una decisión.
+        respuesta de cada resultado. «Pendiente» son los que todavía esperan una decisión. «Sin primera respuesta medida»
+        significa que el sistema no registró el momento de esa respuesta (por ejemplo, cuando una persona resolvió directo
+        en JSM).
       </p>
       <app-outcomes-breakdown [rows]="outcomeRows()" />
     </section>

@@ -12,7 +12,7 @@
           <div class="outcome-bar" aria-hidden="true">
             <div class="outcome-bar-fill" [style.width.%]="row.share * 100"></div>
           </div>
-          <p class="outcome-first-response" [class.outcome-first-response--none]="!row.hasFirstResponse">
+          <p class="outcome-first-response" [class.outcome-first-response--none]="row.firstResponse.state !== 'ok'">
             {{ row.firstResponseText }}
           </p>
         </li>

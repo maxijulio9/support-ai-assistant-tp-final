@@ -22,11 +22,7 @@ const OUTCOME_LABELS: Record<string, string> = {
 
 export const PENDING_OUTCOME_LABEL = 'Pendiente';
 
-// Estos dos canales cierran la solicitud sin publicar una respuesta, asi que
-// no tienen primera respuesta.
-const WITHOUT_FIRST_RESPONSE = new Set(['ESCALATED_BY_HUMAN', 'DISCARDED_BY_HUMAN']);
-
-export const NO_FIRST_RESPONSE_TEXT = 'Sin primera respuesta';
+export const NO_MEASURED_FIRST_RESPONSE_TEXT = 'Sin primera respuesta medida';
 
 export interface OutcomeRow {
   channel: string | null;
@@ -36,17 +32,18 @@ export interface OutcomeRow {
   // Proporcion de 0 a 1 sobre el total de tickets de la lista
   share: number;
   shareText: string;
-  hasFirstResponse: boolean;
-  firstResponse: StatsView | null;
+  firstResponse: StatsView;
   // Lo que se muestra de la primera respuesta: la mediana, o el motivo por el
   // que no hay cifra
   firstResponseText: string;
 }
 
-function firstResponseText(view: StatsView | null): string {
-  if (view === null) return NO_FIRST_RESPONSE_TEXT;
-  if (view.state === 'insufficient') return 'n insuficiente';
-  if (view.state === 'empty') return 'Sin datos de tiempo';
+// El estado sale solo de first_response.count, nunca del nombre del canal:
+// hay canales sin hora medida del primer comentario (por ejemplo cuando una
+// persona resolvio directo en JSM) y el backend lo expresa con count 0.
+function firstResponseText(view: StatsView): string {
+  if (view.state === 'empty') return NO_MEASURED_FIRST_RESPONSE_TEXT;
+  if (view.state === 'insufficient') return `n insuficiente (${view.n} ${view.n === 1 ? 'ticket' : 'tickets'})`;
   return view.median === null ? 'Sin dato' : `Mediana ${view.median}`;
 }
 
@@ -65,9 +62,8 @@ export function buildOutcomeRows(outcomes: OutcomeResponseTimes[], minSample: nu
     .sort((a, b) => orderOf(a.resolution_channel) - orderOf(b.resolution_channel))
     .map((outcome) => {
       const channel = outcome.resolution_channel;
-      const hasFirstResponse = channel === null || !WITHOUT_FIRST_RESPONSE.has(channel);
       const share = total === 0 ? 0 : outcome.tickets / total;
-      const firstResponse = hasFirstResponse ? buildStatsView(outcome.first_response, minSample) : null;
+      const firstResponse = buildStatsView(outcome.first_response, minSample);
       return {
         channel,
         label: channel === null ? PENDING_OUTCOME_LABEL : (OUTCOME_LABELS[channel] ?? channel),
@@ -75,7 +71,6 @@ export function buildOutcomeRows(outcomes: OutcomeResponseTimes[], minSample: nu
         ticketsText: `${outcome.tickets} ${outcome.tickets === 1 ? 'ticket' : 'tickets'}`,
         share,
         shareText: formatPercent(share),
-        hasFirstResponse,
         firstResponse,
         firstResponseText: firstResponseText(firstResponse),
       };
