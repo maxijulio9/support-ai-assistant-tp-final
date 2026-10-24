@@ -14,9 +14,8 @@ import { InteractionDetailResponse } from '../../api/models/interaction-detail-r
 
 export type DetailViewState = 'loading' | 'error' | 'not-found' | 'loaded';
 
-// Mismo patron de UUID que review.service.ts (resolveReviewedBy): valida
-// forma, no existencia. Evita pedirle al backend un id que ya sabemos mal
-// formado.
+// Valida la forma del UUID, no su existencia. Evita pedirle al backend un id
+// que ya sabemos mal formado.
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Component({

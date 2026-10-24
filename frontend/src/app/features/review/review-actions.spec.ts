@@ -2,6 +2,7 @@ import {
   MAX_EDITED_RESPONSE_LENGTH,
   buildApproveBody,
   buildDiscardBody,
+  buildRegenerateBody,
   isEditedResponseValid,
   normalizeResponseText,
   resolveEditedResponse,
@@ -57,23 +58,27 @@ describe('resolveEditedResponse', () => {
 });
 
 describe('buildApproveBody', () => {
-  it('sin reviewedBy y sin edicion: body vacio (igual que hoy)', () => {
-    expect(buildApproveBody(undefined, null)).toEqual({});
+  it('sin edicion: body vacio', () => {
+    expect(buildApproveBody(null)).toEqual({});
   });
 
-  it('con reviewedBy y sin edicion: solo reviewed_by (mismo comportamiento de hoy)', () => {
-    expect(buildApproveBody('uuid-123', null)).toEqual({ reviewed_by: 'uuid-123' });
+  it('con edicion: solo edited_response', () => {
+    expect(buildApproveBody('Texto editado')).toEqual({ edited_response: 'Texto editado' });
   });
 
-  it('sin reviewedBy y con edicion: solo edited_response', () => {
-    expect(buildApproveBody(undefined, 'Texto editado')).toEqual({ edited_response: 'Texto editado' });
+  it('nunca incluye un campo de revisor: el revisor sale del token', () => {
+    expect(Object.keys(buildApproveBody('Texto editado'))).not.toContain('reviewed_by');
+    expect(Object.keys(buildApproveBody(null))).not.toContain('reviewed_by');
+  });
+});
+
+describe('buildRegenerateBody', () => {
+  it('manda solo el motivo, tal cual viene', () => {
+    expect(buildRegenerateBody('Falta contexto')).toEqual({ rejection_reason: 'Falta contexto' });
   });
 
-  it('con reviewedBy y con edicion: ambos campos', () => {
-    expect(buildApproveBody('uuid-123', 'Texto editado')).toEqual({
-      reviewed_by: 'uuid-123',
-      edited_response: 'Texto editado',
-    });
+  it('nunca incluye un campo de revisor: el revisor sale del token', () => {
+    expect(Object.keys(buildRegenerateBody('Motivo'))).toEqual(['rejection_reason']);
   });
 });
 

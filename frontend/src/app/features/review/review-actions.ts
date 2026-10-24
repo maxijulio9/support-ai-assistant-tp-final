@@ -30,17 +30,15 @@ export function resolveEditedResponse(editedText: string, generatedResponse: str
   return normalized === original ? null : normalized;
 }
 
-// Mismo patron que ya usa review.service.ts para reviewed_by: omitir el
-// campo en vez de mandarlo vacio o null. No cambia ese comportamiento, solo
-// lo extiende con edited_response.
-export function buildApproveBody(
-  reviewedBy: string | undefined,
-  editedResponse: string | null,
-): { reviewed_by?: string; edited_response?: string } {
-  const body: { reviewed_by?: string; edited_response?: string } = {};
-  if (reviewedBy) body.reviewed_by = reviewedBy;
-  if (editedResponse !== null) body.edited_response = editedResponse;
-  return body;
+// El revisor sale del token, nunca se manda en el body. edited_response se
+// omite en vez de mandarse vacio o null cuando no hubo edicion.
+export function buildApproveBody(editedResponse: string | null): { edited_response?: string } {
+  return editedResponse !== null ? { edited_response: editedResponse } : {};
+}
+
+// El revisor sale del token, nunca se manda en el body.
+export function buildRegenerateBody(rejectionReason: string): { rejection_reason: string } {
+  return { rejection_reason: rejectionReason };
 }
 
 // El revisor sale del token en discard, nunca se manda en el body.

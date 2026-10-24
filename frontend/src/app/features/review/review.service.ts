@@ -7,7 +7,7 @@ import { getInteractionDetailApiInteractionsInteractionIdGet } from '../../api/f
 import { approveInteractionApiInteractionsInteractionIdApprovePost } from '../../api/fn/internal-api/approve-interaction-api-interactions-interaction-id-approve-post';
 import { regenerateInteractionApiInteractionsInteractionIdRegeneratePost } from '../../api/fn/internal-api/regenerate-interaction-api-interactions-interaction-id-regenerate-post';
 import { discardInteractionApiInteractionsInteractionIdDiscardPost } from '../../api/fn/internal-api/discard-interaction-api-interactions-interaction-id-discard-post';
-import { buildApproveBody, buildDiscardBody } from './review-actions';
+import { buildApproveBody, buildDiscardBody, buildRegenerateBody } from './review-actions';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 import { InteractionReviewResponse } from '../../api/models/interaction-review-response';
@@ -22,18 +22,6 @@ const DECISION_NEEDS_REVIEW = 'NEEDS_REVIEW';
 // pasan el valor directo al SQL sin ningun tope). Elegimos este valor como
 // techo razonable de UX, no viene del contrato.
 const QUEUE_LIMIT = 200;
-
-// reviewed_by se persiste en interaction.reviewed_by, una columna uuid: el
-// backend hace "reviewed_by = :reviewed_by" con el string recibido, sin
-// convertirlo. Mandar un email rompe el INSERT/UPDATE en Postgres y vuelve
-// como el 503 generico de approve/regenerate. Por eso solo se manda el id
-// del perfil si tiene forma de uuid; si no, se omite. Lo correcto seria que
-// el backend tomara el revisor del JWT en vez de recibirlo en el body.
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function resolveReviewedBy(id: string | undefined): string | undefined {
-  return id && UUID_PATTERN.test(id) ? id : undefined;
-}
 
 @Injectable({ providedIn: 'root' })
 export class ReviewService {
@@ -62,18 +50,15 @@ export class ReviewService {
   // el texto es identico al generado (resolveEditedResponse en
   // review-actions.ts): en ese caso se omite, y el backend lo trata como
   // una aprobacion comun.
-  approve(
-    interactionId: string,
-    reviewedBy: string | undefined,
-    editedResponse?: string | null,
-  ): Observable<InteractionReviewResponse> {
+  approve(interactionId: string, editedResponse?: string | null): Observable<InteractionReviewResponse> {
     return approveInteractionApiInteractionsInteractionIdApprovePost(this.http, this.apiConfig.rootUrl, {
       interaction_id: interactionId,
-      body: buildApproveBody(reviewedBy, editedResponse ?? null),
+      body: buildApproveBody(editedResponse ?? null),
     }).pipe(map((response) => response.body));
   }
 
-  // El revisor sale del token, nunca se manda en el body.
+  // El revisor sale del token en aprobar, descartar y regenerar, nunca se
+  // manda en el body.
   discard(interactionId: string, rejectionReason: string | undefined): Observable<InteractionReviewResponse> {
     return discardInteractionApiInteractionsInteractionIdDiscardPost(this.http, this.apiConfig.rootUrl, {
       interaction_id: interactionId,
@@ -81,16 +66,10 @@ export class ReviewService {
     }).pipe(map((response) => response.body));
   }
 
-  regenerate(
-    interactionId: string,
-    rejectionReason: string,
-    reviewedBy: string | undefined,
-  ): Observable<InteractionReviewResponse> {
+  regenerate(interactionId: string, rejectionReason: string): Observable<InteractionReviewResponse> {
     return regenerateInteractionApiInteractionsInteractionIdRegeneratePost(this.http, this.apiConfig.rootUrl, {
       interaction_id: interactionId,
-      body: reviewedBy
-        ? { rejection_reason: rejectionReason, reviewed_by: reviewedBy }
-        : { rejection_reason: rejectionReason },
+      body: buildRegenerateBody(rejectionReason),
     }).pipe(map((response) => response.body));
   }
 }

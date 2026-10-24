@@ -3,8 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, catchError, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../core/auth/auth.service';
-import { ReviewService, resolveReviewedBy } from './review.service';
+import { ReviewService } from './review.service';
 import { classifyReviewError, reviewErrorDetail } from './review-errors';
 import { reviewActionErrorMessage, reviewActionErrorOutcome } from './review-actions';
 import { ReviewQueueComponent, QueueState } from './review-queue.component';
@@ -30,7 +29,6 @@ const NOT_PENDING_MESSAGE = 'Esta solicitud ya no está pendiente de revisión';
 })
 export class ReviewComponent {
   private readonly reviewService = inject(ReviewService);
-  private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
@@ -162,10 +160,9 @@ export class ReviewComponent {
     if (!approvedId) return;
 
     this.submittingAction.set(true);
-    const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
 
     this.reviewService
-      .approve(approvedId, reviewedBy)
+      .approve(approvedId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -183,13 +180,12 @@ export class ReviewComponent {
   openRegenerateDialog(): void {
     const id = this.selectedId();
     if (!id) return;
-    const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
     const previousResponse = this.detail()?.generated_response ?? null;
     const issueKey = this.detail()?.issue_key ?? null;
 
     const dialogRef = this.dialog.open<RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult>(
       RegenerateDialogComponent,
-      { data: { interactionId: id, reviewedBy, previousResponse, issueKey }, disableClose: true, width: '480px' },
+      { data: { interactionId: id, previousResponse, issueKey }, disableClose: true, width: '480px' },
     );
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -297,10 +293,9 @@ export class ReviewComponent {
 
   private submitEditApprove(interactionId: string, editedResponse: string | null): void {
     this.submittingAction.set(true);
-    const reviewedBy = resolveReviewedBy(this.authService.profile()?.id);
 
     this.reviewService
-      .approve(interactionId, reviewedBy, editedResponse)
+      .approve(interactionId, editedResponse)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

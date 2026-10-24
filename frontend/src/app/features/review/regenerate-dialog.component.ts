@@ -23,7 +23,6 @@ import { dialogTitleWithIssueKey } from './review-actions';
 
 export interface RegenerateDialogData {
   interactionId: string;
-  reviewedBy: string | undefined;
   previousResponse: string | null;
   issueKey: string | null;
 }
@@ -125,7 +124,7 @@ export class RegenerateDialogComponent {
     this.reasonControl.disable();
 
     this.reviewService
-      .regenerate(this.data.interactionId, this.reasonControl.value, this.data.reviewedBy)
+      .regenerate(this.data.interactionId, this.reasonControl.value)
       .pipe(timeout(REGENERATE_TIMEOUT_MS), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {

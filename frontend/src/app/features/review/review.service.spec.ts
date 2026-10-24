@@ -20,8 +20,8 @@ describe('ReviewService', () => {
   });
 
   describe('approve', () => {
-    it('sin reviewedBy y sin edicion: body vacio (mismo comportamiento de siempre)', () => {
-      service.approve('int-1', undefined).subscribe();
+    it('sin edicion: body vacio', () => {
+      service.approve('int-1').subscribe();
 
       const req = httpMock.expectOne('/api/interactions/int-1/approve');
       expect(req.request.method).toBe('POST');
@@ -29,27 +29,30 @@ describe('ReviewService', () => {
       req.flush({ status: 'ok', action_type: 'AUTO_PUBLISH' });
     });
 
-    it('con edicion: suma edited_response al body', () => {
-      service.approve('int-1', undefined, 'Texto editado').subscribe();
+    it('con edicion: manda edited_response y nunca reviewed_by', () => {
+      service.approve('int-1', 'Texto editado').subscribe();
 
       const req = httpMock.expectOne('/api/interactions/int-1/approve');
       expect(req.request.body).toEqual({ edited_response: 'Texto editado' });
       req.flush({ status: 'ok', action_type: 'AUTO_PUBLISH' });
     });
 
-    it('con reviewedBy y edicion: ambos campos en el body', () => {
-      service.approve('int-1', 'uuid-123', 'Texto editado').subscribe();
-
-      const req = httpMock.expectOne('/api/interactions/int-1/approve');
-      expect(req.request.body).toEqual({ reviewed_by: 'uuid-123', edited_response: 'Texto editado' });
-      req.flush({ status: 'ok', action_type: 'AUTO_PUBLISH' });
-    });
-
     it('editedResponse null (identico al generado): se omite del body, igual que si no viniera', () => {
-      service.approve('int-1', undefined, null).subscribe();
+      service.approve('int-1', null).subscribe();
 
       const req = httpMock.expectOne('/api/interactions/int-1/approve');
       expect(req.request.body).toEqual({});
+      req.flush({ status: 'ok', action_type: 'AUTO_PUBLISH' });
+    });
+  });
+
+  describe('regenerate', () => {
+    it('manda solo rejection_reason, nunca reviewed_by', () => {
+      service.regenerate('int-1', 'Falta contexto').subscribe();
+
+      const req = httpMock.expectOne('/api/interactions/int-1/regenerate');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ rejection_reason: 'Falta contexto' });
       req.flush({ status: 'ok', action_type: 'AUTO_PUBLISH' });
     });
   });
