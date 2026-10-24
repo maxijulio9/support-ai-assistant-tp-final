@@ -570,6 +570,26 @@
               }
             }
           },
+          "400": {
+            "description": "El proyecto no existe, un mapeo o una accion de estado no son validos, o hay mas de un estado activo con la misma accion",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo persistir la configuracion",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -668,8 +688,28 @@
               }
             }
           },
+          "404": {
+            "description": "La interaccion no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo aprobar la interaccion, o todavia no se configuro la conexion con JSM",
             "content": {
               "application/json": {
                 "schema": {
@@ -735,8 +775,28 @@
               }
             }
           },
+          "404": {
+            "description": "La interaccion no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo regenerar la interaccion, o todavia no se configuro la conexion con JSM",
             "content": {
               "application/json": {
                 "schema": {
@@ -802,8 +862,28 @@
               }
             }
           },
+          "404": {
+            "description": "La interaccion no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "409": {
             "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo escalar la interaccion",
             "content": {
               "application/json": {
                 "schema": {
@@ -888,6 +968,16 @@
           },
           "409": {
             "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo descartar la interaccion",
             "content": {
               "application/json": {
                 "schema": {
