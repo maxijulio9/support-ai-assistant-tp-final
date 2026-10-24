@@ -43,6 +43,7 @@ from app.modules.internal_api.schemas import (
     IndexingStatusResponse,
     ErrorResponse,
     IndexedSpacesResponse,
+    ResponseTimesResponse,
     StatusActionItem,
     StatusActionsResponse,
     DiscardRequest,
@@ -71,6 +72,7 @@ from app.modules.internal_api.services.space_config_service import SpaceConfigur
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.repositories.kb_space_status_repository import KbSpaceStatusRepository
+from app.modules.internal_api.services.response_times_service import ResponseTimesService
 from app.core.jsm_status_actions import CONFIGURABLE_STATUS_ACTIONS
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
@@ -101,6 +103,7 @@ _space_config_service = SpaceConfigurationService()
 _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
 _kb_space_status_repository = KbSpaceStatusRepository()
+_response_times_service = ResponseTimesService()
 _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
 _project_configuration_reader_service = ProjectConfigurationReaderService()
@@ -469,7 +472,8 @@ def list_indexed_spaces(project_key: str | None = None, admin: AppUser = Depends
 
 # resumen agregado de metricas de interacciones, para el dashboard 
 #
-@router.get("/api/metrics/summary", response_model=MetricsSummaryResponse)
+@router.get("/api/metrics/summary", response_model=MetricsSummaryResponse,
+            responses={422: {"model": ErrorResponse, "description": "El huso, las fechas o el project_id no son validos"}})
 def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
                               category: str | None = None, decision: str | None = None, tz: str | None = None):
     try:
@@ -480,7 +484,8 @@ def get_metrics_summary(usuario: AppUser = Depends(get_current_user), project_id
     return MetricsSummaryResponse(**result)
 
 # serie diaria de metricas en el huso pedido, para el dashboard
-@router.get("/api/metrics/daily", response_model=DailyMetricsResponse)
+@router.get("/api/metrics/daily", response_model=DailyMetricsResponse,
+            responses={422: {"model": ErrorResponse, "description": "El huso, las fechas o el project_id no son validos"}})
 def get_metrics_daily(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
                             category: str | None = None, decision: str | None = None, tz: str | None = None):
     try:
@@ -491,7 +496,8 @@ def get_metrics_daily(usuario: AppUser = Depends(get_current_user), project_id: 
     return DailyMetricsResponse(**result)
 
 # desglose de metricas por categoria, para el dashboard
-@router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse)
+@router.get("/api/metrics/by-category", response_model=MetricsByCategoryResponse,
+            responses={422: {"model": ErrorResponse, "description": "El huso, las fechas o el project_id no son validos"}})
 def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
                                   category: str | None = None, decision: str | None = None, tz: str | None = None):
     try:
@@ -502,7 +508,8 @@ def get_metrics_by_category(usuario: AppUser = Depends(get_current_user), projec
     return MetricsByCategoryResponse(categories=result)
 
 # distribucion de las interacciones por intervalo de confianza, para el dashboard
-@router.get("/api/metrics/confidence-distribution", response_model=ConfidenceDistributionResponse)
+@router.get("/api/metrics/confidence-distribution", response_model=ConfidenceDistributionResponse,
+            responses={422: {"model": ErrorResponse, "description": "El huso, las fechas o el project_id no son validos"}})
 def get_metrics_confidence_distribution(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
                                               category: str | None = None, decision: str | None = None, tz: str | None = None):
     try:
@@ -513,7 +520,8 @@ def get_metrics_confidence_distribution(usuario: AppUser = Depends(get_current_u
     return ConfidenceDistributionResponse(**result)
 
 # mapa de calor de las interacciones por dia de la semana y hora, para el dashboard
-@router.get("/api/metrics/heatmap", response_model=HeatmapResponse)
+@router.get("/api/metrics/heatmap", response_model=HeatmapResponse,
+            responses={422: {"model": ErrorResponse, "description": "El huso, las fechas o el project_id no son validos"}})
 def get_metrics_heatmap(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None, to_date: str | None = None,
                               category: str | None = None, decision: str | None = None, tz: str | None = None):
     try:
@@ -524,7 +532,9 @@ def get_metrics_heatmap(usuario: AppUser = Depends(get_current_user), project_id
     return HeatmapResponse(**result)
 
 # umbrales de confianza y de similitud configurados por proyecto, para que el dashboard dibuje las zonas de decision
-@router.get("/api/metrics/thresholds", response_model=ProjectThresholdsResponse)
+@router.get("/api/metrics/thresholds", response_model=ProjectThresholdsResponse,
+            responses={404: {"model": ErrorResponse, "description": "Proyecto no encontrado"},
+                        422: {"model": ErrorResponse, "description": "El project_id no es un uuid valido"}})
 def get_metrics_thresholds(usuario: AppUser = Depends(get_current_user), project_id: str | None = None):
     try:
         result = _thresholds_service.get_thresholds(project_id)
@@ -535,6 +545,19 @@ def get_metrics_thresholds(usuario: AppUser = Depends(get_current_user), project
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     return ProjectThresholdsResponse(projects=result)
+
+
+# tiempos de primera respuesta y de cierre por cohorte, para comparar al sistema contra los tickets anteriores a su puesta en marcha
+@router.get("/api/metrics/response-times", response_model=ResponseTimesResponse,
+            responses={422: {"model": ErrorResponse, "description": "El huso, las fechas o el project_id no son validos"}})
+def get_metrics_response_times(usuario: AppUser = Depends(get_current_user), project_id: str | None = None, from_date: str | None = None,
+                               to_date: str | None = None, category: str | None = None, tz: str | None = None):
+    try:
+        result = _response_times_service.get_response_times(project_id, from_date, to_date, category, tz)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return ResponseTimesResponse(**result)
 
 # lista los proyectos dados de alta con su id, para precargar la pantalla de configuracion
 @router.get("/api/config/itsm/projects", response_model=OnboardedProjectsResponse)
