@@ -5,7 +5,12 @@ import { Subject, catchError, of, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReviewService } from './review.service';
 import { classifyReviewError, reviewErrorDetail } from './review-errors';
-import { reviewActionErrorMessage, reviewActionErrorOutcome } from './review-actions';
+import {
+  NOT_PENDING_MESSAGE,
+  approveUnavailableMessage,
+  reviewActionErrorMessage,
+  reviewActionErrorOutcome,
+} from './review-actions';
 import { ReviewQueueComponent, QueueState } from './review-queue.component';
 import { ReviewDetailComponent, DetailState } from './review-detail.component';
 import { RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult } from './regenerate-dialog.component';
@@ -16,8 +21,6 @@ import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
 const PAGE_SIZE = 6;
-
-const NOT_PENDING_MESSAGE = 'Esta solicitud ya no está pendiente de revisión';
 
 @Component({
   selector: 'app-review',
@@ -194,6 +197,11 @@ export class ReviewComponent {
         this.loadQueue();
         return;
       }
+      if (result === 'not-pending') {
+        this.snackBar.open(NOT_PENDING_MESSAGE, 'Cerrar', { duration: 4000 });
+        this.loadQueue();
+        return;
+      }
       if (result === 'timeout-refresh') {
         this.loadQueue();
         return;
@@ -311,12 +319,13 @@ export class ReviewComponent {
   }
 
   // Ante un error de red o del servidor al aprobar, no reintentamos solos:
-  // el backend no detecta duplicados (confirmado: get_interaction_context en
-  // backend/app/modules/internal_api/repositories/interaction_repository.py
-  // busca solo por id, sin mirar el estado actual de decision), asi que un
-  // reintento ciego podria publicar la respuesta dos veces. El boton Aprobar
-  // queda habilitado, pero avisamos que conviene revisar el estado real en
-  // la cola antes de volver a intentar.
+  // no sabemos si la aprobacion llego a publicarse. El backend responde 409
+  // cuando otra persona ya resolvio la solicitud o la esta resolviendo, pero
+  // mientras no este confirmado que esa reserva es atomica, un reintento
+  // ciego podria publicar la respuesta dos veces. El boton Aprobar queda
+  // habilitado, pero avisamos que conviene revisar el estado real en la cola
+  // antes de volver a intentar. El 503 es igual: se muestra el detail del
+  // backend y se pide verificar en Jira, tampoco se reintenta solo.
   private handleApproveError(error: unknown): void {
     const category = classifyReviewError(error);
     switch (category) {
@@ -326,6 +335,13 @@ export class ReviewComponent {
           'No pudimos confirmar si la respuesta se aprobó. Antes de reintentar, actualizá la cola y verificá.',
           'Actualizar cola',
         );
+        ref.onAction().subscribe(() => this.loadQueue());
+        return;
+      }
+      case 'unavailable': {
+        const ref = this.snackBar.open(approveUnavailableMessage(reviewErrorDetail(error)), 'Actualizar cola', {
+          panelClass: 'app-snackbar-multiline',
+        });
         ref.onAction().subscribe(() => this.loadQueue());
         return;
       }

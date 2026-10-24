@@ -30,9 +30,14 @@ describe('classifyReviewError', () => {
     expect(classifyReviewError(httpError(0))).toBe('network');
   });
 
-  it('500 y mayores son server', () => {
+  it('503 es unavailable, aparte del resto de los 5xx', () => {
+    expect(classifyReviewError(httpError(503))).toBe('unavailable');
+  });
+
+  it('500 y el resto de los 5xx son server', () => {
     expect(classifyReviewError(httpError(500))).toBe('server');
-    expect(classifyReviewError(httpError(503))).toBe('server');
+    expect(classifyReviewError(httpError(502))).toBe('server');
+    expect(classifyReviewError(httpError(504))).toBe('server');
   });
 
   it('un status no mapeado es unknown', () => {

@@ -18,8 +18,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { TimeoutError, map, timeout } from 'rxjs';
 import { ReviewService } from './review.service';
-import { classifyReviewError } from './review-errors';
-import { dialogTitleWithIssueKey } from './review-actions';
+import { classifyReviewError, reviewErrorDetail } from './review-errors';
+import { dialogTitleWithIssueKey, regenerateErrorResolution } from './review-actions';
 
 export interface RegenerateDialogData {
   interactionId: string;
@@ -27,7 +27,12 @@ export interface RegenerateDialogData {
   issueKey: string | null;
 }
 
-export type RegenerateDialogResult = { actionType: string } | 'not-found' | 'timeout-refresh' | undefined;
+export type RegenerateDialogResult =
+  | { actionType: string }
+  | 'not-found'
+  | 'not-pending'
+  | 'timeout-refresh'
+  | undefined;
 
 // Tope de UX: el contrato no define maxLength para rejection_reason
 // (backend/app/modules/internal_api/schemas.py, RegenerateRequest).
@@ -153,20 +158,14 @@ export class RegenerateDialogComponent {
             return;
           }
 
-          const category = classifyReviewError(error);
-          if (category === 'not-found') {
-            this.dialogRef.close('not-found');
+          const resolution = regenerateErrorResolution(classifyReviewError(error), reviewErrorDetail(error));
+          if (resolution.kind === 'close') {
+            this.dialogRef.close(resolution.result);
             return;
           }
 
           this.reasonControl.enable();
-          if (category === 'forbidden') {
-            this.errorMessage.set('No tenés permisos para regenerar esta respuesta.');
-          } else if (category === 'validation') {
-            this.errorMessage.set('Revisá los datos ingresados.');
-          } else {
-            this.errorMessage.set('No se pudo regenerar la respuesta. Intentá de nuevo.');
-          }
+          this.errorMessage.set(resolution.message);
         },
       });
   }

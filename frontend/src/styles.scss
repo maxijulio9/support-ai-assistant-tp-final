@@ -69,3 +69,8 @@ body {
   font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }
+
+// Snackbars con un mensaje en dos lineas: el salto de linea del texto se respeta.
+.app-snackbar-multiline {
+  white-space: pre-line;
+}

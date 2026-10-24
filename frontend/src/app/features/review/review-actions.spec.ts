@@ -1,5 +1,8 @@
 import {
   MAX_EDITED_RESPONSE_LENGTH,
+  NOT_PENDING_MESSAGE,
+  VERIFY_IN_JIRA_MESSAGE,
+  approveUnavailableMessage,
   buildApproveBody,
   buildDiscardBody,
   buildRegenerateBody,
@@ -7,6 +10,7 @@ import {
   normalizeResponseText,
   resolveEditedResponse,
   reviewActionErrorMessage,
+  regenerateErrorResolution,
   reviewActionErrorOutcome,
 } from './review-actions';
 
@@ -108,6 +112,7 @@ describe('reviewActionErrorOutcome', () => {
     expect(reviewActionErrorOutcome('bad-request')).toBe('reopen');
     expect(reviewActionErrorOutcome('network')).toBe('reopen');
     expect(reviewActionErrorOutcome('server')).toBe('reopen');
+    expect(reviewActionErrorOutcome('unavailable')).toBe('reopen');
     expect(reviewActionErrorOutcome('validation')).toBe('reopen');
     expect(reviewActionErrorOutcome('forbidden')).toBe('reopen');
     expect(reviewActionErrorOutcome('unknown')).toBe('reopen');
@@ -125,10 +130,86 @@ describe('reviewActionErrorMessage', () => {
     expect(reviewActionErrorMessage('bad-request', null)).toBe('No se pudo guardar. Intentá de nuevo.');
   });
 
+  it('unavailable con detail: el detail y, en otra linea, verificar en Jira', () => {
+    expect(reviewActionErrorMessage('unavailable', 'Todavía no se configuró la conexión con JSM')).toBe(
+      `Todavía no se configuró la conexión con JSM\n${VERIFY_IN_JIRA_MESSAGE}`,
+    );
+  });
+
   it('cualquier otra categoria: mensaje generico, aunque venga un detail', () => {
     expect(reviewActionErrorMessage('network', null)).toBe('No se pudo guardar. Intentá de nuevo.');
     expect(reviewActionErrorMessage('server', 'algo que no deberia mostrarse')).toBe(
       'No se pudo guardar. Intentá de nuevo.',
     );
+  });
+});
+
+describe('approveUnavailableMessage', () => {
+  it('con detail: el detail tal cual y la linea fija de verificar en Jira', () => {
+    const lines = approveUnavailableMessage('No se pudo aprobar la interaccion').split('\n');
+
+    expect(lines).toEqual(['No se pudo aprobar la interaccion', VERIFY_IN_JIRA_MESSAGE]);
+  });
+
+  it('sin detail: mensaje de servicio no disponible y la misma linea fija', () => {
+    const lines = approveUnavailableMessage(null).split('\n');
+
+    expect(lines).toEqual(['El servicio no está disponible. Intentá de nuevo en unos minutos.', VERIFY_IN_JIRA_MESSAGE]);
+  });
+
+  it('la linea de verificar en Jira dice que no se reintenta a ciegas', () => {
+    expect(VERIFY_IN_JIRA_MESSAGE).toBe('Antes de reintentar, verificá en el ticket de Jira si la respuesta ya se publicó.');
+  });
+});
+
+describe('NOT_PENDING_MESSAGE', () => {
+  it('es neutro: cubre que ya se resolvio o que la esta resolviendo otra persona', () => {
+    expect(NOT_PENDING_MESSAGE).toBe(
+      'Esta solicitud ya no está pendiente de revisión o la está resolviendo otra persona.',
+    );
+  });
+});
+
+describe('regenerateErrorResolution', () => {
+  it('404 cierra el dialogo con not-found', () => {
+    expect(regenerateErrorResolution('not-found', null)).toEqual({ kind: 'close', result: 'not-found' });
+  });
+
+  it('409 cierra el dialogo con not-pending', () => {
+    expect(regenerateErrorResolution('conflict', null)).toEqual({ kind: 'close', result: 'not-pending' });
+  });
+
+  it('503 con detail: solo el detail, sin la linea de verificar en Jira', () => {
+    const resolution = regenerateErrorResolution('unavailable', 'Todavía no se configuró la conexión con JSM');
+
+    expect(resolution).toEqual({ kind: 'message', message: 'Todavía no se configuró la conexión con JSM' });
+    expect(JSON.stringify(resolution)).not.toContain('Jira');
+  });
+
+  it('503 sin detail: mensaje de servicio no disponible', () => {
+    expect(regenerateErrorResolution('unavailable', null)).toEqual({
+      kind: 'message',
+      message: 'El servicio no está disponible. Intentá de nuevo en unos minutos.',
+    });
+  });
+
+  it('403 y 422 dejan el dialogo abierto con su mensaje', () => {
+    expect(regenerateErrorResolution('forbidden', null)).toEqual({
+      kind: 'message',
+      message: 'No tenés permisos para regenerar esta respuesta.',
+    });
+    expect(regenerateErrorResolution('validation', null)).toEqual({
+      kind: 'message',
+      message: 'Revisá los datos ingresados.',
+    });
+  });
+
+  it('red, servidor y otros casos: mensaje generico con el dialogo abierto, aunque venga un detail', () => {
+    for (const category of ['network', 'server', 'bad-request', 'unknown'] as const) {
+      expect(regenerateErrorResolution(category, 'no deberia mostrarse')).toEqual({
+        kind: 'message',
+        message: 'No se pudo regenerar la respuesta. Intentá de nuevo.',
+      });
+    }
   });
 });

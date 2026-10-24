@@ -6,6 +6,7 @@ export type ReviewErrorCategory =
   | 'bad-request'
   | 'validation'
   | 'conflict'
+  | 'unavailable'
   | 'network'
   | 'server'
   | 'unknown';
@@ -17,6 +18,9 @@ export type ReviewErrorCategory =
 // 'bad-request' (400) es distinto de 'validation' (422): el 400 trae un
 // detail legible pensado para mostrar tal cual (editar y aprobar), el 422
 // no deberia ocurrir si el formulario valida bien y usa un mensaje generico.
+// 'unavailable' (503) se separa del resto de los 5xx: el backend manda un
+// detail legible y, a diferencia de un 500, no implica que haya que dudar
+// del estado de la solicitud de la misma manera.
 export function classifyReviewError(error: unknown): ReviewErrorCategory {
   if (!(error instanceof HttpErrorResponse)) {
     return 'unknown';
@@ -27,6 +31,7 @@ export function classifyReviewError(error: unknown): ReviewErrorCategory {
   if (error.status === 409) return 'conflict';
   if (error.status === 422) return 'validation';
   if (error.status === 0) return 'network';
+  if (error.status === 503) return 'unavailable';
   if (error.status >= 500) return 'server';
   return 'unknown';
 }
