@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS project (
     threshold_auto_publish NUMERIC(4,3) DEFAULT 0.85,
     threshold_needs_review NUMERIC(4,3) DEFAULT 0.60,
     similarity_threshold    NUMERIC(4,3) DEFAULT 0.40,
-    language_code VARCHAR(10)
+    language_code VARCHAR(10),
+    first_response_target_seconds INTEGER NOT NULL DEFAULT 30
 );
 
 -- categorias de soporte que usa cada proyecto/organizacion

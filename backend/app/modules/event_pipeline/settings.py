@@ -34,3 +34,6 @@ class KbWorkerSettings:
 
     max_jobs = 5
     max_tries = 3
+
+    # una indexacion de un space grande puede tardar mas de los 5 minutos que arq da por defecto a cada trabajo
+    job_timeout = 3600

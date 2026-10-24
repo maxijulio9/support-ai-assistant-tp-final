@@ -40,6 +40,16 @@ class InvalidEditedResponseError(Exception):
     pass
 
 
+# todavia no se configuro la conexion con jsm, no es un error del pedido sino un estado del sistema y se responde con 503
+class JsmConnectionNotConfiguredError(Exception):
+    pass
+
+
+# minutos que dura la reserva de una interaccion, pasado ese tiempo otra persona puede tomarla de nuevo
+# cubre el caso de que el proceso se corte a mitad de la publicacion y la deje reservada para simpre
+CLAIM_EXPIRES_MINUTES = 5
+
+
 class InteractionReviewService:
 
     def __init__(self):
@@ -69,7 +79,16 @@ class InteractionReviewService:
         else:
             edited_text = None
 
-        await jsm_executor.post_comment(context["issue_key"], response_text, public=True)
+        # reserva la interaccion antes de publicar, asi dos personas no pueden publicar la misma respuesta a la vez
+        self._claim_interaction(interaction_id, reviewed_by)
+
+        try:
+            await jsm_executor.post_comment(context["issue_key"], response_text, public=True)
+        except Exception:
+            # si no se pudo publicar, la interaccion vuelve a quedar pendiente para poder reintentar
+            self._release_interaction(interaction_id)
+            raise
+
         self._update_interaction(
             interaction_id,
             decision=ACTION_AUTO_PUBLISH,
@@ -96,12 +115,20 @@ class InteractionReviewService:
             threshold_needs_review=context["threshold_needs_review"],
         )
 
-        result = self.response_generator.regenerate(analysis, context["retrieval"], rejection_reason)
+        # reserva la interaccion antes de regenerar y publicar, asi dos personas no resuelven la misma a la vez
+        self._claim_interaction(interaction_id, reviewed_by)
 
-        if result.action_type == ACTION_AUTO_PUBLISH:
-            jsm_executor = self._get_jsm_executor()
-            await jsm_executor.post_comment(context["issue_key"], result.response_text, public=True)
-            
+        try:
+            result = self.response_generator.regenerate(analysis, context["retrieval"], rejection_reason)
+
+            if result.action_type == ACTION_AUTO_PUBLISH:
+                jsm_executor = self._get_jsm_executor()
+                await jsm_executor.post_comment(context["issue_key"], result.response_text, public=True)
+        except Exception:
+            # si falla la regeneracion o la publicacion, la interaccion vuelve a quedar pendiente
+            self._release_interaction(interaction_id)
+            raise
+
         self._update_interaction(
             interaction_id,
             decision=result.action_type,
@@ -120,6 +147,9 @@ class InteractionReviewService:
         context = self.interaction_repository.get_interaction_context(interaction_id)
         if context is None:
             raise ValueError(f"interaction '{interaction_id}' no encontrada")
+
+        # solo se puede escalar una interaccion que siga pendiente, si no responde que ya no esta pendiente
+        self._claim_interaction(interaction_id, reviewed_by)
 
         self._update_interaction(
             interaction_id,
@@ -185,6 +215,79 @@ class InteractionReviewService:
             db.rollback()
             logger.error(f"error al descartar interaction '{interaction_id}': {e}")
             raise
+
+        finally:
+            db.close()
+
+    # reserva la interaccion para quien la va a resolver, asi dos personas no publican la misma respuesta a la vez
+    # solo la toma si sigue pendiente y no la tiene reservada otra persona hace menos de CLAIM_EXPIRES_MINUTES
+    # lanza InteractionNotPendingError si no pudo tomarla y ValueError si la interaccion no existe
+    def _claim_interaction(self, interaction_id: str, reviewed_by: str | None):
+        db = next(get_db())
+
+        try:
+            row = db.execute(
+                text("""
+                    UPDATE interaction
+                    SET reviewed_by = :reviewed_by,
+                        reviewed_at = NOW()
+                    WHERE id = :interaction_id
+                      AND decision = :pending_decision
+                      AND (reviewed_at IS NULL OR reviewed_at < NOW() - make_interval(mins => :minutes))
+                    RETURNING id
+                """),
+                {
+                    "interaction_id": interaction_id,
+                    "pending_decision": DECISION_NEEDS_REVIEW,
+                    "reviewed_by": reviewed_by,
+                    "minutes": CLAIM_EXPIRES_MINUTES,
+                },
+            ).fetchone()
+
+            if row is None:
+                exists = db.execute(
+                    text("SELECT 1 FROM interaction WHERE id = :interaction_id"),
+                    {"interaction_id": interaction_id},
+                ).fetchone()
+                db.rollback()
+
+                if exists is None:
+                    raise ValueError(f"interaction '{interaction_id}' no encontrada")
+                raise InteractionNotPendingError(f"interaction '{interaction_id}' ya no esta pendiente de revision")
+
+            db.commit()
+
+        except (ValueError, InteractionNotPendingError):
+            raise
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al reservar la interaction '{interaction_id}': {e}")
+            raise
+
+        finally:
+            db.close()
+
+    # libera la reserva cuando la publicacion fallo, la interaccion vuelve a quedar pendiente y limpia para reintentar
+    # un fallo al liberar no se relanza, ya se esta manejando otro error, y la reserva vence sola
+    def _release_interaction(self, interaction_id: str):
+        db = next(get_db())
+
+        try:
+            db.execute(
+                text("""
+                    UPDATE interaction
+                    SET reviewed_by = NULL,
+                        reviewed_at = NULL
+                    WHERE id = :interaction_id AND decision = :pending_decision
+                """),
+                {"interaction_id": interaction_id, "pending_decision": DECISION_NEEDS_REVIEW},
+            )
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"no se pudo liberar la interaction '{interaction_id}', queda reservada unos minutos: {e}")
 
         finally:
             db.close()
@@ -255,7 +358,7 @@ class InteractionReviewService:
     def _get_jsm_executor(self) -> JsmExecutor:
         credentials = self.credentials_repository.get_credentials()
         if credentials is None:
-            raise ValueError("todavia no se configuro la conexion con jsm")
+            raise JsmConnectionNotConfiguredError("todavia no se configuro la conexion con jsm")
 
         return JsmExecutor(
             base_url=credentials["base_url"],
