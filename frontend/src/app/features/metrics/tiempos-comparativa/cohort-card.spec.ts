@@ -168,3 +168,42 @@ describe('cohortAccentVar', () => {
     expect(cohortAccentVar('otra')).toBe('--app-color-decision-other');
   });
 });
+
+describe('cierre de la tarjeta', () => {
+  function withClosure(key: string, basis: string, closure: StatsLike, tickets = closure.count): CohortLike {
+    return { ...cohort(key, stats(10, 20, 40), tickets), closure_basis: basis, closure };
+  }
+
+  it('con datos suficientes: mediana, p90 y n del cierre, sin placeholder', () => {
+    const card = buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(30, 600, 3700)), 5, null);
+
+    expect(card.closure.view).toMatchObject({ state: 'ok', n: 30, median: '10 min', p90: '1 h 1 min', p90Indicative: false });
+    expect(card.closure.placeholder).toBeNull();
+  });
+
+  it('el p90 del cierre es orientativo bajo 20 tickets', () => {
+    const card = buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(12, 600, 900)), 5, null);
+
+    expect(card.closure.view.p90Indicative).toBe(true);
+  });
+
+  it('pocos cierres: n insuficiente con el n; ninguno con tickets: Sin cierres; sin tickets: Sin tickets', () => {
+    expect(buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(3, null, null)), 5, null).closure.placeholder).toBe(
+      'n insuficiente',
+    );
+    expect(buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(0, null, null), 6), 5, null).closure.placeholder).toBe(
+      'Sin cierres',
+    );
+    expect(buildCohortCard(withClosure('baseline', 'last_customer_comment', stats(0, null, null), 0), 5, null).closure.placeholder).toBe(
+      'Sin tickets',
+    );
+  });
+
+  it('el texto de como se mide sale del closure_basis de cada cohorte', () => {
+    const system = buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(10, 1, 2)), 5, null);
+    const manual = buildCohortCard(withClosure('baseline', 'last_customer_comment', stats(10, 1, 2)), 5, null);
+
+    expect(system.closure.basisText).toContain('confirmación detectada');
+    expect(manual.closure.basisText).toContain('último comentario del cliente según JSM');
+  });
+});

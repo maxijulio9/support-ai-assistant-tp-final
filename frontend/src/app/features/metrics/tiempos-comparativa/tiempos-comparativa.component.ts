@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
 import { ConfigService } from '../../config/config.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
@@ -15,6 +16,7 @@ import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-it
 import { CohortCardComponent } from './cohort-card/cohort-card.component';
 import { CategoryComparisonComponent } from './category-comparison/category-comparison.component';
 import { baselineHasTickets, buildCategoryComparison } from './category-comparison';
+import { closureNote } from './closure';
 import { TimeSeriesComponent } from './time-series/time-series.component';
 import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakdown.component';
 import { buildOutcomeRows } from './outcomes-breakdown';
@@ -34,7 +36,7 @@ export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
 @Component({
   selector: 'app-metrics-tiempos-comparativa',
   standalone: true,
-  imports: [CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, TimeSeriesComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, TimeSeriesComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, MatSlideToggleModule],
   templateUrl: './tiempos-comparativa.component.html',
   styleUrl: './tiempos-comparativa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,6 +71,10 @@ export class TiemposComparativaComponent {
   // el acuse de recibo y el pedido de informacion, que no son una solucion.
   readonly mainCards = computed(() => this.buildCards(MAIN_COHORTS));
   readonly systemResponseCards = computed(() => this.buildCards(SYSTEM_RESPONSE_COHORTS));
+
+  // Apagado por defecto y sin persistir: el cierre es indicativo
+  readonly showClosure = signal(false);
+  readonly closureNoteText = computed(() => closureNote(this.data()?.cohorts ?? []));
 
   readonly minSample = computed(() => this.data()?.min_sample ?? 0);
 
@@ -167,6 +173,10 @@ export class TiemposComparativaComponent {
     return pickCohorts(data.cohorts, keys).map((cohort) =>
       buildCohortCard(cohort, data.min_sample, data.first_response_target_seconds),
     );
+  }
+
+  onClosureToggle(checked: boolean): void {
+    this.showClosure.set(checked);
   }
 
   onProjectChange(value: string): void {

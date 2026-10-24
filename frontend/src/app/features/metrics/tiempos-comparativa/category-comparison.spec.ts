@@ -91,6 +91,39 @@ describe('buildCategoryComparison', () => {
   });
 });
 
+describe('cierre por categoria', () => {
+  function withClosure(key: string, rows: Record<string, [StatsLike, StatsLike]>): CohortLike {
+    return {
+      ...cohort(key, {}),
+      by_category: Object.entries(rows).map(([category, [firstResponse, closure]]) => ({
+        category,
+        tickets: firstResponse.count,
+        first_response: firstResponse,
+        closure,
+      })),
+    };
+  }
+
+  it('cada lado trae su cierre con sus propios estados', () => {
+    const [row] = buildCategoryComparison(
+      withClosure('automatic', { Acceso: [stats(12, 20, 40), stats(10, 600, 1800)] }),
+      withClosure('baseline', { Acceso: [stats(30, 3000, 9000), stats(3, null, null)] }),
+      5,
+    );
+
+    expect(row.automaticClosure).toMatchObject({ state: 'ok', n: 10, median: '10 min', p90: '30 min' });
+    expect(row.baselineClosure).toMatchObject({ state: 'insufficient', n: 3 });
+  });
+
+  it('un lado ausente tiene cierre vacio y 0 tickets', () => {
+    const [row] = buildCategoryComparison(withClosure('automatic', { Acceso: [stats(12, 20, 40), stats(10, 600, 1800)] }), undefined, 5);
+
+    expect(row.baselineClosure).toMatchObject({ state: 'empty', n: 0 });
+    expect(row.baselineTickets).toBe(0);
+    expect(row.automaticTickets).toBe(12);
+  });
+});
+
 describe('baselineHasTickets', () => {
   it('true solo con tickets en el baseline', () => {
     expect(baselineHasTickets(cohort('baseline', {}, 3))).toBe(true);

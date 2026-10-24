@@ -104,6 +104,25 @@
   width: 60%;
 }
 
+.tc-closure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.tc-closure-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+}
+
 .tc-section {
   display: flex;
   flex-direction: column;

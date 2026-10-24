@@ -10,4 +10,5 @@ import { CohortCard } from '../cohort-card';
 })
 export class CohortCardComponent {
   readonly card = input.required<CohortCard>();
+  readonly showClosure = input(false);
 }

@@ -107,3 +107,29 @@
   color: var(--app-color-text-secondary);
   margin: 0;
 }
+
+.cohort-card-closure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  padding-top: var(--app-space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+}
+
+.cohort-card-closure-title {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.cohort-card-closure-placeholder {
+  font: var(--mat-sys-title-medium);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.cohort-card-closure-basis {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}

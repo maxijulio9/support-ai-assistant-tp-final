@@ -5,6 +5,12 @@ export interface CategoryComparisonRow {
   category: string;
   automatic: StatsView;
   baseline: StatsView;
+  // Tickets de la categoria en cada lado, con o sin tiempo
+  automaticTickets: number;
+  baselineTickets: number;
+  // Cierre de cada lado, indicativo: no hay comparacion fuerte
+  automaticClosure: StatsView;
+  baselineClosure: StatsView;
 }
 
 const MISSING_SIDE: StatsView = { state: 'empty', n: 0, median: null, p90: null, p90Indicative: false };
@@ -18,7 +24,16 @@ export function buildCategoryComparison(
   minSample: number,
 ): CategoryComparisonRow[] {
   const sideByCategory = (rows: CategoryRowLike[]) =>
-    new Map(rows.map((row) => [row.category, buildStatsView(row.first_response, minSample)]));
+    new Map(
+      rows.map((row) => [
+        row.category,
+        {
+          firstResponse: buildStatsView(row.first_response, minSample),
+          closure: buildStatsView(row.closure, minSample),
+          tickets: row.tickets,
+        },
+      ]),
+    );
 
   const automaticSides = sideByCategory(automatic?.by_category ?? []);
   const baselineSides = sideByCategory(baseline?.by_category ?? []);
@@ -26,11 +41,19 @@ export function buildCategoryComparison(
 
   return [...categories]
     .sort((a, b) => a.localeCompare(b, 'es'))
-    .map((category) => ({
-      category,
-      automatic: automaticSides.get(category) ?? MISSING_SIDE,
-      baseline: baselineSides.get(category) ?? MISSING_SIDE,
-    }));
+    .map((category) => {
+      const automaticSide = automaticSides.get(category);
+      const baselineSide = baselineSides.get(category);
+      return {
+        category,
+        automatic: automaticSide?.firstResponse ?? MISSING_SIDE,
+        baseline: baselineSide?.firstResponse ?? MISSING_SIDE,
+        automaticTickets: automaticSide?.tickets ?? 0,
+        baselineTickets: baselineSide?.tickets ?? 0,
+        automaticClosure: automaticSide?.closure ?? MISSING_SIDE,
+        baselineClosure: baselineSide?.closure ?? MISSING_SIDE,
+      };
+    });
 }
 
 // Para avisar arriba cuando no hay nada contra que comparar.

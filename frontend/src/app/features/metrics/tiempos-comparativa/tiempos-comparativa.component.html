@@ -57,11 +57,23 @@
   }
 
   @if (state() === 'loaded') {
+    <div class="tc-closure">
+      <mat-slide-toggle [checked]="showClosure()" (change)="onClosureToggle($event.checked)">
+        Mostrar cierre (indicativo)
+      </mat-slide-toggle>
+      @if (showClosure() && closureNoteText()) {
+        <p class="tc-closure-note">
+          <mat-icon aria-hidden="true">info</mat-icon>
+          <span>{{ closureNoteText() }}</span>
+        </p>
+      }
+    </div>
+
     <section class="tc-section" aria-labelledby="tc-main-title">
       <h2 id="tc-main-title" class="tc-section-title">Primera respuesta por tipo de atención</h2>
       <div class="tc-grid">
         @for (card of mainCards(); track card.key) {
-          <app-cohort-card [card]="card" />
+          <app-cohort-card [card]="card" [showClosure]="showClosure()" />
         }
       </div>
     </section>
@@ -73,7 +85,12 @@
         igual en ambos lados: desde que se crea el ticket hasta el primer comentario público. El cierre no se compara.
         Con menos de {{ minSample() }} tickets no se calculan tiempos. Los tickets sin categoría no aparecen.
       </p>
-      <app-category-comparison [rows]="comparisonRows()" [baselineHasData]="baselineHasData()" />
+      <app-category-comparison
+        [rows]="comparisonRows()"
+        [baselineHasData]="baselineHasData()"
+        [showClosure]="showClosure()"
+        [closureNote]="closureNoteText()"
+      />
     </section>
 
     <section class="tc-section" aria-labelledby="tc-series-title">
@@ -99,7 +116,7 @@
       </p>
       <div class="tc-grid">
         @for (card of systemResponseCards(); track card.key) {
-          <app-cohort-card [card]="card" />
+          <app-cohort-card [card]="card" [showClosure]="showClosure()" />
         }
       </div>
     </section>

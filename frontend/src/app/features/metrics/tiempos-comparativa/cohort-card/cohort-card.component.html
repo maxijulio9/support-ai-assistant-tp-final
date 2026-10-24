@@ -39,4 +39,44 @@
       }
     </dl>
   }
+
+  @if (showClosure()) {
+    <section class="cohort-card-closure" [attr.aria-label]="'Cierre indicativo de ' + card().label">
+      <h4 class="cohort-card-closure-title">Cierre (indicativo)</h4>
+
+      @if (card().closure.placeholder; as note) {
+        <p class="cohort-card-closure-placeholder">{{ note }}</p>
+        <dl class="cohort-card-facts">
+          <div class="cohort-card-fact">
+            <dt>Tickets</dt>
+            <dd>{{ card().closure.view.n }}</dd>
+          </div>
+        </dl>
+      } @else {
+        <dl class="cohort-card-facts">
+          <div class="cohort-card-fact">
+            <dt>Mediana</dt>
+            <dd>{{ card().closure.view.median ?? 'Sin dato' }}</dd>
+          </div>
+          <div class="cohort-card-fact">
+            <dt>P90</dt>
+            <dd>
+              {{ card().closure.view.p90 ?? 'Sin dato' }}
+              @if (card().closure.view.p90Indicative) {
+                <span class="cohort-card-indicative">(orientativo)</span>
+              }
+            </dd>
+          </div>
+          <div class="cohort-card-fact">
+            <dt>Tickets</dt>
+            <dd>{{ card().closure.view.n }}</dd>
+          </div>
+        </dl>
+      }
+
+      @if (card().closure.basisText) {
+        <p class="cohort-card-closure-basis">{{ card().closure.basisText }}</p>
+      }
+    </section>
+  }
 </article>

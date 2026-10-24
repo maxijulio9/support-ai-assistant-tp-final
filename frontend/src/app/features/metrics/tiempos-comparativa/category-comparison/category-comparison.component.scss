@@ -26,6 +26,10 @@
   }
 }
 
+.comparison-notice--strong {
+  color: var(--mat-sys-on-surface);
+}
+
 .comparison-empty {
   margin: 0;
   padding: var(--app-space-md) 0;
@@ -76,7 +80,24 @@
   color: var(--app-color-text-secondary);
 }
 
+.comparison-table--wide {
+  min-width: 1040px;
+}
+
+.comparison-metric {
+  font: var(--mat-sys-label-large);
+  text-align: center;
+  color: var(--app-color-text-secondary);
+}
+
+.comparison-metric--soft,
+.comparison-sub--soft,
+.comparison-cell--soft {
+  border-left: 1px dashed color-mix(in srgb, var(--mat-sys-on-surface) 18%, transparent);
+}
+
 .comparison-group--divided,
+.comparison-metric--divided,
 .comparison-sub--divided,
 .comparison-cell--divided {
   border-left: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 18%, transparent);

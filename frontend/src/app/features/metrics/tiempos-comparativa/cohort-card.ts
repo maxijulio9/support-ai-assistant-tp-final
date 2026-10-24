@@ -1,5 +1,6 @@
 import { resolveSegmentColorVar } from '../../../shared/decision-colors';
 import { cohortDescription, cohortLabel, firstResponseKindLabel, formatPercent, withinTargetLabel } from './response-times-format';
+import { closureBasisText, closurePlaceholder } from './closure';
 import { buildStatsView, StatsView } from './stats-view';
 import { CohortLike, ResponseTimesLike } from './response-times.types';
 
@@ -11,6 +12,14 @@ export interface WithinTarget {
 export interface CohortPlaceholder {
   title: string;
   detail: string;
+}
+
+export interface CohortClosure {
+  view: StatsView;
+  // Reemplaza a las cifras cuando no hay con que calcularlas
+  placeholder: string | null;
+  // Como se mide el cierre de esta cohorte, segun su closure_basis
+  basisText: string;
 }
 
 export interface CohortCard {
@@ -28,6 +37,7 @@ export interface CohortCard {
   // Reemplaza a las cifras cuando no hay con que calcularlas
   placeholder: CohortPlaceholder | null;
   withinTarget: WithinTarget | null;
+  closure: CohortClosure;
 }
 
 const ACCENT_DECISION_KEY: Record<string, string> = {
@@ -70,6 +80,15 @@ export function cohortTicketsText(view: StatsView, tickets: number): string {
   return view.n === tickets ? String(view.n) : `${view.n} con tiempo (de ${tickets})`;
 }
 
+function buildCohortClosure(cohort: CohortLike, minSample: number): CohortClosure {
+  const view = buildStatsView(cohort.closure, minSample);
+  return {
+    view,
+    placeholder: closurePlaceholder(view, cohort.tickets),
+    basisText: closureBasisText(cohort.closure_basis),
+  };
+}
+
 // El porcentaje dentro del objetivo solo se muestra si hay objetivo (hay
 // proyecto elegido), el backend lo calculo y la muestra alcanza.
 export function buildCohortCard(cohort: CohortLike, minSample: number, targetSeconds: number | null): CohortCard {
@@ -88,6 +107,7 @@ export function buildCohortCard(cohort: CohortLike, minSample: number, targetSec
     ticketsText: cohortTicketsText(firstResponse, cohort.tickets),
     placeholder: cohortPlaceholder(firstResponse, cohort.tickets, minSample),
     withinTarget: showTarget ? { text: formatPercent(rate), label: withinTargetLabel(cohort.cohort) } : null,
+    closure: buildCohortClosure(cohort, minSample),
   };
 }
 
