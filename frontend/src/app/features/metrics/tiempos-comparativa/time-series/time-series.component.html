@@ -1,0 +1,51 @@
+<div class="ts-card">
+  <p class="ts-help">
+    Muestra cómo cambia la primera respuesta a lo largo del tiempo. La línea sólida es la mediana y la punteada el p90.
+    @if (targetSeconds() !== null) {
+      La línea horizontal es el objetivo del proyecto.
+    }
+    Los marcadores huecos indican pocos tickets (menos de {{ minSample() }}): tomalos como orientativos. Los días o
+    semanas sin tickets quedan sin punto.
+  </p>
+
+  <div class="ts-controls">
+    <mat-form-field appearance="outline" class="ts-cohort-field" subscriptSizing="dynamic">
+      <mat-label>Tipo de atención</mat-label>
+      <mat-select [value]="cohortKey()" (selectionChange)="onCohortChange($event.value)">
+        @for (option of cohortOptions(); track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-button-toggle-group
+      class="ts-granularity"
+      aria-label="Agrupar la serie"
+      [value]="granularity()"
+      (change)="onGranularityChange($event.value)"
+    >
+      <mat-button-toggle value="weekly">Semanal</mat-button-toggle>
+      <mat-button-toggle value="daily">Diario</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  @if (cohortText()) {
+    <p class="ts-cohort-description">{{ cohortText() }}</p>
+  }
+
+  @if (scaleNote(); as note) {
+    <p class="ts-scale-note">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      <span>{{ note }}</span>
+    </p>
+  }
+
+  @if (hasData()) {
+    <div echarts [options]="chartOptions()" class="ts-chart" role="img" [attr.aria-label]="ariaLabel()"></div>
+  } @else {
+    <div class="ts-empty">
+      <mat-icon aria-hidden="true">show_chart</mat-icon>
+      <p>Todavía no hay datos de esta cohorte en el período.</p>
+    </div>
+  }
+</div>

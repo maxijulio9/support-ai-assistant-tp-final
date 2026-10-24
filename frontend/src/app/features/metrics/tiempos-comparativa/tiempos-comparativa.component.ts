@@ -15,6 +15,7 @@ import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-it
 import { CohortCardComponent } from './cohort-card/cohort-card.component';
 import { CategoryComparisonComponent } from './category-comparison/category-comparison.component';
 import { baselineHasTickets, buildCategoryComparison } from './category-comparison';
+import { TimeSeriesComponent } from './time-series/time-series.component';
 import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakdown.component';
 import { buildOutcomeRows } from './outcomes-breakdown';
 import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
@@ -33,7 +34,7 @@ export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
 @Component({
   selector: 'app-metrics-tiempos-comparativa',
   standalone: true,
-  imports: [CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, TimeSeriesComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
   templateUrl: './tiempos-comparativa.component.html',
   styleUrl: './tiempos-comparativa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

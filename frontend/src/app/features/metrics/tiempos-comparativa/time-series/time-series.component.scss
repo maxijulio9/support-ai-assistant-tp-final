@@ -1,0 +1,78 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.ts-card {
+  box-sizing: border-box;
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.ts-help,
+.ts-cohort-description {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+  max-width: 75ch;
+}
+
+.ts-scale-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+}
+
+.ts-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+}
+
+.ts-cohort-field {
+  width: 260px;
+  max-width: 100%;
+}
+
+.ts-chart {
+  width: 100%;
+  min-width: 0;
+  height: 340px;
+}
+
+.ts-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-lg) var(--app-space-md);
+  text-align: center;
+  color: var(--app-color-text-secondary);
+
+  p {
+    margin: 0;
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ts-chart {
+    height: 300px;
+  }
+
+  .ts-cohort-field {
+    width: 100%;
+  }
+}

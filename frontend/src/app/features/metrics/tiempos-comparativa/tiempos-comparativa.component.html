@@ -76,6 +76,11 @@
       <app-category-comparison [rows]="comparisonRows()" [baselineHasData]="baselineHasData()" />
     </section>
 
+    <section class="tc-section" aria-labelledby="tc-series-title">
+      <h2 id="tc-series-title" class="tc-section-title">Evolución de la primera respuesta</h2>
+      <app-time-series [data]="data()!" />
+    </section>
+
     <section class="tc-section" aria-labelledby="tc-outcomes-title">
       <h2 id="tc-outcomes-title" class="tc-section-title">Cómo terminaron los tickets con revisión</h2>
       <p class="tc-section-text">
