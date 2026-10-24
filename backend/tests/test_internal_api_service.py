@@ -23,7 +23,7 @@ def _build_mapping(**overrides):
     defaults = {
         "project_id": "proj-1",
         "status_id": "status-1",
-        "system_action": "21",
+        "system_action": "escalate",
         "is_active": True,
     }
     defaults.update(overrides)

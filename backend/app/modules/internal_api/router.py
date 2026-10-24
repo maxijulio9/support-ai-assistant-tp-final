@@ -43,6 +43,8 @@ from app.modules.internal_api.schemas import (
     IndexingStatusResponse,
     ErrorResponse,
     IndexedSpacesResponse,
+    StatusActionItem,
+    StatusActionsResponse,
     DiscardRequest,
     LlmConfigResponse,
     LlmModelsRequest,
@@ -69,6 +71,7 @@ from app.modules.internal_api.services.space_config_service import SpaceConfigur
 from app.modules.internal_api.services.indexer_trigger_service import IndexingTriggerService
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.repositories.kb_space_status_repository import KbSpaceStatusRepository
+from app.core.jsm_status_actions import CONFIGURABLE_STATUS_ACTIONS
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
@@ -112,6 +115,14 @@ def configure_project(request: ProjectConfigRequest, admin: AppUser = Depends(re
         raise HTTPException(status_code=503, detail="No se pudo persistir la configuracion")
 
     return ProjectConfigResponse(status="ok", mappings_configured=mappings_configured)
+
+
+# lista las acciones del sistema validas para el mapeo de estados, para armar el selector de la configuracion del proyecto
+@router.get("/api/config/itsm/status-actions", response_model=StatusActionsResponse)
+def list_status_actions(admin: AppUser = Depends(require_admin)):
+    return StatusActionsResponse(
+        actions=[StatusActionItem(value=value, description=description) for value, description in CONFIGURABLE_STATUS_ACTIONS.items()]
+    )
 
 
 # aprueba una interaccion en needs_review, publica la respuesta generada tal cual esta o la version editada por el agente si viene edited_response

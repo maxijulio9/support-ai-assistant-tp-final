@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # SendGrid, para el flujo de restablecimiento de contraseña
     sendgrid_api_key: str = ""
     sendgrid_from_email: str = ""
+
+    # url base del frontend, el link del mail de restablecimiento de contrasena apunta a esta direccion
+    frontend_base_url: str = "http://localhost:4200"
     
     
     # bootstrap del primer admin, opcional, solo actua si app_user esta vacia
