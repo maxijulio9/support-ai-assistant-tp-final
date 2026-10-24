@@ -70,7 +70,7 @@ def _result(one=None, rows=None):
 @pytest.mark.asyncio
 async def test_approve_without_edit_publishes_the_generated_response(mock_get_db):
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
     service, jsm = _build_service()
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=jsm):
@@ -88,7 +88,7 @@ async def test_approve_without_edit_publishes_the_generated_response(mock_get_db
 @pytest.mark.asyncio
 async def test_approve_with_edit_publishes_the_edited_text_and_records_it(mock_get_db):
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
     service, jsm = _build_service()
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=jsm):
@@ -106,7 +106,7 @@ async def test_approve_with_edit_publishes_the_edited_text_and_records_it(mock_g
 @pytest.mark.asyncio
 async def test_approve_with_an_identical_text_is_a_plain_approval(mock_get_db):
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
     service, jsm = _build_service()
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=jsm):
@@ -151,7 +151,7 @@ async def test_approve_with_a_text_over_the_limit_is_rejected(mock_get_db):
 @pytest.mark.asyncio
 async def test_approve_with_a_text_of_exactly_the_limit_is_accepted(mock_get_db):
     mock_db = MagicMock()
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
     service, jsm = _build_service()
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=jsm):
@@ -185,7 +185,7 @@ def test_endpoint_passes_the_edited_text_to_the_service(mock_service):
     app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    mock_service.approve_interaction.assert_awaited_once_with("int-1", "agent-1", "texto")
+    mock_service.approve_interaction.assert_awaited_once_with("int-1", "user-1", "texto")
 
 
 # verifica que sin texto editado el endpoint llama al servicio como antes
@@ -199,7 +199,7 @@ def test_endpoint_without_an_edit_keeps_the_previous_call(mock_service):
     app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    mock_service.approve_interaction.assert_awaited_once_with("int-1", "agent-1")
+    mock_service.approve_interaction.assert_awaited_once_with("int-1", "user-1")
 
 
 # verifica que un texto editado invalido se traduce en HTTP 400 con el mensaje en texto legible

@@ -15,6 +15,7 @@ class ProjectThresholds(BaseModel):
     threshold_auto_publish: float = Field(default=0.85, ge=0.0, le=1.0, description="confidence_score minimo para publicar la respuesta sin revision humana")
     threshold_needs_review: float = Field(default=0.60, ge=0.0, le=1.0, description="confidence_score minimo para pedir revision humana en vez de escalar directo")
     similarity_threshold: float = Field(default=0.40, ge=0.0, le=1.0, description="similarity_score minimo para que un chunk recuperado se use como contexto")
+    first_response_target_seconds: int | None = Field(default=None, ge=1, description="objetivo de tiempo de primera respuesta del proyecto en segundos, si no viene se conserva el valor guardado, que es 30 por defecto")
 
 
 class ProjectStatusMapping(BaseModel):
@@ -51,20 +52,20 @@ class ProjectConfigResponse(BaseModel):
 
 class ApproveRequest(BaseModel):
     """Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta generada tal cual esta o la version editada si viene edited_response."""
-    reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa, sin FK hasta que exista M9")
+    reviewed_by: str | None = Field(default=None, description="ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados")
     edited_response: str | None = Field(default=None, description="respuesta editada por el agente, si viene se publica en lugar de la generada, no puede quedar vacia despues de recortar espacios ni superar los 5000 caracteres, si es igual a la generada se trata como una aprobacion comun")
 
 
 class RegenerateRequest(BaseModel):
     """Request para regenerar una interaccion rechazada (CU17)."""
     rejection_reason: str = Field(description="motivo del rechazo, se usa para reintentar la generacion con ese contexto")
-    reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa")
+    reviewed_by: str | None = Field(default=None, description="ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados")
 
 
 class EscalateRequest(BaseModel):
     """Request para escalar una interaccion directo a un humano, sin generar nada nuevo."""
     rejection_reason: str | None = Field(default=None, description="motivo opcional del escalamiento")
-    reviewed_by: str | None = Field(default=None, description="referencia logica al agente que revisa")
+    reviewed_by: str | None = Field(default=None, description="ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados")
 
 
 class DiscardRequest(BaseModel):
@@ -430,6 +431,7 @@ class ProjectThresholdsItem(BaseModel):
     threshold_auto_publish: float = Field(description="confidence_score minimo para publicar la respuesta sin revision humana")
     threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana en vez de escalar directo")
     similarity_threshold: float = Field(description="similarity_score minimo para que un chunk recuperado se use como contexto")
+    first_response_target_seconds: int = Field(description="objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto")
 
 
 class ProjectThresholdsResponse(BaseModel):
@@ -448,6 +450,7 @@ class OnboardedProject(BaseModel):
     threshold_auto_publish: float = Field(description="confidence_score minimo para publicar sin revision humana, con el valor por defecto del pipeline si no esta cargado")
     threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana, con el valor por defecto del pipeline si no esta cargado")
     similarity_threshold: float = Field(description="similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado")
+    first_response_target_seconds: int = Field(description="objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto")
 
 
 class OnboardedProjectsResponse(BaseModel):

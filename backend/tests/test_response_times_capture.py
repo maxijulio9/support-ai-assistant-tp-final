@@ -329,7 +329,8 @@ async def test_approve_marks_the_response_and_the_resolution():
     service = _review_service()
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=_jsm()), \
-         patch.object(InteractionReviewService, "_update_interaction") as update:
+         patch.object(InteractionReviewService, "_update_interaction") as update, \
+         patch.object(InteractionReviewService, "_claim_interaction"):
         await service.approve_interaction("int-1", "user-1")
 
     assert update.call_args.kwargs["responded"] is True
@@ -342,7 +343,8 @@ async def test_regenerate_that_publishes_marks_the_response():
     service.response_generator.regenerate.return_value = SimpleNamespace(action_type=ACTION_AUTO_PUBLISH, response_text="nueva", confidence_score=0.9)
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=_jsm()), \
-         patch.object(InteractionReviewService, "_update_interaction") as update:
+         patch.object(InteractionReviewService, "_update_interaction") as update, \
+         patch.object(InteractionReviewService, "_claim_interaction"):
         await service.regenerate_interaction("int-1", "motivo", "user-1")
 
     assert update.call_args.kwargs["responded"] is True
@@ -356,7 +358,8 @@ async def test_regenerate_that_escalates_does_not_mark_the_response():
     jsm = _jsm()
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=jsm), \
-         patch.object(InteractionReviewService, "_update_interaction") as update:
+         patch.object(InteractionReviewService, "_update_interaction") as update, \
+         patch.object(InteractionReviewService, "_claim_interaction"):
         await service.regenerate_interaction("int-1", "motivo", "user-1")
 
     assert update.call_args.kwargs["responded"] is False

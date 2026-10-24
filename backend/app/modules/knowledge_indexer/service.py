@@ -56,7 +56,19 @@ class KnowledgeIndexer:
     # recorre todos los spaces indicados, indexa cada pagina de punta a punta:
     #extrae, limpia, divide en chunks, genera embeddings y persiste en la bd vectorial    def index_spaces(self, space_keys: list[str]):
     def index_spaces(self, space_keys: list[str], on_progress=None):
-        paginas = self.extract_pages(space_keys)
+        import time
+
+        # durante la extraccion se refrsca updated_at cada tanto, sin esto una corrida con muchas paginas parece abandonada
+        refresh_every_seconds = 30
+        last_refresh = time.monotonic()
+
+        def refresh_while_extracting():
+            nonlocal last_refresh
+            if time.monotonic() - last_refresh >= refresh_every_seconds:
+                last_refresh = time.monotonic()
+                self._notify(on_progress)
+
+        paginas = self.extract_pages(space_keys, on_page=refresh_while_extracting)
         self._notify(on_progress, total_documents=len(paginas))
         db = next(get_db())
         processed = 0
@@ -88,7 +100,7 @@ class KnowledgeIndexer:
 
 
      # recorre todos los spaces indicados y extrae el contenido de cada pagina
-    def extract_pages(self, space_keys: list[str]) -> list[ExtractedPage]:
+    def extract_pages(self, space_keys: list[str], on_page=None) -> list[ExtractedPage]:
         paginas_extraidas = []
 
         db = next(get_db())
@@ -122,6 +134,10 @@ class KnowledgeIndexer:
 
                     )
                     paginas_extraidas.append(pagina)
+
+                    # avisa que avanzo la extraccion, quien llama decide cada cuanto actualiza el estado de la corrida
+                    if on_page is not None:
+                        on_page()
         finally:
             db.close()
             
