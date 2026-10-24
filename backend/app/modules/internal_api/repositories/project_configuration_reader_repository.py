@@ -7,11 +7,13 @@ from app.modules.internal_api.repositories.project_thresholds_repository import 
     DEFAULT_THRESHOLD_AUTO_PUBLISH,
     DEFAULT_THRESHOLD_NEEDS_REVIEW,
     DEFAULT_SIMILARITY_THRESHOLD,
+    DEFAULT_FIRST_RESPONSE_TARGET_SECONDS,
 )
 
 PROJECTS_QUERY = """
     SELECT p.id, p.code, p.name, c.code AS country_code, p.language_code, p.is_active,
-           p.threshold_auto_publish, p.threshold_needs_review, p.similarity_threshold
+           p.threshold_auto_publish, p.threshold_needs_review, p.similarity_threshold,
+           p.first_response_target_seconds
     FROM project p
     LEFT JOIN country c ON c.id = p.country_id
 """
@@ -118,6 +120,7 @@ class ProjectConfigurationReaderRepository:
             "threshold_auto_publish": self._to_float(row.threshold_auto_publish, DEFAULT_THRESHOLD_AUTO_PUBLISH),
             "threshold_needs_review": self._to_float(row.threshold_needs_review, DEFAULT_THRESHOLD_NEEDS_REVIEW),
             "similarity_threshold": self._to_float(row.similarity_threshold, DEFAULT_SIMILARITY_THRESHOLD),
+            "first_response_target_seconds": row.first_response_target_seconds if row.first_response_target_seconds is not None else DEFAULT_FIRST_RESPONSE_TARGET_SECONDS,
         }
 
     # convierte el numeric de la base a float, o devuelve el valor por defecto si viene vacio
