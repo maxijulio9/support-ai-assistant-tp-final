@@ -91,6 +91,8 @@ export type { GetMetricsHeatmapApiMetricsHeatmapGet$Params as GetMetricsHeatmapA
 export { getMetricsHeatmapApiMetricsHeatmapGet as getMetricsHeatmapApiMetricsHeatmapGet } from './fn/internal-api/get-metrics-heatmap-api-metrics-heatmap-get';
 export type { GetMetricsThresholdsApiMetricsThresholdsGet$Params as GetMetricsThresholdsApiMetricsThresholdsGet$Params } from './fn/internal-api/get-metrics-thresholds-api-metrics-thresholds-get';
 export { getMetricsThresholdsApiMetricsThresholdsGet as getMetricsThresholdsApiMetricsThresholdsGet } from './fn/internal-api/get-metrics-thresholds-api-metrics-thresholds-get';
+export type { GetMetricsResponseTimesApiMetricsResponseTimesGet$Params as GetMetricsResponseTimesApiMetricsResponseTimesGet$Params } from './fn/internal-api/get-metrics-response-times-api-metrics-response-times-get';
+export { getMetricsResponseTimesApiMetricsResponseTimesGet as getMetricsResponseTimesApiMetricsResponseTimesGet } from './fn/internal-api/get-metrics-response-times-api-metrics-response-times-get';
 export type { GetProjectConfigurationApiConfigItsmProjectsProjectKeyGet$Params as GetProjectConfigurationApiConfigItsmProjectsProjectKeyGet$Params } from './fn/internal-api/get-project-configuration-api-config-itsm-projects-project-key-get';
 export { getProjectConfigurationApiConfigItsmProjectsProjectKeyGet as getProjectConfigurationApiConfigItsmProjectsProjectKeyGet } from './fn/internal-api/get-project-configuration-api-config-itsm-projects-project-key-get';
 export type { GetLlmConfigStatusApiConfigLlmGet$Params as GetLlmConfigStatusApiConfigLlmGet$Params } from './fn/internal-api/get-llm-config-status-api-config-llm-get';

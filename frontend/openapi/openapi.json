@@ -2033,11 +2033,11 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "El huso, las fechas o el project_id no son validos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2167,11 +2167,11 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "El huso, las fechas o el project_id no son validos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2301,11 +2301,11 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "El huso, las fechas o el project_id no son validos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2435,11 +2435,11 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "El huso, las fechas o el project_id no son validos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2569,11 +2569,11 @@
             }
           },
           "422": {
-            "description": "Validation Error",
+            "description": "El huso, las fechas o el project_id no son validos",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2622,12 +2622,140 @@
               }
             }
           },
-          "422": {
-            "description": "Validation Error",
+          "404": {
+            "description": "Proyecto no encontrado",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El project_id no es un uuid valido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics/response-times": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "Get Metrics Response Times",
+        "operationId": "get_metrics_response_times_api_metrics_response_times_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "from_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From Date"
+            }
+          },
+          {
+            "name": "to_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To Date"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tz"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseTimesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "El huso, las fechas o el project_id no son validos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3181,6 +3309,116 @@
         "title": "CategoryMetric",
         "description": "Un item del desglose de metricas por categoria."
       },
+      "CategoryResponseTimes": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "nombre de la categoria"
+          },
+          "tickets": {
+            "type": "integer",
+            "title": "Tickets",
+            "description": "cantidad de tickets de la cohorte en esa categoria"
+          },
+          "first_response": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "primera respuesta, con el minimo de tickets"
+          },
+          "closure": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "cierre, con el minimo de tickets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "tickets",
+          "first_response",
+          "closure"
+        ],
+        "title": "CategoryResponseTimes",
+        "description": "Tiempos de una cohorte para una categoria."
+      },
+      "CohortResponseTimes": {
+        "properties": {
+          "cohort": {
+            "type": "string",
+            "title": "Cohort",
+            "description": "automatic si el sistema publico solo, reviewed si el sistema sugirio y una persona resolvio, escalated si el sistema escalo, info_requested si el sistema pidio mas informacion y baseline para los tickets anteriores a la puesta en marcha del sistema"
+          },
+          "first_response_kind": {
+            "type": "string",
+            "title": "First Response Kind",
+            "description": "que es la primera respuesta en esta cohorte, answer, acknowledgment si es un acuse de recibo o information_request si es un pedido de informacion"
+          },
+          "closure_basis": {
+            "type": "string",
+            "title": "Closure Basis",
+            "description": "como se mide el cierre, detected_confirmation si el sistema detecto la confirmacion del cliente, con unos 30 segundos de espera de comentarios y procesamiento, o last_customer_comment si es el ultimo comentario del cliente en el ticket"
+          },
+          "tickets": {
+            "type": "integer",
+            "title": "Tickets",
+            "description": "cantidad de tickets de la cohorte, incluidos los que no tienen tiempos medidos"
+          },
+          "first_response": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "tiempo desde la creacion del ticket en JSM hasta el primer comentario publico, con el minimo de tickets"
+          },
+          "closure": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "tiempo desde la creacion hasta la confirmacion del cliente, solo en los tickets donde el cliente confirmo, con el minimo de tickets"
+          },
+          "outcomes": {
+            "items": {
+              "$ref": "#/components/schemas/OutcomeResponseTimes"
+            },
+            "type": "array",
+            "title": "Outcomes",
+            "description": "desglose por desenlace, solo en reviewed, en las demas cohortes viene vacio"
+          },
+          "by_category": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponseTimes"
+            },
+            "type": "array",
+            "title": "By Category",
+            "description": "desglose por categoria, los tickets sin categoria cuentan en la cohorte pero no aparecen aca"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/DailyFirstResponse"
+            },
+            "type": "array",
+            "title": "Daily",
+            "description": "primera respuesta por dia de creacion, solo los dias con tickets, vacio en baseline"
+          },
+          "weekly": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyFirstResponse"
+            },
+            "type": "array",
+            "title": "Weekly",
+            "description": "primera respuesta por semana de creacion, solo las semanas con tickets, vacio en baseline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cohort",
+          "first_response_kind",
+          "closure_basis",
+          "tickets",
+          "first_response",
+          "closure",
+          "outcomes",
+          "by_category",
+          "daily",
+          "weekly"
+        ],
+        "title": "CohortResponseTimes",
+        "description": "Tiempos de una cohorte de tickets."
+      },
       "ConfidenceDistributionResponse": {
         "properties": {
           "intervals": {
@@ -3613,6 +3851,26 @@
           "role"
         ],
         "title": "CreateUserRequest"
+      },
+      "DailyFirstResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "dia de creacion del ticket, formato YYYY-MM-DD"
+          },
+          "first_response": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "estadisticas del dia, sin minimo de tickets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "first_response"
+        ],
+        "title": "DailyFirstResponse",
+        "description": "Primera respuesta de los tickets creados un dia, en el huso pedido."
       },
       "DailyMetric": {
         "properties": {
@@ -5479,6 +5737,39 @@
         "title": "OnboardedProjectsResponse",
         "description": "Response con los proyectos dados de alta, para precargar la pantalla de configuracion."
       },
+      "OutcomeResponseTimes": {
+        "properties": {
+          "resolution_channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Channel",
+            "description": "canal de resolucion, por ejemplo REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY, null son las pendientes de revision"
+          },
+          "tickets": {
+            "type": "integer",
+            "title": "Tickets",
+            "description": "cantidad de tickets con ese desenlace"
+          },
+          "first_response": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "primera respuesta, con el minimo de tickets, los escalados y descartados por una persona no tienen primera respuesta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resolution_channel",
+          "tickets",
+          "first_response"
+        ],
+        "title": "OutcomeResponseTimes",
+        "description": "Tiempos de los tickets revisados por una persona, segun como los resolvio."
+      },
       "PrioritiesWithSuggestionResponse": {
         "properties": {
           "priorities": {
@@ -5927,6 +6218,16 @@
             "title": "Project Id",
             "description": "id del proyecto"
           },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "key del proyecto en JSM, por ejemplo TARG"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "nombre del proyecto"
+          },
           "threshold_auto_publish": {
             "type": "number",
             "title": "Threshold Auto Publish",
@@ -5951,6 +6252,8 @@
         "type": "object",
         "required": [
           "project_id",
+          "key",
+          "name",
           "threshold_auto_publish",
           "threshold_needs_review",
           "similarity_threshold",
@@ -6090,6 +6393,49 @@
         ],
         "title": "ResolutionChannelCount",
         "description": "Cantidad de interacciones que se resolvieron por un mismo canal de resolucion."
+      },
+      "ResponseTimesResponse": {
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "huso horario usado para los dias y las semanas"
+          },
+          "min_sample": {
+            "type": "integer",
+            "title": "Min Sample",
+            "description": "cantidad minima de tickets para informar promedio y percentiles de una cohorte, una categoria o un desenlace"
+          },
+          "first_response_target_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Response Target Seconds",
+            "description": "objetivo de primera respuesta del proyecto en segundos si se filtra por proyecto, o null"
+          },
+          "cohorts": {
+            "items": {
+              "$ref": "#/components/schemas/CohortResponseTimes"
+            },
+            "type": "array",
+            "title": "Cohorts",
+            "description": "siempre las cinco cohortes en este orden, automatic, reviewed, escalated, info_requested y baseline, aunque esten vacias"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timezone",
+          "min_sample",
+          "first_response_target_seconds",
+          "cohorts"
+        ],
+        "title": "ResponseTimesResponse",
+        "description": "Tiempos de respuesta por cohorte, para comparar al sistema contra los tickets anteriores a su puesta en marcha."
       },
       "RetrievedChunkDetail": {
         "properties": {
@@ -6310,6 +6656,73 @@
         "title": "StatusActionsResponse",
         "description": "Acciones del sistema validas para el mapeo de estados, vocabulario cerrado que comparten M7 y el orquestador."
       },
+      "TimeStats": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "cantidad de tickets con ese tiempo medido, siempre viene"
+          },
+          "mean_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Seconds",
+            "description": "promedio en segundos, null si count es menor a min_sample, salvo en daily y weekly donde basta un ticket"
+          },
+          "p50_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P50 Seconds",
+            "description": "mediana en segundos, con las mismas reglas que mean_seconds"
+          },
+          "p90_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P90 Seconds",
+            "description": "percentil 90 en segundos, con las mismas reglas que mean_seconds"
+          },
+          "within_target_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Within Target Rate",
+            "description": "proporcion de tickets dentro del objetivo de primera respuesta del proyecto, solo se calcula en first_response cuando se filtra por proyecto, en el resto es null"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "mean_seconds",
+          "p50_seconds",
+          "p90_seconds",
+          "within_target_rate"
+        ],
+        "title": "TimeStats",
+        "description": "Estadisticas de un conjunto de tiempos, en segundos."
+      },
       "UpdateProfileRequest": {
         "properties": {
           "full_name": {
@@ -6432,6 +6845,26 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WeeklyFirstResponse": {
+        "properties": {
+          "week_start": {
+            "type": "string",
+            "title": "Week Start",
+            "description": "lunes de la semana de creacion del ticket, formato YYYY-MM-DD"
+          },
+          "first_response": {
+            "$ref": "#/components/schemas/TimeStats",
+            "description": "estadisticas de la semana, sin minimo de tickets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "week_start",
+          "first_response"
+        ],
+        "title": "WeeklyFirstResponse",
+        "description": "Primera respuesta de los tickets creados una semana, en el huso pedido."
       }
     },
     "securitySchemes": {

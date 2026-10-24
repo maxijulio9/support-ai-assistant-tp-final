@@ -13,6 +13,16 @@ export interface ProjectThresholdsItem {
   first_response_target_seconds: number;
 
   /**
+   * key del proyecto en JSM, por ejemplo TARG
+   */
+  key: string;
+
+  /**
+   * nombre del proyecto
+   */
+  name: string;
+
+  /**
    * id del proyecto
    */
   project_id: string;
