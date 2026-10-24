@@ -77,7 +77,12 @@ from app.modules.internal_api.services.project_thresholds_service import Project
 from app.modules.internal_api.services.project_configuration_reader_service import ProjectConfigurationReaderService
 from app.modules.internal_api.services.connection_status_service import ConnectionStatusService
 from app.modules.internal_api.services.llm_config_service import LlmConfigService
-from app.modules.internal_api.services.interaction_review_service import InteractionNotPendingError, InvalidEditedResponseError
+from app.modules.internal_api.services.interaction_review_service import (
+    InteractionNotPendingError,
+    InvalidEditedResponseError,
+    JsmConnectionNotConfiguredError,
+    logger as review_logger,
+)
 from app.modules.internal_api.clients.llm_provider_checker import LlmProviderError, ProviderUnavailableError
 from app.modules.internal_api.services.interaction_listing_service import InteractionListingService
 
@@ -127,44 +132,60 @@ def list_status_actions(admin: AppUser = Depends(require_admin)):
 
 # aprueba una interaccion en needs_review, publica la respuesta generada tal cual esta o la version editada por el agente si viene edited_response
 @router.post("/api/interactions/{interaction_id}/approve", response_model=InteractionReviewResponse,
-             responses={400: {"model": ErrorResponse, "description": "La respuesta editada esta vacia o supera el maximo de caracteres"}})
+             responses={400: {"model": ErrorResponse, "description": "La respuesta editada esta vacia o supera el maximo de caracteres"},
+                        409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
 async def approve_interaction(interaction_id: str, request: ApproveRequest, usuario: AppUser = Depends(get_current_user)):
     try:
         if request.edited_response is not None:
-            action_type = await _review_service.approve_interaction(interaction_id, request.reviewed_by, request.edited_response)
+            action_type = await _review_service.approve_interaction(interaction_id, str(usuario.id), request.edited_response)
         else:
-            action_type = await _review_service.approve_interaction(interaction_id, request.reviewed_by)
+            action_type = await _review_service.approve_interaction(interaction_id, str(usuario.id))
     except InvalidEditedResponseError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except InteractionNotPendingError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except JsmConnectionNotConfiguredError:
+        raise HTTPException(status_code=503, detail="Todavía no se configuró la conexión con JSM")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception:
+        review_logger.exception(f"error al aprobar la interaccion '{interaction_id}'")
         raise HTTPException(status_code=503, detail="No se pudo aprobar la interacción")
 
     return InteractionReviewResponse(status="ok", action_type=action_type)
 
 
 # regenera una interaccion rechazada, con el motivo del rechazo
-@router.post("/api/interactions/{interaction_id}/regenerate", response_model=InteractionReviewResponse)
+@router.post("/api/interactions/{interaction_id}/regenerate", response_model=InteractionReviewResponse,
+             responses={409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
 async def regenerate_interaction(interaction_id: str, request: RegenerateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
-        action_type = await _review_service.regenerate_interaction(interaction_id, request.rejection_reason, request.reviewed_by)
+        action_type = await _review_service.regenerate_interaction(interaction_id, request.rejection_reason, str(usuario.id))
+    except InteractionNotPendingError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except JsmConnectionNotConfiguredError:
+        raise HTTPException(status_code=503, detail="Todavía no se configuró la conexión con JSM")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception:
+        review_logger.exception(f"error al regenerar la interaccion '{interaction_id}'")
         raise HTTPException(status_code=503, detail="No se pudo regenerar la interacción")
 
     return InteractionReviewResponse(status="ok", action_type=action_type)
 
 
 # escala una interaccion directo a un humano, sin generar nada nuevo
-@router.post("/api/interactions/{interaction_id}/escalate", response_model=InteractionReviewResponse)
+@router.post("/api/interactions/{interaction_id}/escalate", response_model=InteractionReviewResponse,
+             responses={409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"}})
 def escalate_interaction(interaction_id: str, request: EscalateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
-        action_type = _review_service.escalate_interaction(interaction_id, request.rejection_reason, request.reviewed_by)
+        action_type = _review_service.escalate_interaction(interaction_id, request.rejection_reason, str(usuario.id))
+    except InteractionNotPendingError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception:
+        review_logger.exception(f"error al escalar la interaccion '{interaction_id}'")
         raise HTTPException(status_code=503, detail="No se pudo escalar la interacción")
 
     return InteractionReviewResponse(status="ok", action_type=action_type)
