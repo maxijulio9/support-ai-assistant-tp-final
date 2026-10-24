@@ -18,7 +18,7 @@ class ProjectThresholdsRepository:
     def get_thresholds(self, project_id: str | None = None) -> list[dict]:
         db = next(get_db())
         try:
-            query = "SELECT id, threshold_auto_publish, threshold_needs_review, similarity_threshold, first_response_target_seconds FROM project"
+            query = "SELECT id, code, name, threshold_auto_publish, threshold_needs_review, similarity_threshold, first_response_target_seconds FROM project"
             params = {}
 
             if project_id:
@@ -33,6 +33,8 @@ class ProjectThresholdsRepository:
             for row in rows:
                 result.append({
                     "project_id": str(row.id),
+                    "key": row.code,
+                    "name": row.name,
                     "threshold_auto_publish": self._to_float(row.threshold_auto_publish, DEFAULT_THRESHOLD_AUTO_PUBLISH),
                     "threshold_needs_review": self._to_float(row.threshold_needs_review, DEFAULT_THRESHOLD_NEEDS_REVIEW),
                     "similarity_threshold": self._to_float(row.similarity_threshold, DEFAULT_SIMILARITY_THRESHOLD),

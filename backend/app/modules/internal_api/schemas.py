@@ -428,6 +428,8 @@ class HeatmapResponse(BaseModel):
 class ProjectThresholdsItem(BaseModel):
     """Umbrales configurados de un proyecto."""
     project_id: str = Field(description="id del proyecto")
+    key: str = Field(description="key del proyecto en JSM, por ejemplo TARG")
+    name: str = Field(description="nombre del proyecto")
     threshold_auto_publish: float = Field(description="confidence_score minimo para publicar la respuesta sin revision humana")
     threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana en vez de escalar directo")
     similarity_threshold: float = Field(description="similarity_score minimo para que un chunk recuperado se use como contexto")
@@ -603,3 +605,61 @@ class InteractionDetailResponse(BaseModel):
     was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
     chunks: list[RetrievedChunkDetail] = Field(description="fragmentos de la base de conocimiento usados como contexto")
+
+
+class TimeStats(BaseModel):
+    """Estadisticas de un conjunto de tiempos, en segundos."""
+    count: int = Field(description="cantidad de tickets con ese tiempo medido, siempre viene")
+    mean_seconds: float | None = Field(description="promedio en segundos, null si count es menor a min_sample, salvo en daily y weekly donde basta un ticket")
+    p50_seconds: float | None = Field(description="mediana en segundos, con las mismas reglas que mean_seconds")
+    p90_seconds: float | None = Field(description="percentil 90 en segundos, con las mismas reglas que mean_seconds")
+    within_target_rate: float | None = Field(description="proporcion de tickets dentro del objetivo de primera respuesta del proyecto, solo se calcula en first_response cuando se filtra por proyecto, en el resto es null")
+
+
+class DailyFirstResponse(BaseModel):
+    """Primera respuesta de los tickets creados un dia, en el huso pedido."""
+    date: str = Field(description="dia de creacion del ticket, formato YYYY-MM-DD")
+    first_response: TimeStats = Field(description="estadisticas del dia, sin minimo de tickets")
+
+
+class WeeklyFirstResponse(BaseModel):
+    """Primera respuesta de los tickets creados una semana, en el huso pedido."""
+    week_start: str = Field(description="lunes de la semana de creacion del ticket, formato YYYY-MM-DD")
+    first_response: TimeStats = Field(description="estadisticas de la semana, sin minimo de tickets")
+
+
+class CategoryResponseTimes(BaseModel):
+    """Tiempos de una cohorte para una categoria."""
+    category: str = Field(description="nombre de la categoria")
+    tickets: int = Field(description="cantidad de tickets de la cohorte en esa categoria")
+    first_response: TimeStats = Field(description="primera respuesta, con el minimo de tickets")
+    closure: TimeStats = Field(description="cierre, con el minimo de tickets")
+
+
+class OutcomeResponseTimes(BaseModel):
+    """Tiempos de los tickets revisados por una persona, segun como los resolvio."""
+    resolution_channel: str | None = Field(description="canal de resolucion, por ejemplo REVIEWED_APPROVED, REVIEWED_EDITED, REVIEWED_REGENERATED, ESCALATED_BY_HUMAN, DISCARDED_BY_HUMAN o RESOLVED_EXTERNALLY, null son las pendientes de revision")
+    tickets: int = Field(description="cantidad de tickets con ese desenlace")
+    first_response: TimeStats = Field(description="primera respuesta, con el minimo de tickets, los escalados y descartados por una persona no tienen primera respuesta")
+
+
+class CohortResponseTimes(BaseModel):
+    """Tiempos de una cohorte de tickets."""
+    cohort: str = Field(description="automatic si el sistema publico solo, reviewed si el sistema sugirio y una persona resolvio, escalated si el sistema escalo, info_requested si el sistema pidio mas informacion y baseline para los tickets anteriores a la puesta en marcha del sistema")
+    first_response_kind: str = Field(description="que es la primera respuesta en esta cohorte, answer, acknowledgment si es un acuse de recibo o information_request si es un pedido de informacion")
+    closure_basis: str = Field(description="como se mide el cierre, detected_confirmation si el sistema detecto la confirmacion del cliente, con unos 30 segundos de espera de comentarios y procesamiento, o last_customer_comment si es el ultimo comentario del cliente en el ticket")
+    tickets: int = Field(description="cantidad de tickets de la cohorte, incluidos los que no tienen tiempos medidos")
+    first_response: TimeStats = Field(description="tiempo desde la creacion del ticket en JSM hasta el primer comentario publico, con el minimo de tickets")
+    closure: TimeStats = Field(description="tiempo desde la creacion hasta la confirmacion del cliente, solo en los tickets donde el cliente confirmo, con el minimo de tickets")
+    outcomes: list[OutcomeResponseTimes] = Field(description="desglose por desenlace, solo en reviewed, en las demas cohortes viene vacio")
+    by_category: list[CategoryResponseTimes] = Field(description="desglose por categoria, los tickets sin categoria cuentan en la cohorte pero no aparecen aca")
+    daily: list[DailyFirstResponse] = Field(description="primera respuesta por dia de creacion, solo los dias con tickets, vacio en baseline")
+    weekly: list[WeeklyFirstResponse] = Field(description="primera respuesta por semana de creacion, solo las semanas con tickets, vacio en baseline")
+
+
+class ResponseTimesResponse(BaseModel):
+    """Tiempos de respuesta por cohorte, para comparar al sistema contra los tickets anteriores a su puesta en marcha."""
+    timezone: str = Field(description="huso horario usado para los dias y las semanas")
+    min_sample: int = Field(description="cantidad minima de tickets para informar promedio y percentiles de una cohorte, una categoria o un desenlace")
+    first_response_target_seconds: int | None = Field(description="objetivo de primera respuesta del proyecto en segundos si se filtra por proyecto, o null")
+    cohorts: list[CohortResponseTimes] = Field(description="siempre las cinco cohortes en este orden, automatic, reviewed, escalated, info_requested y baseline, aunque esten vacias")
