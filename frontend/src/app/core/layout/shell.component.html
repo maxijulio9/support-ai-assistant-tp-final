@@ -127,7 +127,12 @@
         <span class="shell-breadcrumb">{{ breadcrumbTitle() }}</span>
       }
       <span class="shell-toolbar-spacer"></span>
-      <div class="shell-avatar shell-avatar--toolbar">{{ initials() }}</div>
+      <a
+        routerLink="/profile"
+        class="shell-avatar shell-avatar--toolbar"
+        aria-label="Ir a mi perfil"
+        matTooltip="Ir a mi perfil"
+      >{{ initials() }}</a>
     </mat-toolbar>
     <main class="shell-content">
       <router-outlet />
