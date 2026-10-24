@@ -668,6 +668,16 @@
               }
             }
           },
+          "409": {
+            "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -725,6 +735,16 @@
               }
             }
           },
+          "409": {
+            "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -778,6 +798,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InteractionReviewResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La interaccion ya no esta pendiente de revision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2894,7 +2924,7 @@
               }
             ],
             "title": "Reviewed By",
-            "description": "referencia logica al agente que revisa, sin FK hasta que exista M9"
+            "description": "ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados"
           },
           "edited_response": {
             "anyOf": [
@@ -3653,7 +3683,7 @@
               }
             ],
             "title": "Reviewed By",
-            "description": "referencia logica al agente que revisa"
+            "description": "ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados"
           }
         },
         "type": "object",
@@ -5318,6 +5348,11 @@
             "type": "number",
             "title": "Similarity Threshold",
             "description": "similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado"
+          },
+          "first_response_target_seconds": {
+            "type": "integer",
+            "title": "First Response Target Seconds",
+            "description": "objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto"
           }
         },
         "type": "object",
@@ -5330,7 +5365,8 @@
           "is_active",
           "threshold_auto_publish",
           "threshold_needs_review",
-          "similarity_threshold"
+          "similarity_threshold",
+          "first_response_target_seconds"
         ],
         "title": "OnboardedProject",
         "description": "Un proyecto dado de alta, con su id interno y sus umbrales."
@@ -5775,6 +5811,19 @@
             "title": "Similarity Threshold",
             "description": "similarity_score minimo para que un chunk recuperado se use como contexto",
             "default": 0.4
+          },
+          "first_response_target_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Response Target Seconds",
+            "description": "objetivo de tiempo de primera respuesta del proyecto en segundos, si no viene se conserva el valor guardado, que es 30 por defecto"
           }
         },
         "type": "object",
@@ -5802,6 +5851,11 @@
             "type": "number",
             "title": "Similarity Threshold",
             "description": "similarity_score minimo para que un chunk recuperado se use como contexto"
+          },
+          "first_response_target_seconds": {
+            "type": "integer",
+            "title": "First Response Target Seconds",
+            "description": "objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto"
           }
         },
         "type": "object",
@@ -5809,7 +5863,8 @@
           "project_id",
           "threshold_auto_publish",
           "threshold_needs_review",
-          "similarity_threshold"
+          "similarity_threshold",
+          "first_response_target_seconds"
         ],
         "title": "ProjectThresholdsItem",
         "description": "Umbrales configurados de un proyecto."
@@ -5888,7 +5943,7 @@
               }
             ],
             "title": "Reviewed By",
-            "description": "referencia logica al agente que revisa"
+            "description": "ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados"
           }
         },
         "type": "object",

@@ -13,7 +13,7 @@ export interface ApproveRequest {
   edited_response?: (string | null);
 
   /**
-   * referencia logica al agente que revisa, sin FK hasta que exista M9
+   * ya no se usa, el revisor sale del usuario autenticado y este campo se ignora, sigue en el contrato para no romper a los clientes ya generados
    */
   reviewed_by?: (string | null);
 }

@@ -8,6 +8,11 @@
 export interface ProjectThresholdsItem {
 
   /**
+   * objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto
+   */
+  first_response_target_seconds: number;
+
+  /**
    * id del proyecto
    */
   project_id: string;

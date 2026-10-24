@@ -8,6 +8,11 @@
 export interface ProjectThresholds {
 
   /**
+   * objetivo de tiempo de primera respuesta del proyecto en segundos, si no viene se conserva el valor guardado, que es 30 por defecto
+   */
+  first_response_target_seconds?: (number | null);
+
+  /**
    * id del proyecto en la tabla project, se puede omitir si se indica project_key
    */
   project_id?: (string | null);
