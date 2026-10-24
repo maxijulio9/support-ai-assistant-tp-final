@@ -66,6 +66,16 @@
       </div>
     </section>
 
+    <section class="tc-section" aria-labelledby="tc-comparison-title">
+      <h2 id="tc-comparison-title" class="tc-section-title">Comparativa por categoría</h2>
+      <p class="tc-section-text">
+        Compara solo la primera respuesta de la atención automática con la de la atención manual previa, porque se mide
+        igual en ambos lados: desde que se crea el ticket hasta el primer comentario público. El cierre no se compara.
+        Con menos de {{ minSample() }} tickets no se calculan tiempos. Los tickets sin categoría no aparecen.
+      </p>
+      <app-category-comparison [rows]="comparisonRows()" [baselineHasData]="baselineHasData()" />
+    </section>
+
     <section class="tc-section" aria-labelledby="tc-outcomes-title">
       <h2 id="tc-outcomes-title" class="tc-section-title">Cómo terminaron los tickets con revisión</h2>
       <p class="tc-section-text">

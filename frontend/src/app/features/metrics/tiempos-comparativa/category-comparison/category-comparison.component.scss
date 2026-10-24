@@ -1,0 +1,107 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.comparison {
+  box-sizing: border-box;
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+  padding: var(--app-space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.comparison-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+}
+
+.comparison-empty {
+  margin: 0;
+  padding: var(--app-space-md) 0;
+  text-align: center;
+  font: var(--mat-sys-title-medium);
+  color: var(--app-color-text-secondary);
+}
+
+.comparison-scroll {
+  overflow-x: auto;
+}
+
+.comparison-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+
+  th,
+  td {
+    padding: var(--app-space-xs) var(--app-space-sm);
+    text-align: right;
+    vertical-align: baseline;
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  }
+}
+
+.comparison-category-head,
+.comparison-category {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background-color: var(--mat-sys-surface);
+}
+
+.comparison-category {
+  font-weight: 600;
+}
+
+.comparison-group {
+  font: var(--mat-sys-label-large);
+  text-align: center;
+}
+
+.comparison-sub {
+  font: var(--mat-sys-label-large);
+  color: var(--app-color-text-secondary);
+}
+
+.comparison-group--divided,
+.comparison-sub--divided,
+.comparison-cell--divided {
+  border-left: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 18%, transparent);
+}
+
+.comparison-placeholder {
+  text-align: left;
+  color: var(--app-color-text-secondary);
+}
+
+.comparison-indicative {
+  display: block;
+  color: var(--app-color-text-secondary);
+}
+
+.comparison-label-narrow {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .comparison-label-full {
+    display: none;
+  }
+
+  .comparison-label-narrow {
+    display: inline;
+  }
+}

@@ -13,6 +13,8 @@ import { resolveMetricsFilters } from '../metrics-filters';
 import { OnboardedProject } from '../../../api/models/onboarded-project';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 import { CohortCardComponent } from './cohort-card/cohort-card.component';
+import { CategoryComparisonComponent } from './category-comparison/category-comparison.component';
+import { baselineHasTickets, buildCategoryComparison } from './category-comparison';
 import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakdown.component';
 import { buildOutcomeRows } from './outcomes-breakdown';
 import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
@@ -31,7 +33,7 @@ export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
 @Component({
   selector: 'app-metrics-tiempos-comparativa',
   standalone: true,
-  imports: [CohortCardComponent, OutcomesBreakdownComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
   templateUrl: './tiempos-comparativa.component.html',
   styleUrl: './tiempos-comparativa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -66,6 +68,19 @@ export class TiemposComparativaComponent {
   // el acuse de recibo y el pedido de informacion, que no son una solucion.
   readonly mainCards = computed(() => this.buildCards(MAIN_COHORTS));
   readonly systemResponseCards = computed(() => this.buildCards(SYSTEM_RESPONSE_COHORTS));
+
+  readonly minSample = computed(() => this.data()?.min_sample ?? 0);
+
+  private findCohort(key: string) {
+    return this.data()?.cohorts.find((cohort) => cohort.cohort === key);
+  }
+
+  // Compara solo la primera respuesta de la automatica contra la atencion
+  // manual previa, que es la unica metrica con la misma regla en ambas.
+  readonly comparisonRows = computed(() =>
+    buildCategoryComparison(this.findCohort('automatic'), this.findCohort('baseline'), this.minSample()),
+  );
+  readonly baselineHasData = computed(() => baselineHasTickets(this.findCohort('baseline')));
 
   // Solo la cohorte con revision tiene desglose por resultado
   readonly outcomeRows = computed(() => {

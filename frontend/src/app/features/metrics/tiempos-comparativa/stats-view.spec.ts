@@ -1,4 +1,4 @@
-import { buildStatsView, P90_INDICATIVE_BELOW, statsState } from './stats-view';
+import { buildStatsView, P90_INDICATIVE_BELOW, statsPlaceholder, statsState } from './stats-view';
 import { StatsLike } from './response-times.types';
 
 function stats(count: number, p50: number | null = null, p90: number | null = null): StatsLike {
@@ -52,5 +52,16 @@ describe('buildStatsView', () => {
 
     expect(view.median).toBe('10 s');
     expect(view.p90).toBeNull();
+  });
+});
+
+describe('statsPlaceholder', () => {
+  it('distingue pocos tickets de ningun ticket', () => {
+    expect(statsPlaceholder(buildStatsView(stats(3), 5))).toBe('n insuficiente');
+    expect(statsPlaceholder(buildStatsView(stats(0), 5))).toBe('Sin tickets');
+  });
+
+  it('con datos suficientes no hay placeholder', () => {
+    expect(statsPlaceholder(buildStatsView(stats(10, 5, 9), 5))).toBeNull();
   });
 });

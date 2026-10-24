@@ -1,0 +1,68 @@
+<div class="comparison">
+  @if (!baselineHasData()) {
+    <p class="comparison-notice">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      <span>Todavía no hay tickets de atención manual previa para comparar.</span>
+    </p>
+  }
+
+  @if (rows().length === 0) {
+    <p class="comparison-empty">Sin categorías para comparar en el período</p>
+  } @else {
+    <div class="comparison-scroll">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th scope="col" rowspan="2" class="comparison-category-head">Categoría</th>
+            <th scope="colgroup" colspan="3" class="comparison-group">{{ automaticLabel }}</th>
+            <th scope="colgroup" colspan="3" class="comparison-group comparison-group--divided">
+              <span class="comparison-label-full">{{ baselineLabel }}</span>
+              <span class="comparison-label-narrow">{{ baselineNarrowLabel }}</span>
+            </th>
+          </tr>
+          <tr>
+            <th scope="col" class="comparison-sub">Tickets</th>
+            <th scope="col" class="comparison-sub">Mediana</th>
+            <th scope="col" class="comparison-sub">P90</th>
+            <th scope="col" class="comparison-sub comparison-sub--divided">Tickets</th>
+            <th scope="col" class="comparison-sub">Mediana</th>
+            <th scope="col" class="comparison-sub">P90</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.category) {
+            <tr>
+              <th scope="row" class="comparison-category">{{ row.category }}</th>
+
+              <td class="comparison-num">{{ row.automatic.n }}</td>
+              @if (placeholder(row.automatic); as note) {
+                <td colspan="2" class="comparison-placeholder">{{ note }}</td>
+              } @else {
+                <td>{{ row.automatic.median ?? 'Sin dato' }}</td>
+                <td>
+                  {{ row.automatic.p90 ?? 'Sin dato' }}
+                  @if (row.automatic.p90Indicative) {
+                    <span class="comparison-indicative">(orientativo)</span>
+                  }
+                </td>
+              }
+
+              <td class="comparison-num comparison-cell--divided">{{ row.baseline.n }}</td>
+              @if (placeholder(row.baseline); as note) {
+                <td colspan="2" class="comparison-placeholder">{{ note }}</td>
+              } @else {
+                <td>{{ row.baseline.median ?? 'Sin dato' }}</td>
+                <td>
+                  {{ row.baseline.p90 ?? 'Sin dato' }}
+                  @if (row.baseline.p90Indicative) {
+                    <span class="comparison-indicative">(orientativo)</span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -40,3 +40,10 @@ export function buildStatsView(stats: StatsLike, minSample: number): StatsView {
     p90Indicative: stats.count < P90_INDICATIVE_BELOW,
   };
 }
+
+// Texto de una celda que no tiene cifras: pocos tickets o ninguno.
+export function statsPlaceholder(view: StatsView): string | null {
+  if (view.state === 'insufficient') return 'n insuficiente';
+  if (view.state === 'empty') return 'Sin tickets';
+  return null;
+}
