@@ -108,7 +108,9 @@
     <router-outlet></router-outlet>
   </mat-tab-nav-panel>
 
-  <footer class="metrics-footer">
-    <span>La confianza expresa la certeza del sistema, no una precisión validada.</span>
-  </footer>
+  @if (!isTimesTab()) {
+    <footer class="metrics-footer">
+      <span>La confianza expresa la certeza del sistema, no una precisión validada.</span>
+    </footer>
+  }
 </div>

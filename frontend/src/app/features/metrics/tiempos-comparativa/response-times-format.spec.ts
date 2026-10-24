@@ -1,4 +1,4 @@
-import { cohortLabel, firstResponseKindLabel, formatDuration, formatPercent, withinTargetLabel } from './response-times-format';
+import { cohortDescription, cohortLabel, firstResponseKindLabel, formatDuration, formatPercent, withinTargetLabel } from './response-times-format';
 
 describe('formatDuration', () => {
   it.each([
@@ -71,5 +71,17 @@ describe('withinTargetLabel', () => {
   it('en las demas cohortes no lleva aclaracion', () => {
     expect(withinTargetLabel('automatic')).toBe('dentro del objetivo');
     expect(withinTargetLabel('reviewed')).toBe('dentro del objetivo');
+  });
+});
+
+describe('cohortDescription', () => {
+  it('cada cohorte conocida tiene una linea de apoyo', () => {
+    for (const key of ['automatic', 'reviewed', 'escalated', 'info_requested', 'baseline']) {
+      expect(cohortDescription(key).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('una cohorte desconocida no tiene linea de apoyo', () => {
+    expect(cohortDescription('otra')).toBe('');
   });
 });

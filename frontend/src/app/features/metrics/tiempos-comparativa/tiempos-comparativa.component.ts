@@ -12,7 +12,8 @@ import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../.
 import { resolveMetricsFilters } from '../metrics-filters';
 import { OnboardedProject } from '../../../api/models/onboarded-project';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
-import { hasAnyTickets } from './cohort-card';
+import { CohortCardComponent } from './cohort-card/cohort-card.component';
+import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
 import { ProjectOption, buildProjectOptions } from './project-options';
 import {
   RESPONSE_TIMES_ERROR_MESSAGE,
@@ -20,7 +21,7 @@ import {
   responseTimesErrorMessage,
 } from './response-times-error';
 import { ALL_PROJECTS, buildResponseTimesFilters, resolveProjectSelection } from './response-times-filters';
-import { cohortLabel, firstResponseKindLabel, formatDuration } from './response-times-format';
+import { cohortLabel, formatDuration } from './response-times-format';
 import { ResponseTimesLike } from './response-times.types';
 
 export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
@@ -28,7 +29,7 @@ export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
 @Component({
   selector: 'app-metrics-tiempos-comparativa',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
+  imports: [CohortCardComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule],
   templateUrl: './tiempos-comparativa.component.html',
   styleUrl: './tiempos-comparativa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,15 +60,10 @@ export class TiemposComparativaComponent {
     return target === null || target === undefined ? null : formatDuration(target);
   });
 
-  // Resumen provisorio de lo cargado, hasta que lleguen las tarjetas
-  readonly cohortSummary = computed(() =>
-    (this.data()?.cohorts ?? []).map((cohort) => ({
-      key: cohort.cohort,
-      label: cohortLabel(cohort.cohort),
-      kind: firstResponseKindLabel(cohort.first_response_kind),
-      tickets: cohort.tickets,
-    })),
-  );
+  // Fila principal: las tres atenciones que se comparan entre si. Aparte van
+  // el acuse de recibo y el pedido de informacion, que no son una solucion.
+  readonly mainCards = computed(() => this.buildCards(MAIN_COHORTS));
+  readonly systemResponseCards = computed(() => this.buildCards(SYSTEM_RESPONSE_COHORTS));
 
   private readonly defaultRange = defaultMetricsDayRange();
   private readonly retry$ = new Subject<void>();
@@ -138,6 +134,14 @@ export class TiemposComparativaComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
+  }
+
+  private buildCards(keys: readonly string[]) {
+    const data = this.data();
+    if (!data) return [];
+    return pickCohorts(data.cohorts, keys).map((cohort) =>
+      buildCohortCard(cohort, data.min_sample, data.first_response_target_seconds),
+    );
   }
 
   onProjectChange(value: string): void {

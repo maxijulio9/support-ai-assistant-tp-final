@@ -15,9 +15,19 @@
   gap: var(--app-space-sm);
 }
 
+.tc-intro {
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+  max-width: 75ch;
+}
+
 .tc-project-field {
   width: 320px;
   max-width: 100%;
+  // El texto de ayuda del campo trae 12px por defecto
+  --mat-form-field-subscript-text-size: 0.875rem;
+  --mat-form-field-subscript-text-line-height: 1.25rem;
 }
 
 .tc-baseline-note {
@@ -26,7 +36,7 @@
   gap: var(--app-space-xs);
   margin: 0;
   min-height: 56px;
-  font: var(--app-text-secondary);
+  font: var(--mat-sys-body-medium);
   color: var(--app-color-text-secondary);
 
   mat-icon {
@@ -59,7 +69,7 @@
 
   p {
     margin: 0;
-    font: var(--app-text-body);
+    font: var(--mat-sys-body-medium);
     color: var(--app-color-text-secondary);
   }
 }
@@ -94,29 +104,27 @@
   width: 60%;
 }
 
-.tc-cohort-list {
-  list-style: none;
-  margin: var(--app-space-sm) 0 0;
-  padding: 0;
+.tc-section {
   display: flex;
   flex-direction: column;
-  gap: var(--app-space-xs);
-
-  li {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: var(--app-space-sm);
-    font: var(--app-text-body);
-    color: var(--mat-sys-on-surface);
-  }
+  gap: var(--app-space-sm);
 }
 
-.tc-cohort-kind {
+.tc-section-title {
+  font: var(--app-text-section-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.tc-section-text {
+  font: var(--mat-sys-body-medium);
   color: var(--app-color-text-secondary);
+  margin: 0;
+  max-width: 75ch;
 }
 
-.tc-cohort-count {
-  min-width: 3ch;
-  text-align: right;
-  font-weight: 600;
+.tc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--app-space-sm);
 }

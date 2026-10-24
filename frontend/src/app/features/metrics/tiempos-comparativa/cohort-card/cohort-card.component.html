@@ -1,0 +1,42 @@
+<article class="cohort-card" [style.--cohort-accent]="'var(' + card().accentVar + ')'">
+  <header class="cohort-card-header">
+    <h3 class="cohort-card-title">{{ card().label }}</h3>
+    @if (card().description) {
+      <p class="cohort-card-description">{{ card().description }}</p>
+    }
+  </header>
+
+  @if (card().placeholder; as placeholder) {
+    <div class="cohort-card-placeholder">
+      <p class="cohort-card-placeholder-title">{{ placeholder.title }}</p>
+      <p class="cohort-card-placeholder-detail">{{ placeholder.detail }}</p>
+    </div>
+  } @else {
+    <p class="cohort-card-main">
+      <span class="cohort-card-value">{{ card().firstResponse.median ?? 'Sin dato' }}</span>
+      <span class="cohort-card-value-label">Mediana</span>
+    </p>
+
+    <dl class="cohort-card-facts">
+      <div class="cohort-card-fact">
+        <dt>P90</dt>
+        <dd>
+          {{ card().firstResponse.p90 ?? 'Sin dato' }}
+          @if (card().firstResponse.p90Indicative) {
+            <span class="cohort-card-indicative">(orientativo)</span>
+          }
+        </dd>
+      </div>
+      <div class="cohort-card-fact">
+        <dt>Tickets</dt>
+        <dd>{{ card().ticketsText }}</dd>
+      </div>
+      @if (card().withinTarget; as withinTarget) {
+        <div class="cohort-card-fact">
+          <dt class="cohort-card-target-label">{{ withinTarget.label }}</dt>
+          <dd>{{ withinTarget.text }}</dd>
+        </div>
+      }
+    </dl>
+  }
+</article>

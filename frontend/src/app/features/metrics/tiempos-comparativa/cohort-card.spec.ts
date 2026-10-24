@@ -1,4 +1,11 @@
-import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
+import {
+  MAIN_COHORTS,
+  SYSTEM_RESPONSE_COHORTS,
+  buildCohortCard,
+  cohortAccentVar,
+  hasAnyTickets,
+  pickCohorts,
+} from './cohort-card';
 import { CohortLike, StatsLike } from './response-times.types';
 
 function stats(count: number, p50: number | null, p90: number | null, rate: number | null = null): StatsLike {
@@ -106,5 +113,58 @@ describe('hasAnyTickets', () => {
 
   it('false sin cohortes', () => {
     expect(hasAnyTickets(data([]))).toBe(false);
+  });
+});
+
+describe('placeholder y texto de tickets de la tarjeta', () => {
+  it('con datos suficientes no hay placeholder', () => {
+    expect(buildCohortCard(cohort('automatic', stats(40, 28, 90)), 5, null).placeholder).toBeNull();
+  });
+
+  it('n insuficiente explica cuantos hay y cuantos hacen falta', () => {
+    const card = buildCohortCard(cohort('automatic', stats(3, null, null)), 5, null);
+
+    expect(card.placeholder?.title).toBe('n insuficiente');
+    expect(card.placeholder?.detail).toBe('Hay 3 tickets con tiempo de respuesta y hacen falta al menos 5 para calcular los tiempos.');
+  });
+
+  it('con 1 ticket el texto va en singular', () => {
+    expect(buildCohortCard(cohort('automatic', stats(1, null, null)), 5, null).placeholder?.detail).toContain('Hay 1 ticket con');
+  });
+
+  it('sin tickets en la cohorte dice Sin tickets', () => {
+    const card = buildCohortCard(cohort('baseline', stats(0, null, null), 0), 5, null);
+
+    expect(card.placeholder?.title).toBe('Sin tickets');
+  });
+
+  it('con tickets pero ninguno con tiempo dice Sin datos de tiempo, no Sin tickets', () => {
+    const card = buildCohortCard(cohort('reviewed', stats(0, null, null), 4), 5, null);
+
+    expect(card.placeholder?.title).toBe('Sin datos de tiempo');
+    expect(card.placeholder?.detail).toContain('Hay 4 tickets');
+  });
+
+  it('el texto de tickets muestra el n y, si difiere, cuantos hay en total', () => {
+    expect(buildCohortCard(cohort('automatic', stats(40, 28, 90), 40), 5, null).ticketsText).toBe('40');
+    expect(buildCohortCard(cohort('automatic', stats(40, 28, 90), 45), 5, null).ticketsText).toBe('40 con tiempo (de 45)');
+  });
+
+  it('la tarjeta incluye la linea de apoyo de la cohorte', () => {
+    expect(buildCohortCard(cohort('escalated', stats(0, null, null), 0), 5, null).description.length).toBeGreaterThan(0);
+  });
+});
+
+describe('cohortAccentVar', () => {
+  it('reusa los colores de decision del resto de Metricas', () => {
+    expect(cohortAccentVar('automatic')).toBe('--app-color-decision-auto-publish');
+    expect(cohortAccentVar('reviewed')).toBe('--app-color-decision-needs-review');
+    expect(cohortAccentVar('escalated')).toBe('--app-color-decision-escalate');
+    expect(cohortAccentVar('info_requested')).toBe('--app-color-decision-request-info');
+  });
+
+  it('la atencion manual previa y una cohorte desconocida usan el color neutro', () => {
+    expect(cohortAccentVar('baseline')).toBe('--app-color-decision-other');
+    expect(cohortAccentVar('otra')).toBe('--app-color-decision-other');
   });
 });

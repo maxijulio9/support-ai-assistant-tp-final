@@ -1,0 +1,109 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.cohort-card {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+  border-top: 4px solid var(--cohort-accent, var(--app-color-decision-other));
+  padding: var(--app-space-md);
+}
+
+.cohort-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.cohort-card-title {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.cohort-card-description {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.cohort-card-main {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.cohort-card-value {
+  font: var(--mat-sys-headline-large);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.cohort-card-value-label {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+}
+
+.cohort-card-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  margin: 0;
+}
+
+.cohort-card-fact {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--app-space-sm);
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+
+  dt {
+    color: var(--app-color-text-secondary);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 600;
+  }
+}
+
+.cohort-card-target-label {
+  display: block;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.cohort-card-indicative {
+  font-weight: 400;
+  color: var(--app-color-text-secondary);
+}
+
+.cohort-card-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}
+
+.cohort-card-placeholder-title {
+  font: var(--mat-sys-title-large);
+  font-weight: 600;
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}
+
+.cohort-card-placeholder-detail {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+}

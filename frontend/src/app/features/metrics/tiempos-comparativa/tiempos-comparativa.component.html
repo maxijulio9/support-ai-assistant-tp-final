@@ -1,4 +1,9 @@
 <div class="tc-page">
+  <p class="tc-intro">
+    Compara cuánto tarda el sistema en dar la primera respuesta contra la atención manual previa a su puesta en marcha.
+    La primera respuesta se mide desde que se crea el ticket hasta el primer comentario público.
+  </p>
+
   <div class="tc-toolbar">
     <mat-form-field appearance="outline" class="tc-project-field" subscriptSizing="dynamic">
       <mat-label>Proyecto</mat-label>
@@ -52,17 +57,27 @@
   }
 
   @if (state() === 'loaded') {
-    <div class="tc-card">
-      <h2>Tickets por cohorte</h2>
-      <ul class="tc-cohort-list">
-        @for (item of cohortSummary(); track item.key) {
-          <li>
-            <span class="tc-cohort-name">{{ item.label }}</span>
-            <span class="tc-cohort-kind">{{ item.kind }}</span>
-            <span class="tc-cohort-count">{{ item.tickets }}</span>
-          </li>
+    <section class="tc-section" aria-labelledby="tc-main-title">
+      <h2 id="tc-main-title" class="tc-section-title">Primera respuesta por tipo de atención</h2>
+      <div class="tc-grid">
+        @for (card of mainCards(); track card.key) {
+          <app-cohort-card [card]="card" />
         }
-      </ul>
-    </div>
+      </div>
+    </section>
+
+    <section class="tc-section" aria-labelledby="tc-system-title">
+      <h2 id="tc-system-title" class="tc-section-title">Respuestas que no resuelven el ticket</h2>
+      <p class="tc-section-text">
+        Estas dos miden un acuse de recibo (el sistema avisa que una persona va a seguir el ticket) o un pedido de
+        información (el sistema pide más datos al cliente). No son una respuesta que resuelve, por eso no se comparan con
+        la atención manual previa.
+      </p>
+      <div class="tc-grid">
+        @for (card of systemResponseCards(); track card.key) {
+          <app-cohort-card [card]="card" />
+        }
+      </div>
+    </section>
   }
 </div>

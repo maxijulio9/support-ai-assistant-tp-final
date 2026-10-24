@@ -60,3 +60,17 @@ export function withinTargetLabel(cohort: string): string {
   if (cohort === 'info_requested') return 'dentro del objetivo (pedido)';
   return 'dentro del objetivo';
 }
+
+// Linea de apoyo bajo el titulo de cada cohorte, para que el rotulo se
+// explique solo.
+const COHORT_DESCRIPTIONS: Record<string, string> = {
+  automatic: 'El sistema publicó la respuesta solo.',
+  reviewed: 'El sistema sugirió la respuesta y una persona la resolvió.',
+  escalated: 'El sistema avisó al cliente que una persona va a seguir el ticket.',
+  info_requested: 'El sistema le pidió más información al cliente.',
+  baseline: 'Tickets atendidos a mano, antes de la puesta en marcha del sistema.',
+};
+
+export function cohortDescription(cohort: string): string {
+  return COHORT_DESCRIPTIONS[cohort] ?? '';
+}
