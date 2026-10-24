@@ -88,6 +88,8 @@ export type { SelectFieldsResponse } from './models/select-fields-response';
 export type { SpaceToLink } from './models/space-to-link';
 export type { StartIndexingRequest } from './models/start-indexing-request';
 export type { StartIndexingResponse } from './models/start-indexing-response';
+export type { StatusActionItem } from './models/status-action-item';
+export type { StatusActionsResponse } from './models/status-actions-response';
 export type { UpdateProfileRequest } from './models/update-profile-request';
 export type { UpdateUserRequest } from './models/update-user-request';
 export type { UserListResponse } from './models/user-list-response';

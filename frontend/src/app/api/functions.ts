@@ -27,6 +27,8 @@ export type { ListOnboardedProjectsApiConfigItsmProjectsGet$Params as ListOnboar
 export { listOnboardedProjectsApiConfigItsmProjectsGet as listOnboardedProjectsApiConfigItsmProjectsGet } from './fn/internal-api/list-onboarded-projects-api-config-itsm-projects-get';
 export type { ConfigureProjectApiConfigItsmProjectsPost$Params as ConfigureProjectApiConfigItsmProjectsPost$Params } from './fn/internal-api/configure-project-api-config-itsm-projects-post';
 export { configureProjectApiConfigItsmProjectsPost as configureProjectApiConfigItsmProjectsPost } from './fn/internal-api/configure-project-api-config-itsm-projects-post';
+export type { ListStatusActionsApiConfigItsmStatusActionsGet$Params as ListStatusActionsApiConfigItsmStatusActionsGet$Params } from './fn/internal-api/list-status-actions-api-config-itsm-status-actions-get';
+export { listStatusActionsApiConfigItsmStatusActionsGet as listStatusActionsApiConfigItsmStatusActionsGet } from './fn/internal-api/list-status-actions-api-config-itsm-status-actions-get';
 export type { ApproveInteractionApiInteractionsInteractionIdApprovePost$Params as ApproveInteractionApiInteractionsInteractionIdApprovePost$Params } from './fn/internal-api/approve-interaction-api-interactions-interaction-id-approve-post';
 export { approveInteractionApiInteractionsInteractionIdApprovePost as approveInteractionApiInteractionsInteractionIdApprovePost } from './fn/internal-api/approve-interaction-api-interactions-interaction-id-approve-post';
 export type { RegenerateInteractionApiInteractionsInteractionIdRegeneratePost$Params as RegenerateInteractionApiInteractionsInteractionIdRegeneratePost$Params } from './fn/internal-api/regenerate-interaction-api-interactions-interaction-id-regenerate-post';

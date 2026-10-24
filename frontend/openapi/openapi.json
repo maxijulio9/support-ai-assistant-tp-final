@@ -588,6 +588,32 @@
         ]
       }
     },
+    "/api/config/itsm/status-actions": {
+      "get": {
+        "tags": [
+          "InternalAPI"
+        ],
+        "summary": "List Status Actions",
+        "operationId": "list_status_actions_api_config_itsm_status_actions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusActionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/interactions/{interaction_id}/approve": {
       "post": {
         "tags": [
@@ -5638,7 +5664,7 @@
               }
             ],
             "title": "System Action",
-            "description": "id real de la transicion de JSM que corresponde a este estado"
+            "description": "accion logica del sistema que corresponde a este estado, uno de los valores que devuelve GET /api/config/itsm/status-actions, o null si el estado no dispara ninguna accion, cualquier otro valor se rechaza con 400"
           },
           "is_active": {
             "type": "boolean",
@@ -5652,7 +5678,7 @@
           "status_id"
         ],
         "title": "ProjectStatusMapping",
-        "description": "Mapeo de una categoria generica de estado ITSM a la transicion real de JSM, una fila por combinacion proyecto + estado (tabla project_config)."
+        "description": "Mapeo de un estado de JSM a una accion logica del sistema, una fila por combinacion proyecto + estado (tabla project_config)."
       },
       "ProjectStatusMappingItem": {
         "properties": {
@@ -6099,6 +6125,45 @@
         ],
         "title": "StartIndexingResponse",
         "description": "Response de confirmacion, la indexacion corre en background."
+      },
+      "StatusActionItem": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "valor que se manda en system_action al guardar el mapeo de estados"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "que hace el sistema cuando mueve un ticket a un estado con esta accion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "description"
+        ],
+        "title": "StatusActionItem",
+        "description": "Una accion logica del sistema que se puede asociar a un estado de JSM."
+      },
+      "StatusActionsResponse": {
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/StatusActionItem"
+            },
+            "type": "array",
+            "title": "Actions",
+            "description": "acciones validas, cualquier otro valor de system_action se rechaza con 400"
+          }
+        },
+        "type": "object",
+        "required": [
+          "actions"
+        ],
+        "title": "StatusActionsResponse",
+        "description": "Acciones del sistema validas para el mapeo de estados, vocabulario cerrado que comparten M7 y el orquestador."
       },
       "UpdateProfileRequest": {
         "properties": {

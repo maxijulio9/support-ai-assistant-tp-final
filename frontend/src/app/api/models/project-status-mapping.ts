@@ -3,7 +3,7 @@
 
 
 /**
- * Mapeo de una categoria generica de estado ITSM a la transicion real de JSM, una fila por combinacion proyecto + estado (tabla project_config).
+ * Mapeo de un estado de JSM a una accion logica del sistema, una fila por combinacion proyecto + estado (tabla project_config).
  */
 export interface ProjectStatusMapping {
 
@@ -23,7 +23,7 @@ export interface ProjectStatusMapping {
   status_id: string;
 
   /**
-   * id real de la transicion de JSM que corresponde a este estado
+   * accion logica del sistema que corresponde a este estado, uno de los valores que devuelve GET /api/config/itsm/status-actions, o null si el estado no dispara ninguna accion, cualquier otro valor se rechaza con 400
    */
   system_action?: (string | null);
 }
