@@ -80,7 +80,7 @@ def test_save_config_without_project_key_keeps_previous_behavior(mock_get_db):
 
     result = ProjectConfigService().save_config(
         ProjectThresholds(project_id="proj-1"),
-        [ProjectStatusMapping(project_id="proj-1", status_id="status-1", system_action="21")],
+        [ProjectStatusMapping(project_id="proj-1", status_id="status-1", system_action="escalate")],
     )
 
     calls = mock_db.execute.call_args_list
