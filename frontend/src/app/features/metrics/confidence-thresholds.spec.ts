@@ -4,6 +4,8 @@ import { agreedThresholds } from './confidence-thresholds';
 function project(id: string, autoPublish: number, needsReview: number): ProjectThresholdsItem {
   return {
     project_id: id,
+    key: 'TARG',
+    name: 'Proyecto',
     threshold_auto_publish: autoPublish,
     threshold_needs_review: needsReview,
     similarity_threshold: 0.4,
