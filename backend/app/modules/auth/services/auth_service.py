@@ -6,6 +6,7 @@ from app.modules.auth.jwt_handler import create_access_token
 from app.modules.auth.token_denylist import add_to_denylist
 from app.modules.auth.password_reset_token import create_reset_token, get_user_id_from_token, consume_reset_token
 from app.modules.auth.sendgrid_client import SendGridClient
+from app.core.config import settings
 
 class AuthService:
 
@@ -41,7 +42,9 @@ class AuthService:
             return
 
         token = await create_reset_token(user.id)
-        link = f"https://tokenia.example.com/reset-password?token={token}"
+        # la url base sale de la configuracion y no puede dejar una barra doble antes de la ruta
+        base_url = settings.frontend_base_url.rstrip('/')
+        link = f"{base_url}/reset-password?token={token}"
 
         email_client = SendGridClient()
         await email_client.send_email(
