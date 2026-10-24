@@ -4,7 +4,7 @@ import logging
 from sqlalchemy import text
 from app.core.database import get_db
 from app.modules.internal_api.schemas import ProjectThresholds, ProjectStatusMapping
-from app.core.jsm_status_actions import CONFIGURABLE_STATUS_ACTIONS
+from app.core.jsm_status_actions import CONFIGURABLE_STATUS_ACTIONS, JSM_STATUS_ACTION_INITIAL
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class ProjectConfigService:
         try:
             project_id = self._resolve_project_id(db, thresholds.project_id, project_key)
             self._validate_same_project(status_mappings, project_id)
+            self._validate_unique_actions(db, project_id, status_mappings)
 
             self._update_thresholds(db, thresholds.model_copy(update={"project_id": project_id}))
 
@@ -81,13 +82,34 @@ class ProjectConfigService:
             if mapping.project_id is not None and mapping.project_id != project_id:
                 raise ValueError("todos los mapeos tienen que ser del mismo proyecto")
 
+    # valida que en el resultado final no haya dos estados activos con la misma accion, salvo initial que puede repetirse
+    # el pipeline lleva el ticket a un solo estado por accion y si hubiera dos elegiria uno cualquiera
+    # el resultado final es lo que ya esta guardado mas lo que llega, y una fila que llega pisa a la guardada del mismo estado
+    def _validate_unique_actions(self, db, project_id: str, status_mappings: list[ProjectStatusMapping]):
+        rows = db.execute(
+            text("SELECT status_id, system_action, is_active FROM project_config WHERE project_id = :project_id"),
+            {"project_id": project_id},
+        ).fetchall()
+
+        final_state = {str(row.status_id): (row.system_action, row.is_active) for row in rows}
+        for mapping in status_mappings:
+            final_state[str(mapping.status_id)] = (mapping.system_action, mapping.is_active)
+
+        single_state_actions = [action for action in CONFIGURABLE_STATUS_ACTIONS if action != JSM_STATUS_ACTION_INITIAL]
+
+        for action in single_state_actions:
+            active_count = sum(1 for system_action, is_active in final_state.values() if is_active and system_action == action)
+            if active_count > 1:
+                raise ValueError(f"Hay más de un estado activo con la acción {action}, el sistema solo puede llevar el ticket a uno")
+
     # actualiza los umbrales de decision en la tabla project
     def _update_thresholds(self, db, thresholds: ProjectThresholds):
         query = text("""
             UPDATE project
             SET threshold_auto_publish = :threshold_auto_publish,
                 threshold_needs_review = :threshold_needs_review,
-                similarity_threshold = :similarity_threshold
+                similarity_threshold = :similarity_threshold,
+                first_response_target_seconds = COALESCE(:first_response_target_seconds, first_response_target_seconds)
             WHERE id = :project_id
         """)
 
@@ -96,6 +118,7 @@ class ProjectConfigService:
             "threshold_auto_publish": thresholds.threshold_auto_publish,
             "threshold_needs_review": thresholds.threshold_needs_review,
             "similarity_threshold": thresholds.similarity_threshold,
+            "first_response_target_seconds": thresholds.first_response_target_seconds,
         })
 
     # inserta el mapeo proyecto + estado, o lo actualiza si ya existia
