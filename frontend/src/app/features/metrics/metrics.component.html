@@ -30,15 +30,17 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="metrics-filter">
-      <mat-label>Decisión</mat-label>
-      <mat-select [value]="decisionFilterValue()" (selectionChange)="onDecisionFilterChange($event.value)">
-        <mat-option [value]="null">Todas las decisiones</mat-option>
-        @for (option of decisionOptions; track option.value) {
-          <mat-option [value]="option.value">{{ option.label }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    @if (!isTimesTab()) {
+      <mat-form-field appearance="outline" class="metrics-filter">
+        <mat-label>Decisión</mat-label>
+        <mat-select [value]="decisionFilterValue()" (selectionChange)="onDecisionFilterChange($event.value)">
+          <mat-option [value]="null">Todas las decisiones</mat-option>
+          @for (option of decisionOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
   </div>
 
   @if (hasActiveFilters()) {
@@ -65,7 +67,9 @@
     </div>
   }
 
-  <p class="metrics-compare-note">Comparado con el período anterior</p>
+  @if (!isTimesTab()) {
+    <p class="metrics-compare-note">Comparado con el período anterior</p>
+  }
 
   <nav mat-tab-nav-bar [tabPanel]="tabPanel" class="metrics-tabs">
     <a

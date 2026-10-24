@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { map } from 'rxjs';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map, startWith } from 'rxjs';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -75,7 +75,25 @@ export class MetricsComponent {
 
   readonly categoryFilterValue = computed(() => this.queryFilters().category);
   readonly decisionFilterValue = computed(() => this.queryFilters().decision);
-  readonly hasActiveFilters = computed(() => this.categoryFilterValue() !== null || this.decisionFilterValue() !== null);
+
+  // En Tiempos y comparativa el filtro de decision no aplica (el endpoint no
+  // lo acepta) y la nota del periodo anterior tampoco: no hay deltas.
+  // Al crearse el contenedor la navegacion todavia esta en curso, y router.url
+  // aun es la anterior: se parte de la URL final de esa navegacion.
+  private readonly initialUrl = this.router.getCurrentNavigation()?.finalUrl?.toString() ?? this.router.url;
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+      startWith(this.initialUrl),
+    ),
+    { initialValue: this.initialUrl },
+  );
+  readonly isTimesTab = computed(() => this.currentUrl().split(/[?#]/)[0].endsWith('/tiempos-comparativa'));
+
+  readonly hasActiveFilters = computed(
+    () => this.categoryFilterValue() !== null || (!this.isTimesTab() && this.decisionFilterValue() !== null),
+  );
 
   // Si el valor de la URL no esta en la lista de categorias ya cargada
   // (por ejemplo, llego por un link viejo), se agrega igual a las opciones
@@ -87,7 +105,7 @@ export class MetricsComponent {
   });
 
   readonly decisionFilterLabel = computed(() => {
-    const value = this.decisionFilterValue();
+    const value = this.isTimesTab() ? null : this.decisionFilterValue();
     return value !== null ? (this.decisionOptions.find((option) => option.value === value)?.label ?? value) : null;
   });
 
@@ -132,9 +150,10 @@ export class MetricsComponent {
     this.updateQueryParams({ decision: value });
   }
 
-  // Saca solo category y decision, from y to quedan como estan.
+  // Saca solo category y decision, from y to quedan como estan. En la
+  // pestaña de tiempos el filtro de decision no se ve, asi que no se toca.
   clearFilters(): void {
-    this.updateQueryParams({ category: null, decision: null });
+    this.updateQueryParams(this.isTimesTab() ? { category: null } : { category: null, decision: null });
   }
 
   private updateQueryParams(queryParams: Record<string, string | null>): void {
