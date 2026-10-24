@@ -1,45 +1,68 @@
 <div class="tc-page">
-  <div class="tc-card">
-    <h2>Atención automática vs manual</h2>
-    <p class="tc-card-subtitle">Comparativa ilustrativa entre cohortes</p>
+  <div class="tc-toolbar">
+    <mat-form-field appearance="outline" class="tc-project-field" subscriptSizing="dynamic">
+      <mat-label>Proyecto</mat-label>
+      <mat-select [value]="selection()" [disabled]="!optionsReady()" (selectionChange)="onProjectChange($event.value)">
+        <mat-option [value]="allProjectsValue">Todos los proyectos</mat-option>
+        @for (option of projectOptions(); track option.projectId) {
+          <mat-option [value]="option.projectId">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>
+        @if (hasProjects() && isAllProjects()) {
+          Elegí un proyecto para ver el objetivo de primera respuesta.
+        } @else if (targetText()) {
+          Objetivo de primera respuesta: {{ targetText() }}
+        }
+      </mat-hint>
+    </mat-form-field>
 
-    <div class="tc-columns">
-      <div class="tc-column tc-column--auto">
-        <h3>Atención automática</h3>
-        <ul class="tc-row-list">
-          @for (row of comparisonRows; track row) {
-            <li>{{ row }}</li>
-          }
-        </ul>
-      </div>
-      <div class="tc-column">
-        <h3>Atención manual</h3>
-        <ul class="tc-row-list">
-          @for (row of comparisonRows; track row) {
-            <li>{{ row }}</li>
-          }
-        </ul>
-      </div>
-    </div>
-
-    <p class="tc-placeholder-note">Sin datos todavía</p>
+    <p class="tc-baseline-note">
+      <mat-icon aria-hidden="true">info</mat-icon>
+      <span>El rango de fechas no afecta a «{{ baselineLabel }}».</span>
+    </p>
   </div>
 
-  <div class="tc-lower">
-    <div class="tc-card">
-      <h2>Tiempo de primera respuesta</h2>
-      <p class="tc-card-subtitle">Promedio del período</p>
-      <div class="tc-placeholder">
-        <p style="margin: 0">Sin datos todavía</p>
-      </div>
+  @if (state() === 'loading') {
+    <div class="tc-card tc-skeleton" role="status">
+      <span class="visually-hidden">Cargando los tiempos de respuesta</span>
+      <div class="tc-skeleton-line tc-skeleton-line--short" aria-hidden="true"></div>
+      <div class="tc-skeleton-line" aria-hidden="true"></div>
+      <div class="tc-skeleton-line tc-skeleton-line--medium" aria-hidden="true"></div>
     </div>
+  }
 
-    <div class="tc-card">
-      <h2>Evolución del tiempo medio de respuesta</h2>
-      <p class="tc-card-subtitle">Percentiles diarios, en segundos</p>
-      <div class="tc-placeholder">
-        <p style="margin: 0">Sin datos todavía</p>
-      </div>
+  @if (state() === 'error') {
+    <div class="tc-card tc-message" role="alert">
+      <mat-icon aria-hidden="true" class="tc-message-icon tc-message-icon--error">error</mat-icon>
+      <h2>No pudimos cargar los tiempos de respuesta</h2>
+      <p>{{ errorMessage() }}</p>
+      @if (canRetry()) {
+        <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
+      }
     </div>
-  </div>
+  }
+
+  @if (state() === 'empty') {
+    <div class="tc-card tc-message">
+      <mat-icon aria-hidden="true" class="tc-message-icon">history</mat-icon>
+      <h2>Todavía no hay tickets con estos filtros</h2>
+      <p>Probá con otro rango de fechas, otra categoría u otro proyecto.</p>
+    </div>
+  }
+
+  @if (state() === 'loaded') {
+    <div class="tc-card">
+      <h2>Tickets por cohorte</h2>
+      <ul class="tc-cohort-list">
+        @for (item of cohortSummary(); track item.key) {
+          <li>
+            <span class="tc-cohort-name">{{ item.label }}</span>
+            <span class="tc-cohort-kind">{{ item.kind }}</span>
+            <span class="tc-cohort-count">{{ item.tickets }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
 </div>

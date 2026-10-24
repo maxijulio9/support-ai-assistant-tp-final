@@ -1,4 +1,4 @@
-import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, pickCohorts } from './cohort-card';
+import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
 import { CohortLike, StatsLike } from './response-times.types';
 
 function stats(count: number, p50: number | null, p90: number | null, rate: number | null = null): StatsLike {
@@ -85,5 +85,26 @@ describe('pickCohorts', () => {
 
   it('una cohorte ausente no rompe', () => {
     expect(pickCohorts([], MAIN_COHORTS)).toEqual([]);
+  });
+});
+
+describe('hasAnyTickets', () => {
+  const data = (tickets: number[]) => ({
+    timezone: 'x',
+    min_sample: 5,
+    first_response_target_seconds: null,
+    cohorts: tickets.map((count, index) => cohort(`c${index}`, stats(0, null, null), count)),
+  });
+
+  it('false cuando todas las cohortes tienen 0 tickets', () => {
+    expect(hasAnyTickets(data([0, 0, 0, 0, 0]))).toBe(false);
+  });
+
+  it('true con tickets en cualquier cohorte, aunque sea una sola', () => {
+    expect(hasAnyTickets(data([0, 0, 0, 0, 1]))).toBe(true);
+  });
+
+  it('false sin cohortes', () => {
+    expect(hasAnyTickets(data([]))).toBe(false);
   });
 });

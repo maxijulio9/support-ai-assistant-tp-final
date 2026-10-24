@@ -1,6 +1,6 @@
 import { cohortLabel, firstResponseKindLabel, formatPercent, withinTargetLabel } from './response-times-format';
 import { buildStatsView, StatsView } from './stats-view';
-import { CohortLike } from './response-times.types';
+import { CohortLike, ResponseTimesLike } from './response-times.types';
 
 export interface WithinTarget {
   text: string;
@@ -40,4 +40,9 @@ export const SYSTEM_RESPONSE_COHORTS: readonly string[] = ['escalated', 'info_re
 
 export function pickCohorts(cohorts: CohortLike[], keys: readonly string[]): CohortLike[] {
   return keys.flatMap((key) => cohorts.filter((cohort) => cohort.cohort === key));
+}
+
+// Sin tickets en ninguna cohorte la pantalla muestra un estado vacio.
+export function hasAnyTickets(data: ResponseTimesLike): boolean {
+  return data.cohorts.some((cohort) => cohort.tickets > 0);
 }
