@@ -61,14 +61,14 @@ async def test_calls_generate_with_analysis_and_retrieval(mock_analyzer_class, m
     assert result["generated_response"]["action_type"] == ACTION_AUTO_PUBLISH
 
 
- # verifica que needs_review dispara el retry automatico, y si el retry da auto_publish, publica como comentario publico
+# verifica que needs_review ya no dispara el retry automatico, queda pendiente de revision con una nota interna para el agente
 @patch("app.modules.event_pipeline.orchestrator.JsmExecutor")
 @patch("app.modules.event_pipeline.orchestrator.ResponseGenerator")
 @patch("app.modules.event_pipeline.orchestrator.KnowledgeRetriever")
 @patch("app.modules.event_pipeline.orchestrator.InteractionLogger")
 @patch("app.modules.event_pipeline.orchestrator.TicketAnalyzer")
 @pytest.mark.asyncio
-async def test_retries_and_publishes_when_needs_review_then_auto_publish(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
+async def test_does_not_retry_when_needs_review_and_posts_an_internal_note(mock_analyzer_class, mock_logger_class, mock_retriever_class, mock_generator_class, mock_jsm_class):
     analysis = _build_analysis()
     retrieval = _build_retrieval()
     first_attempt  = GeneratedResponse(issue_key="TEST-1", action_type=ACTION_NEEDS_REVIEW, response_text="primera respuesta", escalation_reason="low_confidence")    
@@ -91,8 +91,8 @@ async def test_retries_and_publishes_when_needs_review_then_auto_publish(mock_an
     orchestrator = Orchestrator()
     await orchestrator.process_event(_build_event())
 
-    mock_generator.regenerate.assert_called_once()
-    mock_jsm.post_comment.assert_called_once_with("TEST-1", "respuesta regenerada", public=True)
+    mock_generator.regenerate.assert_not_called()
+    mock_jsm.post_comment.assert_called_once_with("TEST-1", "primera respuesta", public=False)
 
 
 # verifica que si el primer intento escala, tambien reintenta antes de dar por perdido el caso

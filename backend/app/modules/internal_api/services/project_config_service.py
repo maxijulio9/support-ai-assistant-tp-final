@@ -4,6 +4,7 @@ import logging
 from sqlalchemy import text
 from app.core.database import get_db
 from app.modules.internal_api.schemas import ProjectThresholds, ProjectStatusMapping
+from app.core.jsm_status_actions import CONFIGURABLE_STATUS_ACTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,11 @@ class ProjectConfigService:
         for mapping in status_mappings:
             if mapping.project_id == "" or not mapping.status_id:
                 raise ValueError("cada mapeo necesita project_id y status_id")
+
+            # la accion tiene que ser del vocabulario que lee el pipeline, si no el mapeo se guardaria y nunca se usaria
+            if mapping.system_action is not None and mapping.system_action not in CONFIGURABLE_STATUS_ACTIONS:
+                valid_values = ", ".join(CONFIGURABLE_STATUS_ACTIONS)
+                raise ValueError(f"system_action '{mapping.system_action}' no es valido, los valores validos son: {valid_values}")
 
     # resuelve el id interno del proyecto a partir de project_key o de project_id
     # con project_key consulta la tabla project, con solo project_id lo devuelve tal cual, igual que antes

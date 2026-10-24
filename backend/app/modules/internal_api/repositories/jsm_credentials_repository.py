@@ -78,3 +78,21 @@ class JsmCredentialsRepository:
 
         finally:
             db.close()
+
+    # trae el secreto compartido del webhook ya guardado y lo desencripta, o none si todavia no se configuro
+    def get_webhook_secret(self) -> str | None:
+        db = next(get_db())
+
+        try:
+            row = db.execute(
+                text("SELECT encrypted_value FROM system_config WHERE key = :key"),
+                {"key": "jsm_webhook_secret"},
+            ).fetchone()
+
+            if row is None:
+                return None
+
+            return self.cipher.decrypt(row.encrypted_value)
+
+        finally:
+            db.close()

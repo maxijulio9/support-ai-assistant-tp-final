@@ -18,11 +18,22 @@ class ProjectThresholds(BaseModel):
 
 
 class ProjectStatusMapping(BaseModel):
-    """Mapeo de una categoria generica de estado ITSM a la transicion real de JSM, una fila por combinacion proyecto + estado (tabla project_config)."""
+    """Mapeo de un estado de JSM a una accion logica del sistema, una fila por combinacion proyecto + estado (tabla project_config)."""
     project_id: str | None = Field(default=None, description="id del proyecto en la tabla project, se puede omitir si se indica project_key")
     status_id: str = Field(description="id del estado generico en la tabla ticket_status")
-    system_action: str | None = Field(default=None, description="id real de la transicion de JSM que corresponde a este estado")
+    system_action: str | None = Field(default=None, description="accion logica del sistema que corresponde a este estado, uno de los valores que devuelve GET /api/config/itsm/status-actions, o null si el estado no dispara ninguna accion, cualquier otro valor se rechaza con 400")
     is_active: bool = Field(default=True, description="si el mapeo esta activo o fue desactivado por el admin")
+
+
+class StatusActionItem(BaseModel):
+    """Una accion logica del sistema que se puede asociar a un estado de JSM."""
+    value: str = Field(description="valor que se manda en system_action al guardar el mapeo de estados")
+    description: str = Field(description="que hace el sistema cuando mueve un ticket a un estado con esta accion")
+
+
+class StatusActionsResponse(BaseModel):
+    """Acciones del sistema validas para el mapeo de estados, vocabulario cerrado que comparten M7 y el orquestador."""
+    actions: list[StatusActionItem] = Field(description="acciones validas, cualquier otro valor de system_action se rechaza con 400")
 
 
 class ProjectConfigRequest(BaseModel):

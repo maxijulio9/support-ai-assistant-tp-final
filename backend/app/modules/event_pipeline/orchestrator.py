@@ -159,7 +159,9 @@ class Orchestrator:
         # amplia la busqueda a 10 chunks (el doble del default) para darle al segundo intento la chance
         # de encontrar contexto relevante que no haya entrado en el top 5 original
         # regenerate() ya limita el resultado a auto_publish o escalate, nunca un segundo needs_review
-        if generated_response.escalation_reason == ESCALATION_REASON_LOW_CONFIDENCE:
+        # solo se reintenta cuando el sistema iba a escalar por confianza baja, la franja de revision humana no se reintnta
+        # queda como needs_review con una nota interna, para que una persona la apruebe, edite o regenere
+        if generated_response.action_type == ACTION_ESCALATE and generated_response.escalation_reason == ESCALATION_REASON_LOW_CONFIDENCE:
             logger.info(f"[{event.issue_key}] confianza baja en el primer intento, ampliando busqueda y reintentando")
             retrieval_result = self.knowledge_retriever.retrieve(analysis, top_k=10)
             generated_response = self.response_generator.regenerate(

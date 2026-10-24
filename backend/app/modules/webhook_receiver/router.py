@@ -1,9 +1,10 @@
 #Modulo 1 Webhook receiver
 # es el endpoint único de entrada para eventos de JSM vía webhook.
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from app.modules.webhook_receiver.schemas import JsmWebhookPayload, ConfluenceWebhookPayload
 from app.modules.webhook_receiver.service import WebhookReceiver
+from app.modules.webhook_receiver.webhook_auth import verify_jsm_webhook, verify_confluence_webhook
 
 router = APIRouter(tags=["Webhook"])
 
@@ -12,7 +13,7 @@ _receiver = WebhookReceiver()
 
 # unico punto de entrada para todos los eventos de JSM, tickets y comentarios (de cliente o de agente)
 # valida, normaliza y despacha el evento al módulo que lo consuma
-@router.post("/webhook/jsm")
+@router.post("/webhook/jsm", dependencies=[Depends(verify_jsm_webhook)])
 async def receive_jsm_webhook(payload: JsmWebhookPayload):
 
     event = _receiver.normalize_payload(payload)
@@ -25,7 +26,7 @@ async def receive_jsm_webhook(payload: JsmWebhookPayload):
 
 
 # punto de entrada para eventos de confluence, disparados por una regla de automation cuando una pagina cambia
-@router.post("/webhook/confluence")
+@router.post("/webhook/confluence", dependencies=[Depends(verify_confluence_webhook)])
 async def receive_confluence_webhook(payload: ConfluenceWebhookPayload):
     await _receiver.dispatch_confluence_event(payload.page_id, payload.space_key)
     return {"status": "dispatched", "route": "knowledge_indexer", "page_id": payload.page_id}
