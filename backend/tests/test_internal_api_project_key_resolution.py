@@ -85,10 +85,10 @@ def test_save_config_without_project_key_keeps_previous_behavior(mock_get_db):
 
     calls = mock_db.execute.call_args_list
     assert result == 1
-    assert len(calls) == 2
-    assert "UPDATE project" in str(calls[0][0][0])
-    assert calls[0][0][1]["project_id"] == "proj-1"
+    assert len(calls) == 3
+    assert "UPDATE project" in str(calls[1][0][0])
     assert calls[1][0][1]["project_id"] == "proj-1"
+    assert calls[2][0][1]["project_id"] == "proj-1"
 
 
 # verifica que un mapeo de otro proyecto se rechaza, sin guardar nada
