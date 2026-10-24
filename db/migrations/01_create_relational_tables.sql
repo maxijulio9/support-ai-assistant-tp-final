@@ -239,3 +239,20 @@ CREATE TABLE IF NOT EXISTS project_workflow (
     last_synced_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE NULLS NOT DISTINCT (project_id, issue_type_id)
 );
+
+
+-- linea base de tiempos de respuesta, tickets anteriores a la puesta en marcha del sistema
+-- la carga un script que lee jsm, el endpoint de tiempos la usa como cohorte de referencia
+CREATE TABLE IF NOT EXISTS ticket_response_baseline (
+    id                       UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    issue_key                VARCHAR(50) NOT NULL UNIQUE,
+    project_id               UUID REFERENCES project(id),
+    category                 VARCHAR(150),
+    jira_created_at          TIMESTAMPTZ NOT NULL,
+    first_response_at        TIMESTAMPTZ,
+    last_customer_comment_at TIMESTAMPTZ,
+    loaded_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ticket_response_baseline_project_category
+    ON ticket_response_baseline (project_id, category);
