@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, throwError, timer } from 'rxjs';
+import { Observable, map, throwError } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { getMetricsByCategoryApiMetricsByCategoryGet } from '../../api/fn/internal-api/get-metrics-by-category-api-metrics-by-category-get';
 import { getMetricsConfidenceDistributionApiMetricsConfidenceDistributionGet } from '../../api/fn/internal-api/get-metrics-confidence-distribution-api-metrics-confidence-distribution-get';
@@ -18,7 +18,6 @@ import { MetricsFilters } from './metrics-filters';
 import { ResponseTimesUnavailableError } from './tiempos-comparativa/response-times-error';
 import { ResponseTimesFilters } from './tiempos-comparativa/response-times-filters';
 import { ResponseTimesLike } from './tiempos-comparativa/response-times.types';
-import { responseTimesFixture } from './tiempos-comparativa/response-times.fixture';
 
 @Injectable({ providedIn: 'root' })
 export class MetricsService {
@@ -98,6 +97,6 @@ export class MetricsService {
     _tz: string,
     _filters?: ResponseTimesFilters,
   ): Observable<ResponseTimesLike> {
-    return timer(300).pipe(map(() => responseTimesFixture(_filters)));
+    return throwError(() => new ResponseTimesUnavailableError());
   }
 }
