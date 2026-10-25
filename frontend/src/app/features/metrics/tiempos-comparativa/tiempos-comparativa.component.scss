@@ -50,6 +50,7 @@
   box-sizing: border-box;
   background-color: var(--mat-sys-surface);
   border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-soft);
   padding: var(--app-space-md);
 }
 
@@ -102,6 +103,19 @@
 
 .tc-skeleton-line--medium {
   width: 60%;
+}
+
+.tc-choose-project {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+
+  mat-icon {
+    flex-shrink: 0;
+  }
 }
 
 .tc-closure {

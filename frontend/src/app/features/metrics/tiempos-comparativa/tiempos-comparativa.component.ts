@@ -13,7 +13,7 @@ import { resolveMetricsFilters } from '../metrics-filters';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 import { CohortCardComponent } from './cohort-card/cohort-card.component';
 import { CategoryComparisonComponent } from './category-comparison/category-comparison.component';
-import { baselineHasTickets, buildCategoryComparison } from './category-comparison';
+import { baselineHasTickets, buildCategoryComparison, categoryComparisonDisplay } from './category-comparison';
 import { closureNote } from './closure';
 import { TimeSeriesComponent } from './time-series/time-series.component';
 import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakdown.component';
@@ -78,6 +78,7 @@ export class TiemposComparativaComponent {
   readonly comparisonRows = computed(() =>
     buildCategoryComparison(this.findCohort('automatic'), this.findCohort('baseline'), this.minSample()),
   );
+  readonly comparisonDisplay = computed(() => categoryComparisonDisplay(!this.isAllProjects(), this.hasProjects()));
   readonly baselineHasData = computed(() => baselineHasTickets(this.findCohort('baseline')));
 
   // Solo la cohorte con revision tiene desglose por resultado

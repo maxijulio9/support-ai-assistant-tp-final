@@ -61,3 +61,14 @@ export function buildCategoryComparison(
 export function baselineHasTickets(baseline: CohortResponseTimes | undefined): boolean {
   return (baseline?.tickets ?? 0) > 0;
 }
+
+export type CategoryComparisonDisplay = 'table' | 'choose-project';
+
+// Con "Todos los proyectos" la comparativa por categoria no tiene sentido:
+// cada proyecto tiene sus propias categorias (y en su propio idioma), y el
+// backend las trae por separado. Se pide elegir uno. Si no hay proyectos para
+// elegir (por ejemplo porque no se pudo cargar la lista), la nota no ayudaria
+// y se deja la tabla.
+export function categoryComparisonDisplay(projectSelected: boolean, projectsAvailable: boolean): CategoryComparisonDisplay {
+  return !projectSelected && projectsAvailable ? 'choose-project' : 'table';
+}

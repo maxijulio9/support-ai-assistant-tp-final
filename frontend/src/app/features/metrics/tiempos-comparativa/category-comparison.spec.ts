@@ -1,4 +1,4 @@
-import { baselineHasTickets, buildCategoryComparison } from './category-comparison';
+import { baselineHasTickets, buildCategoryComparison, categoryComparisonDisplay } from './category-comparison';
 import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
 import { TimeStats } from '../../../api/models/time-stats';
 
@@ -130,5 +130,23 @@ describe('baselineHasTickets', () => {
     expect(baselineHasTickets(cohort('baseline', {}, 3))).toBe(true);
     expect(baselineHasTickets(cohort('baseline', {}, 0))).toBe(false);
     expect(baselineHasTickets(undefined)).toBe(false);
+  });
+});
+
+describe('categoryComparisonDisplay', () => {
+  it('con un proyecto elegido muestra la tabla', () => {
+    expect(categoryComparisonDisplay(true, true)).toBe('table');
+  });
+
+  it('con "Todos los proyectos" y proyectos para elegir pide elegir uno', () => {
+    expect(categoryComparisonDisplay(false, true)).toBe('choose-project');
+  });
+
+  it('con "Todos" pero sin proyectos para elegir deja la tabla, porque la nota no tendria salida', () => {
+    expect(categoryComparisonDisplay(false, false)).toBe('table');
+  });
+
+  it('un proyecto elegido siempre muestra la tabla, haya o no lista', () => {
+    expect(categoryComparisonDisplay(true, false)).toBe('table');
   });
 });

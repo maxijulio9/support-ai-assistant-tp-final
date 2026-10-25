@@ -7,7 +7,7 @@
   box-sizing: border-box;
   background-color: var(--mat-sys-surface);
   border-radius: var(--app-radius-lg);
-  border-top: 4px solid var(--outcome-accent, var(--app-color-decision-other));
+  box-shadow: var(--app-shadow-soft);
   padding: var(--app-space-md);
 }
 

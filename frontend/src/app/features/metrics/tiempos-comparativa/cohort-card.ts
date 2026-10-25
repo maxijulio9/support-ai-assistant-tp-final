@@ -27,8 +27,6 @@ export interface CohortCard {
   key: string;
   label: string;
   description: string;
-  // Variable CSS del color de decision que identifica a la cohorte
-  accentVar: string;
   kindLabel: string;
   // Tickets de la cohorte, incluidos los que no tienen dato de tiempo
   tickets: number;
@@ -48,8 +46,9 @@ const ACCENT_DECISION_KEY: Record<string, string> = {
   info_requested: 'REQUEST_INFO',
 };
 
-// Reusa los colores de decision del resto de Metricas. La atencion manual
-// previa no es una decision del sistema, asi que toma el color neutro.
+// Color de decision de cada cohorte, el mismo del resto de Metricas, para el
+// grafico de la serie y las barras de resultados. La atencion manual previa
+// no es una decision del sistema, asi que toma el color neutro.
 export function cohortAccentVar(cohort: string): string {
   return resolveSegmentColorVar(ACCENT_DECISION_KEY[cohort] ?? 'OTHER');
 }
@@ -101,7 +100,6 @@ export function buildCohortCard(cohort: CohortResponseTimes, minSample: number, 
     key: cohort.cohort,
     label: cohortLabel(cohort.cohort),
     description: cohortDescription(cohort.cohort),
-    accentVar: cohortAccentVar(cohort.cohort),
     kindLabel: firstResponseKindLabel(cohort.first_response_kind),
     tickets: cohort.tickets,
     firstResponse,
