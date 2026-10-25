@@ -226,15 +226,17 @@ def discard_interaction(interaction_id: str, request: DiscardRequest | None = No
     return InteractionReviewResponse(status="ok", action_type=action_type)
 # configura la conexion con jsm, valida las credenciales antes de guardarlas
 @router.post("/api/config/itsm", response_model=ItsmConnectionResponse,
-             responses={400: {"model": ErrorResponse, "description": "Las credenciales de JSM no son validas"},
+             responses={400: {"model": ErrorResponse, "description": "Las credenciales de JSM no son válidas, falta el token de API o cambió la URL o el correo sin volver a ingresarlo"},
                         503: {"model": ErrorResponse, "description": "No se pudo conectar con JSM o guardar la configuracion"}})
 async def configure_itsm_connection(request: ItsmConnectionRequest, admin: AppUser = Depends(require_admin)):
     try:
         await _itsm_connection_service.configure_connection(
             request.base_url, request.user_email, request.api_token, request.webhook_secret
         )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except httpx.HTTPStatusError:
-        raise HTTPException(status_code=400, detail="Las credenciales de JSM no son validas")
+        raise HTTPException(status_code=400, detail="Las credenciales de JSM no son válidas")
     except httpx.RequestError:
         raise HTTPException(status_code=503, detail="No se pudo conectar con JSM")
     except Exception:
