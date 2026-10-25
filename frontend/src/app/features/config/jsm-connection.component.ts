@@ -80,7 +80,14 @@ export class JsmConnectionComponent {
           this.form.patchValue({ apiToken: '', webhookSecret: '' });
           this.snackBar.open('Conexión guardada', 'Cerrar', { duration: 4000 });
           // el centro de Configuracion refleja "Conectado" sin recargar
-          this.configStatus.setJsmConnected({ base_url: baseUrl, configured: true, user_email: userEmail });
+          // despues de guardar hay un secreto: el que se mando, el que ya estaba
+          // o uno generado por el sistema
+          this.configStatus.setJsmConnected({
+            base_url: baseUrl,
+            configured: true,
+            user_email: userEmail,
+            webhook_secret_configured: true,
+          });
         },
         error: (error: unknown) => {
           this.submitting.set(false);

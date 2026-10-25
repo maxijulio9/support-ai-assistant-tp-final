@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, switchMap } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
+import { getWebhookSecretApiConfigItsmWebhookSecretGet, regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost } from '../../api/functions';
 import { getItsmConnectionApiConfigItsmGet } from '../../api/fn/internal-api/get-itsm-connection-api-config-itsm-get';
 import { configureItsmConnectionApiConfigItsmPost } from '../../api/fn/internal-api/configure-itsm-connection-api-config-itsm-post';
 import { listAvailableProjectsApiConfigItsmProjectsAvailableGet } from '../../api/fn/internal-api/list-available-projects-api-config-itsm-projects-available-get';
@@ -31,6 +32,7 @@ import { getLlmConfigStatusApiConfigLlmGet } from '../../api/fn/internal-api/get
 import { listLlmModelsApiConfigLlmModelsPost } from '../../api/fn/internal-api/list-llm-models-api-config-llm-models-post';
 import { saveLlmConfigApiConfigLlmPost } from '../../api/fn/internal-api/save-llm-config-api-config-llm-post';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
+import { JsmConnectionStatusResponse } from '../../api/models/jsm-connection-status-response';
 import { ItsmConnectionRequest } from '../../api/models/itsm-connection-request';
 import { ItsmConnectionResponse } from '../../api/models/itsm-connection-response';
 import { ConfluenceConnectionRequest } from '../../api/models/confluence-connection-request';
@@ -89,9 +91,25 @@ export class ConfigService {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfiguration);
 
-  getItsmConnection(): Observable<ConnectionStatusResponse> {
+  getItsmConnection(): Observable<JsmConnectionStatusResponse> {
     return getItsmConnectionApiConfigItsmGet(this.http, this.apiConfig.rootUrl).pipe(
       map((response) => response.body),
+    );
+  }
+
+  // Secreto de los webhooks, solo para administradores. Devuelve unicamente el
+  // texto: no se guarda aca ni en ningun otro servicio, quien lo pide es el
+  // unico que lo tiene y lo suelta cuando deja de mostrarlo.
+  getWebhookSecret(): Observable<string> {
+    return getWebhookSecretApiConfigItsmWebhookSecretGet(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body.webhook_secret),
+    );
+  }
+
+  // Genera uno nuevo, lo guarda y lo devuelve. El anterior deja de valer al instante.
+  regenerateWebhookSecret(): Observable<string> {
+    return regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost(this.http, this.apiConfig.rootUrl).pipe(
+      map((response) => response.body.webhook_secret),
     );
   }
 

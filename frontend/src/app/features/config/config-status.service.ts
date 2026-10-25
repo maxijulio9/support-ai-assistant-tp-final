@@ -5,6 +5,7 @@ import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
 import { SectionSlot, idleSlot } from './config-readiness';
 import { ConnectionStatusResponse } from '../../api/models/connection-status-response';
+import { JsmConnectionStatusResponse } from '../../api/models/jsm-connection-status-response';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 import { LlmConfigResponse } from '../../api/models/llm-config-response';
@@ -23,13 +24,13 @@ const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.'
 export class ConfigStatusService {
   private readonly configService = inject(ConfigService);
 
-  private readonly jsmSlot = signal<SectionSlot<ConnectionStatusResponse>>(idleSlot());
+  private readonly jsmSlot = signal<SectionSlot<JsmConnectionStatusResponse>>(idleSlot());
   private readonly confluenceSlot = signal<SectionSlot<ConnectionStatusResponse>>(idleSlot());
   private readonly projectsSlot = signal<SectionSlot<OnboardedProject[]>>(idleSlot());
   private readonly indexingSlot = signal<SectionSlot<IndexingStatusResponse>>(idleSlot());
   private readonly llmSlot = signal<SectionSlot<LlmConfigResponse>>(idleSlot());
 
-  readonly jsm: Signal<SectionSlot<ConnectionStatusResponse>> = this.jsmSlot;
+  readonly jsm: Signal<SectionSlot<JsmConnectionStatusResponse>> = this.jsmSlot;
   readonly confluence: Signal<SectionSlot<ConnectionStatusResponse>> = this.confluenceSlot;
   readonly projects: Signal<SectionSlot<OnboardedProject[]>> = this.projectsSlot;
   readonly indexing: Signal<SectionSlot<IndexingStatusResponse>> = this.indexingSlot;
@@ -50,7 +51,7 @@ export class ConfigStatusService {
     this.load(id, current.state === 'loaded');
   }
 
-  setJsmConnected(data: ConnectionStatusResponse): void {
+  setJsmConnected(data: JsmConnectionStatusResponse): void {
     this.jsmSlot.set({ state: 'loaded', data, errorMessage: null });
   }
 
