@@ -44,6 +44,7 @@ from app.modules.internal_api.schemas import (
     ErrorResponse,
     IndexedSpacesResponse,
     ResponseTimesResponse,
+    JsmConnectionStatusResponse,
     StatusActionItem,
     StatusActionsResponse,
     DiscardRequest,
@@ -73,6 +74,7 @@ from app.modules.internal_api.services.indexer_trigger_service import IndexingTr
 from app.modules.internal_api.repositories.kb_indexing_status_repository import KbIndexingStatusRepository
 from app.modules.internal_api.repositories.kb_space_status_repository import KbSpaceStatusRepository
 from app.modules.internal_api.services.response_times_service import ResponseTimesService
+from app.modules.internal_api.services.webhook_secret_service import WebhookSecretService
 from app.core.jsm_status_actions import CONFIGURABLE_STATUS_ACTIONS
 from app.modules.internal_api.services.interaction_metrics_service import InteractionMetricsService
 from app.modules.internal_api.services.project_thresholds_service import ProjectThresholdsService
@@ -104,6 +106,7 @@ _indexing_trigger_service = IndexingTriggerService()
 _kb_indexing_status_repository = KbIndexingStatusRepository()
 _kb_space_status_repository = KbSpaceStatusRepository()
 _response_times_service = ResponseTimesService()
+_webhook_secret_service = WebhookSecretService()
 _metrics_service = InteractionMetricsService()
 _thresholds_service = ProjectThresholdsService()
 _project_configuration_reader_service = ProjectConfigurationReaderService()
@@ -222,7 +225,9 @@ def discard_interaction(interaction_id: str, request: DiscardRequest | None = No
 
     return InteractionReviewResponse(status="ok", action_type=action_type)
 # configura la conexion con jsm, valida las credenciales antes de guardarlas
-@router.post("/api/config/itsm", response_model=ItsmConnectionResponse)
+@router.post("/api/config/itsm", response_model=ItsmConnectionResponse,
+             responses={400: {"model": ErrorResponse, "description": "Las credenciales de JSM no son validas"},
+                        503: {"model": ErrorResponse, "description": "No se pudo conectar con JSM o guardar la configuracion"}})
 async def configure_itsm_connection(request: ItsmConnectionRequest, admin: AppUser = Depends(require_admin)):
     try:
         await _itsm_connection_service.configure_connection(
@@ -585,14 +590,16 @@ def get_project_configuration(project_key: str, admin: AppUser = Depends(require
 
 
 # dice si la conexion con jsm esta configurada y con que url y cuenta, nunca devuelve el token ni el secreto del webhook
-@router.get("/api/config/itsm", response_model=ConnectionStatusResponse)
+@router.get("/api/config/itsm", response_model=JsmConnectionStatusResponse,
+            responses={503: {"model": ErrorResponse, "description": "No se pudo consultar la conexion con JSM"}})
 def get_itsm_connection(admin: AppUser = Depends(require_admin)):
     try:
         connection = _connection_status_service.get_jsm_connection()
+        secret_configured = _webhook_secret_service.is_configured()
     except Exception:
         raise HTTPException(status_code=503, detail="No se pudo consultar la conexion con JSM")
 
-    return ConnectionStatusResponse(**connection)
+    return JsmConnectionStatusResponse(**connection, webhook_secret_configured=secret_configured)
 
 
 # dice si la conexion con confluence esta configurada y con que url y cuenta, nunca devuelve el token
