@@ -7,12 +7,12 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { ConnectionStatusResponse } from '../../models/connection-status-response';
+import { JsmConnectionStatusResponse } from '../../models/jsm-connection-status-response';
 
 export interface GetItsmConnectionApiConfigItsmGet$Params {
 }
 
-export function getItsmConnectionApiConfigItsmGet(http: HttpClient, rootUrl: string, params?: GetItsmConnectionApiConfigItsmGet$Params, context?: HttpContext): Observable<StrictHttpResponse<ConnectionStatusResponse>> {
+export function getItsmConnectionApiConfigItsmGet(http: HttpClient, rootUrl: string, params?: GetItsmConnectionApiConfigItsmGet$Params, context?: HttpContext): Observable<StrictHttpResponse<JsmConnectionStatusResponse>> {
   const rb = new RequestBuilder(rootUrl, getItsmConnectionApiConfigItsmGet.PATH, 'get');
   if (params) {
   }
@@ -22,7 +22,7 @@ export function getItsmConnectionApiConfigItsmGet(http: HttpClient, rootUrl: str
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<ConnectionStatusResponse>;
+      return r as StrictHttpResponse<JsmConnectionStatusResponse>;
     })
   );
 }

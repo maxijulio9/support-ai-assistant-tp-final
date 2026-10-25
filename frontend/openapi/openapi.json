@@ -1012,7 +1012,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ConnectionStatusResponse"
+                  "$ref": "#/components/schemas/JsmConnectionStatusResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo consultar la conexion con JSM",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1047,6 +1057,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ItsmConnectionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Las credenciales de JSM no son validas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo conectar con JSM o guardar la configuracion",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -3111,6 +3141,82 @@
         }
       }
     },
+    "/api/config/itsm/webhook-secret": {
+      "get": {
+        "summary": "Get Webhook Secret",
+        "operationId": "get_webhook_secret_api_config_itsm_webhook_secret_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookSecretResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Todavia no hay un secreto configurado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo consultar el secreto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/config/itsm/webhook-secret/regenerate": {
+      "post": {
+        "summary": "Regenerate Webhook Secret",
+        "operationId": "regenerate_webhook_secret_api_config_itsm_webhook_secret_regenerate_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookSecretResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo regenerar el secreto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -4766,17 +4872,23 @@
             "description": "API token generado desde la cuenta de Atlassian"
           },
           "webhook_secret": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Webhook Secret",
-            "description": "secreto compartido para validar que los webhooks vienen de JSM"
+            "description": "secreto compartido para validar que los webhooks vienen de JSM, es opcional: si no viene se conserva el guardado y, si no hay ninguno, el sistema genera uno aleatorio, que el administrador consulta en GET /api/config/itsm/webhook-secret"
           }
         },
         "type": "object",
         "required": [
           "base_url",
           "user_email",
-          "api_token",
-          "webhook_secret"
+          "api_token"
         ],
         "title": "ItsmConnectionRequest",
         "description": "Request para configurar la conexion con JSM."
@@ -4853,6 +4965,53 @@
           "id"
         ],
         "title": "JsmCommentRaw"
+      },
+      "JsmConnectionStatusResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured",
+            "description": "true si la conexion esta completa, con url, email y token guardados"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url",
+            "description": "url de la instancia, o null si todavia no se configuro"
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email",
+            "description": "email de la cuenta usada para autenticar, o null si todavia no se configuro, el token y el secreto del webhook nunca se devuelven"
+          },
+          "webhook_secret_configured": {
+            "type": "boolean",
+            "title": "Webhook Secret Configured",
+            "description": "true si hay un secreto compartido de los webhooks guardado, el valor se consulta aparte con GET /api/config/itsm/webhook-secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "base_url",
+          "user_email",
+          "webhook_secret_configured"
+        ],
+        "title": "JsmConnectionStatusResponse",
+        "description": "Estado de la conexion con JSM, suma si hay un secreto de webhook guardado, sin devolverlo."
       },
       "JsmCustomField10010Raw": {
         "properties": {
@@ -6845,6 +7004,21 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WebhookSecretResponse": {
+        "properties": {
+          "webhook_secret": {
+            "type": "string",
+            "title": "Webhook Secret",
+            "description": "secreto en texto plano, va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, no se guarda en cache"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhook_secret"
+        ],
+        "title": "WebhookSecretResponse",
+        "description": "Secreto compartido que Jira y Confluence tienen que mandar a los webhooks, solo para administradores."
       },
       "WeeklyFirstResponse": {
         "properties": {

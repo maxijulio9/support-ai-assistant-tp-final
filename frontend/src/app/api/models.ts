@@ -48,6 +48,7 @@ export type { InteractionListResponse } from './models/interaction-list-response
 export type { InteractionReviewResponse } from './models/interaction-review-response';
 export type { ItsmConnectionRequest } from './models/itsm-connection-request';
 export type { ItsmConnectionResponse } from './models/itsm-connection-response';
+export type { JsmConnectionStatusResponse } from './models/jsm-connection-status-response';
 export type { JsmField } from './models/jsm-field';
 export type { JsmPriority } from './models/jsm-priority';
 export type { JsmStatus } from './models/jsm-status';
@@ -101,4 +102,5 @@ export type { UpdateUserRequest } from './models/update-user-request';
 export type { UserListResponse } from './models/user-list-response';
 export type { UserResponse } from './models/user-response';
 export type { ValidationError } from './models/validation-error';
+export type { WebhookSecretResponse } from './models/webhook-secret-response';
 export type { WeeklyFirstResponse } from './models/weekly-first-response';

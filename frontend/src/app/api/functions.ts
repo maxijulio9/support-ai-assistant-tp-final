@@ -105,3 +105,7 @@ export type { ListInteractionsApiInteractionsGet$Params as ListInteractionsApiIn
 export { listInteractionsApiInteractionsGet as listInteractionsApiInteractionsGet } from './fn/internal-api/list-interactions-api-interactions-get';
 export type { GetInteractionDetailApiInteractionsInteractionIdGet$Params as GetInteractionDetailApiInteractionsInteractionIdGet$Params } from './fn/internal-api/get-interaction-detail-api-interactions-interaction-id-get';
 export { getInteractionDetailApiInteractionsInteractionIdGet as getInteractionDetailApiInteractionsInteractionIdGet } from './fn/internal-api/get-interaction-detail-api-interactions-interaction-id-get';
+export type { GetWebhookSecretApiConfigItsmWebhookSecretGet$Params as GetWebhookSecretApiConfigItsmWebhookSecretGet$Params } from './fn/operations/get-webhook-secret-api-config-itsm-webhook-secret-get';
+export { getWebhookSecretApiConfigItsmWebhookSecretGet as getWebhookSecretApiConfigItsmWebhookSecretGet } from './fn/operations/get-webhook-secret-api-config-itsm-webhook-secret-get';
+export type { RegenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost$Params as RegenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost$Params } from './fn/operations/regenerate-webhook-secret-api-config-itsm-webhook-secret-regenerate-post';
+export { regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost as regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost } from './fn/operations/regenerate-webhook-secret-api-config-itsm-webhook-secret-regenerate-post';

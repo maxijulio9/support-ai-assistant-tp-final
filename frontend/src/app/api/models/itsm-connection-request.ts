@@ -23,7 +23,7 @@ export interface ItsmConnectionRequest {
   user_email: string;
 
   /**
-   * secreto compartido para validar que los webhooks vienen de JSM
+   * secreto compartido para validar que los webhooks vienen de JSM, es opcional: si no viene se conserva el guardado y, si no hay ninguno, el sistema genera uno aleatorio, que el administrador consulta en GET /api/config/itsm/webhook-secret
    */
-  webhook_secret: string;
+  webhook_secret?: (string | null);
 }
