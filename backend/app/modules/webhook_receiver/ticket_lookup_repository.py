@@ -42,3 +42,12 @@ class TicketLookupRepository:
             return str(row.id) if row else None
         finally:
             db.close()
+
+    # dice si el proyecto existe y esta desactivado, uno que no esta dado de alta o con el campo vacio cuenta como activo
+    def is_project_inactive(self, project_key: str) -> bool:
+        db = next(get_db())
+        try:
+            row = db.execute(text("SELECT is_active FROM project WHERE code = :project_key"), {"project_key": project_key}).fetchone()
+            return row is not None and row.is_active is False
+        finally:
+            db.close()

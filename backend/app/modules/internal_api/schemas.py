@@ -83,7 +83,7 @@ class ItsmConnectionRequest(BaseModel):
     """Request para configurar la conexion con JSM."""
     base_url: str = Field(description="url de la instancia de JSM, por ejemplo https://tuempresa.atlassian.net")
     user_email: str = Field(description="email de la cuenta usada para autenticar contra la API de JSM")
-    api_token: str = Field(description="API token generado desde la cuenta de Atlassian")
+    api_token: str | None = Field(default=None, description="API token generado desde la cuenta de Atlassian, es opcional: si no viene o viene en blanco se usa el guardado, siempre que la URL y el correo no hayan cambiado")
     webhook_secret: str | None = Field(default=None, description="secreto compartido para validar que los webhooks vienen de JSM, es opcional: si no viene se conserva el guardado y, si no hay ninguno, el sistema genera uno aleatorio, que el administrador consulta en GET /api/config/itsm/webhook-secret")
 
 
@@ -434,6 +434,7 @@ class ProjectThresholdsItem(BaseModel):
     threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana en vez de escalar directo")
     similarity_threshold: float = Field(description="similarity_score minimo para que un chunk recuperado se use como contexto")
     first_response_target_seconds: int = Field(description="objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto")
+    is_active: bool = Field(description="si el proyecto esta activo, un proyecto desactivado no procesa tickets ni comentarios nuevos")
 
 
 class ProjectThresholdsResponse(BaseModel):
@@ -492,6 +493,13 @@ class ProjectConfigurationResponse(BaseModel):
     priority_mapping: dict[str, list[str]] = Field(description="mapeo de prioridades guardado, con la misma forma que recibe el POST, nivel universal y lista de ids reales de JSM")
     status_mappings: list[ProjectStatusMappingItem] = Field(description="mapeos de estado guardados, ordenados por nombre de estado")
     spaces: list[ProjectSpaceItem] = Field(description="spaces de Confluence vinculados, ordenados por key")
+
+
+class ProjectActivationResponse(BaseModel):
+    """Resultado de activar o desactivar un proyecto."""
+    status: str = Field(description="ok si el proyecto quedo en el estado pedido")
+    is_active: bool = Field(description="estado en el que quedo el proyecto, false si esta desactivado, un proyecto desactivado no procesa tickets ni comentarios nuevos y conserva todo lo anterior")
+    pending_reviews: int = Field(description="interacciones del proyecto que siguen pendientes en la cola de revision, siguen visibles y se pueden resolver aunque el proyecto este desactivado")
 
 
 class ConnectionStatusResponse(BaseModel):

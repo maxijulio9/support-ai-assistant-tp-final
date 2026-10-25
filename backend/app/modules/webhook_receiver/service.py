@@ -70,6 +70,12 @@ class WebhookReceiver:
         redis = get_redis()
         pool = await get_arq_pool()
 
+        # un proyecto desactivado no procesa tickets ni comentarios nuevos, se responde 200 para que jira no reintente
+        project_key = event.issue_key.split("-")[0] if "-" in event.issue_key else ""
+        if self._is_project_inactive(project_key):
+            print(f"M1 evento ignorado, el proyecto {project_key} esta inactivo {event.issue_key}")
+            return {"status": "ignored", "reason": "proyecto_inactivo", "issue_key": event.issue_key}
+
         if event.event_type == "jira:issue_created":
             # nuevo ticket: encola el evento completo como un job de arq
             print(f"M1 issue_created recibido {event.issue_key}")
@@ -178,6 +184,15 @@ class WebhookReceiver:
         return texto_completo.strip()
     
     
+    # dice si el proyecto del ticket esta desactivado, uno que no esta dado de alta no se corta
+    # si la consulta falla se deja pasar el evento, es mejor procesar de mas que perder un ticket
+    def _is_project_inactive(self, project_key: str) -> bool:
+        try:
+            return self.ticket_lookup_repository.is_project_inactive(project_key)
+        except Exception as error:
+            print(f"M1 no se pudo consultar si el proyecto {project_key} esta activo, se procesa igual: {error}")
+            return False
+
     # encola la reindexacion puntual de una pagina de confluence
     async def dispatch_confluence_event(self, page_id: str, space_key: str):
         from app.modules.event_pipeline.settings import KB_QUEUE_NAME

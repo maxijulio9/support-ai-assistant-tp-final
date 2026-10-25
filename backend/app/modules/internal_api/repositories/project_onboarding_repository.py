@@ -40,12 +40,13 @@ class ProjectOnboardingRepository:
         row = db.execute(text("SELECT id FROM country WHERE code = :code"), {"code": country_code}).fetchone()
         return row.id if row else None
 
-    # inserta un proyecto nuevo, o lo actualiza si el code ya existia
+    # inserta un proyecto nuevo, o lo actualiza si el code ya existia, y en ese caso lo deja activo
     def _insert_project(self, db, code: str, name: str, country_id: str, language_code: str | None = None):
         query = text("""
             INSERT INTO project (code, name, country_id, language_code)
             VALUES (:code, :name, :country_id, :language_code)
             ON CONFLICT (code)
-            DO UPDATE SET name = :name, country_id = :country_id, language_code = COALESCE(:language_code, project.language_code)
+            DO UPDATE SET name = :name, country_id = :country_id, language_code = COALESCE(:language_code, project.language_code),
+                          is_active = TRUE
         """)
         db.execute(query, {"code": code, "name": name, "country_id": country_id, "language_code": language_code})
