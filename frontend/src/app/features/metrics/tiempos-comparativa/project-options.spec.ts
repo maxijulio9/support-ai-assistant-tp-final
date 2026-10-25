@@ -1,7 +1,7 @@
 import { buildProjectOptions } from './project-options';
 
-function project(id: string, key: string, name: string) {
-  return { project_id: id, key, name };
+function project(id: string, key: string, name: string, is_active?: boolean) {
+  return is_active === undefined ? { project_id: id, key, name } : { project_id: id, key, name, is_active };
 }
 
 describe('buildProjectOptions', () => {
@@ -51,5 +51,44 @@ describe('buildProjectOptions', () => {
 
   it('sin proyectos devuelve una lista vacia', () => {
     expect(buildProjectOptions([])).toEqual([]);
+  });
+
+  it('un proyecto inactivo lleva (inactivo) despues del nombre y antes de la clave', () => {
+    expect(buildProjectOptions([project('p1', 'TARG', 'Soporte Argentina', false)])[0].label).toBe(
+      'Soporte Argentina (inactivo) (TARG)',
+    );
+  });
+
+  it('uno activo, o sin la marca, no lleva nada extra', () => {
+    expect(buildProjectOptions([project('p1', 'TARG', 'Soporte Argentina', true)])[0].label).toBe('Soporte Argentina (TARG)');
+    expect(buildProjectOptions([project('p2', 'TMEX', 'Soporte México')])[0].label).toBe('Soporte México (TMEX)');
+  });
+
+  it('los activos van primero y los inactivos al final, cada grupo por nombre', () => {
+    const options = buildProjectOptions([
+      project('p1', 'A', 'Alfa', false),
+      project('p2', 'Z', 'Zeta', true),
+      project('p3', 'B', 'Beta', false),
+      project('p4', 'M', 'Mu', true),
+    ]);
+
+    expect(options.map((option) => option.projectId)).toEqual(['p4', 'p2', 'p1', 'p3']);
+  });
+
+  it('el primero de la lista es el primer activo, que es el que queda preseleccionado', () => {
+    const options = buildProjectOptions([project('p1', 'A', 'Alfa', false), project('p2', 'Z', 'Zeta', true)]);
+
+    expect(options[0].projectId).toBe('p2');
+  });
+
+  it('si todos estan inactivos, el primero por nombre', () => {
+    const options = buildProjectOptions([project('p2', 'Z', 'Zeta', false), project('p1', 'A', 'Alfa', false)]);
+
+    expect(options.map((option) => option.projectId)).toEqual(['p1', 'p2']);
+  });
+
+  it('con nombre o clave en blanco, la marca se pone igual', () => {
+    expect(buildProjectOptions([project('p1', 'TARG', '', false)])[0].label).toBe('TARG (inactivo)');
+    expect(buildProjectOptions([project('p2', '', 'Soporte', false)])[0].label).toBe('Soporte (inactivo)');
   });
 });

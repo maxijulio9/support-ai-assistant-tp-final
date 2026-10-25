@@ -246,6 +246,16 @@ describe('projectsReadinessState', () => {
     expect(projectsReadinessState({ state: 'loaded', data: [{}], errorMessage: null })).toBe('ready');
   });
 
+  it('con al menos un proyecto activo da ready, aunque haya inactivos', () => {
+    const data = [{ is_active: false }, { is_active: true }];
+    expect(projectsReadinessState({ state: 'loaded', data, errorMessage: null })).toBe('ready');
+  });
+
+  it('con todos los proyectos inactivos da pending: el sistema no procesa ninguno', () => {
+    const data = [{ is_active: false }, { is_active: false }];
+    expect(projectsReadinessState({ state: 'loaded', data, errorMessage: null })).toBe('pending');
+  });
+
   it('error da error', () => {
     expect(projectsReadinessState({ state: 'error', data: null, errorMessage: 'x' })).toBe('error');
   });
@@ -289,7 +299,30 @@ describe('projectsCardChip', () => {
     expect(projectsCardChip(null)).toEqual({ label: '0 incorporados', tone: 'neutral' });
   });
 
-  it('con al menos un proyecto da el conteo en tono informativo', () => {
-    expect(projectsCardChip([{}, {}])).toEqual({ label: '2 incorporados', tone: 'info' });
+  it('con proyectos activos da el conteo de activos en tono informativo', () => {
+    expect(projectsCardChip([{ is_active: true }, { is_active: true }])).toEqual({ label: '2 activos', tone: 'info' });
+    expect(projectsCardChip([{ is_active: true }])).toEqual({ label: '1 activo', tone: 'info' });
+  });
+
+  it('un proyecto sin la marca cuenta como activo', () => {
+    expect(projectsCardChip([{}, {}])).toEqual({ label: '2 activos', tone: 'info' });
+  });
+
+  it('con inactivos los suma al final, con singular y plural', () => {
+    expect(projectsCardChip([{ is_active: true }, { is_active: true }, { is_active: false }])).toEqual({
+      label: '2 activos, 1 inactivo',
+      tone: 'info',
+    });
+    expect(projectsCardChip([{ is_active: true }, { is_active: false }, { is_active: false }])).toEqual({
+      label: '1 activo, 2 inactivos',
+      tone: 'info',
+    });
+  });
+
+  it('con todos inactivos da "0 activos" en neutro', () => {
+    expect(projectsCardChip([{ is_active: false }, { is_active: false }])).toEqual({
+      label: '0 activos, 2 inactivos',
+      tone: 'neutral',
+    });
   });
 });

@@ -3,6 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, switchMap } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { getWebhookSecretApiConfigItsmWebhookSecretGet, regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost } from '../../api/functions';
+import {
+  ProjectActivationResponse,
+  activateProjectApiConfigItsmProjectsProjectKeyActivatePost,
+  deactivateProjectApiConfigItsmProjectsProjectKeyDeactivatePost,
+} from './project-activation.api';
 import { getItsmConnectionApiConfigItsmGet } from '../../api/fn/internal-api/get-itsm-connection-api-config-itsm-get';
 import { configureItsmConnectionApiConfigItsmPost } from '../../api/fn/internal-api/configure-itsm-connection-api-config-itsm-post';
 import { listAvailableProjectsApiConfigItsmProjectsAvailableGet } from '../../api/fn/internal-api/list-available-projects-api-config-itsm-projects-available-get';
@@ -116,6 +121,20 @@ export class ConfigService {
   configureItsmConnection(request: ItsmConnectionRequest): Observable<ItsmConnectionResponse> {
     return configureItsmConnectionApiConfigItsmPost(this.http, this.apiConfig.rootUrl, {
       body: request,
+    }).pipe(map((response) => response.body));
+  }
+
+  // Desactivar no borra nada: el sistema ignora los tickets y comentarios
+  // nuevos del proyecto hasta reactivarlo. Idempotente.
+  deactivateProject(projectKey: string): Observable<ProjectActivationResponse> {
+    return deactivateProjectApiConfigItsmProjectsProjectKeyDeactivatePost(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+    }).pipe(map((response) => response.body));
+  }
+
+  activateProject(projectKey: string): Observable<ProjectActivationResponse> {
+    return activateProjectApiConfigItsmProjectsProjectKeyActivatePost(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
     }).pipe(map((response) => response.body));
   }
 

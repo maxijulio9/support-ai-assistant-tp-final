@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
+import { configProjectLabel } from './project-activation';
 import { resolveSelectedProjectKey } from './project-selection';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { ConfluenceConnectionComponent } from './confluence-connection.component';
@@ -39,6 +40,7 @@ export class ConfluenceTabComponent {
   readonly state = signal<ConfluenceTabState>('loading');
   readonly loadErrorMessage = signal<string | null>(null);
   readonly projects = signal<OnboardedProject[]>([]);
+  readonly projectLabel = configProjectLabel;
 
   // Mismo query param (?project=) que usa la pestaña de Campos y
   // categorías: la seleccion viaja entre las dos.

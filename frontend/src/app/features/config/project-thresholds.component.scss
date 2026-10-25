@@ -43,6 +43,20 @@
   margin-right: var(--app-space-xs);
 }
 
+.project-thresholds-table tr.is-inactive td:not(.project-thresholds-actions) {
+  color: var(--app-color-text-secondary);
+}
+
+.project-thresholds-inactive-chip {
+  display: inline-block;
+  margin-left: var(--app-space-xs);
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  font: var(--mat-sys-label-large);
+  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
+  color: var(--app-color-text-secondary);
+}
+
 .project-thresholds-actions {
   display: flex;
   gap: var(--app-space-xs);

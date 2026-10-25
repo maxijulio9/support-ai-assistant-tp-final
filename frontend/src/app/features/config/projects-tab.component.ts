@@ -11,7 +11,7 @@ import { AvailableProject } from '../../api/models/available-project';
 import { Country } from '../../api/models/country';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { AddProjectDialogComponent, AddProjectDialogData, AddProjectDialogResult } from './add-project-dialog.component';
-import { ProjectThresholdsComponent } from './project-thresholds.component';
+import { ProjectActivationChange, ProjectThresholdsComponent } from './project-thresholds.component';
 import { ProjectStatusesComponent } from './project-statuses.component';
 
 export type ProjectsTabState = 'loading' | 'error' | 'loaded';
@@ -95,6 +95,16 @@ export class ProjectsTabComponent {
         );
       }
     });
+  }
+
+  // Refleja la activacion o desactivacion en la lista y en el estado
+  // compartido, para que el centro de Configuracion lo muestre sin recargar.
+  onActivationChanged(change: ProjectActivationChange): void {
+    const updated = this.onboardedProjects().map((project) =>
+      project.key === change.projectKey ? { ...project, is_active: change.isActive } : project,
+    );
+    this.onboardedProjects.set(updated);
+    this.configStatus.setProjectsLoaded(updated);
   }
 
   onThresholdsSaved(): void {

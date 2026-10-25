@@ -18,7 +18,7 @@ import { sortByConfidence } from '../category-confidence-order';
 import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { ConfidenceInterval } from '../../../api/models/confidence-interval';
-import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
+import { ProjectThresholdsWithActivity } from '../project-thresholds-activity';
 import { CategoryMetric } from '../../../api/models/category-metric';
 
 export type CategoryConfidenceState = 'loading' | 'error' | 'loaded';
@@ -141,7 +141,7 @@ export class DecisionesConfianzaComponent {
   readonly intervals = signal<ConfidenceInterval[]>([]);
   readonly withoutScoreCount = signal(0);
   readonly confidenceTotal = signal(0);
-  readonly thresholds = signal<ProjectThresholdsItem[]>([]);
+  readonly thresholds = signal<ProjectThresholdsWithActivity[]>([]);
   readonly confidenceAsTable = signal(false);
 
   readonly thresholdsAgreement = computed(() => agreedThresholds(this.thresholds()));

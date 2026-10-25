@@ -29,7 +29,7 @@
           <mat-label>Proyecto</mat-label>
           <mat-select [value]="selectedProjectKey()" (selectionChange)="selectProject($event.value)">
             @for (project of projects(); track project.key) {
-              <mat-option [value]="project.key">{{ project.key }} - {{ project.name }}</mat-option>
+              <mat-option [value]="project.key">{{ projectLabel(project) }}</mat-option>
             }
           </mat-select>
         </mat-form-field>

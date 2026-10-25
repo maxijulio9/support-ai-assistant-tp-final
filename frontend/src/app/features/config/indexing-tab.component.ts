@@ -16,6 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
+import { configProjectLabel } from './project-activation';
 import { resolveSelectedProjectKey } from './project-selection';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { IndexingStatusComponent } from './indexing-status.component';
@@ -45,6 +46,7 @@ export class IndexingTabComponent {
   readonly state = signal<IndexingTabState>('loading');
   readonly loadErrorMessage = signal<string | null>(null);
   readonly projects = signal<OnboardedProject[]>([]);
+  readonly projectLabel = configProjectLabel;
 
   // Mismo query param (?project=) que Campos y categorías y Confluence.
   private readonly projectParam = toSignal(this.route.queryParamMap.pipe(map((params) => params.get('project'))), {

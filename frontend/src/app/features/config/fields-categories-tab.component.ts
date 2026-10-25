@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
+import { configProjectLabel } from './project-activation';
 import { resolveSelectedProjectKey } from './project-selection';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { ProjectCategoriesComponent } from './project-categories.component';
@@ -41,6 +42,7 @@ export class FieldsCategoriesTabComponent {
   readonly state = signal<FieldsCategoriesTabState>('loading');
   readonly loadErrorMessage = signal<string | null>(null);
   readonly projects = signal<OnboardedProject[]>([]);
+  readonly projectLabel = configProjectLabel;
 
   // Reactivo a la URL (no solo leido una vez al montar), para que el boton
   // atras/adelante del navegador tambien cambie el proyecto mostrado. El

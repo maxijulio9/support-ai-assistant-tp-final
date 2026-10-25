@@ -17,10 +17,13 @@
       </thead>
       <tbody>
         @for (project of projects(); track project.project_id) {
-          <tr [class.is-selected]="project.key === selectedProjectKey()">
+          <tr [class.is-selected]="project.key === selectedProjectKey()" [class.is-inactive]="!isActive(project)">
             <td data-label="Proyecto">
               <span class="project-thresholds-key">{{ project.key }}</span>
               {{ project.name }}
+              @if (!isActive(project)) {
+                <span class="project-thresholds-inactive-chip">Inactivo</span>
+              }
             </td>
             <td data-label="País">{{ project.country_code ?? 'Sin país' }}</td>
             <td data-label="Publicación automática">{{ project.threshold_auto_publish }}</td>
@@ -30,6 +33,15 @@
             <td data-label="Acciones" class="project-thresholds-actions">
               <button mat-button type="button" (click)="openEditThresholds(project)">Editar umbrales</button>
               <button mat-button type="button" (click)="viewStatuses.emit(project.key)">Ver estados</button>
+              <button
+                mat-button
+                type="button"
+                [disabled]="isPending(project.key)"
+                [attr.aria-label]="actionOf(project).label + ' ' + project.name"
+                (click)="toggleActivation(project)"
+              >
+                {{ actionOf(project).label }}
+              </button>
             </td>
           </tr>
         }

@@ -1,3 +1,5 @@
+import { isProjectActive } from '../../shared/project-activity';
+
 // Estado de carga generico de una seccion del centro de Configuracion
 // (JSM, Confluence, Proyectos, Indexacion). 'idle' es "todavia no se pidio",
 // distinto de 'loading': permite que cada pantalla decida si dispara la
@@ -73,11 +75,12 @@ export function sectionReadinessState<T>(
 }
 
 // Proyectos no tiene un estado "sin dato": mientras no haya al menos un
-// proyecto incorporado se muestra "pendiente" (reloj, ambar), nunca el
-// guion neutro que usan JSM y Confluence.
-export function projectsReadinessState(slot: SectionSlot<unknown[]>): ReadinessState {
+// proyecto activo se muestra "pendiente" (reloj, ambar), nunca el guion
+// neutro que usan JSM y Confluence. Uno inactivo no cuenta: el sistema
+// ignora sus tickets.
+export function projectsReadinessState(slot: SectionSlot<{ is_active?: boolean }[]>): ReadinessState {
   if (slot.state === 'error') return 'error';
-  if (slot.state === 'loaded' && (slot.data?.length ?? 0) > 0) return 'ready';
+  if (slot.state === 'loaded' && (slot.data ?? []).some(isProjectActive)) return 'ready';
   return 'pending';
 }
 
@@ -106,9 +109,15 @@ export function connectionCardChip(data: { configured: boolean } | null): Sectio
   return connected ? { label: 'Conectado', tone: 'success' } : { label: 'No conectado', tone: 'neutral' };
 }
 
-export function projectsCardChip(data: unknown[] | null): SectionCardChip {
-  const count = data?.length ?? 0;
-  return { label: `${count} incorporados`, tone: count > 0 ? 'info' : 'neutral' };
+export function projectsCardChip(data: { is_active?: boolean }[] | null): SectionCardChip {
+  const total = data?.length ?? 0;
+  if (total === 0) return { label: '0 incorporados', tone: 'neutral' };
+
+  const active = (data ?? []).filter(isProjectActive).length;
+  const inactive = total - active;
+  const activeText = `${active} ${active === 1 ? 'activo' : 'activos'}`;
+  const label = inactive > 0 ? `${activeText}, ${inactive} ${inactive === 1 ? 'inactivo' : 'inactivos'}` : activeText;
+  return { label, tone: active > 0 ? 'info' : 'neutral' };
 }
 
 // "Configurado" solo cuando las dos partes (generacion y embeddings) lo

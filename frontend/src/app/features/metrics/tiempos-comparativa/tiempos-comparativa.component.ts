@@ -10,7 +10,6 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MetricsService } from '../metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
 import { resolveMetricsFilters } from '../metrics-filters';
-import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 import { CohortCardComponent } from './cohort-card/cohort-card.component';
 import { CategoryComparisonComponent } from './category-comparison/category-comparison.component';
 import { baselineHasTickets, buildCategoryComparison, categoryComparisonDisplay } from './category-comparison';
@@ -19,6 +18,7 @@ import { TimeSeriesComponent } from './time-series/time-series.component';
 import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakdown.component';
 import { buildOutcomeRows } from './outcomes-breakdown';
 import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
+import { ProjectThresholdsWithActivity } from '../project-thresholds-activity';
 import { ProjectOption, buildProjectOptions } from './project-options';
 import { RESPONSE_TIMES_ERROR_MESSAGE, responseTimesErrorMessage } from './response-times-error';
 import { ALL_PROJECTS, buildResponseTimesFilters, resolveProjectSelection } from './response-times-filters';
@@ -92,10 +92,11 @@ export class TiemposComparativaComponent {
   private readonly retry$ = new Subject<void>();
 
   constructor() {
-    // Los umbrales traen id, clave y nombre de cada proyecto. Si la carga
-    // falla no se bloquea la pantalla: queda solo "Todos los proyectos".
+    // Los umbrales traen id, clave, nombre y si el proyecto esta activo. Los
+    // inactivos siguen en la lista, al final y marcados. Si la carga falla no
+    // se bloquea la pantalla: queda solo "Todos los proyectos".
     const options$ = this.metricsService.getThresholds().pipe(
-      catchError(() => of<ProjectThresholdsItem[]>([])),
+      catchError(() => of<ProjectThresholdsWithActivity[]>([])),
       map((projects) => buildProjectOptions(projects)),
       tap((options) => {
         this.projectOptions.set(options);
