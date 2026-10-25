@@ -7,7 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfigService } from './config.service';
 import { ConfigStatusService } from './config-status.service';
-import { classifyFormError } from '../../shared/form-error';
+import { classifyFormError, formSaveErrorMessage } from '../../shared/form-error';
+import { buildJsmConnectionRequest, statusAfterSave } from './jsm-connection-form';
 import { WebhookSecretComponent } from './webhook-secret/webhook-secret.component';
 
 export type JsmConnectionState = 'loading' | 'error' | 'loaded';
@@ -39,7 +40,6 @@ export class JsmConnectionComponent {
     baseUrl: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     userEmail: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     apiToken: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    webhookSecret: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   constructor() {
@@ -61,40 +61,30 @@ export class JsmConnectionComponent {
     this.submitting.set(true);
     this.form.disable();
 
-    const { baseUrl, userEmail, apiToken, webhookSecret } = this.form.getRawValue();
+    const { baseUrl, userEmail, apiToken } = this.form.getRawValue();
 
     this.configService
-      .configureItsmConnection({
-        base_url: baseUrl,
-        user_email: userEmail,
-        api_token: apiToken,
-        webhook_secret: webhookSecret,
-      })
+      .configureItsmConnection(buildJsmConnectionRequest({ baseUrl, userEmail, apiToken }))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.submitting.set(false);
           this.form.enable();
           this.configured.set(true);
-          // el token y el secreto nunca se vuelven a mostrar, aunque la
-          // conexion haya quedado guardada
-          this.form.patchValue({ apiToken: '', webhookSecret: '' });
+          // el token nunca se vuelve a mostrar, aunque la conexion haya quedado
+          // guardada
+          this.form.patchValue({ apiToken: '' });
           this.snackBar.open('Conexión guardada', 'Cerrar', { duration: 4000 });
-          // el centro de Configuracion refleja "Conectado" sin recargar
-          // despues de guardar hay un secreto: el que se mando, el que ya estaba
-          // o uno generado por el sistema
-          this.configStatus.setJsmConnected({
-            base_url: baseUrl,
-            configured: true,
-            user_email: userEmail,
-            webhook_secret_configured: true,
-          });
+          // el centro de Configuracion y el bloque del secreto reflejan el
+          // cambio sin recargar: primero el estado esperado, y despues el que
+          // devuelve el backend, que es el que vale
+          this.configStatus.setJsmConnected(statusAfterSave(baseUrl, userEmail));
+          this.configStatus.refresh('jsm');
         },
         error: (error: unknown) => {
           this.submitting.set(false);
           this.form.enable();
-          const result = classifyFormError(error);
-          this.submitErrorMessage.set(result.message ?? SUBMIT_ERROR_MESSAGE);
+          this.submitErrorMessage.set(formSaveErrorMessage(error, SUBMIT_ERROR_MESSAGE));
         },
       });
   }

@@ -46,17 +46,6 @@
         <mat-error>Ingresá el API token.</mat-error>
       </mat-form-field>
 
-      <mat-form-field
-        appearance="outline"
-        class="jsm-connection-field jsm-connection-field--with-hint"
-        subscriptSizing="dynamic"
-      >
-        <mat-label>Secreto del webhook</mat-label>
-        <input matInput type="password" formControlName="webhookSecret" autocomplete="new-password" />
-        <mat-hint>Hay que volver a ingresarlo para guardar, aunque la conexión ya esté configurada.</mat-hint>
-        <mat-error>Ingresá el secreto del webhook.</mat-error>
-      </mat-form-field>
-
       @if (submitErrorMessage()) {
         <p class="jsm-connection-error-message" role="alert">{{ submitErrorMessage() }}</p>
       }
