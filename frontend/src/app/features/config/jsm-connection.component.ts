@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfigService } from './config.service';
 import { ConfigStatusService } from './config-status.service';
 import { classifyFormError } from '../../shared/form-error';
+import { WebhookSecretComponent } from './webhook-secret/webhook-secret.component';
 
 export type JsmConnectionState = 'loading' | 'error' | 'loaded';
 
@@ -17,7 +18,7 @@ const SUBMIT_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 @Component({
   selector: 'app-jsm-connection',
   standalone: true,
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, WebhookSecretComponent],
   templateUrl: './jsm-connection.component.html',
   styleUrl: './jsm-connection.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

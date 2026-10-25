@@ -1,12 +1,12 @@
 import { webhookSecretBlockView } from './webhook-secret-view';
 
 describe('webhookSecretBlockView', () => {
-  it('sin conexion guardada: el bloque queda deshabilitado, aunque la marca diga otra cosa', () => {
+  it('sin conexion guardada: el bloque no se muestra, aunque la marca diga otra cosa', () => {
     expect(webhookSecretBlockView({ connectionConfigured: false, secretConfigured: false, notFound: false })).toBe(
-      'connection-not-saved',
+      'hidden',
     );
     expect(webhookSecretBlockView({ connectionConfigured: false, secretConfigured: true, notFound: false })).toBe(
-      'connection-not-saved',
+      'hidden',
     );
   });
 

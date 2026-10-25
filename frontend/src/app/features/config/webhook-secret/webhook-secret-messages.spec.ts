@@ -2,7 +2,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   CLIPBOARD_NOTE,
   CONFLUENCE_HELP,
-  CONNECTION_NOT_SAVED_TEXT,
   COPY_FAILED_MESSAGE,
   JIRA_HELP,
   REGENERATE_DIALOG,
@@ -113,7 +112,6 @@ describe('textos fijos', () => {
   });
 
   it('textos aprobados', () => {
-    expect(CONNECTION_NOT_SAVED_TEXT).toBe('El secreto se genera al guardar la conexión.');
     expect(COPY_FAILED_MESSAGE).toBe('No se pudo copiar. Mostralo y copialo a mano.');
   });
 

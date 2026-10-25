@@ -11,7 +11,6 @@ export const GENERATED_MESSAGE = 'Secreto generado. Pegalo en Jira y en Confluen
 export const REGENERATED_MESSAGE = 'Secreto regenerado. Actualizalo en Jira y en Confluence ahora.';
 
 export const NO_SECRET_TEXT = 'Todavía no hay un secreto configurado.';
-export const CONNECTION_NOT_SAVED_TEXT = 'El secreto se genera al guardar la conexión.';
 
 export const JIRA_HELP =
   'En Jira: Administración, Sistema, Webhooks. Pegalo en el campo Secret de los webhooks de creación de ticket y de comentario.';
