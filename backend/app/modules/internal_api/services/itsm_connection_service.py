@@ -6,6 +6,7 @@ from sqlalchemy import text
 from app.core.database import get_db
 from app.core.encryption import SecretCipher
 from app.modules.internal_api.clients.jsm_connection_checker import JsmConnectionChecker
+from app.modules.internal_api.services.webhook_secret_service import WebhookSecretService
 
 logger = logging.getLogger(__name__)
 
@@ -15,16 +16,17 @@ class ItsmConnectionService:
     def __init__(self):
         self.checker = JsmConnectionChecker()
         self.cipher = SecretCipher()
+        self.secret_service = WebhookSecretService()
 
     # valida las credenciales contra jsm real, si funcionan las guarda encriptadas
-    async def configure_connection(self, base_url: str, user_email: str, api_token: str, webhook_secret: str):
+    # el secreto del webhook es opcional, si no llega se conserva el guardado y, si no hay ninguno, se genera uno aleatorio
+    async def configure_connection(self, base_url: str, user_email: str, api_token: str, webhook_secret: str | None = None):
         await self.checker.check_connection(base_url, user_email, api_token)
 
         credentials = {
             "jsm_base_url": base_url,
             "jsm_user_email": user_email,
             "jsm_api_token": api_token,
-            "jsm_webhook_secret": webhook_secret,
         }
 
         db = next(get_db())
@@ -32,6 +34,7 @@ class ItsmConnectionService:
         try:
             for key, value in credentials.items():
                 self._upsert_secret(db, key, value)
+            self.secret_service.ensure(db, webhook_secret)
             db.commit()
             logger.info("conexion con jsm configurada y guardada")
 

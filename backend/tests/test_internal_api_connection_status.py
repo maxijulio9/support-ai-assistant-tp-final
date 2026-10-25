@@ -15,6 +15,7 @@ JSM_CIPHER = "app.modules.internal_api.repositories.jsm_credentials_repository.S
 CONFLUENCE_DB = "app.modules.internal_api.repositories.confluence_credentials_repository.get_db"
 CONFLUENCE_CIPHER = "app.modules.internal_api.repositories.confluence_credentials_repository.SecretCipher"
 ROUTER_SERVICE = "app.modules.internal_api.router._connection_status_service"
+ROUTER_SECRET_SERVICE = "app.modules.internal_api.router._webhook_secret_service"
 
 app = FastAPI()
 app.include_router(router)
@@ -128,9 +129,11 @@ def test_service_reports_configured_with_url_and_email():
 
 
 # verifica que el endpoint de jsm devuelve 200 con exactamente tres campos, sin ningun secreto
+@patch(ROUTER_SECRET_SERVICE)
 @patch(ROUTER_SERVICE)
-def test_get_itsm_connection_returns_only_the_public_fields(mock_service):
+def test_get_itsm_connection_returns_only_the_public_fields(mock_service, mock_secret_service):
     mock_service.get_jsm_connection.return_value = {"configured": True, "base_url": "https://example.atlassian.net", "user_email": "test@example.com"}
+    mock_secret_service.is_configured.return_value = True
 
     app.dependency_overrides[require_admin] = lambda: MagicMock(id="admin-1", role="admin")
 
@@ -139,8 +142,9 @@ def test_get_itsm_connection_returns_only_the_public_fields(mock_service):
     app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert set(response.json()) == {"configured", "base_url", "user_email"}
+    assert set(response.json()) == {"configured", "base_url", "user_email", "webhook_secret_configured"}
     assert response.json()["configured"] is True
+    assert response.json()["webhook_secret_configured"] is True
 
 
 # verifica que el endpoint de confluence devuelve 200 con configured en false cuando todavia no hay conexion

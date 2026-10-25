@@ -84,7 +84,7 @@ class ItsmConnectionRequest(BaseModel):
     base_url: str = Field(description="url de la instancia de JSM, por ejemplo https://tuempresa.atlassian.net")
     user_email: str = Field(description="email de la cuenta usada para autenticar contra la API de JSM")
     api_token: str = Field(description="API token generado desde la cuenta de Atlassian")
-    webhook_secret: str = Field(description="secreto compartido para validar que los webhooks vienen de JSM")
+    webhook_secret: str | None = Field(default=None, description="secreto compartido para validar que los webhooks vienen de JSM, es opcional: si no viene se conserva el guardado y, si no hay ninguno, el sistema genera uno aleatorio, que el administrador consulta en GET /api/config/itsm/webhook-secret")
 
 
 class ItsmConnectionResponse(BaseModel):
@@ -499,6 +499,16 @@ class ConnectionStatusResponse(BaseModel):
     configured: bool = Field(description="true si la conexion esta completa, con url, email y token guardados")
     base_url: str | None = Field(description="url de la instancia, o null si todavia no se configuro")
     user_email: str | None = Field(description="email de la cuenta usada para autenticar, o null si todavia no se configuro, el token y el secreto del webhook nunca se devuelven")
+
+
+class JsmConnectionStatusResponse(ConnectionStatusResponse):
+    """Estado de la conexion con JSM, suma si hay un secreto de webhook guardado, sin devolverlo."""
+    webhook_secret_configured: bool = Field(description="true si hay un secreto compartido de los webhooks guardado, el valor se consulta aparte con GET /api/config/itsm/webhook-secret")
+
+
+class WebhookSecretResponse(BaseModel):
+    """Secreto compartido que Jira y Confluence tienen que mandar a los webhooks, solo para administradores."""
+    webhook_secret: str = Field(description="secreto en texto plano, va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, no se guarda en cache")
 
 
 class LlmGenerationStatus(BaseModel):
