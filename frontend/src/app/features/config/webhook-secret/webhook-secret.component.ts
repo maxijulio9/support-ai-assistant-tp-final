@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription, timer } from 'rxjs';
@@ -27,6 +28,7 @@ import {
   reduceSecret,
   secretDisplayText,
 } from './webhook-secret-state';
+import { RegenerateSecretDialogComponent, RegenerateSecretDialogResult } from './regenerate-secret-dialog.component';
 import { webhookSecretBlockView } from './webhook-secret-view';
 
 export type WebhookSecretBlockState = 'loading' | 'error' | 'hidden' | 'no-secret' | 'has-secret';
@@ -49,12 +51,14 @@ export class WebhookSecretComponent {
   private readonly status = inject(ConfigStatusService);
   private readonly clipboard = inject(Clipboard);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly noSecretText = NO_SECRET_TEXT;
   readonly jiraHelp = JIRA_HELP;
   readonly confluenceHelp = CONFLUENCE_HELP;
   readonly clipboardNote = CLIPBOARD_NOTE;
+  readonly regeneratedMessage = REGENERATED_MESSAGE;
 
   // Unico lugar donde puede estar el secreto
   private readonly secretState = signal(INITIAL_SECRET_STATE);
@@ -63,6 +67,9 @@ export class WebhookSecretComponent {
   // El pedido de ver o copiar respondio 404
   private readonly notFound = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  // Recordatorio de actualizar Jira y Confluence despues de regenerar: se
+  // queda hasta pedir otra regeneracion o salir de la pantalla
+  readonly regeneratedNote = signal(false);
 
   readonly pending = computed(() => this.secretState().pending);
   readonly isVisible = computed(() => this.secretState().visible && this.secretState().secret !== null);
@@ -108,10 +115,28 @@ export class WebhookSecretComponent {
     this.apply({ type: 'request', action: 'copy' });
   }
 
-  // Generar el primero o regenerar. El aviso de confirmacion cuando ya hay uno
-  // lo agrega quien llame a este metodo.
+  // Regenerar cuando ya hay uno: pide confirmacion, porque el anterior deja de
+  // valer al instante. Antes de abrirla oculta el secreto que estuviera
+  // visible, que esta por dejar de servir.
+  openRegenerateDialog(): void {
+    if (this.pending() !== null) return;
+    this.hide();
+
+    this.dialog
+      .open<RegenerateSecretDialogComponent, void, RegenerateSecretDialogResult>(RegenerateSecretDialogComponent, {
+        width: '440px',
+      })
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((confirmed) => {
+        if (confirmed === true) this.regenerate();
+      });
+  }
+
+  // Generar el primero (sin confirmacion) o regenerar (despues de confirmar)
   regenerate(): void {
     this.errorMessage.set(null);
+    this.regeneratedNote.set(false);
     this.apply({ type: 'request', action: 'regenerate' });
   }
 
@@ -168,7 +193,11 @@ export class WebhookSecretComponent {
   }
 
   private afterRegenerate(hadSecret: boolean): void {
-    this.snackBar.open(hadSecret ? REGENERATED_MESSAGE : GENERATED_MESSAGE, 'Cerrar', { duration: SNACKBAR_MS * 2 });
+    if (hadSecret) {
+      this.regeneratedNote.set(true);
+    } else {
+      this.snackBar.open(GENERATED_MESSAGE, 'Cerrar', { duration: SNACKBAR_MS * 2 });
+    }
 
     // Ahora hay secreto: se refleja en el estado compartido de la conexion
     const data = this.status.jsm().data;
