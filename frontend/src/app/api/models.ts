@@ -69,6 +69,7 @@ export type { OnboardProjectsRequest } from './models/onboard-projects-request';
 export type { OnboardProjectsResponse } from './models/onboard-projects-response';
 export type { OutcomeResponseTimes } from './models/outcome-response-times';
 export type { PrioritiesWithSuggestionResponse } from './models/priorities-with-suggestion-response';
+export type { ProjectActivationResponse } from './models/project-activation-response';
 export type { ProjectCategoryItem } from './models/project-category-item';
 export type { ProjectConfigRequest } from './models/project-config-request';
 export type { ProjectConfigResponse } from './models/project-config-response';

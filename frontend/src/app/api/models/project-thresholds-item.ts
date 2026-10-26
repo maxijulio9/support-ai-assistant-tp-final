@@ -13,6 +13,11 @@ export interface ProjectThresholdsItem {
   first_response_target_seconds: number;
 
   /**
+   * si el proyecto esta activo, un proyecto desactivado no procesa tickets ni comentarios nuevos
+   */
+  is_active: boolean;
+
+  /**
    * key del proyecto en JSM, por ejemplo TARG
    */
   key: string;

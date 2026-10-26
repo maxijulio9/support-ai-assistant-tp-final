@@ -8,9 +8,9 @@
 export interface ItsmConnectionRequest {
 
   /**
-   * API token generado desde la cuenta de Atlassian
+   * API token generado desde la cuenta de Atlassian, es opcional: si no viene o viene en blanco se usa el guardado, siempre que la URL y el correo no hayan cambiado
    */
-  api_token: string;
+  api_token?: (string | null);
 
   /**
    * url de la instancia de JSM, por ejemplo https://tuempresa.atlassian.net

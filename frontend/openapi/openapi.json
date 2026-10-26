@@ -1062,7 +1062,7 @@
             }
           },
           "400": {
-            "description": "Las credenciales de JSM no son validas",
+            "description": "Las credenciales de JSM no son válidas, falta el token de API o cambió la URL o el correo sin volver a ingresarlo",
             "content": {
               "application/json": {
                 "schema": {
@@ -3217,6 +3217,134 @@
         ]
       }
     },
+    "/api/config/itsm/projects/{project_key}/deactivate": {
+      "post": {
+        "summary": "Deactivate Project",
+        "operationId": "deactivate_project_api_config_itsm_projects__project_key__deactivate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectActivationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El proyecto no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo cambiar el estado del proyecto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/config/itsm/projects/{project_key}/activate": {
+      "post": {
+        "summary": "Activate Project",
+        "operationId": "activate_project_api_config_itsm_projects__project_key__activate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectActivationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El proyecto no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo cambiar el estado del proyecto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -4867,9 +4995,16 @@
             "description": "email de la cuenta usada para autenticar contra la API de JSM"
           },
           "api_token": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Api Token",
-            "description": "API token generado desde la cuenta de Atlassian"
+            "description": "API token generado desde la cuenta de Atlassian, es opcional: si no viene o viene en blanco se usa el guardado, siempre que la URL y el correo no hayan cambiado"
           },
           "webhook_secret": {
             "anyOf": [
@@ -4887,8 +5022,7 @@
         "type": "object",
         "required": [
           "base_url",
-          "user_email",
-          "api_token"
+          "user_email"
         ],
         "title": "ItsmConnectionRequest",
         "description": "Request para configurar la conexion con JSM."
@@ -5963,6 +6097,33 @@
         "title": "PrioritiesWithSuggestionResponse",
         "description": "Response con las prioridades reales de jsm y una sugerencia automatica de mapeo."
       },
+      "ProjectActivationResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ok si el proyecto quedo en el estado pedido"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "estado en el que quedo el proyecto, false si esta desactivado, un proyecto desactivado no procesa tickets ni comentarios nuevos y conserva todo lo anterior"
+          },
+          "pending_reviews": {
+            "type": "integer",
+            "title": "Pending Reviews",
+            "description": "interacciones del proyecto que siguen pendientes en la cola de revision, siguen visibles y se pueden resolver aunque el proyecto este desactivado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "is_active",
+          "pending_reviews"
+        ],
+        "title": "ProjectActivationResponse",
+        "description": "Resultado de activar o desactivar un proyecto."
+      },
       "ProjectCategoryItem": {
         "properties": {
           "id": {
@@ -6406,6 +6567,11 @@
             "type": "integer",
             "title": "First Response Target Seconds",
             "description": "objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "si el proyecto esta activo, un proyecto desactivado no procesa tickets ni comentarios nuevos"
           }
         },
         "type": "object",
@@ -6416,7 +6582,8 @@
           "threshold_auto_publish",
           "threshold_needs_review",
           "similarity_threshold",
-          "first_response_target_seconds"
+          "first_response_target_seconds",
+          "is_active"
         ],
         "title": "ProjectThresholdsItem",
         "description": "Umbrales configurados de un proyecto."
