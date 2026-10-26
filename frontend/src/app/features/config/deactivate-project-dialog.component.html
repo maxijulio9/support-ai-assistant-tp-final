@@ -1,7 +1,11 @@
 <h2 mat-dialog-title>{{ title }}</h2>
 
 <mat-dialog-content>
-  <p class="deactivate-project-text">{{ texts.body }}</p>
+  <ul class="deactivate-project-list">
+    @for (point of texts.points; track point) {
+      <li>{{ point }}</li>
+    }
+  </ul>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

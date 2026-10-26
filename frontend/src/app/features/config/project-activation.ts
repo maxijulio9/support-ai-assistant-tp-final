@@ -20,7 +20,7 @@ export function activationAction(project: { is_active: boolean }): ActivationAct
 
 // Rotulo de los selectores de proyecto de Configuracion: "CLAVE - Nombre", y
 // "(inactivo)" justo despues del nombre cuando corresponde.
-export function configProjectLabel(project: { key: string; name: string; is_active?: boolean }): string {
+export function configProjectLabel(project: { key: string; name: string; is_active: boolean }): string {
   const base = `${project.key} - ${project.name}`;
   return isProjectActive(project) ? base : `${base} ${INACTIVE_MARK}`;
 }
@@ -59,9 +59,12 @@ export function activationErrorMessage(error: unknown, kind: ActivationKind): st
 export const DEACTIVATE_DIALOG = {
   cancel: 'Cancelar',
   confirm: 'Desactivar',
-  body:
-    'No se borra nada. Mientras el proyecto esté inactivo, el sistema ignora sus tickets nuevos y sus comentarios nuevos. ' +
-    'Las revisiones pendientes siguen disponibles. Podés volver a activarlo cuando quieras.',
+  points: [
+    'No se borra nada y podés volver a activarlo cuando quieras.',
+    'Los tickets y comentarios nuevos se ignoran, y no se procesan después al reactivarlo.',
+    'Si un agente resuelve un ticket de este proyecto a mano, el sistema no lo registra.',
+    'La cola de revisión sigue funcionando con lo que ya estaba pendiente.',
+  ],
 };
 
 export function deactivateDialogTitle(projectName: string): string {

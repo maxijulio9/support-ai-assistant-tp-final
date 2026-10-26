@@ -1,12 +1,12 @@
 import { INACTIVE_MARK, isProjectActive } from '../../../shared/project-activity';
-import { ProjectThresholdsWithActivity } from '../project-thresholds-activity';
+import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 
 export interface ProjectOption {
   projectId: string;
   label: string;
 }
 
-export type ProjectLabelSource = Pick<ProjectThresholdsWithActivity, 'project_id' | 'key' | 'name' | 'is_active'>;
+export type ProjectLabelSource = Pick<ProjectThresholdsItem, 'project_id' | 'key' | 'name' | 'is_active'>;
 
 // "Nombre (CLAVE)", y para un inactivo "Nombre (inactivo) (CLAVE)".
 function labelOf(project: ProjectLabelSource): string {

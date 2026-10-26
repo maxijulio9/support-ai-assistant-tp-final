@@ -1,7 +1,7 @@
 import { buildProjectOptions } from './project-options';
 
-function project(id: string, key: string, name: string, is_active?: boolean) {
-  return is_active === undefined ? { project_id: id, key, name } : { project_id: id, key, name, is_active };
+function project(id: string, key: string, name: string, is_active = true) {
+  return { project_id: id, key, name, is_active };
 }
 
 describe('buildProjectOptions', () => {
@@ -59,9 +59,8 @@ describe('buildProjectOptions', () => {
     );
   });
 
-  it('uno activo, o sin la marca, no lleva nada extra', () => {
+  it('uno activo no lleva nada extra', () => {
     expect(buildProjectOptions([project('p1', 'TARG', 'Soporte Argentina', true)])[0].label).toBe('Soporte Argentina (TARG)');
-    expect(buildProjectOptions([project('p2', 'TMEX', 'Soporte México')])[0].label).toBe('Soporte México (TMEX)');
   });
 
   it('los activos van primero y los inactivos al final, cada grupo por nombre', () => {

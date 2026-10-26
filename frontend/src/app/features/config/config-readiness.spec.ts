@@ -243,7 +243,7 @@ describe('projectsReadinessState', () => {
   });
 
   it('con al menos un proyecto da ready', () => {
-    expect(projectsReadinessState({ state: 'loaded', data: [{}], errorMessage: null })).toBe('ready');
+    expect(projectsReadinessState({ state: 'loaded', data: [{ is_active: true }], errorMessage: null })).toBe('ready');
   });
 
   it('con al menos un proyecto activo da ready, aunque haya inactivos', () => {
@@ -302,10 +302,6 @@ describe('projectsCardChip', () => {
   it('con proyectos activos da el conteo de activos en tono informativo', () => {
     expect(projectsCardChip([{ is_active: true }, { is_active: true }])).toEqual({ label: '2 activos', tone: 'info' });
     expect(projectsCardChip([{ is_active: true }])).toEqual({ label: '1 activo', tone: 'info' });
-  });
-
-  it('un proyecto sin la marca cuenta como activo', () => {
-    expect(projectsCardChip([{}, {}])).toEqual({ label: '2 activos', tone: 'info' });
   });
 
   it('con inactivos los suma al final, con singular y plural', () => {

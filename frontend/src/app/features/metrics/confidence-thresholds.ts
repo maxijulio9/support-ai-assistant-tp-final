@@ -1,5 +1,5 @@
 import { isProjectActive } from '../../shared/project-activity';
-import { ProjectThresholdsWithActivity } from './project-thresholds-activity';
+import { ProjectThresholdsItem } from '../../api/models/project-thresholds-item';
 
 export interface AgreedThresholds {
   thresholdAutoPublish: number | null;
@@ -11,7 +11,7 @@ export interface AgreedThresholds {
 // devuelve ningun valor. Cuentan solo los proyectos activos, porque un
 // inactivo no procesa tickets; si no hay ninguno activo se usan todos, para
 // no dejar el histograma sin referencia.
-export function agreedThresholds(projects: ProjectThresholdsWithActivity[]): AgreedThresholds {
+export function agreedThresholds(projects: ProjectThresholdsItem[]): AgreedThresholds {
   const active = projects.filter(isProjectActive);
   const considered = active.length > 0 ? active : projects;
 
@@ -22,8 +22,8 @@ export function agreedThresholds(projects: ProjectThresholdsWithActivity[]): Agr
 }
 
 function valueIfAllAgree(
-  projects: ProjectThresholdsWithActivity[],
-  pick: (project: ProjectThresholdsWithActivity) => number,
+  projects: ProjectThresholdsItem[],
+  pick: (project: ProjectThresholdsItem) => number,
 ): number | null {
   if (projects.length === 0) return null;
   const first = pick(projects[0]);

@@ -14,7 +14,7 @@ import { ConfidenceDistributionResponse } from '../../api/models/confidence-dist
 import { DailyMetric } from '../../api/models/daily-metric';
 import { HeatmapCell } from '../../api/models/heatmap-cell';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
-import { ProjectThresholdsWithActivity } from './project-thresholds-activity';
+import { ProjectThresholdsItem } from '../../api/models/project-thresholds-item';
 import { MetricsFilters } from './metrics-filters';
 import { ResponseTimesFilters } from './tiempos-comparativa/response-times-filters';
 import { ResponseTimesResponse } from '../../api/models/response-times-response';
@@ -82,7 +82,7 @@ export class MetricsService {
   // Nunca manda project_id: siempre pide los umbrales de todos los proyectos
   // configurados. No acepta category ni decision, el contrato no los define
   // para este endpoint.
-  getThresholds(): Observable<ProjectThresholdsWithActivity[]> {
+  getThresholds(): Observable<ProjectThresholdsItem[]> {
     return getMetricsThresholdsApiMetricsThresholdsGet(this.http, this.apiConfig.rootUrl, {}).pipe(
       map((response) => response.body.projects),
     );

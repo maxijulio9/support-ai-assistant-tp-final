@@ -30,7 +30,6 @@ describe('activationAction', () => {
 describe('configProjectLabel', () => {
   it('activo: CLAVE - Nombre', () => {
     expect(configProjectLabel({ key: 'TARG', name: 'Soporte Argentina', is_active: true })).toBe('TARG - Soporte Argentina');
-    expect(configProjectLabel({ key: 'TARG', name: 'Soporte Argentina' })).toBe('TARG - Soporte Argentina');
   });
 
   it('inactivo: la marca va despues del nombre', () => {
@@ -106,11 +105,26 @@ describe('textos del dialogo de desactivar', () => {
     expect(deactivateDialogTitle('Soporte Argentina')).toBe('Desactivar Soporte Argentina');
   });
 
-  it('explica que no se borra nada, que se ignoran tickets y comentarios nuevos, y que se puede revertir', () => {
-    expect(DEACTIVATE_DIALOG.body).toContain('No se borra nada');
-    expect(DEACTIVATE_DIALOG.body).toContain('tickets nuevos y sus comentarios nuevos');
-    expect(DEACTIVATE_DIALOG.body).toContain('revisiones pendientes siguen disponibles');
-    expect(DEACTIVATE_DIALOG.body).toContain('volver a activarlo');
+  it('son cuatro puntos cortos, en este orden', () => {
+    expect(DEACTIVATE_DIALOG.points).toEqual([
+      'No se borra nada y podés volver a activarlo cuando quieras.',
+      'Los tickets y comentarios nuevos se ignoran, y no se procesan después al reactivarlo.',
+      'Si un agente resuelve un ticket de este proyecto a mano, el sistema no lo registra.',
+      'La cola de revisión sigue funcionando con lo que ya estaba pendiente.',
+    ]);
+  });
+
+  it('cubre que no se borra nada, que lo nuevo se ignora y no se procesa despues, la resolucion a mano y la cola de revision', () => {
+    const text = DEACTIVATE_DIALOG.points.join(' ');
+    expect(text).toContain('No se borra nada');
+    expect(text).toContain('se ignoran');
+    expect(text).toContain('no se procesan después al reactivarlo');
+    expect(text).toContain('resuelve un ticket de este proyecto a mano');
+    expect(text).toContain('La cola de revisión sigue funcionando');
+    expect(text).toContain('volver a activarlo');
+  });
+
+  it('los botones son Cancelar y Desactivar', () => {
     expect(DEACTIVATE_DIALOG.cancel).toBe('Cancelar');
     expect(DEACTIVATE_DIALOG.confirm).toBe('Desactivar');
   });

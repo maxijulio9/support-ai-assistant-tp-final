@@ -78,7 +78,7 @@ export function sectionReadinessState<T>(
 // proyecto activo se muestra "pendiente" (reloj, ambar), nunca el guion
 // neutro que usan JSM y Confluence. Uno inactivo no cuenta: el sistema
 // ignora sus tickets.
-export function projectsReadinessState(slot: SectionSlot<{ is_active?: boolean }[]>): ReadinessState {
+export function projectsReadinessState(slot: SectionSlot<{ is_active: boolean }[]>): ReadinessState {
   if (slot.state === 'error') return 'error';
   if (slot.state === 'loaded' && (slot.data ?? []).some(isProjectActive)) return 'ready';
   return 'pending';
@@ -109,7 +109,7 @@ export function connectionCardChip(data: { configured: boolean } | null): Sectio
   return connected ? { label: 'Conectado', tone: 'success' } : { label: 'No conectado', tone: 'neutral' };
 }
 
-export function projectsCardChip(data: { is_active?: boolean }[] | null): SectionCardChip {
+export function projectsCardChip(data: { is_active: boolean }[] | null): SectionCardChip {
   const total = data?.length ?? 0;
   if (total === 0) return { label: '0 incorporados', tone: 'neutral' };
 

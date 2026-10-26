@@ -42,7 +42,7 @@
       >
         <mat-label>API token</mat-label>
         <input matInput type="password" formControlName="apiToken" autocomplete="new-password" />
-        <mat-hint>Hay que volver a ingresarlo para guardar, aunque la conexión ya esté configurada.</mat-hint>
+        <mat-hint>{{ tokenHint() }}</mat-hint>
         <mat-error>Ingresá el API token.</mat-error>
       </mat-form-field>
 

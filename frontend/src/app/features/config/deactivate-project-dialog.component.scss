@@ -1,5 +1,9 @@
-.deactivate-project-text {
+.deactivate-project-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+  margin: 0;
+  padding-left: var(--app-space-md);
   font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface);
-  margin: 0;
 }

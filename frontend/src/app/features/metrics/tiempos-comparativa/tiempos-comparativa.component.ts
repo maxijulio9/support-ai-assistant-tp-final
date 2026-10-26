@@ -18,7 +18,7 @@ import { TimeSeriesComponent } from './time-series/time-series.component';
 import { OutcomesBreakdownComponent } from './outcomes-breakdown/outcomes-breakdown.component';
 import { buildOutcomeRows } from './outcomes-breakdown';
 import { MAIN_COHORTS, SYSTEM_RESPONSE_COHORTS, buildCohortCard, hasAnyTickets, pickCohorts } from './cohort-card';
-import { ProjectThresholdsWithActivity } from '../project-thresholds-activity';
+import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 import { ProjectOption, buildProjectOptions } from './project-options';
 import { RESPONSE_TIMES_ERROR_MESSAGE, responseTimesErrorMessage } from './response-times-error';
 import { ALL_PROJECTS, buildResponseTimesFilters, resolveProjectSelection } from './response-times-filters';
@@ -96,7 +96,7 @@ export class TiemposComparativaComponent {
     // inactivos siguen en la lista, al final y marcados. Si la carga falla no
     // se bloquea la pantalla: queda solo "Todos los proyectos".
     const options$ = this.metricsService.getThresholds().pipe(
-      catchError(() => of<ProjectThresholdsWithActivity[]>([])),
+      catchError(() => of<ProjectThresholdsItem[]>([])),
       map((projects) => buildProjectOptions(projects)),
       tap((options) => {
         this.projectOptions.set(options);

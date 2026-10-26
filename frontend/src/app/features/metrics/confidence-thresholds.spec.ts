@@ -1,7 +1,7 @@
 import { agreedThresholds } from './confidence-thresholds';
-import { ProjectThresholdsWithActivity } from './project-thresholds-activity';
+import { ProjectThresholdsItem } from '../../api/models/project-thresholds-item';
 
-function project(id: string, autoPublish: number, needsReview: number, isActive?: boolean): ProjectThresholdsWithActivity {
+function project(id: string, autoPublish: number, needsReview: number, isActive = true): ProjectThresholdsItem {
   return {
     project_id: id,
     key: 'TARG',
@@ -10,7 +10,7 @@ function project(id: string, autoPublish: number, needsReview: number, isActive?
     threshold_needs_review: needsReview,
     similarity_threshold: 0.4,
     first_response_target_seconds: 30,
-    ...(isActive === undefined ? {} : { is_active: isActive }),
+    is_active: isActive,
   };
 }
 
@@ -63,10 +63,5 @@ describe('agreedThresholds', () => {
   it('sin ningun activo y con valores distintos, el respaldo da null', () => {
     const result = agreedThresholds([project('p1', 0.9, 0.55, false), project('p2', 0.85, 0.6, false)]);
     expect(result).toEqual({ thresholdAutoPublish: null, thresholdNeedsReview: null });
-  });
-
-  it('un proyecto sin la marca cuenta como activo', () => {
-    const result = agreedThresholds([project('p1', 0.9, 0.55), project('p2', 0.85, 0.6, false)]);
-    expect(result).toEqual({ thresholdAutoPublish: 0.9, thresholdNeedsReview: 0.55 });
   });
 });
