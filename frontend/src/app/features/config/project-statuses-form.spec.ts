@@ -5,11 +5,17 @@ import { StatusActionItem } from '../../api/models/status-action-item';
 import {
   DUPLICATE_ACTION_MESSAGE,
   INVALID_ACTION_MESSAGE,
+  NO_ACTION_HINT,
   NO_ESCALATE_WARNING,
+  STATUS_COLUMN_ACTION,
+  STATUS_COLUMN_STATE,
+  STATUS_MAPPING_INTRO,
+  STATUS_TABLE_LABEL,
   StatusMappingRow,
   buildStatusMappingRows,
   buildStatusMappingsPayload,
   canSaveStatusMappings,
+  hintForAction,
   statusMappingsHaveChanges,
   thresholdsFromProject,
   validateStatusMappings,
@@ -223,5 +229,49 @@ describe('thresholdsFromProject', () => {
 
     expect(thresholdsFromProject(project)).not.toEqual(unsavedDraft);
     expect(thresholdsFromProject(project).threshold_auto_publish).toBe(project.threshold_auto_publish);
+  });
+});
+
+describe('textos de la tabla del mapeo', () => {
+  it('la frase de apoyo y los encabezados son los aprobados', () => {
+    expect(STATUS_MAPPING_INTRO).toBe('Cada fila es un estado de tu flujo de Jira. Elegí para qué usa el sistema ese estado.');
+    expect(STATUS_COLUMN_STATE).toBe('Estado en Jira');
+    expect(STATUS_COLUMN_ACTION).toBe('Acción del sistema');
+    expect(STATUS_TABLE_LABEL).toBe('Mapeo de estados de Jira a acciones del sistema');
+  });
+
+  it('el texto de "Sin acción" explica que el sistema no mueve tickets ahí y no procesa sus comentarios', () => {
+    expect(NO_ACTION_HINT).toBe(
+      'El sistema no mueve tickets a este estado. Si un ticket está acá, el sistema no procesa sus comentarios: lo atiende una persona.',
+    );
+  });
+
+  it('la frase de apoyo no dice que la accion se ejecuta cuando el ticket esta en el estado', () => {
+    expect(STATUS_MAPPING_INTRO).not.toMatch(/cuando un ticket est/i);
+  });
+
+  it('ningun texto lleva enlaces ni caracteres de separador prohibidos', () => {
+    for (const text of [STATUS_MAPPING_INTRO, STATUS_COLUMN_STATE, STATUS_COLUMN_ACTION, STATUS_TABLE_LABEL, NO_ACTION_HINT]) {
+      expect(text).not.toMatch(/https?:|<a|\u2014|\u00B7/);
+    }
+  });
+});
+
+describe('hintForAction', () => {
+  it('sin accion devuelve el texto de "Sin accion"', () => {
+    expect(hintForAction(null, ACTIONS)).toBe(NO_ACTION_HINT);
+  });
+
+  it('con una accion devuelve la descripcion que manda el endpoint', () => {
+    expect(hintForAction('escalate', ACTIONS)).toBe('Escalar');
+    expect(hintForAction('initial', ACTIONS)).toBe('Estado inicial');
+  });
+
+  it('una accion que ya no esta en la lista no inventa texto', () => {
+    expect(hintForAction('vieja', ACTIONS)).toBe('');
+  });
+
+  it('sin acciones cargadas y con accion elegida devuelve vacio', () => {
+    expect(hintForAction('initial', [])).toBe('');
   });
 });

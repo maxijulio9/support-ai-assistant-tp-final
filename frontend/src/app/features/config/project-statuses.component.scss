@@ -2,38 +2,63 @@
   display: block;
 }
 
-.project-statuses-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-sm);
-  margin: 0;
-  padding: 0;
+.project-statuses-intro {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-sm);
 }
 
-.project-statuses-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: var(--app-space-sm);
-  align-items: start;
+.project-statuses-table {
+  position: relative;
+  width: 100%;
+  border-collapse: collapse;
 }
 
+.project-statuses-head {
+  width: 33%;
+  padding: 0 var(--app-space-sm) var(--app-space-xs) 0;
+  text-align: left;
+  font: var(--mat-sys-label-large);
+  color: var(--app-color-text-secondary);
+}
+
+.project-statuses-head + .project-statuses-head {
+  width: auto;
+}
+
+// El nombre se alinea con el centro del campo de 56px: el aire de arriba de
+// la celda mas lo que le falta al texto (una linea de 20px) para ocupar ese alto
 .project-statuses-name {
-  display: flex;
-  align-items: center;
-  min-height: 56px;
-  font: var(--app-text-body);
+  padding: calc(var(--app-space-xs) + 1.125rem) var(--app-space-sm) 0 0;
+  vertical-align: top;
+  text-align: left;
+  font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface);
   overflow-wrap: anywhere;
 }
 
+// Aire entre filas: mas arriba y, sobre todo, debajo del campo, para que el
+// texto de ayuda no quede pegado al estado siguiente
+.project-statuses-cell {
+  padding: var(--app-space-xs) 0 var(--app-space-sm);
+  vertical-align: top;
+}
+
 .project-statuses-field {
   width: 100%;
+  // El campo no se estira a todo el ancho de la columna, y el texto de ayuda
+  // de abajo (que es parte del campo) mide lo mismo
+  max-width: 20rem;
+  // Esquinas redondeadas con radio moderado en las cuatro, no de pildora
+  --mat-form-field-outlined-container-shape: var(--mat-sys-corner-medium);
+  // El texto de ayuda del campo trae 12px por defecto
+  --mat-form-field-subscript-text-size: 0.875rem;
+  --mat-form-field-subscript-text-line-height: 1.25rem;
 }
 
 .project-statuses-submit-error {
   color: var(--mat-sys-error);
-  font: var(--app-text-secondary);
+  font: var(--mat-sys-body-medium);
   margin: var(--app-space-sm) 0 0;
 }
 
@@ -46,24 +71,55 @@
 }
 
 .project-statuses-warning {
-  font: var(--app-text-secondary);
+  font: var(--mat-sys-body-medium);
   color: var(--app-color-warning);
   margin: 0 0 var(--app-space-sm);
 }
 
+// En pantallas angostas cada fila se apila (estado arriba, desplegable
+// abajo). Los roles ARIA de la tabla conservan su estructura para los
+// lectores de pantalla, y el encabezado se oculta con clip y no con
+// display: none, para que siga disponible.
 @media (max-width: 767.98px) {
-  .project-statuses-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--app-space-xs);
+  .project-statuses-table,
+  .project-statuses-table tbody {
+    display: block;
   }
 
-  .project-statuses-name {
-    min-height: auto;
+  .project-statuses-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .project-statuses-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--app-space-xs);
+    padding: var(--app-space-sm) 0 var(--app-space-xs);
+  }
+
+  .project-statuses-name,
+  .project-statuses-cell {
+    display: block;
+    width: 100%;
+    padding: 0;
+  }
+
+  // En pantallas angostas el campo vuelve a ocupar todo el ancho
+  .project-statuses-field {
+    max-width: none;
   }
 }
 
 .project-statuses-empty {
-  font: var(--app-text-body);
+  font: var(--mat-sys-body-medium);
   color: var(--app-color-text-secondary);
   margin: 0 0 var(--app-space-sm);
 }
@@ -78,7 +134,7 @@
 }
 
 .project-statuses-error p {
-  font: var(--app-text-body);
+  font: var(--mat-sys-body-medium);
   color: var(--app-color-text-secondary);
   margin: 0;
 }
