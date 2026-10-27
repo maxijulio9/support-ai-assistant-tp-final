@@ -10,8 +10,13 @@ import {
   StatusMappingRow,
   StatusMappingValidation,
   buildStatusMappingRows,
+  STATUS_COLUMN_ACTION,
+  STATUS_COLUMN_STATE,
+  STATUS_MAPPING_INTRO,
+  STATUS_TABLE_LABEL,
   buildStatusMappingsPayload,
   canSaveStatusMappings,
+  hintForAction,
   statusMappingsHaveChanges,
   validateStatusMappings,
 } from './project-statuses-form';
@@ -25,7 +30,6 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 const SAVE_ERROR_MESSAGE =
   'No se pudo guardar el mapeo de estados. No se guardó ningún cambio, ni del mapeo ni de los umbrales. Intentá de nuevo.';
 const RELOAD_ERROR_MESSAGE = 'El mapeo se guardó, pero no se pudo recargar la pantalla. Intentá de nuevo.';
-const NO_ACTION_HINT = 'El estado no dispara ninguna acción.';
 
 // mat-select no selecciona una opcion cuyo valor es null, por eso "Sin accion"
 // vive en el control como cadena vacia y se traduce a null al validar y enviar.
@@ -47,6 +51,12 @@ export class ProjectStatusesComponent {
   readonly projectKey = input.required<string>();
 
   readonly noActionValue = NO_ACTION_VALUE;
+  readonly texts = {
+    intro: STATUS_MAPPING_INTRO,
+    columnState: STATUS_COLUMN_STATE,
+    columnAction: STATUS_COLUMN_ACTION,
+    tableLabel: STATUS_TABLE_LABEL,
+  };
   readonly state = signal<ProjectStatusesState>('loading');
   readonly loadErrorMessage = signal<string | null>(null);
   readonly actions = signal<StatusActionItem[]>([]);
@@ -89,8 +99,7 @@ export class ProjectStatusesComponent {
 
   hintFor(statusId: string): string {
     const current = this.currentRows().find((row) => row.statusId === statusId);
-    if (!current || current.action === null) return NO_ACTION_HINT;
-    return this.actions().find((action) => action.value === current.action)?.description ?? '';
+    return hintForAction(current?.action ?? null, this.actions());
   }
 
   onDiscard(): void {

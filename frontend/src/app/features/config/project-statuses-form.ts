@@ -12,6 +12,20 @@ import { StatusActionItem } from '../../api/models/status-action-item';
 export const EXCLUSIVE_ACTIONS: readonly string[] = ['escalate', 'awaiting_customer', 'resolved'];
 export const ESCALATE_ACTION = 'escalate';
 
+// Textos de la tabla del mapeo. Cada fila es un estado real del flujo de
+// Jira y el desplegable dice para que lo usa el sistema (recibir tickets
+// nuevos, mover un ticket a ese estado...), no que hace el sistema cuando un
+// ticket esta ahi.
+export const STATUS_MAPPING_INTRO = 'Cada fila es un estado de tu flujo de Jira. Elegí para qué usa el sistema ese estado.';
+export const STATUS_COLUMN_STATE = 'Estado en Jira';
+export const STATUS_COLUMN_ACTION = 'Acción del sistema';
+export const STATUS_TABLE_LABEL = 'Mapeo de estados de Jira a acciones del sistema';
+
+// Un estado sin accion no recibe tickets que mueva el sistema, y los
+// comentarios de un ticket en ese estado no se reprocesan.
+export const NO_ACTION_HINT =
+  'El sistema no mueve tickets a este estado. Si un ticket está acá, el sistema no procesa sus comentarios: lo atiende una persona.';
+
 export const DUPLICATE_ACTION_MESSAGE = 'Otro estado activo ya usa esta acción. Dejá solo uno.';
 export const INVALID_ACTION_MESSAGE = 'Este valor ya no es válido. Elegí otra acción.';
 export const NO_ESCALATE_WARNING =
@@ -112,4 +126,11 @@ export function thresholdsFromProject(
     threshold_needs_review: project.threshold_needs_review,
     similarity_threshold: project.similarity_threshold,
   };
+}
+
+// Texto bajo el desplegable de una fila: el de "Sin accion", o la descripcion
+// que devuelve el endpoint para la accion elegida (vacio si ya no existe).
+export function hintForAction(action: string | null, actions: StatusActionItem[]): string {
+  if (action === null) return NO_ACTION_HINT;
+  return actions.find((item) => item.value === action)?.description ?? '';
 }
