@@ -3128,6 +3128,16 @@
               }
             }
           },
+          "404": {
+            "description": "La interaccion no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -4849,6 +4859,14 @@
             "type": "array",
             "title": "Chunks",
             "description": "fragmentos de la base de conocimiento usados como contexto"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/InteractionSource"
+            },
+            "type": "array",
+            "title": "Sources",
+            "description": "fuentes de la base de conocimiento consultadas para generar la respuesta, una por pagina y ordenadas por relevancia, la mejor primero, vacia si el sistema no consulto la base o si la interaccion es anterior a que se guardaran los fragmentos, son las paginas de los fragmentos que se le pasaron al modelo, no se registra cuales uso"
           }
         },
         "type": "object",
@@ -4868,10 +4886,11 @@
           "edited_response",
           "was_edited",
           "created_at",
-          "chunks"
+          "chunks",
+          "sources"
         ],
         "title": "InteractionDetailResponse",
-        "description": "Detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)."
+        "description": "Detalle completo de una interaccion puntual, con sus chunks recuperados y las fuentes consultadas, para el dashboard."
       },
       "InteractionListItem": {
         "properties": {
@@ -5055,6 +5074,60 @@
         ],
         "title": "InteractionReviewResponse",
         "description": "Response comun a las 4 acciones de revision (approve, regenerate, escalate y discard)."
+      },
+      "InteractionSource": {
+        "properties": {
+          "page_title": {
+            "type": "string",
+            "title": "Page Title",
+            "description": "titulo de la pagina, tal como estaba cuando se respondio"
+          },
+          "space_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Key",
+            "description": "clave del space de Confluence, o null si la pagina se reindexo o ya no esta en la base"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "enlace completo a la pagina en Confluence, o null si falta la conexion con Confluence o la pagina ya no esta en la base, abre con los permisos que tenga en Confluence quien lo use"
+          },
+          "fragment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fragment",
+            "description": "texto del fragmento mejor posicionado de esa pagina, de hasta 600 caracteres con un punto suspensivo si se recorto, es el texto actual de la base y no necesariamente el que se uso al responder, o null si la pagina ya no esta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page_title",
+          "space_key",
+          "url",
+          "fragment"
+        ],
+        "title": "InteractionSource",
+        "description": "Una fuente de la base de conocimiento consultada para responder, una por pagina de Confluence."
       },
       "ItsmConnectionRequest": {
         "properties": {

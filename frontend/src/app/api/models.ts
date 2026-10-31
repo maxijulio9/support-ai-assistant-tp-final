@@ -46,6 +46,7 @@ export type { InteractionDetailResponse } from './models/interaction-detail-resp
 export type { InteractionListItem } from './models/interaction-list-item';
 export type { InteractionListResponse } from './models/interaction-list-response';
 export type { InteractionReviewResponse } from './models/interaction-review-response';
+export type { InteractionSource } from './models/interaction-source';
 export type { ItsmConnectionRequest } from './models/itsm-connection-request';
 export type { ItsmConnectionResponse } from './models/itsm-connection-response';
 export type { JsmConnectionStatusResponse } from './models/jsm-connection-status-response';
