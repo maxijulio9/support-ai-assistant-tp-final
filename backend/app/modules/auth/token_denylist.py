@@ -1,5 +1,5 @@
 # M9 AuthModule: denylist de tokens invalidados en Redis
-# add_to_denylist se agrega en TF-77, cuando exista el logout que lo necesita
+# add_to_denylist se agrega cuando exista el logout que lo necesita
 
 from datetime import datetime, timezone
 from app.core.redis_client import get_redis
