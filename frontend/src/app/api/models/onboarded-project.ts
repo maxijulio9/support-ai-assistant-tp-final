@@ -33,6 +33,11 @@ export interface OnboardedProject {
   language_code: (string | null);
 
   /**
+   * si el sistema puede pasar por un estado intermedio cuando Jira no ofrece una transicion directa, viene apagado y guardar los umbrales no lo cambia
+   */
+  multi_step_transitions_enabled: boolean;
+
+  /**
    * nombre del proyecto
    */
   name: string;

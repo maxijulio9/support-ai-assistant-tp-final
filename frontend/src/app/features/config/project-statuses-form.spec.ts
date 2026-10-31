@@ -214,6 +214,7 @@ describe('thresholdsFromProject', () => {
     threshold_auto_publish: 0.85,
     threshold_needs_review: 0.6,
     first_response_target_seconds: 30,
+    multi_step_transitions_enabled: false,
   };
 
   it('devuelve siempre los tres umbrales guardados del proyecto', () => {

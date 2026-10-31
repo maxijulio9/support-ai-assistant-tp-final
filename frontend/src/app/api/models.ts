@@ -63,6 +63,8 @@ export type { LoginRequest } from './models/login-request';
 export type { LoginResponse } from './models/login-response';
 export type { MetricsByCategoryResponse } from './models/metrics-by-category-response';
 export type { MetricsSummaryResponse } from './models/metrics-summary-response';
+export type { MultiStepTransitionsRequest } from './models/multi-step-transitions-request';
+export type { MultiStepTransitionsResponse } from './models/multi-step-transitions-response';
 export type { OnboardedProject } from './models/onboarded-project';
 export type { OnboardedProjectsResponse } from './models/onboarded-projects-response';
 export type { OnboardProjectsRequest } from './models/onboard-projects-request';

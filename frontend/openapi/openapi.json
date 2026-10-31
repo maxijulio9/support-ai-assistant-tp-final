@@ -3345,6 +3345,80 @@
         }
       }
     },
+    "/api/config/itsm/projects/{project_key}/multi-step-transitions": {
+      "put": {
+        "summary": "Set Multi Step Transitions",
+        "operationId": "set_multi_step_transitions_api_config_itsm_projects__project_key__multi_step_transitions_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiStepTransitionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiStepTransitionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El proyecto no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo cambiar el estado del proyecto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -5891,6 +5965,42 @@
         "title": "MetricsSummaryResponse",
         "description": "Resumen agregado de metricas de interacciones, para el dashboard."
       },
+      "MultiStepTransitionsRequest": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "true para que el sistema pase por un estado intermedio cuando Jira no ofrece una transicion directa al estado que necesita, false lo deja solo con transiciones directas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "MultiStepTransitionsRequest",
+        "description": "Habilita o deshabilita los caminos con un estado intermedio de un proyecto."
+      },
+      "MultiStepTransitionsResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ok si la opcion quedo en el valor pedido"
+          },
+          "multi_step_transitions_enabled": {
+            "type": "boolean",
+            "title": "Multi Step Transitions Enabled",
+            "description": "valor en el que quedo la opcion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "multi_step_transitions_enabled"
+        ],
+        "title": "MultiStepTransitionsResponse",
+        "description": "Resultado de cambiar la opcion de caminos con estado intermedio."
+      },
       "OnboardProjectsRequest": {
         "properties": {
           "projects": {
@@ -5994,6 +6104,11 @@
             "type": "integer",
             "title": "First Response Target Seconds",
             "description": "objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto"
+          },
+          "multi_step_transitions_enabled": {
+            "type": "boolean",
+            "title": "Multi Step Transitions Enabled",
+            "description": "si el sistema puede pasar por un estado intermedio cuando Jira no ofrece una transicion directa, viene apagado y guardar los umbrales no lo cambia"
           }
         },
         "type": "object",
@@ -6007,7 +6122,8 @@
           "threshold_auto_publish",
           "threshold_needs_review",
           "similarity_threshold",
-          "first_response_target_seconds"
+          "first_response_target_seconds",
+          "multi_step_transitions_enabled"
         ],
         "title": "OnboardedProject",
         "description": "Un proyecto dado de alta, con su id interno y sus umbrales."
