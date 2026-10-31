@@ -1,5 +1,5 @@
 # M7 InternalAPI:
-# persiste los estados reales de jsm en ticket_status TF-145
+# persiste los estados reales de jsm en ticket_status
 # ticket_status es un catalogo global, no por proyecto, project_config ya resuelve el vinculo por proyecto
 
 import logging
