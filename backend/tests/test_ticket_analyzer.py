@@ -45,7 +45,7 @@ def _build_project_context(**overrides) -> ProjectContext:
     return ProjectContext(**defaults)
 
 
-# arma un jsm_executor mockeado generico, lo necesita analyze() como parametro desde TF-169
+# arma un jsm_executor mockeado generico, lo necesita analyze() como parametro
 def _build_jsm_executor() -> MagicMock:
     jsm_executor = MagicMock()
     jsm_executor.update_fields = AsyncMock()
