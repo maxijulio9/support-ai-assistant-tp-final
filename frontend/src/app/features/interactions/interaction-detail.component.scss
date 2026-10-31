@@ -1,11 +1,18 @@
 :host {
   display: block;
+  // Los cortes miden el ancho real del contenido, no el de la ventana
+  container-type: inline-size;
 }
 
+// Panel blanco con tarjetas de borde sutil, el mismo lenguaje que Inicio
 .interaction-detail-page {
   display: flex;
   flex-direction: column;
   gap: var(--app-space-sm);
+  padding: var(--app-space-md);
+  background-color: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-lg);
 }
 
 .interaction-detail-back {
@@ -15,22 +22,26 @@
   align-self: flex-start;
   color: var(--mat-sys-primary);
   text-decoration: none;
-  font: var(--app-text-secondary);
+  font: var(--mat-sys-label-large);
 }
 
 .interaction-detail-back:hover {
   text-decoration: underline;
 }
 
-.interaction-detail-back:focus-visible {
+.interaction-detail-back:focus-visible,
+a.interaction-detail-key:focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
 }
 
 .interaction-detail-card {
   width: 100%;
-  background-color: var(--mat-sys-surface);
+  min-width: 0;
+  background-color: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-card);
   padding: var(--app-space-md);
   display: flex;
   flex-direction: column;
@@ -48,101 +59,105 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--app-space-xs);
-  font: var(--app-text-metadata);
-  color: var(--app-color-text-secondary);
+  font: var(--mat-sys-body-medium);
 }
 
 .interaction-detail-key {
-  font: var(--app-text-card-heading);
+  font: var(--mat-sys-title-medium);
   color: var(--mat-sys-on-surface);
 }
 
 a.interaction-detail-key {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 4px;
   color: var(--mat-sys-primary);
   text-decoration: underline;
 }
 
-a.interaction-detail-key:focus-visible {
-  outline: 2px solid var(--mat-sys-primary);
-  outline-offset: 2px;
-}
-
 .interaction-detail-key-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
 }
 
-.interaction-detail-category {
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
-  color: var(--mat-sys-on-surface);
+.interaction-detail-category,
+.interaction-detail-edited-chip {
   border-radius: var(--app-radius-sm);
   padding: 2px var(--app-space-xs);
-  font: var(--app-text-metadata);
-}
-
-.interaction-detail-priority {
-  color: var(--app-color-text-secondary);
+  font: var(--mat-sys-label-large);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+  color: var(--mat-sys-on-surface);
 }
 
 .interaction-detail-edited-chip {
-  background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);
   color: var(--app-color-text-secondary);
-  border-radius: var(--app-radius-sm);
-  padding: 2px var(--app-space-xs);
-  font: var(--app-text-metadata);
+}
+
+.interaction-detail-action {
+  margin-left: auto;
 }
 
 .interaction-detail-title {
   align-self: flex-start;
-  font: var(--app-text-page-title);
+  font: var(--mat-sys-headline-small);
+  font-weight: 600;
   color: var(--mat-sys-on-surface);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .interaction-detail-title:focus-visible {
   outline: none;
 }
 
-.interaction-detail-created {
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
-  margin: 0;
+// Una columna: primero el resumen, luego el texto. Ancha: texto a la izquierda
+.interaction-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'aside' 'main';
+  gap: var(--app-space-md);
+  align-items: start;
 }
 
-.interaction-detail-decision {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--app-space-sm);
-  flex-wrap: wrap;
+.interaction-detail-aside {
+  grid-area: aside;
 }
 
-.interaction-detail-decision-status {
+.interaction-detail-main {
+  grid-area: main;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--app-space-md);
+  min-width: 0;
 }
 
-.interaction-detail-decision-label {
-  font: var(--app-text-card-heading);
+.interaction-detail-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.interaction-detail-label,
+.interaction-detail-value {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+}
+
+.interaction-detail-value {
   color: var(--mat-sys-on-surface);
 }
 
 .interaction-detail-status {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font: var(--app-text-body);
+  gap: 6px;
+  font: var(--mat-sys-title-small);
 }
 
 .interaction-detail-status-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background-color: currentColor;
 }
@@ -163,29 +178,9 @@ a.interaction-detail-key:focus-visible {
   color: var(--app-color-text-secondary);
 }
 
-.interaction-detail-channel {
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
-  margin: 0;
-}
-
-.interaction-detail-confidence {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-}
-
-.interaction-detail-confidence-label {
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
-  text-align: right;
-}
-
 .interaction-detail-confidence-bar {
-  width: 240px;
-  max-width: 100%;
-  height: 4px;
+  width: 100%;
+  height: 8px;
   border-radius: 999px;
   background-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
   overflow: hidden;
@@ -204,7 +199,7 @@ a.interaction-detail-key:focus-visible {
 }
 
 .interaction-detail-block h2 {
-  font: var(--app-text-card-heading);
+  font: var(--mat-sys-title-medium);
   color: var(--mat-sys-on-surface);
   margin: 0 0 var(--app-space-xs);
 }
@@ -218,7 +213,7 @@ a.interaction-detail-key:focus-visible {
 }
 
 .interaction-detail-text {
-  font: var(--app-text-body);
+  font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -227,13 +222,6 @@ a.interaction-detail-key:focus-visible {
 
 .interaction-detail-text--empty {
   color: var(--app-color-text-secondary);
-}
-
-.interaction-detail-actions {
-  display: flex;
-  justify-content: flex-end;
-  border-top: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
-  padding-top: var(--app-space-sm);
 }
 
 .interaction-detail-skeleton {
@@ -247,11 +235,16 @@ a.interaction-detail-key:focus-visible {
   gap: var(--app-space-xs);
 }
 
+.interaction-detail-skeleton-chip,
+.interaction-detail-skeleton-line {
+  height: 1rem;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
 .interaction-detail-skeleton-chip {
   width: 100px;
   height: 20px;
-  border-radius: var(--app-radius-sm);
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
 }
 
 .interaction-detail-skeleton-chip--small {
@@ -259,9 +252,6 @@ a.interaction-detail-key:focus-visible {
 }
 
 .interaction-detail-skeleton-line {
-  height: 1rem;
-  border-radius: var(--app-radius-sm);
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
   width: 100%;
 }
 
@@ -270,10 +260,23 @@ a.interaction-detail-key:focus-visible {
   width: 60%;
 }
 
-.interaction-detail-skeleton-line--subtitle {
-  width: 30%;
-}
-
 .interaction-detail-skeleton-line--short {
   width: 40%;
+}
+
+@container (min-width: 760px) {
+  .interaction-detail-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas: 'main aside';
+  }
+}
+
+@container (max-width: 480px) {
+  .interaction-detail-page {
+    padding: var(--app-space-sm);
+  }
+
+  .interaction-detail-card {
+    padding: var(--app-space-sm);
+  }
 }

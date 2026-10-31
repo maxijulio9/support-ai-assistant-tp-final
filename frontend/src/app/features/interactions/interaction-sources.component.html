@@ -1,0 +1,52 @@
+<section class="sources" [attr.aria-labelledby]="titleId">
+  <h2 [id]="titleId" class="sources-title">{{ title }}</h2>
+  <p class="sources-note">{{ note }}</p>
+
+  @if (rows().length === 0) {
+    <p class="sources-empty">{{ emptyText }}</p>
+  } @else {
+    <ul class="sources-list">
+      @for (row of rows(); track row.key) {
+        <li class="sources-item">
+          <div class="sources-head">
+            <h3 class="sources-page">
+              @if (row.href) {
+                <a [href]="row.href" target="_blank" rel="noopener noreferrer" class="sources-link">
+                  {{ row.title }}
+                  <mat-icon aria-hidden="true" class="sources-link-icon">open_in_new</mat-icon>
+                  <span class="visually-hidden"> {{ newTabHint }}</span>
+                </a>
+              } @else {
+                {{ row.title }}
+              }
+            </h3>
+            @if (row.space) {
+              <span class="sources-space">{{ row.space }}</span>
+            }
+          </div>
+
+          @if (row.fragment) {
+            <p
+              class="sources-fragment"
+              [class.is-clamped]="row.collapsible && !isExpanded(row.key)"
+              [id]="row.fragmentId"
+            >{{ row.fragment }}</p>
+            @if (row.collapsible) {
+              <button
+                type="button"
+                class="sources-toggle"
+                [attr.aria-expanded]="isExpanded(row.key)"
+                [attr.aria-controls]="row.fragmentId"
+                (click)="toggle(row.key)"
+              >
+                {{ toggleLabel(isExpanded(row.key)) }}<span class="visually-hidden">{{ toggleContext(row.title) }}</span>
+              </button>
+            }
+          } @else {
+            <p class="sources-fragment sources-fragment--empty">{{ unavailableText }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

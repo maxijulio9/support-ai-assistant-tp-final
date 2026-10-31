@@ -6,6 +6,7 @@ import { EMPTY, Subject, catchError, switchMap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { InteractionsService } from './interactions.service';
+import { InteractionSourcesComponent } from './interaction-sources.component';
 import { DecisionStatus, decisionStatus } from './interaction-status';
 import { resolutionChannelLabel } from './resolution-channel';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
@@ -21,7 +22,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 @Component({
   selector: 'app-interaction-detail',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, RouterLink],
+  imports: [MatButtonModule, MatIconModule, RouterLink, InteractionSourcesComponent],
   templateUrl: './interaction-detail.component.html',
   styleUrl: './interaction-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
