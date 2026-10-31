@@ -16,22 +16,23 @@
   // --app-color-success/warning/text-secondary de arriba a proposito: esos
   // tambien pintan botones, snackbars y el chip de Historial (DECISION_STATUS
   // en interaction-status.ts), y cambiarlos ahi habria afectado ese chip.
-  // Elegidos vivos y simulados contra protanopia, deuteranopia y tritanopia
+  // Saturados un toque mas que antes, con al menos 3:1 de contraste contra
+  // blanco (graficos) y sin cambiar el tono. Elegidos vivos y simulados contra protanopia, deuteranopia y tritanopia
   // (no dependen solo de rojo vs verde: tambien varian en luminosidad) para
   // que cada porcion se distinga de las demas.
-  --app-color-decision-auto-publish: #16a34a; // Publicada, verde vivo
-  --app-color-decision-needs-review: #d97706; // Pendiente de revision, ambar vivo
-  --app-color-decision-escalate: #dc2626; // Escalada, rojo vivo
-  --app-color-decision-request-info: #2563eb; // Informacion solicitada, azul vivo
-  --app-color-decision-discarded: #a21caf; // Descartada, magenta vivo
+  --app-color-decision-auto-publish: #0aa543; // Publicada, verde vivo
+  --app-color-decision-needs-review: #da7500; // Pendiente de revision, ambar vivo
+  --app-color-decision-escalate: #eb1717; // Escalada, rojo vivo
+  --app-color-decision-request-info: #175ef9; // Informacion solicitada, azul vivo
+  --app-color-decision-discarded: #ac10bb; // Descartada, magenta vivo
   // Resuelta: en Metricas tambien pinta el grupo "Resueltas (incluye
   // externas)", un solo segmento que suma resueltas por el sistema y
   // externas. Resuelta externamente no aparece hoy como porcion propia en
   // ninguna de las dos pantallas, queda definida para si se separa a
   // futuro, por eso no esta tan afinada contra tritanopia como las de
   // arriba.
-  --app-color-decision-resolved: #0891b2; // Resuelta, cian
-  --app-color-decision-resolved-externally: #0d9488; // Resuelta externamente, verde azulado
+  --app-color-decision-resolved: #0096ba; // Resuelta, cian
+  --app-color-decision-resolved-externally: #039e90; // Resuelta externamente, verde azulado
   // "Otras" agrupa decisiones sin mapear: por eso es el unico segmento que
   // se queda en gris neutro, el mismo que usa el resto de la app para texto
   // secundario.
@@ -56,6 +57,8 @@
 
   // Sombra suave, solo para capas flotantes (modales, dropdowns, tooltips)
   --app-shadow-soft: 0px 2px 6px 0px rgba(24, 32, 43, 0.04);
+  // Sombra de las tarjetas de Inicio: apenas se nota, el borde hace el resto
+  --app-shadow-card: 0px 1px 3px 0px rgba(24, 32, 43, 0.08), 0px 1px 2px 0px rgba(24, 32, 43, 0.04);
   // Misma familia de color que --app-shadow-soft, mas marcada: para
   // elementos que necesitan despegarse de un fondo con imagen (por ejemplo
   // la tarjeta de login).

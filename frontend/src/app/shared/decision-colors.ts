@@ -28,6 +28,11 @@ export function resolveSegmentColorVar(key: string): string {
   return DECISION_COLOR_VAR[key] ?? DECISION_COLOR_VAR[OTHER_SEGMENT_KEY];
 }
 
+// Valor literal de cualquier variable de tema, para el canvas de echarts.
+export function resolveThemeColor(varName: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
 export function resolveSegmentColor(key: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(resolveSegmentColorVar(key)).trim();
+  return resolveThemeColor(resolveSegmentColorVar(key));
 }

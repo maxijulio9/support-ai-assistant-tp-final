@@ -98,10 +98,11 @@
       <div class="dashboard-card dashboard-kpi dashboard-kpi--highlight">
         <p class="dashboard-kpi-label">Resolución automática</p>
         <p class="dashboard-kpi-value">{{ autoPublishRate() !== null ? (autoPublishRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato' }}</p>
-        @if (autoPublishDeltaPp() !== null) {
-          <p class="dashboard-kpi-delta" [class.is-negative]="autoPublishDeltaPp()! < 0">
-            {{ autoPublishDeltaPp()! >= 0 ? '▲' : '▼' }} {{ (autoPublishDeltaPp()! | number: '1.1-1') }} pp
-            <span class="dashboard-kpi-delta-label">vs. anterior</span>
+        @if (autoPublishDelta(); as delta) {
+          <p class="dashboard-kpi-delta dashboard-kpi-delta--{{ delta.tone }}">
+            <span aria-hidden="true">{{ delta.arrow }} {{ delta.text }}</span>
+            <span class="visually-hidden">{{ delta.spoken }}</span>
+            <span class="dashboard-kpi-delta-label" aria-hidden="true">vs. anterior</span>
           </p>
         }
       </div>
@@ -116,10 +117,11 @@
       <div class="dashboard-card dashboard-kpi">
         <p class="dashboard-kpi-label">Escaladas</p>
         <p class="dashboard-kpi-value">{{ escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato' }}</p>
-        @if (escalateDeltaPp() !== null) {
-          <p class="dashboard-kpi-delta" [class.is-negative]="escalateDeltaPp()! < 0">
-            {{ escalateDeltaPp()! >= 0 ? '▲' : '▼' }} {{ (escalateDeltaPp()! | number: '1.1-1') }} pp
-            <span class="dashboard-kpi-delta-label">vs. anterior</span>
+        @if (escalateDelta(); as delta) {
+          <p class="dashboard-kpi-delta dashboard-kpi-delta--{{ delta.tone }}">
+            <span aria-hidden="true">{{ delta.arrow }} {{ delta.text }}</span>
+            <span class="visually-hidden">{{ delta.spoken }}</span>
+            <span class="dashboard-kpi-delta-label" aria-hidden="true">vs. anterior</span>
           </p>
         }
       </div>
@@ -127,33 +129,17 @@
       <div class="dashboard-card dashboard-kpi">
         <p class="dashboard-kpi-label">Confianza media</p>
         <p class="dashboard-kpi-value">{{ avgConfidence() !== null ? (avgConfidence() | number: '1.2-2') : 'Sin dato' }}</p>
-        @if (avgConfidenceDelta() !== null) {
-          <p class="dashboard-kpi-delta" [class.is-negative]="avgConfidenceDelta()! < 0">
-            {{ avgConfidenceDelta()! >= 0 ? '▲' : '▼' }} {{ (avgConfidenceDelta()! | number: '1.2-2') }}
-            <span class="dashboard-kpi-delta-label">vs. anterior</span>
+        @if (avgConfidenceDeltaView(); as delta) {
+          <p class="dashboard-kpi-delta dashboard-kpi-delta--{{ delta.tone }}">
+            <span aria-hidden="true">{{ delta.arrow }} {{ delta.text }}</span>
+            <span class="visually-hidden">{{ delta.spoken }}</span>
+            <span class="dashboard-kpi-delta-label" aria-hidden="true">vs. anterior</span>
           </p>
         }
       </div>
     </div>
 
-    <div class="dashboard-charts">
-      <div class="dashboard-card dashboard-evolution">
-        <h2>Evolución de la resolución automática</h2>
-        <p class="dashboard-card-subtitle">Por día, porcentaje de solicitudes</p>
-        <div class="dashboard-evolution-empty">
-          <p style="margin: 0">Sin datos todavía</p>
-          <p class="dashboard-card-subtitle">La serie diaria se habilita en una próxima iteración.</p>
-        </div>
-      </div>
-
-      <div class="dashboard-card">
-        <h2>Distribución de decisiones</h2>
-        <p class="dashboard-card-subtitle">Decisiones del período</p>
-        <app-decisions-donut [segments]="donutSegments()" [total]="totalInteractions() ?? 0" />
-      </div>
-    </div>
-
-    <div class="dashboard-lower">
+    <div class="dashboard-main">
       <div class="dashboard-card dashboard-activity">
         <h2>Actividad reciente</h2>
         <p class="dashboard-card-subtitle">Últimas solicitudes procesadas</p>
@@ -210,6 +196,21 @@
           @if (lastUpdatedAt()) {
             <span>Actualizado {{ relativeTime(lastUpdatedAt()) }}</span>
           }
+        </div>
+      </div>
+
+      <div class="dashboard-card dashboard-decisions">
+        <h2>Distribución de decisiones</h2>
+        <p class="dashboard-card-subtitle">Decisiones del período</p>
+        <app-decisions-donut [segments]="donutSegments()" [total]="totalInteractions() ?? 0" />
+      </div>
+
+      <div class="dashboard-card dashboard-evolution">
+        <h2>Evolución de la resolución automática</h2>
+        <p class="dashboard-card-subtitle">Por día, porcentaje de solicitudes</p>
+        <div class="dashboard-evolution-empty">
+          <p style="margin: 0">Sin datos todavía</p>
+          <p class="dashboard-card-subtitle">La serie diaria se habilita en una próxima iteración.</p>
         </div>
       </div>
 

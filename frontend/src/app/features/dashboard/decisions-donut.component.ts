@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input
 import { DecimalPipe } from '@angular/common';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
-import { resolveSegmentColor, resolveSegmentColorVar } from '../../shared/decision-colors';
+import { resolveSegmentColor, resolveSegmentColorVar, resolveThemeColor } from '../../shared/decision-colors';
 
 export interface DonutSegment {
   label: string;
@@ -56,6 +56,9 @@ export class DecisionsDonutComponent {
   readonly options = computed<EChartsCoreOption>(() => {
     this.colorSchemeTick();
 
+    // Un borde del color de la tarjeta separa las porciones entre si
+    const separator = resolveThemeColor('--mat-sys-surface-container-lowest');
+
     return {
       tooltip: { trigger: 'item' },
       series: [
@@ -67,7 +70,7 @@ export class DecisionsDonutComponent {
           data: this.segments().map((segment) => ({
             name: segment.label,
             value: segment.value,
-            itemStyle: { color: resolveSegmentColor(segment.key) },
+            itemStyle: { color: resolveSegmentColor(segment.key), borderColor: separator, borderWidth: 2 },
           })),
         },
       ],

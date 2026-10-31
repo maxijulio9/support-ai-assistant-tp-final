@@ -13,7 +13,7 @@ import { OTHER_SEGMENT_KEY } from '../../shared/decision-colors';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { formatRelativeTime } from '../../shared/format-relative-time';
-import { rate, ppDelta, rawDelta } from '../../shared/kpi-metrics';
+import { formatDelta, rate, ppDelta, rawDelta } from '../../shared/kpi-metrics';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../api/models/category-metric';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
@@ -105,6 +105,12 @@ export class DashboardComponent {
   readonly avgConfidence = computed(() => this.summary()?.avg_confidence_score ?? null);
   private readonly previousAvgConfidence = computed(() => this.previousSummary()?.avg_confidence_score ?? null);
   readonly avgConfidenceDelta = computed(() => rawDelta(this.avgConfidence(), this.previousAvgConfidence()));
+
+  // Lo que se muestra de cada delta: flecha, valor con coma y tono segun si
+  // subir es bueno. Escaladas es la unica donde subir es malo.
+  readonly autoPublishDelta = computed(() => formatDelta(this.autoPublishDeltaPp(), 'pp', 1, true));
+  readonly escalateDelta = computed(() => formatDelta(this.escalateDeltaPp(), 'pp', 1, false));
+  readonly avgConfidenceDeltaView = computed(() => formatDelta(this.avgConfidenceDelta(), 'raw', 2, true));
 
   // --- Donut de decisiones ---
   readonly donutSegments = computed<DonutSegment[]>(() => {
