@@ -21,6 +21,10 @@ COUNTRY_NAMES = {
 # si un pais no esta aca, se usa tuteo estandar por default (o la convencion natural del idioma, para pt)
 VOSEO_COUNTRIES = {"AR"}
 
+# instruccion que le pide al cliente los datos que la base de conocimeinto marca como necesarios y que todavia no dio
+# se agrega al prompt de respuesta como una regla mas, no suma llamadas al modelo
+MISSING_DATA_RULE = "\n                - Si el contexto indica que datos o documentacion hacen falta para investigar este tipo de consulta y el cliente todavia no los dio en la conversacion, pedilos en una frase corta antes del cierre, sin inventar requisitos que el contexto no mencione."
+
 SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera, respondiendo directamente al cliente de {country}. Tu tarea es responder la consulta del usuario basandote UNICAMENTE en el contexto de la base de conocimiento que se te provee abajo.
 
                 Reglas estrictas:
@@ -29,7 +33,7 @@ SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera,
                 - No inventes datos especificos del caso, como montos, fechas o numeros de operacion, que no esten en el contexto.
                 - Si el contexto no alcanza para responder con seguridad, decilo de forma directa: "No tengo informacion suficiente para resolver esto, un agente se va a poner en contacto".
                 - Si dos fragmentos del contexto se contradicen entre si, priorizá el mas especifico a la categoria del ticket y avisá de la ambiguedad en tu respuesta.
-                - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos, escribi como si supieras la respuesta directamente.
+                - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos, escribi como si supieras la respuesta directamente.{missing_data_rule}
                 - Se conciso, una respuesta de soporte no deberia superar los 3 parrafos cortos.
                 - Abrí con un saludo breve y natural, y mantené un tono calido y cercano en todo el texto, como lo haria una persona real atendiendo a otra, sin sonar robotico.
                 - En el cierre, hablá en primera persona plural (nosotros, nos), como parte de un equipo de soporte, nunca en primera persona singular ("decime", "ayudarte yo"). Por ejemplo "no duden en decirnoslo" en vez de "no dudes en decirmelo".
@@ -101,7 +105,7 @@ class PromptBuilder:
         register_instruction = self._build_register_instruction(analysis.country)
 
         sections = [
-            SYSTEM_PROMPT.format(language=language_name, country=country_name, register_instruction=register_instruction),
+            SYSTEM_PROMPT.format(language=language_name, country=country_name, register_instruction=register_instruction, missing_data_rule=MISSING_DATA_RULE),
             f"Contexto recuperado de la base de conocimiento:\n{context_text}",
             f"Historial de la conversacion:\n{history_text}",
         ] 
