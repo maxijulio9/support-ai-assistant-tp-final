@@ -20,6 +20,7 @@ async def process_issue_created(arq_context, event_data: dict):
         summary=event_data.get("summary"),
         description=event_data.get("description"),
         issue_type=event_data.get("issue_type"),
+        issue_type_id=event_data.get("issue_type_id"),
         priority=event_data.get("priority"),
         status=event_data.get("status"),
         reporter_id=event_data.get("reporter_id"),
