@@ -267,7 +267,7 @@ class Orchestrator:
 
        # cuando no hay transicion directa, busca si existe un camino multi salto como respaldo
     # no lo ejecuta automaticamente, solo avisa por nota interna, el riesgo de disparar automatizaciones
-    # en estados intermedios sin que un humano lo apruebe queda documentado en TF-151
+    # en estados intermedios sin que un humano lo apruebe
     async def _handle_missing_direct_transition(self, issue_key: str, project_id: str, target_status_name: str, issue_type_id: str | None = None) -> None:
         try:
             project_code = self._get_project_code(project_id)
@@ -428,7 +428,7 @@ class Orchestrator:
             db.close()
 
     # trae el mapa de workflow de un proyecto desde la base, descubriendolo y persistiendolo
-    # la primera vez que se necesite. usa el issue_type_id real si se paso (TF-172), sino cae al fallback
+    # la primera vez que se necesite. usa el issue_type_id real si se paso, sino cae al fallback
     async def _get_cached_workflow_map(self, project_code: str, project_id: str, issue_type_id: str | None = None) -> ProjectWorkflowMap:
         workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=issue_type_id)
 
