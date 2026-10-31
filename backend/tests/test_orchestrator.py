@@ -607,6 +607,7 @@ async def test_handle_missing_direct_transition_posts_no_path_note(
     mock_jsm = MagicMock()
     mock_jsm.get_issue_status = AsyncMock(return_value="Escalated")
     mock_jsm.post_comment = AsyncMock()
+    mock_jsm.get_issue_type_id = AsyncMock(return_value=None)
     mock_jsm_class.return_value = mock_jsm
 
     orchestrator = Orchestrator()
@@ -671,6 +672,7 @@ async def test_handle_missing_direct_transition_posts_multihop_note_without_exec
     mock_jsm = MagicMock()
     mock_jsm.get_issue_status = AsyncMock(return_value="To Do")
     mock_jsm.post_comment = AsyncMock()
+    mock_jsm.get_issue_type_id = AsyncMock(return_value=None)
     mock_jsm.transition_issue = AsyncMock()
     mock_jsm_class.return_value = mock_jsm
 
@@ -784,7 +786,7 @@ async def test_resolve_transition_id_triggers_fallback_when_no_direct_transition
     mock_row = MagicMock()
     mock_row.name = "Waiting for customer"
     mock_db.execute.return_value.fetchone.return_value = mock_row
-    mock_get_db.return_value = iter([mock_db])
+    mock_get_db.side_effect = lambda: iter([mock_db])
 
     mock_jsm = MagicMock()
     mock_jsm.get_transitions = AsyncMock(return_value={"transitions": [{"id": "1", "to": {"name": "Otro estado"}}]})
