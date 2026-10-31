@@ -49,3 +49,31 @@ class ProjectActivationService:
 
         finally:
             db.close()
+
+    # habilita o deshabilita que el sistema pase por un estado intermedio cuando jira no ofrece una transicion directa
+    # lanza ValueError si el project_key no existe, es idempotente
+    def set_multi_step(self, project_key: str, enabled: bool) -> dict:
+        db = next(get_db())
+
+        try:
+            row = db.execute(
+                text("UPDATE project SET multi_step_transitions_enabled = :enabled WHERE code = :code RETURNING id"),
+                {"enabled": enabled, "code": project_key},
+            ).fetchone()
+
+            if row is None:
+                db.rollback()
+                raise ValueError(f"project_key '{project_key}' no existe")
+
+            db.commit()
+            return {"status": "ok", "multi_step_transitions_enabled": enabled}
+
+        except ValueError:
+            raise
+
+        except Exception:
+            db.rollback()
+            raise
+
+        finally:
+            db.close()
