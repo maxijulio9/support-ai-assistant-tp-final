@@ -674,7 +674,7 @@ def list_interactions(
     return InteractionListResponse(interactions=result)
 
 
-# detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)
+# detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard
 @router.get("/api/interactions/{interaction_id}", response_model=InteractionDetailResponse)
 def get_interaction_detail(interaction_id: str, usuario: AppUser = Depends(get_current_user)):
     result = _listing_service.get_detail(interaction_id)
