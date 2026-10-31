@@ -78,3 +78,11 @@ class JsmExecutor:
         response = await self._client.get(url, params={"fields": "status"})
         response.raise_for_status()
         return response.json()["fields"]["status"]["name"]
+
+    # trae el id del tipo de issue del ticket, se usa para elegir el workflow correcto cuando el evento no lo trae, por ejemplo en un comentario
+    async def get_issue_type_id(self, issue_key: str) -> str | None:
+        url = f"{self.base_url}/rest/api/3/issue/{issue_key}"
+        response = await self._client.get(url, params={"fields": "issuetype"})
+        response.raise_for_status()
+        issue_type = response.json()["fields"].get("issuetype") or {}
+        return issue_type.get("id")
