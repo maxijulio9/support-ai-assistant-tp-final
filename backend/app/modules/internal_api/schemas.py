@@ -616,8 +616,16 @@ class RetrievedChunkDetail(BaseModel):
     rank_position: int = Field(description="posicion del chunk en el ranking de resultados recuperados")
 
 
+class InteractionSource(BaseModel):
+    """Una fuente de la base de conocimiento consultada para responder, una por pagina de Confluence."""
+    page_title: str = Field(description="titulo de la pagina, tal como estaba cuando se respondio")
+    space_key: str | None = Field(description="clave del space de Confluence, o null si la pagina se reindexo o ya no esta en la base")
+    url: str | None = Field(description="enlace completo a la pagina en Confluence, o null si falta la conexion con Confluence o la pagina ya no esta en la base, abre con los permisos que tenga en Confluence quien lo use")
+    fragment: str | None = Field(description="texto del fragmento mejor posicionado de esa pagina, de hasta 600 caracteres con un punto suspensivo si se recorto, es el texto actual de la base y no necesariamente el que se uso al responder, o null si la pagina ya no esta")
+
+
 class InteractionDetailResponse(BaseModel):
-    """Detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard (TF-160)."""
+    """Detalle completo de una interaccion puntual, con sus chunks recuperados y las fuentes consultadas, para el dashboard."""
     model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     interaction_id: str = Field(description="id de la interaccion")
     issue_key: str = Field(description="key del ticket original en JSM, por ejemplo TARG-123")
@@ -635,6 +643,7 @@ class InteractionDetailResponse(BaseModel):
     was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
     chunks: list[RetrievedChunkDetail] = Field(description="fragmentos de la base de conocimiento usados como contexto")
+    sources: list[InteractionSource] = Field(default_factory=list, description="fuentes de la base de conocimiento consultadas para generar la respuesta, una por pagina y ordenadas por relevancia, la mejor primero, vacia si el sistema no consulto la base o si la interaccion es anterior a que se guardaran los fragmentos, son las paginas de los fragmentos que se le pasaron al modelo, no se registra cuales uso")
 
 
 class TimeStats(BaseModel):

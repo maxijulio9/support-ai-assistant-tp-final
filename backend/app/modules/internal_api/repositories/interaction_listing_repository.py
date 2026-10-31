@@ -110,10 +110,12 @@ class InteractionListingRepository:
                 return None
 
             chunks = db.execute(text("""
-                SELECT page_title, similarity_score, rank_position
-                FROM retrieved_chunk
-                WHERE interaction_id = :interaction_id
-                ORDER BY rank_position
+                SELECT rc.page_title, rc.similarity_score, rc.rank_position,
+                       kc.page_title AS current_title, kc.space_key, kc.page_id, kc.content
+                FROM retrieved_chunk rc
+                LEFT JOIN knowledge_chunk kc ON kc.id = rc.chunk_id
+                WHERE rc.interaction_id = :interaction_id
+                ORDER BY rc.rank_position
             """), {"interaction_id": interaction_id}).fetchall()
 
             return {
@@ -136,6 +138,16 @@ class InteractionListingRepository:
                         "page_title": c.page_title,
                         "similarity_score": c.similarity_score,
                         "rank_position": c.rank_position,
+                    }
+                    for c in chunks
+                ],
+                "source_rows": [
+                    {
+                        "page_title": c.page_title,
+                        "current_title": c.current_title,
+                        "space_key": c.space_key,
+                        "page_id": c.page_id,
+                        "content": c.content,
                     }
                     for c in chunks
                 ],

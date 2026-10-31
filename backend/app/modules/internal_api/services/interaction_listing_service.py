@@ -5,6 +5,8 @@ import logging
 from app.modules.internal_api.repositories.interaction_listing_repository import InteractionListingRepository
 from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
 from app.modules.internal_api.ticket_url_builder import build_ticket_url
+from app.modules.internal_api.repositories.confluence_credentials_repository import ConfluenceCredentialsRepository
+from app.modules.internal_api.knowledge_sources import build_sources
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ class InteractionListingService:
     def __init__(self):
         self.listing_repository = InteractionListingRepository()
         self.credentials_repository = JsmCredentialsRepository()
+        self.confluence_credentials_repository = ConfluenceCredentialsRepository()
 
     # lista interacciones paginadas, con filtros opcionales, y completa el enlace al ticket de cada una
     def list_interactions(
@@ -38,7 +41,7 @@ class InteractionListingService:
 
         return interactions
 
-    # trae el detalle completo de una interaccion puntual con el enlace al ticket, o none si no existe
+    # trae el detalle completo de una interaccion puntual con el enlace al ticket y las fuentes consultadas, o none si no existe
     def get_detail(self, interaction_id: str) -> dict | None:
         detail = self.listing_repository.get_detail(interaction_id)
 
@@ -46,7 +49,20 @@ class InteractionListingService:
             return None
 
         detail["ticket_url"] = build_ticket_url(self._get_base_url(), detail["issue_key"])
+
+        # la url de confluence solo se lee si hay fuentes que armar
+        source_rows = list(detail.pop("source_rows", []))
+        detail["sources"] = build_sources(source_rows, self._get_confluence_base_url() if source_rows else None)
         return detail
+
+    # lee la url base de confluence para armar los enlaces de las fuentes, si falla devuelve none y las fuentes salen sin enlace
+    def _get_confluence_base_url(self) -> str | None:
+        try:
+            settings = self.confluence_credentials_repository.get_public_settings()
+            return settings["base_url"] if settings else None
+        except Exception as e:
+            logger.warning(f"no se pudo leer la url base de confluence, las fuentes quedan sin enlace: {e}")
+            return None
 
     # lee la url base de jsm, si falla devuelve none para que el listado no se caiga por un enlace
     def _get_base_url(self) -> str | None:
