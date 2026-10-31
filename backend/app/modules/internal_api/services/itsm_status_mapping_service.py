@@ -1,5 +1,5 @@
 # M7 InternalAPI: expone los estados reales de un proyecto de JSM ya configurado 
-# CU28, TF-122
+# CU28
 
 
 from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
