@@ -70,3 +70,13 @@ class ProjectWorkflowMap:
                 queue.append((next_reference, new_path))
 
         return None
+
+    # dice si el workflow permite pasar directo de un estado a otro, usando los nombres de los estados
+    def can_transition(self, from_status_name: str, to_status_name: str) -> bool:
+        from_reference = self.name_to_reference.get(from_status_name)
+        to_reference = self.name_to_reference.get(to_status_name)
+
+        if from_reference is None or to_reference is None:
+            return False
+
+        return any(next_reference == to_reference for _transition_id, next_reference in self.adjacency.get(from_reference, []))

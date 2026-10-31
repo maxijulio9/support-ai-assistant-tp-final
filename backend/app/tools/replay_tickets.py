@@ -2,7 +2,7 @@
 # toma tickets de ticket_response_baseline con respuesta de una persona y confirmacion del cliente, o sea resueltos en el nivel 1
 # crea tickets nuevos en jsm con el mismo titulo y descripcion, con la fecha de ahora y a nombre de un cliente de prueba,
 # espera que el sistema los procese por el webhook y simula en una parte de ellos la respuesta de cierre del cliente
-# los cierres se mandan directo al webhook con el secreto y no quedan como comentarios en jsm, hay que aclararlo en el informe
+# los cierres se mandan directo al webhook con el secreto, no quedan como comentarios en jsm
 # sin --confirm solo muestra el plan y no crea nada, por ejemplo
 #   python -m app.tools.replay_tickets --projects TARG,TBRA --customer-account-id ID --count 5 --seed 1
 

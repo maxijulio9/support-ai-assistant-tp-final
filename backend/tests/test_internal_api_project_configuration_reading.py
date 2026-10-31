@@ -50,7 +50,7 @@ def _configuration():
     return {
         "project": {
             "project_id": "proj-1", "key": "TARG", "name": "Argentina", "country_code": "AR", "language_code": "es",
-            "is_active": True, "threshold_auto_publish": 0.9, "threshold_needs_review": 0.55, "similarity_threshold": 0.4, "first_response_target_seconds": 30,
+            "is_active": True, "threshold_auto_publish": 0.9, "threshold_needs_review": 0.55, "similarity_threshold": 0.4, "first_response_target_seconds": 30, "multi_step_transitions_enabled": False,
         },
         "categories": [{"id": "cat-1", "name": "Acceso", "is_active": True}],
         "request_types": [{"id": "rt-1", "name": "Portal Tokenia", "is_active": True}],

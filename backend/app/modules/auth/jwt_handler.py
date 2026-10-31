@@ -10,7 +10,7 @@ from app.core.config import settings
 
 
 # genera el jwt que se entrega en el login
-# incluye jti para poder invalidar el token puntual en logout (TF-77)
+# incluye jti para poder invalidar el token puntual en logout
 def create_access_token(user_id: str, role: str) -> str:
     now = datetime.now(timezone.utc)
     payload = {

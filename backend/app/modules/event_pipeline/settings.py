@@ -12,7 +12,7 @@ class WorkerSettings:
     # funciones que este worker sabe ejecutar
     functions = [process_issue_created, process_comment_created, process_agent_resolution]
 
-    # tareas periodicas, TF-171 resincroniza el workflow de todos los proyectos una vez por dia a las 3 am
+    # tareas periodicas, resincroniza el workflow de todos los proyectos una vez por dia a las 3 am
     cron_jobs = [cron(resync_all_project_workflows, hour=3, minute=0)]
 
     # configuración de conexión a rexdis

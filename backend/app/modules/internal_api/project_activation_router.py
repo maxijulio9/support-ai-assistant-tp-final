@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from app.modules.auth.dependencies import require_admin
 from app.modules.auth.schemas import AppUser
-from app.modules.internal_api.schemas import ErrorResponse, ProjectActivationResponse
+from app.modules.internal_api.schemas import ErrorResponse, MultiStepTransitionsRequest, MultiStepTransitionsResponse, ProjectActivationResponse
 from app.modules.internal_api.services.project_activation_service import ProjectActivationService
 
 logger = logging.getLogger(__name__)
@@ -43,3 +43,19 @@ def deactivate_project(project_key: str, admin: AppUser = Depends(require_admin)
 @router.post("/api/config/itsm/projects/{project_key}/activate", response_model=ProjectActivationResponse, responses=ERROR_RESPONSES)
 def activate_project(project_key: str, admin: AppUser = Depends(require_admin)):
     return _change_state(project_key, True, admin)
+
+
+# habilita o deshabilita que el sistema pase por un estado intermedio cuando jira no ofrece una transicion directa al estado que necesita
+# viene apagado, el estado intermedio puede disparar automatizaciones de jira, y es idempotente
+@router.put("/api/config/itsm/projects/{project_key}/multi-step-transitions", response_model=MultiStepTransitionsResponse, responses=ERROR_RESPONSES)
+def set_multi_step_transitions(project_key: str, request: MultiStepTransitionsRequest, admin: AppUser = Depends(require_admin)):
+    try:
+        result = _service.set_multi_step(project_key, request.enabled)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception(f"error al cambiar la opcion de estado intermedio del proyecto '{project_key}'")
+        raise HTTPException(status_code=503, detail="No se pudo cambiar la opcion del proyecto")
+
+    logger.info(f"el usuario {admin.id} dejo {'habilitados' if request.enabled else 'deshabilitados'} los caminos con estado intermedio del proyecto '{project_key}'")
+    return MultiStepTransitionsResponse(**result)

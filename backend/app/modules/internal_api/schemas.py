@@ -454,6 +454,7 @@ class OnboardedProject(BaseModel):
     threshold_needs_review: float = Field(description="confidence_score minimo para pedir revision humana, con el valor por defecto del pipeline si no esta cargado")
     similarity_threshold: float = Field(description="similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado")
     first_response_target_seconds: int = Field(description="objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto")
+    multi_step_transitions_enabled: bool = Field(description="si el sistema puede pasar por un estado intermedio cuando Jira no ofrece una transicion directa, viene apagado y guardar los umbrales no lo cambia")
 
 
 class OnboardedProjectsResponse(BaseModel):
@@ -493,6 +494,17 @@ class ProjectConfigurationResponse(BaseModel):
     priority_mapping: dict[str, list[str]] = Field(description="mapeo de prioridades guardado, con la misma forma que recibe el POST, nivel universal y lista de ids reales de JSM")
     status_mappings: list[ProjectStatusMappingItem] = Field(description="mapeos de estado guardados, ordenados por nombre de estado")
     spaces: list[ProjectSpaceItem] = Field(description="spaces de Confluence vinculados, ordenados por key")
+
+
+class MultiStepTransitionsRequest(BaseModel):
+    """Habilita o deshabilita los caminos con un estado intermedio de un proyecto."""
+    enabled: bool = Field(description="true para que el sistema pase por un estado intermedio cuando Jira no ofrece una transicion directa al estado que necesita, false lo deja solo con transiciones directas")
+
+
+class MultiStepTransitionsResponse(BaseModel):
+    """Resultado de cambiar la opcion de caminos con estado intermedio."""
+    status: str = Field(description="ok si la opcion quedo en el valor pedido")
+    multi_step_transitions_enabled: bool = Field(description="valor en el que quedo la opcion")
 
 
 class ProjectActivationResponse(BaseModel):

@@ -99,11 +99,11 @@ class Orchestrator:
                         await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
                         self.interaction_logger.mark_first_response(interaction_id, resolved=False)
 
-                    internal_note = self._build_internal_escalation_note(analysis, "out_of_scope_o_l2")
+                    internal_note = self._build_internal_escalation_note(analysis, self._direct_escalation_reason(analysis))
                     await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
 
                 except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {e}")
+                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {type(e).__name__}: {e}")
                           
             return {
                 "status": "processed",
@@ -134,7 +134,7 @@ class Orchestrator:
                     self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
                     logger.info(f"[{event.issue_key}] cierre de conversacion detectado, transicionado a resolved")
                 except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar a resolved: {e}")
+                    logger.error(f"[{event.issue_key}] fallo al transicionar a resolved: {type(e).__name__}: {e}")
             else:
                 logger.warning(f"[{event.issue_key}] cierre de conversacion detectado, sin transicion configurada para resolved")
 
@@ -206,7 +206,7 @@ class Orchestrator:
                         logger.warning(f"[{event.issue_key}] sin transicion configurada para awaiting_customer")
 
             except Exception as e:
-                logger.error(f"[{event.issue_key}] fallo al publicar comentario o transicionar en jsm: {e}")
+                logger.error(f"[{event.issue_key}] fallo al publicar comentario o transicionar en jsm: {type(e).__name__}: {e}")
         elif generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO):
             logger.warning(f"[{event.issue_key}] action_type={generated_response.action_type} sin response_text, no se publica ningun comentario")
         
@@ -227,7 +227,7 @@ class Orchestrator:
                     await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
 
                 except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {e}")
+                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {type(e).__name__}: {e}")
             else:
                 logger.warning(f"[{event.issue_key}] ticket va para escalamiento, sin transicion configurada o disponible")
                 
@@ -257,17 +257,26 @@ class Orchestrator:
                 return transition["id"], target_status_name
 
         logger.warning(f"[{issue_key}] no se encontro una transicion disponible hacia '{target_status_name}'")
+        # con el interruptor del proyecto habilitado, prueba pasar por un estado intermedio antes de rendirse
+        final_transition_id = await self._try_multi_step(issue_key, project_id, target_status_name, issue_type_id)
+        if final_transition_id is not None:
+            return final_transition_id, target_status_name
+
         await self._handle_missing_direct_transition(issue_key, project_id, target_status_name, issue_type_id)
         return None, target_status_name
 
        # cuando no hay transicion directa, busca si existe un camino multi salto como respaldo
     # no lo ejecuta automaticamente, solo avisa por nota interna, el riesgo de disparar automatizaciones
-    # en estados intermedios sin que un humano lo apruebe queda documentado en TF-151
+    # en estados intermedios sin que un humano lo apruebe
     async def _handle_missing_direct_transition(self, issue_key: str, project_id: str, target_status_name: str, issue_type_id: str | None = None) -> None:
         try:
             project_code = self._get_project_code(project_id)
             if project_code is None:
                 return
+
+            # si el evento no trajo el tipo de ticket, por ejemplo en un comentario, se lo pide a jsm para usar el workflow correcto
+            if issue_type_id is None:
+                issue_type_id = await self.jsm_executor.get_issue_type_id(issue_key)
 
             workflow_map = await self._get_cached_workflow_map(project_code, project_id, issue_type_id)
             current_status_name = await self.jsm_executor.get_issue_status(issue_key)
@@ -290,9 +299,125 @@ class Orchestrator:
             await self.jsm_executor.post_comment(issue_key, note, public=False)
 
         except Exception as e:
-            logger.error(f"[{issue_key}] fallo al calcular el camino de respaldo: {e}")
+            logger.error(f"[{issue_key}] fallo al calcular el camino de respaldo: {type(e).__name__}: {e}")
             
             
+    # dice si el administrador habilito, en la configuracion del proyecto, pasar por un estado intermedio cuando jira no ofrece una transicion directa
+    # un fallo de la consulta cuenta como apagado, que es lo que el sistema ya hacia
+    def _multi_step_enabled(self, project_id: str | None) -> bool:
+        if not project_id:
+            return False
+
+        db = next(get_db())
+        try:
+            row = db.execute(
+                text("SELECT multi_step_transitions_enabled FROM project WHERE id = :project_id"),
+                {"project_id": project_id},
+            ).fetchone()
+            return row is not None and row.multi_step_transitions_enabled is True
+        except Exception as e:
+            logger.error(f"no se pudo consultar si el proyecto admite un estado intermedio, se asume que no: {type(e).__name__}: {e}")
+            return False
+        finally:
+            db.close()
+
+    # elige, entre las transiciones que jira ofrece hoy para el ticket, un estado intermedio desde el que el workflow permita llegar al destino
+    # descarta los estados de la categoria hecho y los que el sistema usa para resolver o escalar, y no sigue caminos con mas de un estado intermedio
+    def _pick_intermediate(self, transitions: list, workflow_map: ProjectWorkflowMap, target_status_name: str, avoid_names: set) -> tuple[str, str] | None:
+        for transition in transitions:
+            destination = transition.get("to", {})
+            name = destination.get("name")
+            category = (destination.get("statusCategory") or {}).get("key")
+
+            if not name or name == target_status_name or name in avoid_names or category == "done":
+                continue
+
+            if workflow_map.can_transition(name, target_status_name):
+                return transition["id"], name
+
+        return None
+
+    # vuelve a descubrir el workflow real del proyecto en jira y lo guarda, para cuando el mapa guardado quedo viejo
+    async def _refresh_workflow_map(self, project_code: str, project_id: str, issue_type_id: str | None = None) -> ProjectWorkflowMap:
+        resultados = await self.workflow_discovery_service.discover_all_workflows(project_code)
+        for r in resultados:
+            self.project_workflow_repository.upsert(project_id, r["issue_type_id"], r["workflow_name"], r["workflow_data"])
+
+        workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=issue_type_id)
+        return ProjectWorkflowMap(workflow_data["workflow"], workflow_data["status_names"])
+
+    # deja una nota interna sin romper el flujo si falla, es solo informativa
+    async def _post_internal_note(self, issue_key: str, note: str) -> None:
+        try:
+            await self.jsm_executor.post_comment(issue_key, note, public=False)
+        except Exception as e:
+            logger.error(f"[{issue_key}] no se pudo dejar la nota interna: {type(e).__name__}: {e}")
+
+    # recorre un estado intermedio cuando jira no ofrece una transicion directa, solo si el proyecto lo habilito
+    # ejecuta el primer paso y devuelve el id de la transicion que lleva al destino, para que quien llama la ejecute como siempre
+    # devuelve none si esta apagado, si no hay un camino seguro o si algo falla, y en ese caso queda la nota interna de siempre
+    async def _try_multi_step(self, issue_key: str, project_id: str, target_status_name: str, issue_type_id: str | None = None) -> str | None:
+        if not self._multi_step_enabled(project_id):
+            return None
+
+        try:
+            project_code = self._get_project_code(project_id)
+            if project_code is None:
+                return None
+
+            current_status_name = await self.jsm_executor.get_issue_status(issue_key)
+            resolved_type = issue_type_id or await self.jsm_executor.get_issue_type_id(issue_key)
+            avoid_names = {
+                name
+                for name in (
+                    self._get_target_status_name(project_id, JSM_STATUS_ACTION_RESOLVED),
+                    self._get_target_status_name(project_id, JSM_STATUS_ACTION_ESCALATE),
+                )
+                if name
+            }
+            transitions = (await self.jsm_executor.get_transitions(issue_key)).get("transitions", [])
+
+            workflow_map = await self._get_cached_workflow_map(project_code, project_id, resolved_type)
+            choice = self._pick_intermediate(transitions, workflow_map, target_status_name, avoid_names)
+
+            if choice is None:
+                # el mapa guardado puede estar viejo, se vuelve a descubrir el workflow una sola vez y se prueba de nuevo
+                workflow_map = await self._refresh_workflow_map(project_code, project_id, resolved_type)
+                choice = self._pick_intermediate(transitions, workflow_map, target_status_name, avoid_names)
+
+            if choice is None:
+                logger.warning(f"[{issue_key}] no hay un estado intermedio seguro entre '{current_status_name}' y '{target_status_name}'")
+                return None
+
+            first_transition_id, intermediate_name = choice
+
+            if not await self.jsm_executor.transition_issue(issue_key, first_transition_id):
+                logger.error(f"[{issue_key}] jsm rechazo el paso a '{intermediate_name}'")
+                return None
+
+            self.interaction_logger.update_ticket_status(issue_key, intermediate_name)
+            logger.info(f"[{issue_key}] paso por '{intermediate_name}' para llegar a '{target_status_name}'")
+
+            next_transitions = (await self.jsm_executor.get_transitions(issue_key)).get("transitions", [])
+            final_transition_id = next((t["id"] for t in next_transitions if t.get("to", {}).get("name") == target_status_name), None)
+
+            if final_transition_id is None:
+                await self._post_internal_note(issue_key, (
+                    f"El sistema movio el ticket a '{intermediate_name}' pero desde ahi Jira no ofrece una transicion hacia '{target_status_name}', "
+                    f"el ticket quedo en '{intermediate_name}'. Revisar el workflow configurado en JSM para este proyecto."
+                ))
+                return None
+
+            await self._post_internal_note(issue_key, (
+                f"El sistema paso por '{intermediate_name}' para llegar a '{target_status_name}', porque desde '{current_status_name}' "
+                f"Jira no ofrece una transicion directa. Camino habilitado en la configuracion del proyecto."
+            ))
+            return final_transition_id
+
+        except Exception as e:
+            logger.error(f"[{issue_key}] fallo el camino con estado intermedio: {type(e).__name__}: {e}")
+            return None
+
     # trae el code real del proyecto (ej TARG) a partir de su uuid interno
     def _get_project_code(self, project_id: str) -> str | None:
         db = next(get_db())
@@ -303,7 +428,7 @@ class Orchestrator:
             db.close()
 
     # trae el mapa de workflow de un proyecto desde la base, descubriendolo y persistiendolo
-    # la primera vez que se necesite. usa el issue_type_id real si se paso (TF-172), sino cae al fallback
+    # la primera vez que se necesite. usa el issue_type_id real si se paso, sino cae al fallback
     async def _get_cached_workflow_map(self, project_code: str, project_id: str, issue_type_id: str | None = None) -> ProjectWorkflowMap:
         workflow_data = self.project_workflow_repository.get_workflow_data(project_id, issue_type_id=issue_type_id)
 
@@ -347,6 +472,14 @@ class Orchestrator:
         finally:
             db.close()
     
+    # motivo real del escalamiento directo, el alcance que marco el clasificador o el nivel 2, antes la nota siempre decia lo mismo
+    def _direct_escalation_reason(self, analysis: TicketAnalysis) -> str:
+        if analysis.scope == "OUT_OF_SCOPE":
+            return "out_of_scope"
+        if analysis.resolved_by == "L2":
+            return "resolved_by_l2"
+        return "no_especificado"
+
     # arma el texto de la nota interna para el agente, resumen de lo que detecto el sistema antes de escalar
     def _build_internal_escalation_note(self, analysis: TicketAnalysis, escalation_reason: str | None) -> str:
         return (
