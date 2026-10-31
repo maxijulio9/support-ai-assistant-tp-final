@@ -37,6 +37,11 @@
   // secundario.
   --app-color-decision-other: var(--app-color-text-secondary);
 
+  // Barra lateral: ancho angosto (solo iconos, el que reserva el contenido) y
+  // ancho expandido (se superpone al contenido, no lo corre)
+  --app-shell-rail-width: 72px;
+  --app-shell-nav-width: 232px;
+
   // Radio (coincide con --mat-sys-corner-small/medium/large de Material)
   --app-radius-sm: 8px;
   --app-radius-md: 12px;

@@ -11,8 +11,30 @@
   --mat-sidenav-content-background-color: var(--app-color-background);
 }
 
+.shell-desktop {
+  display: flex;
+  height: 100%;
+}
+
+.shell-content-pane--desktop {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--app-color-background);
+}
+
+// Hueco en el flujo: siempre del ancho angosto. El contenido se calcula con
+// este ancho y nunca se mueve cuando la barra se expande.
+.shell-rail-slot {
+  position: relative;
+  flex: 0 0 var(--app-shell-rail-width);
+  width: var(--app-shell-rail-width);
+  z-index: 20;
+}
+
 .shell-nav {
-  width: 232px;
+  width: var(--app-shell-nav-width);
   background-color: var(--app-color-nav);
   color: var(--mat-sys-inverse-on-surface);
 }
@@ -23,12 +45,47 @@
   height: 100%;
 }
 
+.shell-rail {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--app-shell-rail-width);
+  overflow: hidden;
+  background-color: var(--app-color-nav);
+  color: var(--mat-sys-inverse-on-surface);
+  transition:
+    width 150ms ease,
+    box-shadow 150ms ease;
+}
+
+// El hover va sobre la barra entera, no sobre cada item: pasar de un item a
+// otro no sale de la barra, asi que no parpadea. Con teclado se usa
+// :focus-visible y no :focus-within, para que un clic con el mouse no la deje
+// abierta.
+.shell-rail:hover,
+.shell-rail:has(:focus-visible) {
+  width: var(--app-shell-nav-width);
+  box-shadow: var(--app-shadow-md);
+}
+
+.shell-rail .shell-nav-label {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.shell-rail:hover .shell-nav-label,
+.shell-rail:has(:focus-visible) .shell-nav-label {
+  opacity: 1;
+}
+
 .shell-brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1.75rem 1rem 1rem;
+  gap: 1rem;
+  padding: 1.75rem 1.5rem 1rem;
   color: var(--mat-sys-inverse-on-surface);
+  white-space: nowrap;
 }
 
 .shell-brand-icon {
@@ -36,58 +93,108 @@
 }
 
 .shell-brand-name {
+  font: var(--mat-sys-title-medium);
   font-weight: 600;
 }
 
 .shell-nav-list {
-  --mat-list-list-item-label-text-color: var(--mat-sys-inverse-on-surface);
-  --mat-list-list-item-leading-icon-color: var(--mat-sys-inverse-on-surface);
-  --mat-list-list-item-hover-state-layer-color: color-mix(
-    in srgb,
-    var(--mat-sys-inverse-on-surface) 12%,
-    transparent
-  );
-  --mat-list-list-item-focus-state-layer-color: color-mix(
-    in srgb,
-    var(--mat-sys-inverse-on-surface) 16%,
-    transparent
-  );
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
+// Los items comparten un mismo molde (link, boton de salir, perfil): el
+// icono queda siempre en la misma columna, centrado en la barra angosta.
 .shell-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  width: auto;
+  min-height: 48px;
+  margin: 0 0.75rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: var(--app-radius-md);
+  background: transparent;
+  color: var(--mat-sys-inverse-on-surface);
+  font: var(--mat-sys-label-large);
+  text-decoration: none;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.shell-nav-item--disabled {
-  padding: 0 1rem;
-  height: 48px;
-  color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 48%, transparent);
-  cursor: default;
+.shell-nav-item mat-icon,
+.shell-brand-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  line-height: 24px;
 }
 
-.shell-nav-item--disabled mat-icon {
+.shell-nav-item mat-icon {
   color: inherit;
 }
 
-.active-link {
+.shell-nav-item:hover {
   background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 12%, transparent);
-  color: var(--mat-sys-inverse-primary);
-  --mat-list-list-item-label-text-color: var(--mat-sys-inverse-primary);
 }
 
-.active-link mat-icon {
+.shell-nav-item:focus-visible {
+  outline: 2px solid var(--mat-sys-inverse-primary);
+  outline-offset: 2px;
+}
+
+// El estado activo no depende solo del color: lleva fondo y una marca a la
+// izquierda, ademas del aria-current del link.
+.active-link {
+  background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 16%, transparent);
   color: var(--mat-sys-inverse-primary);
 }
 
-.shell-nav-section-label {
-  padding: 1rem 1rem 0.25rem;
-  font-size: 0.75rem;
+.active-link::before {
+  content: '';
+  position: absolute;
+  left: -0.75rem;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background-color: var(--mat-sys-inverse-primary);
+}
+
+.shell-nav-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+  margin: 0.5rem 0.75rem 0;
+  padding: 0 0.75rem;
+  font: var(--mat-sys-label-large);
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 64%, transparent);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 72%, transparent);
+}
+
+// Con la barra angosta el titulo se reemplaza por una linea divisoria.
+.shell-rail .shell-nav-section::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  top: 50%;
+  height: 1px;
+  background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 32%, transparent);
+  transition: opacity 150ms ease;
+}
+
+.shell-rail:hover .shell-nav-section::before,
+.shell-rail:has(:focus-visible) .shell-nav-section::before {
+  opacity: 0;
 }
 
 .shell-nav-spacer {
@@ -96,48 +203,31 @@
 
 .shell-account {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0;
   border-top: 1px solid color-mix(in srgb, var(--mat-sys-inverse-on-surface) 16%, transparent);
+}
+
+.shell-account-link {
+  padding-left: 0.5rem;
 }
 
 .shell-account-info {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
   min-width: 0;
-  color: inherit;
-  text-decoration: none;
-  border-radius: var(--app-radius-sm);
-  padding: 0.25rem;
-  margin: -0.25rem;
-}
-
-.shell-account-info:hover {
-  background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 8%, transparent);
-}
-
-.shell-account-info:focus-visible {
-  outline: 2px solid var(--mat-sys-inverse-primary);
-  outline-offset: 2px;
 }
 
 .shell-account-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font: var(--mat-sys-label-large);
 }
 
 .shell-account-role {
-  font-size: 0.75rem;
+  font: var(--mat-sys-body-medium);
   color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 72%, transparent);
-}
-
-.shell-account button {
-  color: var(--mat-sys-inverse-on-surface);
 }
 
 .shell-avatar {
@@ -145,21 +235,21 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 0.75rem;
+  font: var(--mat-sys-label-large);
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .shell-avatar--account {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 20%, transparent);
   color: var(--mat-sys-inverse-on-surface);
 }
 
 .shell-avatar--toolbar {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background-color: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
   text-decoration: none;
@@ -185,4 +275,12 @@
 
 .shell-toolbar-spacer {
   flex: 1 1 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-rail,
+  .shell-rail .shell-nav-label,
+  .shell-rail .shell-nav-section::before {
+    transition: none;
+  }
 }

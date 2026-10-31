@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { filter, map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ROLE_ADMIN, SessionService } from '../auth/session.service';
@@ -22,20 +22,39 @@ function initials(fullName: string | undefined): string {
   return (first + last).toUpperCase();
 }
 
-// Breakpoint de pantalla chica: por debajo de 768px el nav pasa a cajon.
-// El .98 es la convencion estandar para "menor a 768px" exacto.
-const HANDSET_QUERY = '(max-width: 767.98px)';
+interface NavItem {
+  path: string;
+  label: string;
+  icon: string;
+}
+
+const MAIN_NAV_ITEMS: NavItem[] = [
+  { path: '/dashboard', label: 'Inicio', icon: 'dashboard' },
+  { path: '/metrics', label: 'Métricas', icon: 'insights' },
+  { path: '/interactions', label: 'Historial', icon: 'history' },
+  { path: '/review', label: 'Revisión', icon: 'fact_check' },
+];
+
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { path: '/users', label: 'Usuarios', icon: 'group' },
+  { path: '/config', label: 'Configuración', icon: 'settings' },
+];
+
+// Modo cajon: pantallas chicas (menos de 768px, el .98 es la convencion
+// estandar para "menor a 768px" exacto) y dispositivos sin hover, donde la
+// barra de iconos no podria mostrar sus etiquetas.
+const DRAWER_QUERY = '(max-width: 767.98px), (hover: none)';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
   imports: [
+    NgTemplateOutlet,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
     MatSidenavModule,
     MatToolbarModule,
-    MatListModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
@@ -51,8 +70,13 @@ export class ShellComponent {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
+  private readonly drawer = viewChild(MatSidenav);
+
+  readonly mainNavItems = MAIN_NAV_ITEMS;
+  readonly adminNavItems = ADMIN_NAV_ITEMS;
+
   readonly isHandset = toSignal(
-    this.breakpointObserver.observe(HANDSET_QUERY).pipe(map((result) => result.matches)),
+    this.breakpointObserver.observe(DRAWER_QUERY).pipe(map((result) => result.matches)),
     { initialValue: false },
   );
 
@@ -82,6 +106,14 @@ export class ShellComponent {
       .loadProfile()
       .pipe(takeUntilDestroyed())
       .subscribe({ error: () => {} });
+  }
+
+  toggleDrawer(): void {
+    this.drawer()?.toggle();
+  }
+
+  closeDrawerIfHandset(): void {
+    if (this.isHandset()) this.drawer()?.close();
   }
 
   logout(): void {

@@ -1,141 +1,109 @@
-<mat-sidenav-container class="shell-container">
-  <mat-sidenav
-    #drawer
-    fixedInViewport
-    [mode]="isHandset() ? 'over' : 'side'"
-    [opened]="!isHandset()"
-    [attr.role]="isHandset() ? 'dialog' : 'navigation'"
-    class="shell-nav"
-  >
-    <div class="shell-nav-inner">
-      <div class="shell-brand">
-        <mat-icon class="shell-brand-icon">layers</mat-icon>
-        <span class="shell-brand-name">Soporte N1</span>
+<ng-template #navPanel>
+  <div class="shell-brand">
+    <mat-icon class="shell-brand-icon" aria-hidden="true">layers</mat-icon>
+    <span class="shell-brand-name shell-nav-label">Soporte N1</span>
+  </div>
+
+  <nav class="shell-nav-list" aria-label="Navegación principal">
+    @for (item of mainNavItems; track item.path) {
+      <a
+        class="shell-nav-item"
+        [routerLink]="item.path"
+        routerLinkActive="active-link"
+        ariaCurrentWhenActive="page"
+        (click)="closeDrawerIfHandset()"
+      >
+        <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+        <span class="shell-nav-label">{{ item.label }}</span>
+      </a>
+    }
+
+    @if (isAdmin()) {
+      <div class="shell-nav-section"><span class="shell-nav-label">Administración</span></div>
+
+      @for (item of adminNavItems; track item.path) {
+        <a
+          class="shell-nav-item"
+          [routerLink]="item.path"
+          routerLinkActive="active-link"
+          ariaCurrentWhenActive="page"
+          (click)="closeDrawerIfHandset()"
+        >
+          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+          <span class="shell-nav-label">{{ item.label }}</span>
+        </a>
+      }
+    }
+  </nav>
+
+  <div class="shell-nav-spacer"></div>
+
+  <div class="shell-account">
+    <a
+      routerLink="/profile"
+      class="shell-nav-item shell-account-link"
+      aria-label="Ir a mi perfil"
+      (click)="closeDrawerIfHandset()"
+    >
+      <span class="shell-avatar shell-avatar--account" aria-hidden="true">{{ initials() }}</span>
+      <span class="shell-nav-label shell-account-info">
+        <span class="shell-account-name">{{ profile()?.full_name }}</span>
+        <span class="shell-account-role">{{ roleLabel() }}</span>
+      </span>
+    </a>
+    <button type="button" class="shell-nav-item shell-logout" (click)="logout()">
+      <mat-icon aria-hidden="true">logout</mat-icon>
+      <span class="shell-nav-label">Cerrar sesión</span>
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #pagePanel>
+  <mat-toolbar class="shell-toolbar">
+    @if (isHandset()) {
+      <button mat-icon-button type="button" aria-label="Abrir navegación" (click)="toggleDrawer()">
+        <mat-icon>menu</mat-icon>
+      </button>
+    }
+    @if (breadcrumbTitle()) {
+      <span class="shell-breadcrumb">{{ breadcrumbTitle() }}</span>
+    }
+    <span class="shell-toolbar-spacer"></span>
+    <a
+      routerLink="/profile"
+      class="shell-avatar shell-avatar--toolbar"
+      aria-label="Ir a mi perfil"
+      matTooltip="Ir a mi perfil"
+    >{{ initials() }}</a>
+  </mat-toolbar>
+  <main class="shell-content">
+    <router-outlet />
+  </main>
+</ng-template>
+
+@if (isHandset()) {
+  <mat-sidenav-container class="shell-container">
+    <mat-sidenav #drawer fixedInViewport mode="over" [opened]="false" role="dialog" class="shell-nav">
+      <div class="shell-nav-inner">
+        <ng-container [ngTemplateOutlet]="navPanel" />
       </div>
+    </mat-sidenav>
 
-      <mat-nav-list class="shell-nav-list">
-        <a
-          mat-list-item
-          class="shell-nav-item"
-          routerLink="/dashboard"
-          routerLinkActive="active-link"
-          ariaCurrentWhenActive="page"
-          (click)="isHandset() && drawer.close()"
-        >
-          <mat-icon matListItemIcon>dashboard</mat-icon>
-          <span matListItemTitle>Inicio</span>
-        </a>
-
-        <a
-          mat-list-item
-          class="shell-nav-item"
-          routerLink="/metrics"
-          routerLinkActive="active-link"
-          ariaCurrentWhenActive="page"
-          (click)="isHandset() && drawer.close()"
-        >
-          <mat-icon matListItemIcon>insights</mat-icon>
-          <span matListItemTitle>Métricas</span>
-        </a>
-
-        <a
-          mat-list-item
-          class="shell-nav-item"
-          routerLink="/interactions"
-          routerLinkActive="active-link"
-          ariaCurrentWhenActive="page"
-          (click)="isHandset() && drawer.close()"
-        >
-          <mat-icon matListItemIcon>history</mat-icon>
-          <span matListItemTitle>Historial</span>
-        </a>
-
-        <a
-          mat-list-item
-          class="shell-nav-item"
-          routerLink="/review"
-          routerLinkActive="active-link"
-          ariaCurrentWhenActive="page"
-          (click)="isHandset() && drawer.close()"
-        >
-          <mat-icon matListItemIcon>fact_check</mat-icon>
-          <span matListItemTitle>Revisión</span>
-        </a>
-
-        @if (isAdmin()) {
-          <div class="shell-nav-section-label">Administración</div>
-
-          <a
-            mat-list-item
-            class="shell-nav-item"
-            routerLink="/users"
-            routerLinkActive="active-link"
-            ariaCurrentWhenActive="page"
-            (click)="isHandset() && drawer.close()"
-          >
-            <mat-icon matListItemIcon>group</mat-icon>
-            <span matListItemTitle>Usuarios</span>
-          </a>
-          <a
-            mat-list-item
-            class="shell-nav-item"
-            routerLink="/config"
-            routerLinkActive="active-link"
-            ariaCurrentWhenActive="page"
-            (click)="isHandset() && drawer.close()"
-          >
-            <mat-icon matListItemIcon>settings</mat-icon>
-            <span matListItemTitle>Configuración</span>
-          </a>
-        }
-      </mat-nav-list>
-
-      <div class="shell-nav-spacer"></div>
-
-      <div class="shell-account">
-        <div class="shell-avatar shell-avatar--account">{{ initials() }}</div>
-        <a
-          routerLink="/profile"
-          class="shell-account-info"
-          aria-label="Ir a mi perfil"
-          (click)="isHandset() && drawer.close()"
-        >
-          <span class="shell-account-name">{{ profile()?.full_name }}</span>
-          <span class="shell-account-role">{{ roleLabel() }}</span>
-        </a>
-        <button
-          mat-icon-button
-          type="button"
-          aria-label="Cerrar sesión"
-          matTooltip="Cerrar sesión"
-          (click)="logout()"
-        >
-          <mat-icon>logout</mat-icon>
-        </button>
+    <mat-sidenav-content class="shell-content-pane">
+      <ng-container [ngTemplateOutlet]="pagePanel" />
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+} @else {
+  <div class="shell-desktop">
+    <!-- El hueco reserva siempre el ancho angosto: la barra se expande por
+         encima del contenido sin correrlo ni redimensionarlo. -->
+    <div class="shell-rail-slot">
+      <div class="shell-rail shell-nav-inner">
+        <ng-container [ngTemplateOutlet]="navPanel" />
       </div>
     </div>
-  </mat-sidenav>
-
-  <mat-sidenav-content class="shell-content-pane">
-    <mat-toolbar class="shell-toolbar">
-      @if (isHandset()) {
-        <button mat-icon-button type="button" aria-label="Abrir navegación" (click)="drawer.toggle()">
-          <mat-icon>menu</mat-icon>
-        </button>
-      }
-      @if (breadcrumbTitle()) {
-        <span class="shell-breadcrumb">{{ breadcrumbTitle() }}</span>
-      }
-      <span class="shell-toolbar-spacer"></span>
-      <a
-        routerLink="/profile"
-        class="shell-avatar shell-avatar--toolbar"
-        aria-label="Ir a mi perfil"
-        matTooltip="Ir a mi perfil"
-      >{{ initials() }}</a>
-    </mat-toolbar>
-    <main class="shell-content">
-      <router-outlet />
-    </main>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+    <div class="shell-content-pane shell-content-pane--desktop">
+      <ng-container [ngTemplateOutlet]="pagePanel" />
+    </div>
+  </div>
+}
