@@ -1,0 +1,40 @@
+<section class="multi-step" aria-labelledby="multi-step-title">
+  <mat-slide-toggle
+    class="multi-step-toggle"
+    [checked]="toggle().checked"
+    [disabled]="toggle().disabled"
+    aria-describedby="multi-step-short-help"
+    (change)="onToggle($event)"
+  >
+    <span id="multi-step-title" class="multi-step-title">{{ title }}</span>
+  </mat-slide-toggle>
+
+  <p id="multi-step-short-help" class="multi-step-help">{{ shortHelp() }}</p>
+
+  @if (inactive()) {
+    <p class="multi-step-inactive-note">{{ inactiveNote }}</p>
+  }
+
+  @if (current().error; as message) {
+    <p class="multi-step-error" role="alert">{{ message }}</p>
+  }
+
+  <button
+    mat-button
+    type="button"
+    class="multi-step-more"
+    aria-controls="multi-step-full-help"
+    [attr.aria-expanded]="expanded()"
+    (click)="toggleExpanded()"
+  >
+    {{ moreLabel() }}
+  </button>
+
+  @if (expanded()) {
+    <div id="multi-step-full-help" class="multi-step-full">
+      @for (paragraph of paragraphs; track paragraph) {
+        <p>{{ paragraph }}</p>
+      }
+    </div>
+  }
+</section>

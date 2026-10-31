@@ -1,0 +1,13 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<mat-dialog-content>
+  <p class="enable-multi-step-project">{{ projectLine }}</p>
+  @for (paragraph of paragraphs; track paragraph) {
+    <p class="enable-multi-step-text">{{ paragraph }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" cdkFocusInitial (click)="cancel()">{{ texts.cancel }}</button>
+  <button mat-flat-button type="button" (click)="confirm()">{{ texts.confirm }}</button>
+</mat-dialog-actions>

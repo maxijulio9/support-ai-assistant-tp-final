@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  margin-bottom: var(--app-space-md);
+}
+
+.multi-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  padding: var(--app-space-sm);
+  border-radius: var(--app-radius-md);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+}
+
+.multi-step-title {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+}
+
+.multi-step-help,
+.multi-step-full p {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+  margin: 0;
+  max-width: 75ch;
+}
+
+.multi-step-inactive-note {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.multi-step-error {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-error);
+  margin: 0;
+}
+
+.multi-step-full {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-xs);
+}

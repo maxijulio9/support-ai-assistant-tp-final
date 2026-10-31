@@ -11,6 +11,7 @@ import { AvailableProject } from '../../api/models/available-project';
 import { Country } from '../../api/models/country';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { AddProjectDialogComponent, AddProjectDialogData, AddProjectDialogResult } from './add-project-dialog.component';
+import { MultiStepChange, ProjectMultiStepComponent } from './project-multi-step.component';
 import { ProjectActivationChange, ProjectThresholdsComponent } from './project-thresholds.component';
 import { ProjectStatusesComponent } from './project-statuses.component';
 
@@ -21,7 +22,7 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 @Component({
   selector: 'app-projects-tab',
   standalone: true,
-  imports: [MatButtonModule, ProjectThresholdsComponent, ProjectStatusesComponent],
+  imports: [MatButtonModule, ProjectMultiStepComponent, ProjectThresholdsComponent, ProjectStatusesComponent],
   templateUrl: './projects-tab.component.html',
   styleUrl: './projects-tab.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +41,11 @@ export class ProjectsTabComponent {
   readonly availableProjects = signal<AvailableProject[]>([]);
   readonly countries = signal<Country[]>([]);
   readonly selectedProjectKeyForStatuses = signal<string | null>(null);
+
+  // El proyecto cuyos estados se estan viendo, con su valor guardado de la lista
+  readonly selectedProject = computed(
+    () => this.onboardedProjects().find((project) => project.key === this.selectedProjectKeyForStatuses()) ?? null,
+  );
 
   readonly availableToOnboard = computed(() => {
     const onboardedKeys = new Set(this.onboardedProjects().map((project) => project.key));
@@ -102,6 +108,16 @@ export class ProjectsTabComponent {
   onActivationChanged(change: ProjectActivationChange): void {
     const updated = this.onboardedProjects().map((project) =>
       project.key === change.projectKey ? { ...project, is_active: change.isActive } : project,
+    );
+    this.onboardedProjects.set(updated);
+    this.configStatus.setProjectsLoaded(updated);
+  }
+
+  // Guarda en la lista y en el estado compartido el valor con el que quedo la
+  // opcion, para que no quede uno viejo.
+  onMultiStepChanged(change: MultiStepChange): void {
+    const updated = this.onboardedProjects().map((project) =>
+      project.key === change.projectKey ? { ...project, multi_step_transitions_enabled: change.enabled } : project,
     );
     this.onboardedProjects.set(updated);
     this.configStatus.setProjectsLoaded(updated);

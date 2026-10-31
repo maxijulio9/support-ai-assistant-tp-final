@@ -6,8 +6,10 @@ import {
   activateProjectApiConfigItsmProjectsProjectKeyActivatePost,
   deactivateProjectApiConfigItsmProjectsProjectKeyDeactivatePost,
   getWebhookSecretApiConfigItsmWebhookSecretGet,
+  setMultiStepTransitionsApiConfigItsmProjectsProjectKeyMultiStepTransitionsPut,
   regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost,
 } from '../../api/functions';
+import { MultiStepTransitionsResponse } from '../../api/models/multi-step-transitions-response';
 import { ProjectActivationResponse } from '../../api/models/project-activation-response';
 import { getItsmConnectionApiConfigItsmGet } from '../../api/fn/internal-api/get-itsm-connection-api-config-itsm-get';
 import { configureItsmConnectionApiConfigItsmPost } from '../../api/fn/internal-api/configure-itsm-connection-api-config-itsm-post';
@@ -136,6 +138,16 @@ export class ConfigService {
   activateProject(projectKey: string): Observable<ProjectActivationResponse> {
     return activateProjectApiConfigItsmProjectsProjectKeyActivatePost(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
+    }).pipe(map((response) => response.body));
+  }
+
+  // Habilita o deshabilita que el sistema pase por un estado intermedio cuando
+  // Jira no ofrece una transicion directa. Idempotente, y guardar umbrales o
+  // mapeos no lo cambia.
+  setMultiStepTransitions(projectKey: string, enabled: boolean): Observable<MultiStepTransitionsResponse> {
+    return setMultiStepTransitionsApiConfigItsmProjectsProjectKeyMultiStepTransitionsPut(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+      body: { enabled },
     }).pipe(map((response) => response.body));
   }
 

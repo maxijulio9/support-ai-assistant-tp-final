@@ -235,7 +235,10 @@ describe('thresholdsFromProject', () => {
 
 describe('textos de la tabla del mapeo', () => {
   it('la frase de apoyo y los encabezados son los aprobados', () => {
-    expect(STATUS_MAPPING_INTRO).toBe('Cada fila es un estado de tu flujo de Jira. Elegí para qué usa el sistema ese estado.');
+    expect(STATUS_MAPPING_INTRO).toBe(
+      'Cada fila es un estado de tu flujo de Jira. Elegí para qué usa el sistema ese estado. ' +
+        'Si Jira no permite llevar un ticket directo a alguno de esos estados, podés habilitar un estado intermedio con la llave de arriba.',
+    );
     expect(STATUS_COLUMN_STATE).toBe('Estado en Jira');
     expect(STATUS_COLUMN_ACTION).toBe('Acción del sistema');
     expect(STATUS_TABLE_LABEL).toBe('Mapeo de estados de Jira a acciones del sistema');

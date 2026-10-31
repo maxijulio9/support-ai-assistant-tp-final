@@ -16,7 +16,9 @@ export const ESCALATE_ACTION = 'escalate';
 // Jira y el desplegable dice para que lo usa el sistema (recibir tickets
 // nuevos, mover un ticket a ese estado...), no que hace el sistema cuando un
 // ticket esta ahi.
-export const STATUS_MAPPING_INTRO = 'Cada fila es un estado de tu flujo de Jira. Elegí para qué usa el sistema ese estado.';
+export const STATUS_MAPPING_INTRO =
+  'Cada fila es un estado de tu flujo de Jira. Elegí para qué usa el sistema ese estado. ' +
+  'Si Jira no permite llevar un ticket directo a alguno de esos estados, podés habilitar un estado intermedio con la llave de arriba.';
 export const STATUS_COLUMN_STATE = 'Estado en Jira';
 export const STATUS_COLUMN_ACTION = 'Acción del sistema';
 export const STATUS_TABLE_LABEL = 'Mapeo de estados de Jira a acciones del sistema';
