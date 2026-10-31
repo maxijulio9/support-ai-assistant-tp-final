@@ -123,7 +123,7 @@ async def process_agent_resolution(arq_context, issue_key: str):
 
 
 # CRON:::: tarea periodica que resincroniza el workflow de todos los proyectos dados de alta
-# recorre cada proyecto y vuelve a descubrir su workflow real contra jira, sobreescribiendo lo persistido en TF-170
+# recorre cada proyecto y vuelve a descubrir su workflow real contra jira, sobreescribiendo lo persistido
 async def resync_all_project_workflows(arq_context):
     logger.info("worker: iniciando resincronizacion periodica de workflows")
 
