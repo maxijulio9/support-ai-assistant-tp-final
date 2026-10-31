@@ -1,5 +1,5 @@
 # M7 InternalAPI
-# lista interacciones paginadas para el dashboard (TF-160)
+# lista interacciones paginadas para el dashboard
 
 from sqlalchemy import text
 from app.core.database import get_db
