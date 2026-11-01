@@ -15,7 +15,12 @@ class JsmExecutor:
         self.user_email = user_email
         self.api_token = api_token
         self._headers = self._build_auth_header()
-        self._client = httpx.AsyncClient(headers=self._headers)
+        # tiempos de espera propios y reintentos solo ante fallos de conexion, que no duplican ningun pedido
+        self._client = httpx.AsyncClient(
+            headers=self._headers,
+            timeout=httpx.Timeout(30.0, connect=15.0),
+            transport=httpx.AsyncHTTPTransport(retries=3, limits=httpx.Limits(max_keepalive_connections=10, keepalive_expiry=30.0)),
+        )
 
     # genera los headers de Basic auth para la API de JSM
     def _build_auth_header(self) -> dict:
