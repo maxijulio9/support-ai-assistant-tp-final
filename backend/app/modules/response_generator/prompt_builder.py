@@ -23,7 +23,7 @@ VOSEO_COUNTRIES = {"AR"}
 
 # instruccion que le pide al cliente los datos que la base de conocimeinto marca como necesarios y que todavia no dio
 # se agrega al prompt de respuesta como una regla mas, no suma llamadas al modelo
-MISSING_DATA_RULE = "\n                - Si el contexto indica que datos o documentacion hacen falta para investigar este tipo de consulta y el cliente todavia no los dio en la conversacion, pedilos en una frase corta antes del cierre, sin inventar requisitos que el contexto no mencione."
+MISSING_DATA_RULE = "\n                - Si el contexto indica que datos o documentacion hacen falta para investigar este tipo de consulta y el cliente todavia no los dio en la conversacion, pedilos en una frase corta antes del cierre, sin inventar requisitos que el contexto no mencione. El pedido de datos nunca reemplaza la respuesta: contesta primero con lo que dice el contexto, y si no alcanza para responder aplica la regla anterior en lugar de pedir datos."
 
 SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera, respondiendo directamente al cliente de {country}. Tu tarea es responder la consulta del usuario basandote UNICAMENTE en el contexto de la base de conocimiento que se te provee abajo.
 
