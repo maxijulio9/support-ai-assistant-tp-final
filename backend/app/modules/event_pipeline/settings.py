@@ -1,5 +1,8 @@
 # Configuración del worker ARQ para el pipeline de procesamiento de eventos
 
+import asyncio
+import faulthandler
+
 from arq import cron
 from arq.connections import RedisSettings
 from app.core.config import settings
@@ -18,9 +21,38 @@ def build_redis_settings() -> RedisSettings:
     return redis_settings
 
 
+# si el ciclo de eventos del worker queda bloqueado mas de este tiempo el proceso termina y docker lo reinicia
+# una consulta o una llamada que no vuelve congela todo el worker sin dejar ningun error, asi se hace visible y se recupera solo
+WATCHDOG_SECONDS = 180
+HEARTBEAT_SECONDS = 15
+
+
+# renueva el temporiazdor cada pocos segundos mientras el ciclo de eventos esta libre
+async def _heartbeat():
+    while True:
+        faulthandler.cancel_dump_traceback_later()
+        faulthandler.dump_traceback_later(WATCHDOG_SECONDS, exit=True)
+        await asyncio.sleep(HEARTBEAT_SECONDS)
+
+
+async def start_watchdog(ctx):
+    ctx["heartbeat_task"] = asyncio.create_task(_heartbeat())
+
+
+async def stop_watchdog(ctx):
+    task = ctx.get("heartbeat_task")
+    if task is not None:
+        task.cancel()
+    faulthandler.cancel_dump_traceback_later()
+
+
 class WorkerSettings:
     # funciones que este worker sabe ejecutar
     functions = [process_issue_created, process_comment_created, process_agent_resolution]
+
+    # si el ciclo principal queda bloqueado mas de unos minutos el proceso termina y docker lo reinicia
+    on_startup = start_watchdog
+    on_shutdown = stop_watchdog
 
     # tareas periodicas, resincroniza el workflow de todos los proyectos una vez por dia a las 3 am
     cron_jobs = [cron(resync_all_project_workflows, hour=3, minute=0)]
