@@ -26,7 +26,7 @@ def test_response_client_is_rebuilt_only_when_the_config_changes(mock_get_config
     client = ResponseLlmClient()
 
     assert mock_openai_class.call_count == 1
-    mock_openai_class.assert_called_with(api_key="key-1", base_url=OPENAI_BASE_URL)
+    mock_openai_class.assert_called_with(api_key="key-1", base_url=OPENAI_BASE_URL, timeout=30.0, max_retries=2)
 
     client.generate_response("hola")
     assert mock_openai_class.call_count == 1
@@ -35,7 +35,7 @@ def test_response_client_is_rebuilt_only_when_the_config_changes(mock_get_config
     client.generate_response("hola")
 
     assert mock_openai_class.call_count == 2
-    mock_openai_class.assert_called_with(api_key="key-2", base_url=GEMINI_BASE_URL)
+    mock_openai_class.assert_called_with(api_key="key-2", base_url=GEMINI_BASE_URL, timeout=30.0, max_retries=2)
     assert mock_openai_class.return_value.chat.completions.create.call_args.kwargs["model"] == "gemini-2.5-flash"
 
 
@@ -62,7 +62,7 @@ def test_embedding_client_keeps_the_openai_key_when_generation_uses_gemini(mock_
 
     client.generate_embedding("hola")
 
-    mock_openai_class.assert_called_with(api_key="openai-key")
+    mock_openai_class.assert_called_with(api_key="openai-key", timeout=30.0, max_retries=2)
     assert mock_openai_class.return_value.embeddings.create.call_args.kwargs["model"] == "text-embedding-3-small"
 
 
@@ -81,4 +81,4 @@ def test_embedding_client_is_rebuilt_when_the_openai_key_changes(mock_get_config
     client.generate_embedding("hola")
 
     assert mock_openai_class.call_count == 2
-    mock_openai_class.assert_called_with(api_key="key-2")
+    mock_openai_class.assert_called_with(api_key="key-2", timeout=30.0, max_retries=2)

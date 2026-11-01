@@ -60,7 +60,8 @@ class LlmClient:
         signature = (config.api_key, config.base_url, config.chat_model)
 
         if signature != self._signature:
-            self.client = OpenAI(api_key=config.api_key, base_url=config.base_url)
+            # con un limite de espera propio, una llamada colgada no bloquea al worker los minutos que tarda el valor por defecto
+            self.client = OpenAI(api_key=config.api_key, base_url=config.base_url, timeout=30.0, max_retries=2)
             self.model = config.chat_model
             self._signature = signature
     # def __init__(self):

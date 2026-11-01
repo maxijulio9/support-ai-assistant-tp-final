@@ -57,11 +57,7 @@ class Orchestrator:
             logger.error(f"[{event.issue_key}] no hay credenciales de jsm configuradas, no se puede procesar el evento")
             return {"status": "error", "issue_key": event.issue_key, "reason": "jsm no configurado"}
 
-        self.jsm_executor = JsmExecutor(
-            base_url=credentials["base_url"],
-            user_email=credentials["user_email"],
-            api_token=credentials["api_token"],
-        )
+        self.jsm_executor = self._get_jsm_executor(credentials)
 
         #m2 analisis y clasificaciòn del ticket
         analysis = await self.ticket_analyzer.analyze(event, self.jsm_executor)
@@ -86,24 +82,7 @@ class Orchestrator:
             )
             self.interaction_logger.record_processing_time(interaction_id, int((time.perf_counter() - started_at) * 1000))
 
-            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
-            
-            if transition_id:
-                try:
-                    await self.jsm_executor.transition_issue(event.issue_key, transition_id)
-                    self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
-                    logger.info(f"[{event.issue_key}] escalate_direct desde m2, transicionado en jsm")
-
-                    acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
-                    if acknowledgment:
-                        await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
-                        self.interaction_logger.mark_first_response(interaction_id, resolved=False)
-
-                    internal_note = self._build_internal_escalation_note(analysis, self._direct_escalation_reason(analysis))
-                    await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
-
-                except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {type(e).__name__}: {e}")
+            await self._escalate_in_jsm(event.issue_key, analysis, interaction_id, self._direct_escalation_reason(analysis))
                           
             return {
                 "status": "processed",
@@ -125,18 +104,7 @@ class Orchestrator:
             self.interaction_logger.mark_resolved(interaction_id)
             self.interaction_logger.record_processing_time(interaction_id, int((time.perf_counter() - started_at) * 1000))
 
-            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED, analysis.issue_type_id)
-            
-            
-            if transition_id:
-                try:
-                    await self.jsm_executor.transition_issue(event.issue_key, transition_id)
-                    self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
-                    logger.info(f"[{event.issue_key}] cierre de conversacion detectado, transicionado a resolved")
-                except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar a resolved: {type(e).__name__}: {e}")
-            else:
-                logger.warning(f"[{event.issue_key}] cierre de conversacion detectado, sin transicion configurada para resolved")
+            await self._move_to_resolved(event.issue_key, analysis)
 
             return {
                 "status": "processed",
@@ -197,13 +165,7 @@ class Orchestrator:
 
                 # si ya se le respondio al cliente (o se le pidio mas info), transiciona a un estado de espera
                 if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_REQUEST_INFO):
-                    transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER, analysis.issue_type_id)
-                    if transition_id:
-                        await self.jsm_executor.transition_issue(event.issue_key, transition_id)
-                        self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
-                        logger.info(f"[{event.issue_key}] transicionado a awaiting_customer en jsm")
-                    else:
-                        logger.warning(f"[{event.issue_key}] sin transicion configurada para awaiting_customer")
+                    await self._move_to_awaiting_customer(event.issue_key, analysis)
 
             except Exception as e:
                 logger.error(f"[{event.issue_key}] fallo al publicar comentario o transicionar en jsm: {type(e).__name__}: {e}")
@@ -211,25 +173,7 @@ class Orchestrator:
             logger.warning(f"[{event.issue_key}] action_type={generated_response.action_type} sin response_text, no se publica ningun comentario")
         
         elif generated_response.action_type == ACTION_ESCALATE:
-            transition_id, target_status_name = await self._resolve_transition_id(event.issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
-            if transition_id:
-                try:
-                    await self.jsm_executor.transition_issue(event.issue_key, transition_id)
-                    self.interaction_logger.update_ticket_status(event.issue_key, target_status_name)
-                    logger.info(f"[{event.issue_key}] transicionado en jsm")
-
-                    acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
-                    if acknowledgment:
-                        await self.jsm_executor.post_comment(event.issue_key, acknowledgment, public=True)
-                        self.interaction_logger.mark_first_response(interaction_id, resolved=False)
-
-                    internal_note = self._build_internal_escalation_note(analysis, generated_response.escalation_reason)
-                    await self.jsm_executor.post_comment(event.issue_key, internal_note, public=False)
-
-                except Exception as e:
-                    logger.error(f"[{event.issue_key}] fallo al transicionar o comentar en jsm: {type(e).__name__}: {e}")
-            else:
-                logger.warning(f"[{event.issue_key}] ticket va para escalamiento, sin transicion configurada o disponible")
+            await self._escalate_in_jsm(event.issue_key, analysis, interaction_id, generated_response.escalation_reason)
                 
         return {
             "status": "processed",
@@ -416,7 +360,93 @@ class Orchestrator:
 
         except Exception as e:
             logger.error(f"[{issue_key}] fallo el camino con estado intermedio: {type(e).__name__}: {e}")
+            await self._post_internal_note(issue_key, "El sistema no pudo completar el cambio de estado pasando por un estado intermedio, revisar en que estado quedo el ticket y moverlo a mano si hace falta.")
             return None
+
+    # devuelve el ejecutor de jsm de este proceso, se crea una vez y se reutilza mientras las credenciales no cambien
+    # asi no se abre una conexion nueva por cada evento ni quedan clientes sin cerrar
+    def _get_jsm_executor(self, credentials: dict) -> JsmExecutor:
+        signature = (credentials["base_url"], credentials["user_email"], credentials["api_token"])
+        cached = getattr(self, "_jsm_executor_cache", None)
+
+        if cached is not None and cached[0] == signature:
+            return cached[1]
+
+        executor = JsmExecutor(base_url=credentials["base_url"], user_email=credentials["user_email"], api_token=credentials["api_token"])
+        self._jsm_executor_cache = (signature, executor)
+        return executor
+
+    # ejecuta una transicion en jsm y actualiza el estado guardado solo si jsm la confirmo
+    async def _execute_transition(self, issue_key: str, transition_id: str, status_name: str) -> bool:
+        confirmed = await self.jsm_executor.transition_issue(issue_key, transition_id)
+
+        if not confirmed:
+            logger.warning(f"[{issue_key}] jsm no confirmo la transicion hacia '{status_name}', el estado no se actualiza")
+            return False
+
+        self.interaction_logger.update_ticket_status(issue_key, status_name)
+        logger.info(f"[{issue_key}] transicionado a '{status_name}' en jsm")
+        return True
+
+    # mueve el ticket a escalado, le avisa al cliente y deja la nota interna, cada paso es indepndiente y ninguno corta a los demas
+    # si el cambio de estado falla igual se publica el aviso al cliente y la nota avisa que hay que mover el ticket a mano
+    # sin un estado configurado para escalar no se hace nada
+    async def _escalate_in_jsm(self, issue_key: str, analysis: TicketAnalysis, interaction_id: str | None, reason: str | None) -> None:
+        moved = False
+        configured = True
+
+        try:
+            transition_id, target_status_name = await self._resolve_transition_id(issue_key, analysis.project_id, JSM_STATUS_ACTION_ESCALATE, analysis.issue_type_id)
+            configured = target_status_name is not None
+            if transition_id:
+                moved = await self._execute_transition(issue_key, transition_id, target_status_name)
+        except Exception as e:
+            logger.error(f"[{issue_key}] fallo al escalar el ticket en jsm: {type(e).__name__}: {e}")
+
+        if not configured:
+            logger.warning(f"[{issue_key}] ticket va para escalamiento, sin estado configurado para escalar")
+            return
+
+        try:
+            acknowledgment = self.ticket_analyzer.llm_client.generate_escalation_acknowledgment(analysis.summary, None)
+            if acknowledgment:
+                await self.jsm_executor.post_comment(issue_key, acknowledgment, public=True)
+                self.interaction_logger.mark_first_response(interaction_id, resolved=False)
+        except Exception as e:
+            logger.error(f"[{issue_key}] fallo al publicar el aviso de escalamiento: {type(e).__name__}: {e}")
+
+        note = self._build_internal_escalation_note(analysis, reason)
+        if not moved:
+            note += "\nAtencion: el sistema no pudo cambiar el estado del ticket, hay que moverlo a mano."
+        await self._post_internal_note(issue_key, note)
+
+    # deja el ticket esperando al cliente despues de responderle, si no se puede deja una nota interna y nunca corta el procesamiento
+    async def _move_to_awaiting_customer(self, issue_key: str, analysis: TicketAnalysis) -> None:
+        try:
+            transition_id, target_status_name = await self._resolve_transition_id(issue_key, analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER, analysis.issue_type_id)
+            if transition_id is None:
+                logger.warning(f"[{issue_key}] sin transicion configurada para awaiting_customer")
+                return
+            if await self._execute_transition(issue_key, transition_id, target_status_name):
+                return
+        except Exception as e:
+            logger.error(f"[{issue_key}] fallo al dejar el ticket esperando al cliente: {type(e).__name__}: {e}")
+
+        await self._post_internal_note(issue_key, "El sistema respondio al cliente pero no pudo cambiar el estado del ticket a esperando al cliente, hay que moverlo a mano.")
+
+    # deja el ticket resuelto cuando el cliente confirma, si no se puede deja una nota interna y nunca corta el procesamiento
+    async def _move_to_resolved(self, issue_key: str, analysis: TicketAnalysis) -> None:
+        try:
+            transition_id, target_status_name = await self._resolve_transition_id(issue_key, analysis.project_id, JSM_STATUS_ACTION_RESOLVED, analysis.issue_type_id)
+            if transition_id is None:
+                logger.warning(f"[{issue_key}] cierre de conversacion detectado, sin transicion configurada para resolved")
+                return
+            if await self._execute_transition(issue_key, transition_id, target_status_name):
+                return
+        except Exception as e:
+            logger.error(f"[{issue_key}] fallo al dejar el ticket resuelto: {type(e).__name__}: {e}")
+
+        await self._post_internal_note(issue_key, "El cliente confirmo que su consulta quedo resuelta pero el sistema no pudo cambiar el estado del ticket, hay que resolverlo a mano.")
 
     # trae el code real del proyecto (ej TARG) a partir de su uuid interno
     def _get_project_code(self, project_id: str) -> str | None:

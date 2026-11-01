@@ -25,7 +25,8 @@ class EmbeddingClient:
         signature = (config.embedding_api_key, config.embedding_model)
 
         if signature != self._signature:
-            self.client = OpenAI(api_key=config.embedding_api_key)
+            # con un limite de espera propio, una llamada colgada no bloquea al worker los minutos que tarda el valor por defecto
+            self.client = OpenAI(api_key=config.embedding_api_key, timeout=30.0, max_retries=2)
             self.model = config.embedding_model
             self._signature = signature
 
