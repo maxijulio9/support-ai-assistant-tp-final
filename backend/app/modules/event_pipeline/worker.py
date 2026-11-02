@@ -47,6 +47,9 @@ async def process_comment_created(arq_context, issue_key: str):
     debounce_key = f"debounce:{issue_key}"
     comment_body = await redis.hget(debounce_key, "body")
 
+    # el texto ya se tomo, se borra para que un comentario posteriror no se mezcle con este ni se procese dos veces
+    await redis.delete(debounce_key)
+
     if not comment_body:
         logger.warning(f"no se encontro hash de debouncing para {issue_key} se descarta")
         return {"status": "discarded", "issue_key": issue_key}
