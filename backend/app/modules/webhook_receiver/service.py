@@ -101,7 +101,7 @@ class WebhookReceiver:
             #
             await redis.hset(debounce_key, "body", nuevo_body)
             # await redis.expire(debounce_key, settings.debounce_ttl_seconds)
-            await redis.expire(debounce_key, settings.debounce_ttl_seconds + 5)
+            await redis.expire(debounce_key, settings.debounce_ttl_seconds + 120)
 
 
             # agenda el job con defer_by para esperar mas comentariossss
@@ -231,7 +231,7 @@ class WebhookReceiver:
                 nuevo_body = f"{existing}\n{nuevo_body}"
 
             await redis.hset(debounce_key, "body", nuevo_body)
-            await redis.expire(debounce_key, settings.debounce_ttl_seconds + 5)
+            await redis.expire(debounce_key, settings.debounce_ttl_seconds + 120)
 
             await pool.enqueue_job(
                 "process_comment_created",
