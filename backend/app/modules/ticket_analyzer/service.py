@@ -108,7 +108,7 @@ class TicketAnalyzer:
             status=event.status,
             request_type=event.request_type,
             reporter_account_id=event.reporter_id,
-            escalate_direct=(classification.scope == "OUT_OF_SCOPE" or classification.resolved_by == "L2") if classification else False,
+            escalate_direct=self._should_escalate_direct(classification, event) if classification else False,
         )
         
 
@@ -117,6 +117,15 @@ class TicketAnalyzer:
     def _classify(self, text: str, conversation_history: list = [], categories: list[str] = []):
         return self.llm_client.classify(text, conversation_history, categories)
     
+
+    # decide si el mensaje se escala directo sin buscar en la base de conocimiento
+    # un agradecimeinto o confirmacion de cierre dentro de una conversacion nunca se escala, el clasificador a veces lo marca como fuera de alcance porque no trae ninguna consulta
+    # en un ticket nuevo se decide igual que antes
+    def _should_escalate_direct(self, classification, event) -> bool:
+        if classification.intent == "cierre_conversacion" and event.comment_body:
+            return False
+
+        return classification.scope == "OUT_OF_SCOPE" or classification.resolved_by == "L2"
 
     # orden de severidad de prioridad, para saber si un valor nuevo es una escalada real o no
     PRIORITY_ORDER = {"Low": 0, "Medium": 1, "High": 2, "Highest": 3}
