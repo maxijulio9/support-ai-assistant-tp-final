@@ -2,6 +2,7 @@
 #Coordina los módulos M2, M3, M4 y M5 según el tipo de evento recibido.
 
 
+import asyncio
 import logging
 import time
 from sqlalchemy import text
@@ -28,6 +29,12 @@ from app.modules.internal_api.repositories.project_workflow_repository import Pr
 from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
 
 logger = logging.getLogger(__name__)
+
+# respuesta de cortesia para un ticket nuevo que es solo un agradeimiento, igual a la que daria una persona del equipo
+COURTESY_REPLIES = {
+    "es": "Hola,\nMuchas gracias por tu comentario, lo valoramos mucho.\nCualquier consulta que tengas, estamos para ayudarte.\nSaludos",
+    "pt": "Olá,\nMuito obrigado pelo seu comentário, valorizamos muito.\nQualquer dúvida que tiver, estamos à disposição.\nAtenciosamente",
+}
 
 
 class Orchestrator:
@@ -93,7 +100,7 @@ class Orchestrator:
             }
 
         # el cliente esta confirmando que ya resolvio su consulta, no hace falta generar nada nuevo
-        if analysis.intent == "cierre_conversacion":
+        if analysis.intent == "cierre_conversacion" and await self._confirm_closure(event, analysis, interaction_id):
             self.interaction_logger.update_interaction_result(
                 interaction_id,
                 chunks_retrieved_count=0,
@@ -447,6 +454,41 @@ class Orchestrator:
             logger.error(f"[{issue_key}] fallo al dejar el ticket resuelto: {type(e).__name__}: {e}")
 
         await self._post_internal_note(issue_key, "El cliente confirmo que su consulta quedo resuelta pero el sistema no pudo cambiar el estado del ticket, hay que resolverlo a mano.")
+
+    # confirma si un mensaje de agradecimiento cierra el ticket, el clasificador solo propone el cierre y aca se decide
+    # en un comentario exige que el ticket este esperando al cliente, o sea que el sistema ya habia respondido, y que una verificacion aparte confirme que no queda nada pendiente
+    # en un ticket nuevo que es solo un agradecimiento publica una respuesta de cortesia antes de cerrar
+    # ante cualquier duda devuelve false y el mensaje sigue el flujo normal
+    async def _confirm_closure(self, event: NormalizedEvent, analysis: TicketAnalysis, interaction_id: str | None) -> bool:
+        text_to_check = event.comment_body or f"{event.summary or ''} {event.description or ''}".strip()
+        verdict = await asyncio.to_thread(self.ticket_analyzer.llm_client.verify_closure, text_to_check, analysis.conversation_history)
+
+        if verdict not in ("resuelto", "cortesia"):
+            logger.info(f"[{event.issue_key}] el mensaje parecia un cierre pero la verificacion dice '{verdict}', sigue el flujo normal")
+            return False
+
+        if event.comment_body:
+            try:
+                waiting_status = self._get_target_status_name(analysis.project_id, JSM_STATUS_ACTION_AWAITING_CUSTOMER)
+                current_status = await self.jsm_executor.get_issue_status(event.issue_key)
+            except Exception as e:
+                logger.error(f"[{event.issue_key}] no se pudo comprobar el estado antes de cerrar, no se cierra: {type(e).__name__}: {e}")
+                return False
+
+            if waiting_status is None or current_status != waiting_status:
+                logger.info(f"[{event.issue_key}] agradecimiento con el ticket en '{current_status}', no esta esperando al cliente, no se cierra")
+                return False
+
+            return True
+
+        reply = COURTESY_REPLIES.get(analysis.language_code or "es", COURTESY_REPLIES["es"])
+        try:
+            await self.jsm_executor.post_comment(event.issue_key, reply, public=True)
+            self.interaction_logger.mark_first_response(interaction_id, resolved=False)
+        except Exception as e:
+            logger.error(f"[{event.issue_key}] fallo al publicar la respuesta de cortesia: {type(e).__name__}: {e}")
+
+        return True
 
     # trae el code real del proyecto (ej TARG) a partir de su uuid interno
     def _get_project_code(self, project_id: str) -> str | None:
