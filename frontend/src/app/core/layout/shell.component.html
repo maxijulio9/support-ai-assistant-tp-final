@@ -1,7 +1,20 @@
 <ng-template #navPanel>
   <div class="shell-brand">
-    <mat-icon class="shell-brand-icon" aria-hidden="true">layers</mat-icon>
-    <span class="shell-brand-name shell-nav-label">Soporte N1</span>
+    <mat-icon class="shell-brand-icon" role="img" aria-label="Soporte N1">layers</mat-icon>
+    @if (pinAvailable()) {
+      <button
+        type="button"
+        class="shell-pin shell-nav-label"
+        [class.is-pinned]="navPinned()"
+        [attr.aria-pressed]="navPinned()"
+        [attr.aria-label]="navPinned() ? 'Soltar menú' : 'Fijar menú'"
+        (click)="toggleNavPinned()"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+          <path d="M9 3h6l-1 6 3 3v2h-4.5v6l-.5.5-.5-.5v-6H7v-2l3-3z" />
+        </svg>
+      </button>
+    }
   </div>
 
   <nav class="shell-nav-list" aria-label="Navegación principal">
@@ -65,9 +78,6 @@
         <mat-icon>menu</mat-icon>
       </button>
     }
-    @if (breadcrumbTitle()) {
-      <span class="shell-breadcrumb">{{ breadcrumbTitle() }}</span>
-    }
     <span class="shell-toolbar-spacer"></span>
     <a
       routerLink="/profile"
@@ -94,11 +104,11 @@
     </mat-sidenav-content>
   </mat-sidenav-container>
 } @else {
-  <div class="shell-desktop">
-    <!-- El hueco reserva siempre el ancho angosto: la barra se expande por
-         encima del contenido sin correrlo ni redimensionarlo. -->
+  <div class="shell-desktop" [class.shell-desktop--pinned]="railFixed()">
+    <!-- Suelto, el hueco reserva el ancho angosto y la barra se expande por
+         encima del contenido. Fijo, el hueco crece y empuja el contenido. -->
     <div class="shell-rail-slot">
-      <div class="shell-rail shell-nav-inner">
+      <div class="shell-rail shell-nav-inner" [class.shell-rail--pinned]="railFixed()">
         <ng-container [ngTemplateOutlet]="navPanel" />
       </div>
     </div>

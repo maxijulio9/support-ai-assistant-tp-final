@@ -28,12 +28,23 @@
   box-shadow: var(--app-shadow-md);
 }
 
-.login-card mat-card-title {
-  margin-bottom: var(--app-space-xs);
-}
-
 .login-card mat-card-header {
   margin-bottom: var(--app-space-sm);
+}
+
+.login-header {
+  justify-content: center;
+  text-align: center;
+}
+
+.login-brand {
+  display: block;
+  margin: var(--app-space-sm) auto var(--app-space-xs);
+  width: var(--app-brand-size-login);
+  height: var(--app-brand-size-login);
+  font-size: var(--app-brand-size-login);
+  line-height: var(--app-brand-size-login);
+  color: var(--mat-sys-primary);
 }
 
 .login-field {

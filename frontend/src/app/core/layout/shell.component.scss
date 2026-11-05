@@ -31,6 +31,15 @@
   flex: 0 0 var(--app-shell-rail-width);
   width: var(--app-shell-rail-width);
   z-index: 20;
+  transition:
+    flex-basis var(--app-motion-short) ease,
+    width var(--app-motion-short) ease;
+}
+
+// Menu fijo: el hueco crece y el contenido se corre a la derecha
+.shell-desktop--pinned .shell-rail-slot {
+  flex-basis: var(--app-shell-nav-width);
+  width: var(--app-shell-nav-width);
 }
 
 .shell-nav {
@@ -64,9 +73,18 @@
 // :focus-visible y no :focus-within, para que un clic con el mouse no la deje
 // abierta.
 .shell-rail:hover,
-.shell-rail:has(:focus-visible) {
+.shell-rail:has(:focus-visible),
+.shell-rail--pinned {
   width: var(--app-shell-nav-width);
+}
+
+.shell-rail:hover,
+.shell-rail:has(:focus-visible) {
   box-shadow: var(--app-shadow-md);
+}
+
+.shell-rail--pinned {
+  box-shadow: none;
 }
 
 .shell-rail .shell-nav-label {
@@ -75,26 +93,29 @@
 }
 
 .shell-rail:hover .shell-nav-label,
-.shell-rail:has(:focus-visible) .shell-nav-label {
+.shell-rail:has(:focus-visible) .shell-nav-label,
+.shell-rail--pinned .shell-nav-label {
   opacity: 1;
 }
 
+// El simbolo queda centrado en la columna de la barra angosta (72 px)
 .shell-brand {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.75rem 1.5rem 1rem;
+  min-height: 64px;
+  padding: 1rem 0 0.5rem calc((var(--app-shell-rail-width) - var(--app-brand-size)) / 2);
   color: var(--mat-sys-inverse-on-surface);
   white-space: nowrap;
 }
 
 .shell-brand-icon {
+  flex-shrink: 0;
+  width: var(--app-brand-size);
+  height: var(--app-brand-size);
+  font-size: var(--app-brand-size);
+  line-height: var(--app-brand-size);
   color: var(--mat-sys-inverse-on-surface);
-}
-
-.shell-brand-name {
-  font: var(--mat-sys-title-medium);
-  font-weight: 600;
 }
 
 .shell-nav-list {
@@ -125,8 +146,7 @@
   cursor: pointer;
 }
 
-.shell-nav-item mat-icon,
-.shell-brand-icon {
+.shell-nav-item mat-icon {
   flex-shrink: 0;
   width: 24px;
   height: 24px;
@@ -139,11 +159,75 @@
 }
 
 .shell-nav-item:hover {
-  background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 12%, transparent);
+  background-color: var(--app-nav-hover-bg);
+}
+
+// Brillo diagonal que recorre el item una sola vez. Es un fondo animado y no
+// un pseudo-elemento, para no recortar la marca del item activo ni tapar el
+// icono o el texto.
+.shell-nav-item:hover,
+.shell-nav-item:focus-visible {
+  background-image: linear-gradient(
+    110deg,
+    transparent 35%,
+    var(--app-nav-shine) 50%,
+    transparent 65%
+  );
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  animation: shell-nav-shine var(--app-nav-shine-duration) ease-out 1 both;
+}
+
+@keyframes shell-nav-shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
 }
 
 .shell-nav-item:focus-visible {
-  outline: 2px solid var(--mat-sys-inverse-primary);
+  outline: 2px solid var(--app-nav-accent);
+  outline-offset: 2px;
+}
+
+.shell-pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  margin-right: 0.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--app-radius-sm);
+  background: transparent;
+  color: var(--mat-sys-inverse-on-surface);
+  cursor: pointer;
+}
+
+.shell-pin svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  transition: transform var(--app-motion-short) ease;
+}
+
+.shell-pin.is-pinned svg {
+  fill: currentColor;
+  transform: rotate(45deg);
+}
+
+.shell-pin:hover {
+  background-color: var(--app-nav-hover-bg);
+}
+
+.shell-pin:focus-visible {
+  outline: 2px solid var(--app-nav-accent);
   outline-offset: 2px;
 }
 
@@ -193,7 +277,8 @@
 }
 
 .shell-rail:hover .shell-nav-section::before,
-.shell-rail:has(:focus-visible) .shell-nav-section::before {
+.shell-rail:has(:focus-visible) .shell-nav-section::before,
+.shell-rail--pinned .shell-nav-section::before {
   opacity: 0;
 }
 
@@ -264,11 +349,6 @@
   height: 64px;
 }
 
-.shell-breadcrumb {
-  color: var(--mat-sys-on-surface);
-  font-weight: 500;
-}
-
 .shell-content {
   padding: 1.5rem;
 }
@@ -278,7 +358,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .shell-nav-item:hover,
+  .shell-nav-item:focus-visible {
+    animation: none;
+    background-image: none;
+  }
+
   .shell-rail,
+  .shell-rail-slot,
+  .shell-pin svg,
   .shell-rail .shell-nav-label,
   .shell-rail .shell-nav-section::before {
     transition: none;

@@ -39,14 +39,28 @@
   --app-color-decision-other: var(--app-color-text-secondary);
 
   // Barra lateral: ancho angosto (solo iconos, el que reserva el contenido) y
-  // ancho expandido (se superpone al contenido, no lo corre)
+  // ancho expandido (se superpone al contenido, o lo empuja si el menu esta
+  // fijo)
   --app-shell-rail-width: 72px;
   --app-shell-nav-width: 232px;
+  --app-motion-short: 150ms;
+
+  // Marca: solo el simbolo, sin texto
+  --app-brand-size: 30px;
+  --app-brand-size-login: 52px;
+
+  // Acento de la barra lateral (verde jade neon) y fondo de los items en
+  // hover; el brillo diagonal usa el mismo acento a baja opacidad.
+  --app-nav-accent: #00e0a4;
+  --app-nav-hover-bg: color-mix(in srgb, var(--app-nav-accent) 16%, transparent);
+  --app-nav-shine: color-mix(in srgb, var(--app-nav-accent) 18%, transparent);
+  --app-nav-shine-duration: 700ms;
 
   // Radio (coincide con --mat-sys-corner-small/medium/large de Material)
   --app-radius-sm: 8px;
   --app-radius-md: 12px;
   --app-radius-lg: 16px;
+  --app-radius-xl: 20px; // panel exterior de cada pantalla
 
   // Espaciado
   --app-space-xs: 8px;
@@ -71,6 +85,8 @@
   --app-text-section-title: 600 18px/1.45 'Inter', sans-serif;
   --app-text-card-heading: 600 15px/1.45 'Inter', sans-serif;
   --app-text-body: 400 13px/1.45 'Inter', sans-serif;
+  --app-text-subtitle: 400 14px/1.45 'Inter', sans-serif;
+  --app-text-chip: 500 14px/20px 'Inter', sans-serif;
   --app-text-secondary: 400 12px/17px 'Inter', sans-serif;
   --app-text-metadata: 400 11px/16px 'Inter', sans-serif;
 }

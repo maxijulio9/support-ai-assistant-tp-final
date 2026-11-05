@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { filter, map } from 'rxjs';
+import { map } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
@@ -45,6 +45,10 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 // barra de iconos no podria mostrar sus etiquetas.
 const DRAWER_QUERY = '(max-width: 767.98px), (hover: none)';
 
+// Por debajo de este ancho de ventana el menu fijo no deja lugar al contenido:
+// la barra se comporta como suelta y el estado fijo se conserva.
+const PIN_QUERY = '(min-width: 1100px)';
+
 @Component({
   selector: 'app-shell',
   standalone: true,
@@ -66,8 +70,6 @@ const DRAWER_QUERY = '(max-width: 767.98px), (hover: none)';
 export class ShellComponent {
   private readonly sessionService = inject(SessionService);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly activatedRoute = inject(ActivatedRoute);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
   private readonly drawer = viewChild(MatSidenav);
@@ -80,23 +82,22 @@ export class ShellComponent {
     { initialValue: false },
   );
 
+  private readonly isWide = toSignal(
+    this.breakpointObserver.observe(PIN_QUERY).pipe(map((result) => result.matches)),
+    { initialValue: true },
+  );
+
+  // Preferencia del usuario, solo en memoria: al recargar vuelve a suelto.
+  readonly navPinned = signal(false);
+  readonly pinAvailable = computed(() => !this.isHandset() && this.isWide());
+  readonly railFixed = computed(() => this.navPinned() && this.pinAvailable());
+
   // Esto es solo para la interfaz (mostrar u ocultar los links de admin).
   // La autorizacion real la hace el backend, y roleGuard ya protege esas rutas.
   readonly isAdmin = computed(() => this.sessionService.hasRole(ROLE_ADMIN));
   readonly profile = this.authService.profile;
   readonly initials = computed(() => initials(this.profile()?.full_name));
   readonly roleLabel = computed(() => translateRole(this.profile()?.role));
-
-  // Se lee de la propiedad "title" de la ruta activa mas profunda (no de
-  // data.title). Si la ruta no define title, el breadcrumb no se renderiza.
-  // No se agrega un TitleStrategy propio, esto solo lee el snapshot.
-  readonly breadcrumbTitle = toSignal(
-    this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map(() => this.deepestRouteTitle()),
-    ),
-    { initialValue: this.deepestRouteTitle() },
-  );
 
   constructor() {
     // El error se ignora a proposito: el interceptor ya maneja un 401 (limpia
@@ -106,6 +107,10 @@ export class ShellComponent {
       .loadProfile()
       .pipe(takeUntilDestroyed())
       .subscribe({ error: () => {} });
+  }
+
+  toggleNavPinned(): void {
+    this.navPinned.update((pinned) => !pinned);
   }
 
   toggleDrawer(): void {
@@ -118,13 +123,5 @@ export class ShellComponent {
 
   logout(): void {
     this.authService.logout().subscribe();
-  }
-
-  private deepestRouteTitle(): string | undefined {
-    let route = this.activatedRoute.snapshot;
-    while (route.firstChild) {
-      route = route.firstChild;
-    }
-    return route.title;
   }
 }
