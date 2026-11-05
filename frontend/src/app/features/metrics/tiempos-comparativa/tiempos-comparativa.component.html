@@ -5,9 +5,9 @@
   </p>
 
   <div class="tc-toolbar">
-    <mat-form-field appearance="outline" class="tc-project-field" subscriptSizing="dynamic">
+    <mat-form-field appearance="outline" class="tc-project-field app-filter" subscriptSizing="dynamic">
       <mat-label>Proyecto</mat-label>
-      <mat-select [value]="selection()" [disabled]="!optionsReady()" (selectionChange)="onProjectChange($event.value)">
+      <mat-select panelClass="app-filter-panel" [value]="selection()" [disabled]="!optionsReady()" (selectionChange)="onProjectChange($event.value)">
         <mat-option [value]="allProjectsValue">Todos los proyectos</mat-option>
         @for (option of projectOptions(); track option.projectId) {
           <mat-option [value]="option.projectId">{{ option.label }}</mat-option>

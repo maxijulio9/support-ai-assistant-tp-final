@@ -2,6 +2,7 @@
 @use './theme-colors' as theme;
 @use './tokens';
 @use './page-layout';
+@use './filters';
 
 html {
   @include mat.theme(

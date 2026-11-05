@@ -1,5 +1,5 @@
 <div class="review-queue">
-  <mat-form-field appearance="outline" class="review-queue-search">
+  <mat-form-field appearance="outline" class="review-queue-search app-filter">
     <mat-label>Buscar por asunto o ID</mat-label>
     <input matInput [value]="searchTerm()" (input)="onSearchInput($event)" />
   </mat-form-field>
@@ -8,9 +8,9 @@
     @if (state() !== 'loading' && state() !== 'error') {
       <span>{{ totalPending() }} pendientes</span>
     }
-    <mat-form-field appearance="outline" class="review-queue-priority">
+    <mat-form-field appearance="outline" class="review-queue-priority app-filter">
       <mat-label>Prioridad</mat-label>
-      <mat-select [value]="priorityFilter()" (selectionChange)="onPriorityChange($event.value)">
+      <mat-select panelClass="app-filter-panel" [value]="priorityFilter()" (selectionChange)="onPriorityChange($event.value)">
         <mat-option [value]="null">Todas</mat-option>
         @for (option of priorityOptions(); track option) {
           <mat-option [value]="option">{{ option }}</mat-option>

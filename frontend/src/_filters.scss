@@ -1,0 +1,46 @@
+// Campos de filtro (clase marcadora .app-filter): con valor, o enfocados, el
+// campo pasa a violeta con borde de 2 px, asi que el estado no depende solo
+// del color. El estado "con valor" se detecta con :has() sobre la etiqueta
+// flotante de Material, sin logica en los componentes. Los selects suman
+// panelClass="app-filter-panel" para el panel desplegable.
+
+.app-filter.mat-mdc-form-field:has(.mdc-floating-label--float-above) {
+  --mat-form-field-outlined-outline-color: var(--app-filter-accent);
+  --mat-form-field-outlined-hover-outline-color: var(--app-filter-accent);
+  --mat-form-field-outlined-focus-outline-color: var(--app-filter-accent);
+  --mat-form-field-outlined-outline-width: 2px;
+  --mat-form-field-outlined-label-text-color: var(--app-filter-accent-text);
+  --mat-form-field-outlined-hover-label-text-color: var(--app-filter-accent-text);
+  --mat-form-field-outlined-focus-label-text-color: var(--app-filter-accent-text);
+  --mat-form-field-outlined-input-text-color: var(--app-filter-accent-text);
+  --mat-form-field-outlined-caret-color: var(--app-filter-accent);
+  --mat-form-field-leading-icon-color: var(--app-filter-accent);
+  --mat-form-field-trailing-icon-color: var(--app-filter-accent);
+  --mat-form-field-enabled-select-arrow-color: var(--app-filter-accent);
+  --mat-form-field-focus-select-arrow-color: var(--app-filter-accent);
+  --mat-select-enabled-trigger-text-color: var(--app-filter-accent-text);
+  --mat-select-enabled-arrow-color: var(--app-filter-accent);
+  --mat-select-focused-arrow-color: var(--app-filter-accent);
+  --mat-datepicker-toggle-icon-color: var(--app-filter-accent);
+  --mat-datepicker-toggle-active-state-icon-color: var(--app-filter-accent);
+}
+
+// Foco visible: el borde violeta de arriba mas un anillo aparte
+.app-filter.mat-mdc-form-field:has(:focus-visible) .mdc-notched-outline {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 3px;
+}
+
+.app-filter-panel.mat-mdc-select-panel {
+  --mat-select-panel-background-color: var(--mat-sys-surface-container-lowest);
+  --mat-option-selected-state-layer-color: color-mix(in srgb, var(--app-filter-accent) 12%, transparent);
+  --mat-option-hover-state-layer-color: color-mix(in srgb, var(--app-filter-accent) 8%, transparent);
+  --mat-option-focus-state-layer-color: color-mix(in srgb, var(--app-filter-accent) 8%, transparent);
+  --mat-option-selected-state-label-text-color: var(--app-filter-accent-text);
+  --mat-pseudo-checkbox-minimal-selected-checkmark-color: var(--app-filter-accent);
+  border: 1px solid color-mix(in srgb, var(--app-filter-accent) 30%, transparent);
+}
+
+.app-filter-panel .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text {
+  color: var(--app-filter-accent-text);
+}

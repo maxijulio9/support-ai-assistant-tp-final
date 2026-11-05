@@ -8,7 +8,7 @@
 
   <div class="app-page-panel">
   <div class="app-page-card app-page-card--neutral metrics-controls">
-    <mat-form-field appearance="outline" class="metrics-range-field">
+    <mat-form-field appearance="outline" class="metrics-range-field app-filter">
       <mat-label>Rango de fechas</mat-label>
       <mat-date-range-input [rangePicker]="picker">
         <input matStartDate [formControl]="rangeStart" placeholder="Inicio" />
@@ -18,9 +18,9 @@
       <mat-date-range-picker #picker (closed)="onRangeChanged()"></mat-date-range-picker>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="metrics-filter">
+    <mat-form-field appearance="outline" class="metrics-filter app-filter">
       <mat-label>Categoría</mat-label>
-      <mat-select [value]="categoryFilterValue()" (selectionChange)="onCategoryFilterChange($event.value)">
+      <mat-select panelClass="app-filter-panel" [value]="categoryFilterValue()" (selectionChange)="onCategoryFilterChange($event.value)">
         <mat-option [value]="null">Todas las categorías</mat-option>
         @for (name of categoryOptionNames(); track name) {
           <mat-option [value]="name">{{ name }}</mat-option>
@@ -29,9 +29,9 @@
     </mat-form-field>
 
     @if (!isTimesTab()) {
-      <mat-form-field appearance="outline" class="metrics-filter">
+      <mat-form-field appearance="outline" class="metrics-filter app-filter">
         <mat-label>Decisión</mat-label>
-        <mat-select [value]="decisionFilterValue()" (selectionChange)="onDecisionFilterChange($event.value)">
+        <mat-select panelClass="app-filter-panel" [value]="decisionFilterValue()" (selectionChange)="onDecisionFilterChange($event.value)">
           <mat-option [value]="null">Todas las decisiones</mat-option>
           @for (option of decisionOptions; track option.value) {
             <mat-option [value]="option.value">{{ option.label }}</mat-option>

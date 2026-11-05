@@ -6,7 +6,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { InteractionsService } from './interactions.service';
 import { DecisionStatus, STATUS_FILTER_OPTIONS, decisionStatus } from './interaction-status';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
@@ -26,7 +25,6 @@ const PAGE_SIZE = 10;
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatTooltipModule,
     RouterLink,
   ],
   templateUrl: './interactions.component.html',

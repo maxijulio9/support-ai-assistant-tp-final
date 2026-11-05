@@ -12,15 +12,15 @@
   <div class="app-page-panel">
 
   <div class="interactions-filters">
-    <mat-form-field appearance="outline" class="interactions-search">
+    <mat-form-field appearance="outline" class="interactions-search app-filter">
       <mat-label>Buscar por ID o asunto</mat-label>
       <mat-icon matPrefix>search</mat-icon>
       <input matInput [value]="searchTerm()" (input)="onSearchInput($event)" />
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="interactions-filter">
+    <mat-form-field appearance="outline" class="interactions-filter app-filter">
       <mat-label>Estado</mat-label>
-      <mat-select [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
+      <mat-select panelClass="app-filter-panel" [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
         <mat-option [value]="null">Todos los estados</mat-option>
         @for (option of statusOptions; track option.value) {
           <mat-option [value]="option.value">{{ option.label }}</mat-option>
@@ -28,9 +28,9 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="interactions-filter">
+    <mat-form-field appearance="outline" class="interactions-filter app-filter">
       <mat-label>Categoría</mat-label>
-      <mat-select [value]="categoryFilter()" (selectionChange)="onCategoryFilterChange($event.value)">
+      <mat-select panelClass="app-filter-panel" [value]="categoryFilter()" (selectionChange)="onCategoryFilterChange($event.value)">
         <mat-option [value]="null">Todas las categorías</mat-option>
         @for (option of categoryOptions(); track option) {
           <mat-option [value]="option">{{ option }}</mat-option>
@@ -42,12 +42,6 @@
       <button mat-button type="button" class="interactions-clear" (click)="clearFilters()">Limpiar filtros</button>
     }
 
-    <span class="interactions-export" matTooltip="Disponible próximamente">
-      <button mat-stroked-button type="button" disabled>
-        <mat-icon>download</mat-icon>
-        Exportar CSV
-      </button>
-    </span>
   </div>
 
   @if (truncated()) {
