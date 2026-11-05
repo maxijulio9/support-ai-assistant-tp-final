@@ -212,12 +212,13 @@ def _orchestrator(analysis, generated=None, transition=("5", "Waiting for custom
 
 
 # corre el procesamiento de un evento con JSM simulado, y con un error al publicar si se pide
-async def _run(orchestrator, publish_error=None):
+async def _run(orchestrator, publish_error=None, event=None):
     with patch("app.modules.event_pipeline.orchestrator.JsmExecutor") as jsm_class:
         jsm = jsm_class.return_value
         jsm.post_comment = AsyncMock(side_effect=publish_error)
         jsm.transition_issue = AsyncMock()
-        await orchestrator.process_event(_event())
+        jsm.get_issue_status = AsyncMock(return_value="Waiting for customer")
+        await orchestrator.process_event(event or _event())
     return jsm
 
 
@@ -284,8 +285,11 @@ async def test_direct_escalation_acknowledgment_marks_the_first_response():
 @pytest.mark.asyncio
 async def test_customer_closure_marks_the_resolution_only():
     orchestrator = _orchestrator(_analysis(intent="cierre_conversacion"), transition=("7", "Resolved"))
+    comment_event = NormalizedEvent(issue_key="TEST-1", event_type="jira:issue_updated", received_at=RECEIVED, comment_body="gracias, ya quedo resuelto")
+    orchestrator.ticket_analyzer.llm_client.verify_closure.return_value = "resuelto"
+    orchestrator._get_target_status_name = MagicMock(return_value="Waiting for customer")
 
-    await _run(orchestrator)
+    await _run(orchestrator, event=comment_event)
 
     orchestrator.interaction_logger.mark_resolved.assert_called_once_with("int-1")
     orchestrator.interaction_logger.mark_first_response.assert_not_called()

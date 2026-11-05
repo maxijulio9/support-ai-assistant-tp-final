@@ -45,6 +45,23 @@ Solicitud del usuario:
 
 
 
+# prompt de la verificacion de cierre, mas estricto que el del clasificador, ante la duda el cliente tiene algo pendiente
+CLOSURE_PROMPT = """Sos un agente de soporte nivel 1. Tenes que decidir si el ultimo mensaje del cliente da por terminada su consulta.
+Devolve UNICAMENTE un JSON con un solo campo, verdict, con uno de estos tres valores:
+- "resuelto": el cliente confirma que su consulta o su problema quedo resuelto.
+- "cortesia": el mensaje es solo un agradecimiento o una despedida, sin ninguna pregunta, problema, duda ni nada pendiente.
+- "pendiente": al cliente todavia le queda algo pendiente, por ejemplo dice que el problema sigue o que no funciono, hace una pregunta o pide algo, no entendio algo, dice que va a probar o que va a avisar, o el mensaje es ambiguo.
+Ante la duda elegi "pendiente". Un agradecimiento acompañado de un problema, una duda o un pedido es "pendiente".
+El mensaje puede estar en español o en portugués.
+
+Ultimo mensaje del cliente:
+{message}
+
+Conversacion previa:
+{history}
+"""
+
+
 class LlmClient:
 
     def __init__(self):
@@ -161,6 +178,27 @@ class LlmClient:
         return None
     
     
+    # verifica con una consulta aparte si el ultimo mensaje del cliente da por terminada la consulta
+    # el clasificador solo propone el cierre y esta verifiacion es mas estricta, ante la duda o si la llamada falla devuelve pendiente
+    def verify_closure(self, text: str, conversation_history: list[ConversationTurn] = []) -> str:
+        self._refresh()
+        history_text = "\n".join(f"{turn.role}: {turn.content}" for turn in conversation_history) or "(sin historial)"
+        prompt = CLOSURE_PROMPT.format(message=text, history=history_text)
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+                temperature=0,
+            )
+            verdict = json.loads(response.choices[0].message.content).get("verdict")
+        except Exception as e:
+            logger.error(f"error al verificar el cierre: {type(e).__name__}: {e}")
+            return "pendiente"
+
+        return verdict if verdict in ("resuelto", "cortesia", "pendiente") else "pendiente"
+
     # traduce un texto a un idioma destino, para buscar contra kb en otro idioma
     # reintenta hasta 2 veces si la llamada falla
     def translate(self, text: str, target_language: str) -> str | None:
