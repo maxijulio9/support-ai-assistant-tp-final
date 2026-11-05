@@ -51,6 +51,11 @@
   --app-filter-accent: #9a52ff;
   --app-filter-accent-text: #7f3fe0;
 
+  // Linea de los graficos de evolucion (6,8:1 sobre blanco, minimo 3:1)
+  --app-chart-line: var(--mat-sys-primary);
+  // Segmento "resto" de las barras apiladas (3,46:1 sobre blanco, minimo 3:1)
+  --app-chart-neutral: #868a94;
+
   // Marca: solo el simbolo, sin texto
   --app-brand-size: 30px;
   --app-brand-size-login: 52px;

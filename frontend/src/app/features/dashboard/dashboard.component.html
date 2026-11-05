@@ -203,14 +203,7 @@
         <app-decisions-donut [segments]="donutSegments()" [total]="totalInteractions() ?? 0" />
       </div>
 
-      <div class="dashboard-card dashboard-evolution">
-        <h2>Evolución de la resolución automática</h2>
-        <p class="dashboard-card-subtitle">Por día, porcentaje de solicitudes</p>
-        <div class="dashboard-evolution-empty">
-          <p style="margin: 0">Sin datos todavía</p>
-          <p class="dashboard-card-subtitle">La serie diaria se habilita en una próxima iteración.</p>
-        </div>
-      </div>
+      <app-auto-publish-evolution class="dashboard-evolution" />
 
       <div class="dashboard-card dashboard-categories">
         <h2>Solicitudes por categoría</h2>

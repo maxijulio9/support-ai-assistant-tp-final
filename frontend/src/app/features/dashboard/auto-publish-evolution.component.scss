@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.evolution-card {
+  min-width: 0;
+  padding: var(--app-space-md);
+  background-color: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-lg);
+  box-shadow: var(--app-shadow-card);
+}
+
+.evolution-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+  margin-bottom: var(--app-space-sm);
+}
+
+h2 {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.evolution-subtitle {
+  margin: var(--app-space-xs) 0 0;
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.evolution-chart {
+  height: 240px;
+}
+
+.evolution-skeleton,
+.evolution-message {
+  height: 260px;
+}
+
+.evolution-headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--app-space-xs);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.evolution-headline-main {
+  font: var(--mat-sys-headline-small);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.evolution-headline-detail {
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.evolution-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--app-space-xs) var(--app-space-md);
+  margin: var(--app-space-xs) 0 0;
+  padding: 0;
+  list-style: none;
+  font: var(--app-text-subtitle);
+  color: var(--mat-sys-on-surface);
+}
+
+.evolution-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+}
+
+.evolution-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.evolution-swatch--auto {
+  background-color: var(--app-chart-line);
+}
+
+// Borde y trama diagonal, como las barras del grafico
+.evolution-swatch--rest {
+  border: 1px solid var(--app-color-text-secondary);
+  background-color: var(--app-chart-neutral);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 3px,
+    var(--mat-sys-surface-container-lowest) 3px 5px
+  );
+}
+
+.evolution-skeleton {
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+.evolution-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--app-space-xs);
+  text-align: center;
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.evolution-message p {
+  margin: 0;
+}

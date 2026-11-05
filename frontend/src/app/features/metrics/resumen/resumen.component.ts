@@ -13,7 +13,6 @@ import {
   METRICS_TIMEZONE,
   daysInRange,
   defaultMetricsDayRange,
-  parseIsoDateLocal,
   previousCalendarDayRange,
   resolveDateRange,
 } from '../../dashboard/period';
@@ -25,6 +24,7 @@ import { KpiCardComponent } from './kpi-card/kpi-card.component';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../../api/models/category-metric';
 import { DailyMetric } from '../../../api/models/daily-metric';
+import { formatShortDay } from '../../../shared/format-short-day';
 import { HeatmapCell } from '../../../api/models/heatmap-cell';
 
 export type ResumenState = 'loading' | 'error' | 'empty' | 'loaded';
@@ -47,14 +47,6 @@ const DAILY_SEGMENT_CSS_VAR: Record<DecisionSegmentTone, string> = {
 
 function resolveDailySegmentColor(tone: DecisionSegmentTone): string {
   return getComputedStyle(document.documentElement).getPropertyValue(DAILY_SEGMENT_CSS_VAR[tone]).trim();
-}
-
-const SHORT_DAY_FORMATTER = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
-
-// No reusa formatShortDate (shared/): esa incluye hora y minuto, pensada
-// para timestamps, y aca "date" es un dia AAAA-MM-DD sin hora.
-function formatShortDay(day: string): string {
-  return SHORT_DAY_FORMATTER.format(parseIsoDateLocal(day));
 }
 
 // Nombres de dia con Intl en vez de un array de strings a mano: 1/1/2024 es

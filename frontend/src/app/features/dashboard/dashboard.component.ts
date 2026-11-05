@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardService } from './dashboard.service';
 import { computePeriodRanges, PeriodOption } from './period';
+import { AutoPublishEvolutionComponent } from './auto-publish-evolution.component';
 import { DecisionsDonutComponent, DonutSegment } from './decisions-donut.component';
 import { OTHER_SEGMENT_KEY } from '../../shared/decision-colors';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
@@ -33,7 +34,7 @@ const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent],
+  imports: [DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent, AutoPublishEvolutionComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
