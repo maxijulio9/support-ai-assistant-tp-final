@@ -160,6 +160,7 @@
 
 .shell-nav-item:hover {
   background-color: var(--app-nav-hover-bg);
+  color: var(--app-nav-accent);
 }
 
 // Brillo diagonal que recorre el item una sola vez. Es un fondo animado y no
@@ -224,6 +225,7 @@
 
 .shell-pin:hover {
   background-color: var(--app-nav-hover-bg);
+  color: var(--app-nav-accent);
 }
 
 .shell-pin:focus-visible {
@@ -235,7 +237,7 @@
 // izquierda, ademas del aria-current del link.
 .active-link {
   background-color: color-mix(in srgb, var(--mat-sys-inverse-on-surface) 16%, transparent);
-  color: var(--mat-sys-inverse-primary);
+  color: var(--app-nav-accent);
 }
 
 .active-link::before {
@@ -246,7 +248,7 @@
   bottom: 0.75rem;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background-color: var(--mat-sys-inverse-primary);
+  background-color: var(--app-nav-accent);
 }
 
 .shell-nav-section {

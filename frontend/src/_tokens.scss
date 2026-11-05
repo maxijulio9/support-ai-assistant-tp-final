@@ -45,15 +45,23 @@
   --app-shell-nav-width: 232px;
   --app-motion-short: 150ms;
 
+  // Filtros con valor: violeta para borde, flecha e iconos (3:1 sobre blanco) y
+  // uno apenas mas oscuro para el texto (4,5:1 sobre blanco y sobre el fondo
+  // tonal de la opcion seleccionada)
+  --app-filter-accent: #9a52ff;
+  --app-filter-accent-text: #7f3fe0;
+
   // Marca: solo el simbolo, sin texto
   --app-brand-size: 30px;
   --app-brand-size-login: 52px;
 
   // Acento de la barra lateral (verde jade neon) y fondo de los items en
-  // hover; el brillo diagonal usa el mismo acento a baja opacidad.
+  // hover; el brillo diagonal usa el mismo acento a baja opacidad. Etiqueta e icono
+  // pasan al acento en hover y en el item activo.
   --app-nav-accent: #00e0a4;
   --app-nav-hover-bg: color-mix(in srgb, var(--app-nav-accent) 16%, transparent);
-  --app-nav-shine: color-mix(in srgb, var(--app-nav-accent) 18%, transparent);
+  // 12%: el texto neon sigue en 4,5:1 como minimo bajo el pico del brillo
+  --app-nav-shine: color-mix(in srgb, var(--app-nav-accent) 12%, transparent);
   --app-nav-shine-duration: 700ms;
 
   // Radio (coincide con --mat-sys-corner-small/medium/large de Material)
