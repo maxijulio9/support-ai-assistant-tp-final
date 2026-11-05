@@ -1,15 +1,13 @@
-<div class="metrics-page">
-  <header class="metrics-header">
-    <h1 class="metrics-title">Métricas</h1>
-    <span matTooltip="Exportación no disponible todavía">
-      <button mat-stroked-button type="button" disabled>
-        <mat-icon aria-hidden="true">download</mat-icon>
-        Exportar datos
-      </button>
-    </span>
+<div class="app-page">
+  <header class="app-page-header">
+    <div>
+      <h1 class="app-page-title">Métricas</h1>
+      <p class="app-page-subtitle">Decisiones, confianza y tiempos de respuesta del sistema en el período elegido</p>
+    </div>
   </header>
 
-  <div class="metrics-controls">
+  <div class="app-page-panel">
+  <div class="app-page-card app-page-card--neutral metrics-controls">
     <mat-form-field appearance="outline" class="metrics-range-field">
       <mat-label>Rango de fechas</mat-label>
       <mat-date-range-input [rangePicker]="picker">
@@ -113,4 +111,5 @@
       <span>La confianza expresa la certeza del sistema, no una precisión validada.</span>
     </footer>
   }
+</div>
 </div>

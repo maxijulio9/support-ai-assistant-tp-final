@@ -4,17 +4,6 @@
   container-type: inline-size;
 }
 
-// Panel blanco con tarjetas de borde sutil, el mismo lenguaje que Inicio
-.interaction-detail-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-sm);
-  padding: var(--app-space-md);
-  background-color: var(--mat-sys-surface-container-lowest);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-lg);
-}
-
 .interaction-detail-back {
   display: inline-flex;
   align-items: center;
@@ -37,12 +26,6 @@ a.interaction-detail-key:focus-visible {
 
 .interaction-detail-card {
   width: 100%;
-  min-width: 0;
-  background-color: var(--mat-sys-surface-container-lowest);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--app-radius-lg);
-  box-shadow: var(--app-shadow-card);
-  padding: var(--app-space-md);
   display: flex;
   flex-direction: column;
   gap: var(--app-space-sm);
@@ -94,16 +77,8 @@ a.interaction-detail-key {
   color: var(--app-color-text-secondary);
 }
 
-.interaction-detail-action {
-  margin-left: auto;
-}
-
 .interaction-detail-title {
-  align-self: flex-start;
-  font: var(--mat-sys-headline-small);
-  font-weight: 600;
-  color: var(--mat-sys-on-surface);
-  margin: 0;
+  margin-top: var(--app-space-xs);
   overflow-wrap: anywhere;
 }
 
@@ -271,12 +246,4 @@ a.interaction-detail-key {
   }
 }
 
-@container (max-width: 480px) {
-  .interaction-detail-page {
-    padding: var(--app-space-sm);
-  }
 
-  .interaction-detail-card {
-    padding: var(--app-space-sm);
-  }
-}

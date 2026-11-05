@@ -1,9 +1,16 @@
-<div class="profile-page">
-  <header class="profile-header">
-    <h1 class="profile-title">Mi perfil</h1>
+<div class="app-page">
+  <header class="app-page-header">
+    <div>
+      <h1 class="app-page-title">Mi perfil</h1>
+      <p class="app-page-subtitle">Tus datos de cuenta en la herramienta</p>
+    </div>
+    @if (state() === 'loaded' && roleLabel()) {
+      <span class="app-page-chip">{{ roleLabel() }}</span>
+    }
   </header>
 
-  <div class="profile-card">
+  <div class="app-page-panel">
+  <div class="app-page-card profile-card">
     @if (state() === 'loading') {
       <div class="profile-skeleton" role="status" aria-hidden="true">
         <span class="visually-hidden">Cargando el perfil</span>
@@ -64,4 +71,5 @@
       </form>
     }
   </div>
+</div>
 </div>

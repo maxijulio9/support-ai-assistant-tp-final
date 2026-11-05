@@ -2,26 +2,6 @@
   display: block;
 }
 
-.metrics-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-sm);
-}
-
-.metrics-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--app-space-sm);
-  flex-wrap: wrap;
-}
-
-.metrics-title {
-  font: var(--app-text-page-title);
-  color: var(--mat-sys-on-surface);
-  margin: 0;
-}
-
 .metrics-controls {
   display: flex;
   align-items: flex-start;

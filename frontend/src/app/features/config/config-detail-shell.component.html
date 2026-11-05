@@ -1,4 +1,4 @@
-<div class="config-detail">
+<div class="app-page config-detail">
   <div class="config-detail-breadcrumb-row">
     <nav class="config-detail-breadcrumb" aria-label="Migas de pan">
       <a routerLink="/config">Configuración</a>
@@ -11,7 +11,20 @@
     </a>
   </div>
 
-  <mat-form-field appearance="outline" class="config-detail-section-select">
+  <header class="app-page-header">
+    <div class="config-detail-header">
+      <div class="config-detail-header-icon">
+        <mat-icon aria-hidden="true">{{ activeItem()?.icon }}</mat-icon>
+      </div>
+      <h1 class="app-page-title">{{ activeItem()?.label }}</h1>
+    </div>
+    @if (headerChip(); as chip) {
+      <span class="config-detail-chip" [class]="'config-detail-chip--' + chip.tone">{{ chip.label }}</span>
+    }
+  </header>
+
+  <div class="app-page-panel">
+    <mat-form-field appearance="outline" class="config-detail-section-select">
     <mat-label>Sección</mat-label>
     <mat-select [value]="activeItem()?.path" (selectionChange)="selectSection($event.value)">
       @for (item of navItems; track item.label) {
@@ -48,17 +61,8 @@
     </nav>
 
     <div class="config-detail-main">
-      <div class="config-detail-header">
-        <div class="config-detail-header-icon">
-          <mat-icon>{{ activeItem()?.icon }}</mat-icon>
-        </div>
-        <h1 class="config-detail-title">{{ activeItem()?.label }}</h1>
-        @if (headerChip(); as chip) {
-          <span class="config-detail-chip" [class]="'config-detail-chip--' + chip.tone">{{ chip.label }}</span>
-        }
-      </div>
-
       <router-outlet></router-outlet>
     </div>
   </div>
+</div>
 </div>

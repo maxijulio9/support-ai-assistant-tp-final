@@ -4,7 +4,8 @@
 
 .review-queue {
   background-color: var(--mat-sys-surface);
-  border-radius: var(--app-radius-lg);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
   padding: var(--app-space-sm);
   display: flex;
   flex-direction: column;

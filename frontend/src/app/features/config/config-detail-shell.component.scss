@@ -7,7 +7,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--app-space-sm);
-  margin-bottom: var(--app-space-md);
 }
 
 .config-detail-breadcrumb {
@@ -133,7 +132,6 @@ a.config-detail-nav-item:focus-visible {
   display: flex;
   align-items: center;
   gap: var(--app-space-sm);
-  margin-bottom: var(--app-space-md);
 }
 
 .config-detail-header-icon {
@@ -148,20 +146,13 @@ a.config-detail-nav-item:focus-visible {
   flex-shrink: 0;
 }
 
-.config-detail-title {
-  font: var(--app-text-page-title);
-  color: var(--mat-sys-on-surface);
-  margin: 0;
-  flex-grow: 1;
-}
-
 .config-detail-chip {
   display: inline-flex;
   align-items: center;
   height: 28px;
   padding: 0 var(--app-space-sm);
   border-radius: var(--app-radius-sm);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   line-height: 1;
   background-color: color-mix(in srgb, var(--app-color-text-secondary) 16%, transparent);

@@ -1,18 +1,19 @@
-<div class="config-center">
-  <div class="config-center-header">
+<div class="app-page">
+  <header class="app-page-header">
     <div>
-      <h1 class="config-center-title">Configuración</h1>
-      <p class="config-center-subtitle">{{ subtitle() }}</p>
+      <h1 class="app-page-title">Configuración</h1>
+      <p class="app-page-subtitle">{{ subtitle() }}</p>
       @if (readinessSummary().showWelcome) {
         <p class="config-center-suggestion">1. JSM, 2. Confluence, 3. Proyectos</p>
       }
     </div>
-    <span class="config-center-admin-only">
+    <span class="app-page-chip">
       <mat-icon aria-hidden="true">lock</mat-icon>
       Solo Administrador
     </span>
-  </div>
+  </header>
 
+  <div class="app-page-panel config-center-panel">
   <app-readiness-strip [sections]="readinessSections()" [loading]="readinessLoading()" />
 
   <section class="config-center-group">
@@ -105,4 +106,5 @@
     <mat-icon aria-hidden="true">info</mat-icon>
     La conexión a la base de datos se define con la variable de entorno DATABASE_URL del despliegue.
   </p>
+</div>
 </div>

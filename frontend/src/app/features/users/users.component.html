@@ -1,10 +1,18 @@
-<div class="users-page">
-  <header class="users-header">
-    <h1 class="users-title">Usuarios</h1>
+<div class="app-page">
+  <header class="app-page-header">
+    <div>
+      <h1 class="app-page-title">Usuarios</h1>
+      <p class="app-page-subtitle">Administrá quién accede a la herramienta y con qué rol</p>
+    </div>
     @if (state() === 'loaded') {
-      <button mat-flat-button type="button" (click)="openCreate()">Nuevo usuario</button>
+      <div class="app-page-header-end">
+        <span class="app-page-chip">{{ sortedUsers().length }} {{ sortedUsers().length === 1 ? 'usuario' : 'usuarios' }}</span>
+        <button mat-flat-button type="button" (click)="openCreate()">Nuevo usuario</button>
+      </div>
     }
   </header>
+
+  <div class="app-page-panel">
 
   @if (state() === 'loading') {
     <div class="users-skeleton" role="status" aria-hidden="true">
@@ -86,4 +94,5 @@
       </table>
     }
   }
+</div>
 </div>

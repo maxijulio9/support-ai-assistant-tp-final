@@ -2,25 +2,6 @@
   display: block;
 }
 
-.interactions-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-sm);
-}
-
-.interactions-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--app-space-sm);
-}
-
-.interactions-title {
-  font: var(--app-text-page-title);
-  color: var(--mat-sys-on-surface);
-  margin: 0;
-}
-
 .interactions-filters {
   display: flex;
   align-items: center;

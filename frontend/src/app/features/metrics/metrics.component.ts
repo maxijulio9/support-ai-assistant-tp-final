@@ -9,7 +9,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MetricsService } from './metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, parseIsoDateLocal, resolveDateRange, toIsoDate } from '../dashboard/period';
@@ -31,7 +30,6 @@ import { CategoryMetric } from '../../api/models/category-metric';
     MatSelectModule,
     MatDatepickerModule,
     MatTabsModule,
-    MatTooltipModule,
     MatChipsModule,
   ],
   templateUrl: './metrics.component.html',

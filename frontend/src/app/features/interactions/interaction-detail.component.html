@@ -1,11 +1,11 @@
-<div class="interaction-detail-page">
+<div class="app-page">
   <a routerLink="/interactions" class="interaction-detail-back">
     <mat-icon aria-hidden="true">arrow_back</mat-icon>
     Volver al Historial
   </a>
 
   @if (state() === 'loading') {
-    <div class="interaction-detail-skeleton" role="status">
+    <div class="app-page-panel interaction-detail-skeleton" role="status">
       <span class="visually-hidden">Cargando solicitud</span>
       <div class="interaction-detail-skeleton-header" aria-hidden="true">
         <div class="interaction-detail-skeleton-chip"></div>
@@ -14,12 +14,12 @@
       <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--title" aria-hidden="true"></div>
 
       <div class="interaction-detail-layout" aria-hidden="true">
-        <div class="interaction-detail-card interaction-detail-aside">
+        <div class="app-page-card interaction-detail-aside">
           <div class="interaction-detail-skeleton-line"></div>
           <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--short"></div>
         </div>
         <div class="interaction-detail-main">
-          <div class="interaction-detail-card">
+          <div class="app-page-card interaction-detail-card">
             <div class="interaction-detail-skeleton-line"></div>
             <div class="interaction-detail-skeleton-line"></div>
             <div class="interaction-detail-skeleton-line interaction-detail-skeleton-line--short"></div>
@@ -30,14 +30,14 @@
   }
 
   @if (state() === 'error') {
-    <div class="interaction-detail-card interaction-detail-message" role="alert">
+    <div class="app-page-panel interaction-detail-message" role="alert">
       <p>No se pudo cargar la solicitud. Intentá de nuevo.</p>
       <button mat-flat-button type="button" (click)="retry()">Reintentar</button>
     </div>
   }
 
   @if (state() === 'not-found') {
-    <div class="interaction-detail-card interaction-detail-message">
+    <div class="app-page-panel interaction-detail-message">
       <p>No encontramos esta solicitud</p>
       <a mat-stroked-button routerLink="/interactions">Volver al Historial</a>
     </div>
@@ -48,31 +48,37 @@
     @let status = statusFor(data.decision);
     @let confidence = confidencePercent();
 
-    <header class="interaction-detail-meta">
-      @if (ticketUrl) {
-        <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="interaction-detail-key">
-          {{ data.issue_key }}
-          <mat-icon aria-hidden="true" class="interaction-detail-key-icon">open_in_new</mat-icon>
-          <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
-        </a>
-      } @else {
-        <span class="interaction-detail-key">{{ data.issue_key }}</span>
-      }
-      @if (data.category) {
-        <span class="interaction-detail-category">{{ data.category }}</span>
-      }
-      @if (data.was_edited) {
-        <span class="interaction-detail-edited-chip">Editada por el agente</span>
-      }
-      @if (data.decision === 'NEEDS_REVIEW') {
-        <a mat-flat-button routerLink="/review" class="interaction-detail-action">Ir a revisión</a>
-      }
+    <header class="app-page-header">
+      <div>
+        <div class="interaction-detail-meta">
+          @if (ticketUrl) {
+            <a [href]="ticketUrl" target="_blank" rel="noopener noreferrer" class="interaction-detail-key">
+              {{ data.issue_key }}
+              <mat-icon aria-hidden="true" class="interaction-detail-key-icon">open_in_new</mat-icon>
+              <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+            </a>
+          } @else {
+            <span class="interaction-detail-key">{{ data.issue_key }}</span>
+          }
+          @if (data.category) {
+            <span class="interaction-detail-category">{{ data.category }}</span>
+          }
+          @if (data.priority) {
+            <span class="interaction-detail-category">Prioridad {{ data.priority }}</span>
+          }
+          @if (data.was_edited) {
+            <span class="interaction-detail-edited-chip">Editada por el agente</span>
+          }
+        </div>
+        <h1 #heading tabindex="-1" class="app-page-title interaction-detail-title">{{ data.summary }}</h1>
+        <p class="app-page-subtitle">Creada el {{ formatDate(data.created_at) }}</p>
+      </div>
+      <span class="app-page-chip">{{ status.label }}</span>
     </header>
 
-    <h1 #heading tabindex="-1" class="interaction-detail-title">{{ data.summary }}</h1>
-
+    <div class="app-page-panel">
     <div class="interaction-detail-layout">
-      <aside class="interaction-detail-card interaction-detail-aside" aria-label="Resumen de la decisión">
+      <aside class="app-page-card app-page-card--primary interaction-detail-aside" aria-label="Resumen de la decisión">
         <div class="interaction-detail-fact">
           <span class="interaction-detail-label">Decisión del sistema</span>
           <span [class]="'interaction-detail-status interaction-detail-status--' + status.tone">
@@ -97,21 +103,11 @@
           <span class="interaction-detail-value">{{ resolutionChannelLabel(data.resolution_channel) }}</span>
         </div>
 
-        @if (data.priority) {
-          <div class="interaction-detail-fact">
-            <span class="interaction-detail-label">Prioridad</span>
-            <span class="interaction-detail-value">{{ data.priority }}</span>
-          </div>
-        }
 
-        <div class="interaction-detail-fact">
-          <span class="interaction-detail-label">Creada</span>
-          <span class="interaction-detail-value">{{ formatDate(data.created_at) }}</span>
-        </div>
       </aside>
 
       <div class="interaction-detail-main">
-        <div class="interaction-detail-card">
+        <div class="app-page-card interaction-detail-card">
           <section class="interaction-detail-block">
             <h2>Solicitud original</h2>
             <p class="interaction-detail-text">{{ data.text_input }}</p>
@@ -134,10 +130,17 @@
           }
         </div>
 
-        <div class="interaction-detail-card">
+        <div class="app-page-card interaction-detail-card">
           <app-interaction-sources [sources]="data.sources" />
         </div>
       </div>
+    </div>
+
+    @if (data.decision === 'NEEDS_REVIEW') {
+      <div class="app-page-actions">
+        <a mat-flat-button routerLink="/review">Ir a revisión</a>
+      </div>
+    }
     </div>
   }
 </div>

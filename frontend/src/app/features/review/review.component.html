@@ -1,15 +1,15 @@
-<div class="review-page">
-  <header class="review-page-header">
+<div class="app-page">
+  <header class="app-page-header">
     <div>
-      <h1 class="review-page-title">Revisión de respuestas</h1>
-      <p class="review-page-subtitle">Aprobá o regenerá las respuestas sugeridas por el sistema antes de enviarlas</p>
+      <h1 class="app-page-title">Revisión de respuestas</h1>
+      <p class="app-page-subtitle">Aprobá o regenerá las respuestas sugeridas por el sistema antes de enviarlas</p>
     </div>
     @if (queueState() !== 'loading' && queueState() !== 'error') {
-      <span class="review-page-count">{{ totalPending() }} pendientes</span>
+      <span class="app-page-chip">{{ totalPending() }} pendientes</span>
     }
   </header>
 
-  <div class="review-page-body">
+  <div class="app-page-panel review-page-body">
     <app-review-queue
       class="review-page-queue"
       [items]="pageItems()"

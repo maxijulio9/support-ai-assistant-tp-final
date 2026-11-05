@@ -4,7 +4,8 @@
 
 .review-detail {
   background-color: var(--mat-sys-surface);
-  border-radius: var(--app-radius-lg);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
   padding: var(--app-space-md);
   display: flex;
   flex-direction: column;
@@ -73,6 +74,30 @@ a.review-detail-id:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+// Borde y texto del color primario, sin relleno; hover tonal al 8%
+.review-detail-edit {
+  --mat-button-outlined-outline-color: var(--mat-sys-primary);
+  --mat-button-outlined-label-text-color: var(--mat-sys-primary);
+  --mat-button-outlined-state-layer-color: var(--mat-sys-primary);
+  --mat-button-outlined-disabled-outline-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+}
+
+.review-detail-edit mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+.review-detail-edit:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+}
+
+.review-detail-edit:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
 }
 
 .review-detail-text {

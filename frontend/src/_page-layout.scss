@@ -1,0 +1,93 @@
+// Patron de pantalla compartido: encabezado (titulo, subtitulo y chip), panel
+// exterior y tarjetas internas. Vive aca y no en cada componente para no
+// repetir las reglas ni inflar el presupuesto de estilos por componente.
+
+.app-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.app-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+}
+
+.app-page-title {
+  font: var(--app-text-page-title);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.app-page-subtitle {
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+  margin: 0.25rem 0 0;
+}
+
+// Chip y accion del encabezado, juntos a la derecha
+.app-page-header-end {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--app-space-sm);
+}
+
+.app-page-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--app-space-xs);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--app-radius-lg);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--app-text-chip);
+  white-space: nowrap;
+}
+
+// Panel claro que agrupa el contenido sobre el fondo de la app
+.app-page-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-md);
+  min-width: 0;
+  padding: var(--app-space-md);
+  background-color: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-xl);
+}
+
+// Tarjeta interna: borde sutil y fondo tonal segun su rol
+.app-page-card {
+  min-width: 0;
+  padding: var(--app-space-sm);
+  background-color: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
+}
+
+.app-page-card--primary {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 6%, var(--mat-sys-surface-container-lowest));
+}
+
+.app-page-card--neutral {
+  background-color: var(--mat-sys-surface-container-low);
+}
+
+// Acciones al pie, a la derecha
+.app-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--app-space-xs);
+}
+
+@media (max-width: 767.98px) {
+  .app-page-panel {
+    padding: var(--app-space-sm);
+    gap: var(--app-space-sm);
+  }
+}

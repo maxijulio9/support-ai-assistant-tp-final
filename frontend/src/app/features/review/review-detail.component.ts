@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 
@@ -8,7 +9,7 @@ export type DetailState = 'empty' | 'loading' | 'error' | 'loaded';
 @Component({
   selector: 'app-review-detail',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatIconModule],
   templateUrl: './review-detail.component.html',
   styleUrl: './review-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,17 +1,15 @@
-<div class="dashboard-page">
-  <header class="dashboard-header">
+<div class="app-page">
+  <header class="app-page-header">
     <div>
-      <h1 class="dashboard-title">Inicio</h1>
-      <p class="dashboard-greeting">{{ firstName() ? 'Buenos días, ' + firstName() : 'Buenos días' }}</p>
+      <h1 class="app-page-title">Inicio</h1>
+      <p class="app-page-subtitle">{{ firstName() ? 'Buenos días, ' + firstName() : 'Buenos días' }}</p>
     </div>
-    <span matTooltip="Exportación no disponible todavía">
-      <button mat-stroked-button type="button" disabled>
-        <mat-icon aria-hidden="true">download</mat-icon>
-        Exportar datos
-      </button>
-    </span>
+    @if (state() === 'loaded' && totalInteractions() !== null) {
+      <span class="app-page-chip">{{ totalInteractions() | number }} solicitudes</span>
+    }
   </header>
 
+  <div class="app-page-panel">
   <div class="dashboard-period">
     <button
       mat-stroked-button
@@ -249,4 +247,5 @@
       <span>La confianza expresa la certeza del sistema, no una precisión validada.</span>
     </footer>
   }
+</div>
 </div>

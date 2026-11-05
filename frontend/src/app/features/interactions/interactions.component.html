@@ -1,7 +1,15 @@
-<div class="interactions-page">
-  <header class="interactions-header">
-    <h1 class="interactions-title">Historial</h1>
+<div class="app-page">
+  <header class="app-page-header">
+    <div>
+      <h1 class="app-page-title">Historial</h1>
+      <p class="app-page-subtitle">Consultá las solicitudes que procesó el sistema y cómo se resolvió cada una</p>
+    </div>
+    @if (loadState() === 'loaded') {
+      <span class="app-page-chip">{{ totalFiltered() }} {{ totalFiltered() === 1 ? 'solicitud' : 'solicitudes' }}</span>
+    }
   </header>
+
+  <div class="app-page-panel">
 
   <div class="interactions-filters">
     <mat-form-field appearance="outline" class="interactions-search">
@@ -168,4 +176,5 @@
       </div>
     }
   </div>
+</div>
 </div>

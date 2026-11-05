@@ -4,7 +4,6 @@ import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardService } from './dashboard.service';
 import { computePeriodRanges, PeriodOption } from './period';
@@ -34,7 +33,7 @@ const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe, RouterLink, MatButtonModule, MatIconModule, MatTooltipModule, DecisionsDonutComponent],
+  imports: [DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

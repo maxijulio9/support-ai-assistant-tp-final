@@ -49,8 +49,8 @@
   min-width: 0;
   box-sizing: border-box;
   background-color: var(--mat-sys-surface);
-  border-radius: var(--app-radius-lg);
-  box-shadow: var(--app-shadow-soft);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
   padding: var(--app-space-md);
 }
 
