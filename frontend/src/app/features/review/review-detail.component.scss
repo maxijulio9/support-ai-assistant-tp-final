@@ -107,10 +107,62 @@ a.review-detail-id:focus-visible {
   margin: 0;
 }
 
-.review-detail-actions {
+.review-detail-sources-toggle {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--app-text-card-heading);
+  text-align: left;
+  cursor: pointer;
+}
+
+.review-detail-sources-toggle:hover {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+}
+
+.review-detail-sources-toggle:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.review-detail-sources-icon {
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.review-detail-sources-icon.is-open {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-detail-sources-icon {
+    transition: none;
+  }
+}
+
+.review-detail-sources-body {
+  padding-top: var(--app-space-sm);
+}
+
+// Fija al pie del area visible: con la lista de fuentes abierta, las acciones
+// no se van fuera de la vista
+.review-detail-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--app-space-xs);
+  padding-top: var(--app-space-xs);
+  background-color: var(--mat-sys-surface);
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .review-detail-skeleton {

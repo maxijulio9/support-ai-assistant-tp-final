@@ -16,7 +16,7 @@ import {
   previousCalendarDayRange,
   resolveDateRange,
 } from '../../dashboard/period';
-import { percentGrowth, ppDelta, rate, rawDelta } from '../../../shared/kpi-metrics';
+import { formatDelta, percentGrowth, ppDelta, rate, rawDelta } from '../../../shared/kpi-metrics';
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
 import { DecisionSegmentTone, DECISION_SEGMENTS, decisionSegmentValue } from '../decision-segments';
 import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
@@ -34,6 +34,9 @@ export type HeatmapState = 'loading' | 'error' | 'loaded';
 // Limite del contrato de GET /api/metrics/daily (no es una regla de
 // calendario generica, por eso no va en period.ts).
 const MAX_DAILY_RANGE_DAYS = 366;
+
+// Texto de los graficos: nunca por debajo de 14 px.
+const CHART_FONT_SIZE = 14;
 
 // El canvas de echarts no puede resolver var(--token) solo, hace falta el
 // color literal, leido en runtime (mismo patron que decisions-donut).
@@ -101,7 +104,8 @@ export class ResumenComponent {
   readonly totalInteractions = computed(() => this.summary()?.total_interactions ?? null);
   private readonly previousTotalInteractions = computed(() => this.previousSummary()?.total_interactions ?? null);
   readonly totalDeltaPercent = computed(() => percentGrowth(this.totalInteractions(), this.previousTotalInteractions()));
-  readonly totalDeltaArrowUp = computed(() => (this.totalDeltaPercent() ?? 0) >= 0);
+  // Mas solicitudes no es bueno ni malo: tono neutral
+  readonly totalDeltaView = computed(() => formatDelta(this.totalDeltaPercent(), 'percent', 1, null));
 
   readonly autoPublishRate = computed(() => {
     const s = this.summary();
@@ -112,8 +116,7 @@ export class ResumenComponent {
     return s ? rate(s.auto_publish_count, s.total_interactions) : null;
   });
   readonly autoPublishDeltaPp = computed(() => ppDelta(this.autoPublishRate(), this.previousAutoPublishRate()));
-  readonly autoPublishDeltaArrowUp = computed(() => (this.autoPublishDeltaPp() ?? 0) >= 0);
-  readonly autoPublishDeltaBad = computed(() => (this.autoPublishDeltaPp() ?? 0) < 0);
+  readonly autoPublishDeltaView = computed(() => formatDelta(this.autoPublishDeltaPp(), 'pp', 1, true));
 
   readonly escalateRate = computed(() => {
     const s = this.summary();
@@ -124,12 +127,13 @@ export class ResumenComponent {
     return s ? rate(s.escalate_count, s.total_interactions) : null;
   });
   readonly escalateDeltaPp = computed(() => ppDelta(this.escalateRate(), this.previousEscalateRate()));
-  readonly escalateDeltaArrowUp = computed(() => (this.escalateDeltaPp() ?? 0) >= 0);
+  // Escalar menos es lo bueno
+  readonly escalateDeltaView = computed(() => formatDelta(this.escalateDeltaPp(), 'pp', 1, false));
 
   readonly avgConfidence = computed(() => this.summary()?.avg_confidence_score ?? null);
   private readonly previousAvgConfidence = computed(() => this.previousSummary()?.avg_confidence_score ?? null);
   readonly avgConfidenceDelta = computed(() => rawDelta(this.avgConfidence(), this.previousAvgConfidence()));
-  readonly avgConfidenceDeltaArrowUp = computed(() => (this.avgConfidenceDelta() ?? 0) >= 0);
+  readonly avgConfidenceDeltaView = computed(() => formatDelta(this.avgConfidenceDelta(), 'raw', 2, true));
 
   // --- Solicitudes por categoria ---
   readonly categoryRows = computed(() => {
@@ -181,8 +185,9 @@ export class ResumenComponent {
     const days = this.dailyMetrics();
 
     return {
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      legend: { data: DECISION_SEGMENTS.map((segment) => segment.label), bottom: 0 },
+      textStyle: { fontSize: CHART_FONT_SIZE },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, textStyle: { fontSize: CHART_FONT_SIZE } },
+      legend: { data: DECISION_SEGMENTS.map((segment) => segment.label), bottom: 0, textStyle: { fontSize: CHART_FONT_SIZE } },
       grid: { left: 40, right: 16, top: 24, bottom: 64, containLabel: false },
       xAxis: { type: 'category', data: days.map((day) => formatShortDay(day.date)) },
       yAxis: { type: 'value' },
@@ -208,14 +213,16 @@ export class ResumenComponent {
     const [lightColor, fullColor] = resolveHeatmapColors();
 
     return {
+      textStyle: { fontSize: CHART_FONT_SIZE },
       tooltip: {
         position: 'top',
+        textStyle: { fontSize: CHART_FONT_SIZE },
         formatter: (params: { value: [number, number, number] }) => {
           const [hour, weekdayIndex, count] = params.value;
           return `${WEEKDAY_LABELS[weekdayIndex]}, ${hour}:00: ${count}`;
         },
       },
-      grid: { left: 70, right: 16, top: 24, bottom: 70, containLabel: false },
+      grid: { left: 96, right: 16, top: 24, bottom: 76, containLabel: false },
       xAxis: { type: 'category', data: Array.from({ length: 24 }, (_, hour) => `${hour}h`), splitArea: { show: true } },
       yAxis: { type: 'category', data: WEEKDAY_LABELS, inverse: true, splitArea: { show: true } },
       visualMap: {
@@ -226,6 +233,7 @@ export class ResumenComponent {
         orient: 'horizontal',
         left: 'center',
         bottom: 0,
+        textStyle: { fontSize: CHART_FONT_SIZE },
         inRange: { color: [lightColor, fullColor] },
       },
       series: [

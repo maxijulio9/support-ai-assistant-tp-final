@@ -25,7 +25,7 @@
 }
 
 .resumen-card-subtitle {
-  font: var(--app-text-secondary);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
   margin: var(--app-space-xs) 0 var(--app-space-sm);
 }
@@ -71,7 +71,7 @@
 }
 
 .resumen-empty {
-  font: var(--app-text-body);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
   text-align: center;
   padding: var(--app-space-md) 0;
@@ -90,7 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font: var(--app-text-body);
+  font: var(--app-text-subtitle);
   color: var(--mat-sys-on-surface);
   margin-bottom: 0.25rem;
 }
@@ -109,7 +109,7 @@
 }
 
 .resumen-categories-leader {
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--mat-sys-primary);
   margin: var(--app-space-sm) 0 0;
 }
@@ -121,7 +121,7 @@
 .resumen-categories-table {
   width: 100%;
   border-collapse: collapse;
-  font: var(--app-text-body);
+  font: var(--app-text-subtitle);
   color: var(--mat-sys-on-surface);
 }
 
@@ -133,7 +133,7 @@
 }
 
 .resumen-categories-table th {
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
 }
 
@@ -147,7 +147,7 @@
 }
 
 .resumen-footer {
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
 }
 
@@ -194,7 +194,7 @@
 .resumen-daily-table {
   width: 100%;
   border-collapse: collapse;
-  font: var(--app-text-body);
+  font: var(--app-text-subtitle);
   color: var(--mat-sys-on-surface);
 }
 
@@ -207,7 +207,7 @@
 }
 
 .resumen-daily-table th {
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
 }
 

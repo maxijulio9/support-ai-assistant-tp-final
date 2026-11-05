@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
+import { DeltaView } from '../../../../shared/kpi-metrics';
 import { sparklineTrend } from '../../sparkline-trend';
 
 // El canvas de echarts no puede resolver var(--token) solo, hace falta el
@@ -10,8 +11,9 @@ function resolveSparklineColor(): string {
   return getComputedStyle(document.documentElement).getPropertyValue('--mat-sys-primary').trim();
 }
 
-// Presentacional puro: recibe texto ya formateado, no sabe de donde sale el
-// numero ni que significa la suba o la baja para cada metrica en particular.
+// Presentacional puro: recibe el valor y el delta ya preparados (formatDelta),
+// no sabe de donde sale el numero ni que significa la suba o la baja para
+// cada metrica en particular.
 @Component({
   selector: 'app-metrics-kpi-card',
   standalone: true,
@@ -25,10 +27,7 @@ export class KpiCardComponent {
 
   readonly label = input.required<string>();
   readonly value = input.required<string>();
-  readonly deltaText = input<string | null>(null);
-  readonly deltaArrowUp = input(true);
-  readonly deltaColored = input(false);
-  readonly deltaBad = input(false);
+  readonly delta = input<DeltaView | null>(null);
   readonly highlight = input(false);
 
   // Serie diaria del minigrafico: null es un dia sin datos (hueco), no un

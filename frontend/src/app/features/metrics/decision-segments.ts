@@ -44,6 +44,10 @@ const COUNT_FIELD: Record<string, keyof DecisionSegmentCounts> = {
   DISCARDED: 'discarded_count',
 };
 
+// Ancho minimo (en % de la barra) para escribir el porcentaje dentro del
+// segmento a 14 px. Por debajo, el dato queda en la leyenda y en el title.
+export const MIN_INLINE_LABEL_PERCENT = 15;
+
 export function decisionSegmentValue(counts: DecisionSegmentCounts, key: string): number {
   if (key === RESOLVED_GROUP_KEY) return counts.resolved_count + counts.resolved_externally_count;
   return (counts[COUNT_FIELD[key]] as number) ?? 0;

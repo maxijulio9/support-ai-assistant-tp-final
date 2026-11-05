@@ -31,7 +31,7 @@
 }
 
 .metrics-compare-note {
-  font: var(--app-text-secondary);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
   margin: 0;
 }
@@ -47,7 +47,7 @@
 .metrics-footer {
   display: flex;
   justify-content: flex-end;
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
 }
 

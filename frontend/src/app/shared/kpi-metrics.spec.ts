@@ -111,13 +111,24 @@ describe('formatDelta', () => {
     const delta = formatDelta(-0.04, 'pp', 1, true)!;
     expect(delta.direction).toBe('flat');
     expect(delta.tone).toBe('neutral');
-    expect(delta.text).toBe('0,0 pp');
+    expect(delta.text).toBe('sin cambios');
     expect(delta.spoken).toBe('sin cambios respecto del período anterior');
   });
 
   it('la lectura accesible dice la direccion con palabras y la unidad', () => {
     expect(formatDelta(-38.8, 'pp', 1, true)!.spoken).toBe('bajó 38,8 puntos porcentuales respecto del período anterior');
     expect(formatDelta(0.05, 'raw', 2, true)!.spoken).toBe('subió 0,05 respecto del período anterior');
+  });
+
+  it('porcentaje: usa coma, signo % y lectura "por ciento"', () => {
+    const delta = formatDelta(12.34, 'percent', 1, null)!;
+    expect(delta.text).toBe('12,3%');
+    expect(delta.spoken).toBe('subió 12,3 por ciento respecto del período anterior');
+  });
+
+  it('sin lado bueno (null): el tono es neutral aunque suba o baje', () => {
+    expect(formatDelta(5, 'percent', 1, null)!.tone).toBe('neutral');
+    expect(formatDelta(-5, 'percent', 1, null)!.tone).toBe('neutral');
   });
 
   it('sin delta (null o no finito) devuelve null', () => {

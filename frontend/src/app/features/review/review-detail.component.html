@@ -62,6 +62,26 @@
       <p class="review-detail-text">{{ data.generated_response }}</p>
     </section>
 
+    <div class="review-detail-sources">
+      @if (sourcesFoldable(data.sources.length)) {
+        <button
+          type="button"
+          class="review-detail-sources-toggle"
+          aria-controls="review-detail-sources-body"
+          [attr.aria-expanded]="sourcesOpen()"
+          (click)="toggleSources()"
+        >
+          <span>{{ sourcesTitle(data.sources.length) }}</span>
+          <mat-icon aria-hidden="true" class="review-detail-sources-icon" [class.is-open]="sourcesOpen()">expand_more</mat-icon>
+        </button>
+        <div id="review-detail-sources-body" class="review-detail-sources-body" [hidden]="!sourcesOpen()">
+          <app-interaction-sources [sources]="data.sources" [showHeading]="false" />
+        </div>
+      } @else {
+        <app-interaction-sources [sources]="data.sources" />
+      }
+    </div>
+
     <div class="review-detail-actions">
       <button mat-button type="button" [disabled]="submitting()" (click)="discard.emit()">Descartar</button>
       <button mat-stroked-button type="button" [disabled]="submitting()" (click)="regenerate.emit()">

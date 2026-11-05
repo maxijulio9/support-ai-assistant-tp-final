@@ -17,7 +17,7 @@ export function rawDelta(current: number | null, previous: number | null): numbe
 
 export type DeltaDirection = 'up' | 'down' | 'flat';
 export type DeltaTone = 'good' | 'bad' | 'neutral';
-export type DeltaUnit = 'pp' | 'raw';
+export type DeltaUnit = 'pp' | 'raw' | 'percent';
 
 export interface DeltaView {
   direction: DeltaDirection;
@@ -34,30 +34,37 @@ const DELTA_ARROW: Record<DeltaDirection, string> = { up: '▲', down: '▼', fl
 
 // Prepara un delta para mostrarlo: direccion, valor absoluto con coma y el
 // tono segun si subir es bueno para esa metrica (una baja de escaladas es
-// buena). Un cambio que se redondea a cero se muestra como "sin cambios".
+// buena). Con higherIsBetter en null la metrica no tiene lado bueno (por
+// ejemplo el volumen de solicitudes) y el tono es neutral. Un cambio que se redondea a cero se muestra como "sin cambios".
 // null si no hay delta.
 export function formatDelta(
   value: number | null,
   unit: DeltaUnit,
   decimals: number,
-  higherIsBetter: boolean,
+  higherIsBetter: boolean | null,
 ): DeltaView | null {
   if (value === null || !Number.isFinite(value)) return null;
 
   const magnitude = Math.abs(value).toFixed(decimals).replace('.', ',');
   const isZero = Number(Math.abs(value).toFixed(decimals)) === 0;
   const direction: DeltaDirection = isZero ? 'flat' : value > 0 ? 'up' : 'down';
-  const suffix = unit === 'pp' ? ' pp' : '';
-  const spokenUnit = unit === 'pp' ? ' puntos porcentuales' : '';
+  const suffix = unit === 'pp' ? ' pp' : unit === 'percent' ? '%' : '';
+  const spokenUnit = unit === 'pp' ? ' puntos porcentuales' : unit === 'percent' ? ' por ciento' : '';
 
   const tone: DeltaTone =
-    direction === 'flat' ? 'neutral' : (direction === 'up') === higherIsBetter ? 'good' : 'bad';
+    direction === 'flat' || higherIsBetter === null
+      ? 'neutral'
+      : (direction === 'up') === higherIsBetter
+        ? 'good'
+        : 'bad';
   const spoken =
     direction === 'flat'
       ? 'sin cambios respecto del período anterior'
       : `${direction === 'up' ? 'subió' : 'bajó'} ${magnitude}${spokenUnit} respecto del período anterior`;
 
-  return { direction, arrow: DELTA_ARROW[direction], text: `${magnitude}${suffix}`, spoken, tone };
+  const text = direction === 'flat' ? 'sin cambios' : `${magnitude}${suffix}`;
+
+  return { direction, arrow: DELTA_ARROW[direction], text, spoken, tone };
 }
 
 // Delta como crecimiento relativo (%): para conteos totales, no tasas. null

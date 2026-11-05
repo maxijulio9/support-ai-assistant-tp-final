@@ -1,5 +1,5 @@
 <section class="sources" [attr.aria-labelledby]="titleId">
-  <h2 [id]="titleId" class="sources-title">{{ title }}</h2>
+  <h2 [id]="titleId" class="sources-title" [class.visually-hidden]="!showHeading()">{{ title }}</h2>
   <p class="sources-note">{{ note }}</p>
 
   @if (rows().length === 0) {

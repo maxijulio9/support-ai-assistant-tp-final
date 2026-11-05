@@ -10,7 +10,7 @@ import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
 import { MetricsService } from '../metrics.service';
 import { METRICS_TIMEZONE, defaultMetricsDayRange, resolveDateRange } from '../../dashboard/period';
-import { DECISION_SEGMENTS, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
+import { DECISION_SEGMENTS, MIN_INLINE_LABEL_PERCENT, decisionSegmentValue, roundedSegmentPercentages } from '../decision-segments';
 import { resolveSegmentColorVar } from '../../../shared/decision-colors';
 import { resolveSegmentTextColorVar } from '../../../shared/decision-text-color';
 import { agreedThresholds } from '../confidence-thresholds';
@@ -53,6 +53,9 @@ function renderConfidenceBar(_params: unknown, api: RenderItemApi) {
     style: api.style(),
   };
 }
+
+// Texto de los graficos: nunca por debajo de 14 px.
+const CHART_FONT_SIZE = 14;
 
 // El canvas de echarts no puede resolver var(--token) solo, hace falta el
 // color literal, leido en runtime (mismo patron que el resto de los graficos
@@ -110,6 +113,7 @@ export class DecisionesConfianzaComponent {
   readonly activeFilters = signal<MetricsFilters>({ category: null, decision: null });
   readonly hasActiveFilters = computed(() => this.activeFilters().category !== null || this.activeFilters().decision !== null);
 
+  readonly minInlineLabelPercent = MIN_INLINE_LABEL_PERCENT;
   readonly colorVarFor = resolveSegmentColorVar;
   readonly textColorVarFor = resolveSegmentTextColorVar;
 
@@ -195,7 +199,7 @@ export class DecisionesConfianzaComponent {
           backgroundColor: colors.autoPublish,
           padding: [2, 6],
           borderRadius: 4,
-          fontSize: 11,
+          fontSize: CHART_FONT_SIZE,
         },
       });
     }
@@ -207,31 +211,33 @@ export class DecisionesConfianzaComponent {
           formatter: `Revisión ${agreed.thresholdNeedsReview.toFixed(2)}`,
           position: 'end',
           align: 'center',
-          distance: 28,
+          distance: 36,
           color: colors.onColor,
           backgroundColor: colors.needsReview,
           padding: [2, 6],
           borderRadius: 4,
-          fontSize: 11,
+          fontSize: CHART_FONT_SIZE,
         },
       });
     }
 
     return {
+      textStyle: { fontSize: CHART_FONT_SIZE },
       tooltip: {
+        textStyle: { fontSize: CHART_FONT_SIZE },
         formatter: (params: { data: { value: [number, number, number]; upperInclusive: boolean } }) => {
           const [lower, upper, count] = params.data.value;
           const closingBracket = params.data.upperInclusive ? ']' : ')';
           return `[${lower.toFixed(1)}, ${upper.toFixed(1)}${closingBracket}: ${count}`;
         },
       },
-      grid: { left: 50, right: 24, top: 64, bottom: 32, containLabel: false },
+      grid: { left: 56, right: 24, top: 84, bottom: 36, containLabel: false },
       xAxis: { type: 'value', min: 0, max: 1, interval: 0.1 },
       // Eje de valor sobre una serie custom: no infiere el rango de "y" solo
       // (los datos son [lower, upper, count], no [x, y]), asi que el maximo
       // se fija a mano. minInterval 1 evita ticks fraccionarios en un eje de
       // conteos.
-      yAxis: { type: 'value', min: 0, max: maxCount, minInterval: 1, name: 'Solicitudes' },
+      yAxis: { type: 'value', min: 0, max: maxCount, minInterval: 1, name: 'Solicitudes', nameTextStyle: { fontSize: CHART_FONT_SIZE } },
       series: [
         {
           type: 'custom',

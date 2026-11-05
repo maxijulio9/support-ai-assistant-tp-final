@@ -43,32 +43,26 @@
       <app-metrics-kpi-card
         label="Resolución automática"
         [value]="autoPublishRate() !== null ? (autoPublishRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
-        [deltaText]="autoPublishDeltaPp() !== null ? (autoPublishDeltaPp()! | number: '1.1-1') + ' pp' : null"
-        [deltaArrowUp]="autoPublishDeltaArrowUp()"
-        [deltaColored]="true"
-        [deltaBad]="autoPublishDeltaBad()"
+        [delta]="autoPublishDeltaView()"
         [highlight]="true"
         [sparklineValues]="autoPublishSparkline()"
       />
       <app-metrics-kpi-card
         label="Escalamiento"
         [value]="escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
-        [deltaText]="escalateDeltaPp() !== null ? (escalateDeltaPp()! | number: '1.1-1') + ' pp' : null"
-        [deltaArrowUp]="escalateDeltaArrowUp()"
+        [delta]="escalateDeltaView()"
         [sparklineValues]="escalateSparkline()"
       />
       <app-metrics-kpi-card
         label="Total de solicitudes"
         [value]="(totalInteractions() ?? 0 | number) ?? ''"
-        [deltaText]="totalDeltaPercent() !== null ? (totalDeltaPercent()! | number: '1.1-1') + '%' : null"
-        [deltaArrowUp]="totalDeltaArrowUp()"
+        [delta]="totalDeltaView()"
         [sparklineValues]="totalSparkline()"
       />
       <app-metrics-kpi-card
         label="Confianza media"
         [value]="avgConfidence() !== null ? ((avgConfidence() | number: '1.2-2') ?? '') : 'Sin dato'"
-        [deltaText]="avgConfidenceDelta() !== null ? (avgConfidenceDelta()! | number: '1.2-2') : null"
-        [deltaArrowUp]="avgConfidenceDeltaArrowUp()"
+        [delta]="avgConfidenceDeltaView()"
         [sparklineValues]="avgConfidenceSparkline()"
       />
     </div>

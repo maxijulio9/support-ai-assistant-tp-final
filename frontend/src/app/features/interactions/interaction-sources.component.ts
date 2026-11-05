@@ -31,6 +31,9 @@ let nextInstanceId = 0;
 })
 export class InteractionSourcesComponent {
   readonly sources = input.required<InteractionSource[]>();
+  // El contenedor puede ya mostrar el titulo: el h2 queda solo para lectores
+  // de pantalla y sigue nombrando la seccion.
+  readonly showHeading = input(true);
 
   private readonly instanceId = nextInstanceId++;
   readonly titleId = `sources-${this.instanceId}-title`;

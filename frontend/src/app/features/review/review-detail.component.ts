@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, linkedSignal, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
+import { InteractionSourcesComponent } from '../interactions/interaction-sources.component';
+import { isSourcesFoldable, sourcesToggleTitle } from './review-sources';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 
 export type DetailState = 'empty' | 'loading' | 'error' | 'loaded';
@@ -9,7 +11,7 @@ export type DetailState = 'empty' | 'loading' | 'error' | 'loaded';
 @Component({
   selector: 'app-review-detail',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule],
+  imports: [MatButtonModule, MatIconModule, InteractionSourcesComponent],
   templateUrl: './review-detail.component.html',
   styleUrl: './review-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,6 +20,19 @@ export class ReviewDetailComponent {
   readonly detail = input<InteractionDetailResponse | null>(null);
   readonly state = input<DetailState>('empty');
   readonly submitting = input(false);
+
+  // Cerrado por defecto; al cambiar de solicitud vuelve a cerrarse
+  readonly sourcesOpen = linkedSignal<string | undefined, boolean>({
+    source: () => this.detail()?.issue_key,
+    computation: () => false,
+  });
+
+  readonly sourcesTitle = sourcesToggleTitle;
+  readonly sourcesFoldable = isSourcesFoldable;
+
+  toggleSources(): void {
+    this.sourcesOpen.update((open) => !open);
+  }
 
   readonly approve = output<void>();
   readonly regenerate = output<void>();
