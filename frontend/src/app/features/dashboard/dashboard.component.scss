@@ -11,9 +11,21 @@
   gap: var(--app-space-xs);
 }
 
+// Periodo activo: relleno tonal, borde de 2 px, negrita y un check, para que
+// no dependa solo del color
 .dashboard-period button.is-active {
-  border-color: var(--mat-sys-primary);
-  color: var(--mat-sys-primary);
+  --mat-button-outlined-outline-width: 2px;
+  --mat-button-outlined-outline-color: var(--mat-sys-primary);
+  --mat-button-outlined-label-text-color: var(--mat-sys-primary);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  font-weight: 700;
+}
+
+.dashboard-period button mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
 }
 
 .dashboard-period-label,

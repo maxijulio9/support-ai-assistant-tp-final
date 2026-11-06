@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardService } from './dashboard.service';
-import { computePeriodRanges, PeriodOption } from './period';
+import { computePeriodRanges, PeriodOption, periodRangeLabel } from './period';
 import { AutoPublishEvolutionComponent } from './auto-publish-evolution.component';
 import { DecisionsDonutComponent, DonutSegment } from './decisions-donut.component';
 import { OTHER_SEGMENT_KEY } from '../../shared/decision-colors';
@@ -47,6 +47,11 @@ export class DashboardComponent {
   private readonly dashboardService = inject(DashboardService);
   private readonly destroyRef = inject(DestroyRef);
 
+  readonly periodOptions: { value: PeriodOption; label: string }[] = [
+    { value: 'today', label: 'Hoy' },
+    { value: '7d', label: '7 días' },
+    { value: '30d', label: '30 días' },
+  ];
   readonly periodOption = signal<PeriodOption>('30d');
   readonly state = signal<DashboardState>('loading');
   readonly pendingReviewLimit = this.dashboardService.pendingReviewLimit;
@@ -65,7 +70,8 @@ export class DashboardComponent {
     return first || null;
   });
 
-  readonly periodLabel = new Intl.DateTimeFormat('es', { month: 'long', year: 'numeric' }).format(new Date());
+  // Rango real del periodo activo, no el mes en curso
+  readonly periodLabel = computed(() => periodRangeLabel(this.periodOption()));
 
   // --- Banner de revision ---
   readonly pendingReviewCount = computed(() => this.pendingReview().length);

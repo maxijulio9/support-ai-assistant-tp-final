@@ -46,6 +46,24 @@ export function computePeriodRanges(option: PeriodOption, now: Date = new Date()
   return { current, previous: previousPeriodOf(current) };
 }
 
+const SHORT_DAY = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
+const SHORT_DAY_YEAR = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// Texto corto del periodo activo de Inicio: "6 nov", "31 oct al 6 nov". Se
+// cuenta en dias calendario terminando hoy (7 dias son hoy y los 6 anteriores).
+// Con un rango que cruza de anio, o que no es del anio en curso, se incluye
+// el anio.
+export function periodRangeLabel(option: PeriodOption, now: Date = new Date()): string {
+  const days = option === 'today' ? 1 : option === '7d' ? 7 : 30;
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - (days - 1));
+  const withYear = start.getFullYear() !== end.getFullYear();
+
+  if (days === 1) return SHORT_DAY.format(end);
+  const format = withYear ? SHORT_DAY_YEAR : SHORT_DAY;
+  return `${format.format(start)} al ${format.format(end)}`;
+}
+
 // --- Rango de dias de Metricas (AAAA-MM-DD + tz, contrato del backend) ---
 
 export interface DayRange {

@@ -10,22 +10,22 @@
   </header>
 
   <div class="app-page-panel">
-  <div class="dashboard-period">
-    <button
-      mat-stroked-button
-      type="button"
-      [class.is-active]="periodOption() === 'today'"
-      (click)="setPeriod('today')"
-    >
-      Hoy
-    </button>
-    <button mat-stroked-button type="button" [class.is-active]="periodOption() === '7d'" (click)="setPeriod('7d')">
-      7 días
-    </button>
-    <button mat-stroked-button type="button" [class.is-active]="periodOption() === '30d'" (click)="setPeriod('30d')">
-      30 días
-    </button>
-    <span class="dashboard-period-label">{{ periodLabel }}</span>
+  <div class="dashboard-period" role="group" aria-label="Período">
+    @for (option of periodOptions; track option.value) {
+      <button
+        mat-stroked-button
+        type="button"
+        [class.is-active]="periodOption() === option.value"
+        [attr.aria-pressed]="periodOption() === option.value"
+        (click)="setPeriod(option.value)"
+      >
+        @if (periodOption() === option.value) {
+          <mat-icon aria-hidden="true">check</mat-icon>
+        }
+        {{ option.label }}
+      </button>
+    }
+    <span class="dashboard-period-label">{{ periodLabel() }}</span>
   </div>
 
   @if (state() === 'loading') {

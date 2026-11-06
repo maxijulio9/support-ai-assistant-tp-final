@@ -71,13 +71,19 @@
   --app-spark-line-teal: var(--app-chart-line);
   --app-spark-line-violet: var(--app-filter-accent-text);
 
+  // Tarjeta de inicio de sesion
+  --app-login-card-max-width: 400px;
+  // Alto de campos y boton del formulario, y tamano de los iconos dentro de los campos
+  --app-control-height: 48px;
+  --app-field-icon-size: 24px;
+
   // Popup de ayuda de los graficos
   --app-info-hint-icon-size: 22px;
   --app-info-hint-max-width: 320px;
 
   // Marca: solo el simbolo, sin texto
   --app-brand-size: 30px;
-  --app-brand-size-login: 52px;
+  --app-brand-size-login: 60px;
 
   // Acento de la barra lateral (verde jade neon) y fondo de los items en
   // hover; el brillo diagonal usa el mismo acento a baja opacidad. Etiqueta e icono

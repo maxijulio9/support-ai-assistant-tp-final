@@ -7,14 +7,13 @@
   justify-content: center;
   align-items: center;
   min-height: 100dvh;
-  padding: 1rem;
+  padding: var(--app-space-sm);
   box-sizing: border-box;
   // Color base del tema como fallback: si la imagen no carga, el fondo
   // queda en este color solido, sin romper el diseño.
   background-color: var(--app-color-background);
   // La imagen es decorativa (fondo CSS, no <img>), sin velo encima: la
-  // tarjeta se separa del fondo con su propio sombreado (--app-shadow-md),
-  // no oscureciendo la foto.
+  // tarjeta se separa del fondo con su propia sombra, no oscureciendo la foto.
   background-image: url('/images/login-background.png');
   background-size: cover;
   background-position: center;
@@ -23,23 +22,21 @@
 
 .login-card {
   width: 100%;
-  max-width: 360px;
+  max-width: var(--app-login-card-max-width);
+  box-sizing: border-box;
+  padding: var(--app-space-lg);
   background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-xl);
   box-shadow: var(--app-shadow-md);
 }
 
-.login-card mat-card-header {
-  margin-bottom: var(--app-space-sm);
-}
-
-.login-header {
-  justify-content: center;
-  text-align: center;
+.login-card mat-card-content {
+  padding: 0;
 }
 
 .login-brand {
   display: block;
-  margin: var(--app-space-sm) auto var(--app-space-xs);
+  margin: 0 auto var(--app-space-md);
   width: var(--app-brand-size-login);
   height: var(--app-brand-size-login);
   font-size: var(--app-brand-size-login);
@@ -47,25 +44,113 @@
   color: var(--mat-sys-primary);
 }
 
+.login-title {
+  margin: 0 0 var(--app-space-md);
+  text-align: center;
+  font: var(--mat-sys-headline-small);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
 .login-field {
   width: 100%;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--app-space-xs);
+  --mat-form-field-container-height: var(--app-control-height);
+  --mat-form-field-container-vertical-padding: calc((var(--app-control-height) - var(--app-field-icon-size)) / 2);
+}
+
+// Sin tamano propio el icono dentro del campo heredaba 16 px con line-height 0
+// y se recortaba
+.login-field-icon {
+  font-size: var(--app-field-icon-size);
+  line-height: var(--app-field-icon-size);
+  color: var(--mat-sys-primary);
+}
+
+// Autocompletado del navegador: el relleno azul se tapa con el fondo del campo
+.login-field input:-webkit-autofill,
+.login-field input:-webkit-autofill:hover,
+.login-field input:-webkit-autofill:focus {
+  box-shadow: 0 0 0 100vmax var(--mat-sys-surface) inset;
+  -webkit-text-fill-color: var(--mat-sys-on-surface);
+  caret-color: var(--mat-sys-on-surface);
 }
 
 .login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  margin: var(--app-space-xs) 0 var(--app-space-sm);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-error) 10%, var(--mat-sys-surface));
   color: var(--mat-sys-error);
-  font-size: 0.875rem;
-  margin: 0.5rem 0;
+  font: var(--app-text-subtitle);
+}
+
+.login-error mat-icon {
+  flex-shrink: 0;
+  width: var(--app-field-icon-size);
+  height: var(--app-field-icon-size);
+  font-size: var(--app-field-icon-size);
+  line-height: var(--app-field-icon-size);
 }
 
 .login-submit {
   width: 100%;
-  margin-top: 0.5rem;
+  margin-top: var(--app-space-xs);
+  --mat-button-filled-container-height: var(--app-control-height);
+  transition: background-color 150ms ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 88%, var(--mat-sys-surface));
+}
+
+.login-submit:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+// Enviando: sigue viendose como el boton activo, no gris
+.login-submit.is-loading {
+  --mat-button-filled-disabled-container-color: var(--mat-sys-primary);
+  --mat-button-filled-disabled-label-text-color: var(--mat-sys-on-primary);
+}
+
+.login-spinner {
+  display: inline-block;
+  margin-right: var(--app-space-xs);
+  --mat-progress-spinner-active-indicator-color: var(--mat-sys-on-primary);
 }
 
 .login-forgot-link {
   display: block;
-  margin-top: 1rem;
+  margin-top: var(--app-space-md);
   text-align: center;
+  font: var(--app-text-subtitle);
   color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+.login-forgot-link:hover,
+.login-forgot-link:focus-visible {
+  text-decoration: underline;
+}
+
+.login-forgot-link:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: var(--app-space-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-submit {
+    transition: none;
+  }
 }

@@ -2,6 +2,7 @@ import {
   computePeriodRanges,
   daysInRange,
   parseIsoDateLocal,
+  periodRangeLabel,
   previousCalendarDayRange,
   previousPeriodOf,
   resolveDateRange,
@@ -201,5 +202,29 @@ describe('daysInRange', () => {
 
   it('cruza un 29 de febrero: la cuenta no asume años de 365 dias', () => {
     expect(daysInRange({ from: '2023-03-01', to: '2024-03-01' })).toBe(367);
+  });
+});
+
+describe('periodRangeLabel', () => {
+  const today = new Date(2026, 10, 6, 15, 30);
+
+  it('hoy: solo el dia', () => {
+    expect(periodRangeLabel('today', today)).toBe('6 nov');
+  });
+
+  it('7 dias: hoy y los 6 anteriores', () => {
+    expect(periodRangeLabel('7d', today)).toBe('31 oct al 6 nov');
+  });
+
+  it('30 dias: hoy y los 29 anteriores', () => {
+    expect(periodRangeLabel('30d', today)).toBe('8 oct al 6 nov');
+  });
+
+  it('si cruza de anio, incluye el anio en los dos extremos', () => {
+    expect(periodRangeLabel('7d', new Date(2026, 0, 3))).toBe('28 dic 2025 al 3 ene 2026');
+  });
+
+  it('no depende de la hora del dia', () => {
+    expect(periodRangeLabel('7d', new Date(2026, 10, 6, 0, 1))).toBe(periodRangeLabel('7d', new Date(2026, 10, 6, 23, 59)));
   });
 });

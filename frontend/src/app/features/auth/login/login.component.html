@@ -1,15 +1,13 @@
 <div class="login-page">
   <mat-card class="login-card">
     <mat-icon class="login-brand" role="img" aria-label="Soporte N1">layers</mat-icon>
-    <h1 class="visually-hidden">Soporte N1</h1>
-    <mat-card-header class="login-header">
-      <mat-card-subtitle>Iniciá sesión</mat-card-subtitle>
-    </mat-card-header>
+    <h1 class="login-title">Iniciá sesión</h1>
 
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
         <mat-form-field appearance="outline" class="login-field">
           <mat-label>Email</mat-label>
+          <mat-icon matPrefix aria-hidden="true" class="login-field-icon">mail_outline</mat-icon>
           <input
             matInput
             type="email"
@@ -28,6 +26,7 @@
 
         <mat-form-field appearance="outline" class="login-field">
           <mat-label>Contraseña</mat-label>
+          <mat-icon matPrefix aria-hidden="true" class="login-field-icon">lock_outline</mat-icon>
           <input
             #passwordInput
             matInput
@@ -41,19 +40,35 @@
             matSuffix
             type="button"
             [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [attr.aria-pressed]="passwordVisible()"
             (click)="togglePasswordVisibility()"
           >
-            <mat-icon>{{ passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+            <mat-icon aria-hidden="true">{{ passwordVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
           <mat-error>Ingresá tu contraseña.</mat-error>
         </mat-form-field>
 
         @if (errorMessage()) {
-          <p class="login-error" role="alert">{{ errorMessage() }}</p>
+          <p class="login-error" role="alert">
+            <mat-icon aria-hidden="true">error_outline</mat-icon>
+            <span>{{ errorMessage() }}</span>
+          </p>
         }
 
-        <button mat-flat-button type="submit" class="login-submit" [disabled]="submitting()">
-          {{ submitting() ? 'Ingresando...' : 'Ingresar' }}
+        <button
+          mat-flat-button
+          type="submit"
+          class="login-submit"
+          [class.is-loading]="submitting()"
+          [disabled]="submitting()"
+          [attr.aria-busy]="submitting()"
+        >
+          @if (submitting()) {
+            <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" class="login-spinner" />
+            Ingresando…
+          } @else {
+            Ingresar
+          }
         </button>
       </form>
 
