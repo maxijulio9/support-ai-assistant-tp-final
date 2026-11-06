@@ -20,6 +20,8 @@ import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-resp
 import { ConfidenceInterval } from '../../../api/models/confidence-interval';
 import { ProjectThresholdsItem } from '../../../api/models/project-thresholds-item';
 import { CategoryMetric } from '../../../api/models/category-metric';
+import { InfoHintComponent } from '../../../shared/info-hint/info-hint.component';
+import { METRICS_CHART_HELP } from '../../../shared/help-texts';
 
 export type CategoryConfidenceState = 'loading' | 'error' | 'loaded';
 
@@ -88,12 +90,13 @@ function intervalLabel(interval: ConfidenceInterval): string {
 @Component({
   selector: 'app-metrics-decisiones-confianza',
   standalone: true,
-  imports: [DecimalPipe, MatButtonModule, MatIconModule, MatSlideToggleModule, NgxEchartsDirective],
+  imports: [InfoHintComponent, DecimalPipe, MatButtonModule, MatIconModule, MatSlideToggleModule, NgxEchartsDirective],
   templateUrl: './decisiones-confianza.component.html',
   styleUrl: './decisiones-confianza.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DecisionesConfianzaComponent {
+  readonly help = METRICS_CHART_HELP;
   private readonly route = inject(ActivatedRoute);
   private readonly metricsService = inject(MetricsService);
   private readonly destroyRef = inject(DestroyRef);

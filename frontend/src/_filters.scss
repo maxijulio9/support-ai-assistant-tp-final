@@ -25,11 +25,16 @@
   --mat-datepicker-toggle-active-state-icon-color: var(--app-filter-accent);
 }
 
-// Foco visible: el borde violeta de arriba mas un anillo aparte
-.app-filter.mat-mdc-form-field:has(:focus-visible) .mdc-notched-outline {
-  outline: 2px solid var(--mat-sys-primary);
-  outline-offset: 3px;
+// Icono de lupa de los campos de busqueda: sin tamano propio heredaba 16 px
+// con line-height 0 y el overflow oculto del icono lo recortaba.
+.app-filter .mat-mdc-form-field-icon-prefix > .mat-icon {
+  font-size: 24px;
+  line-height: 24px;
 }
+
+// Foco visible: el borde violeta de 2 px de arriba ya es el indicador (se
+// aplica tambien en foco porque la etiqueta flota). Sin un segundo anillo
+// por fuera, que dibujaba dos rectangulos.
 
 .app-filter-panel.mat-mdc-select-panel {
   --mat-select-panel-background-color: var(--mat-sys-surface-container-lowest);

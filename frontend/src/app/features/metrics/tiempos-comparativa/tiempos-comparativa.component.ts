@@ -24,18 +24,21 @@ import { RESPONSE_TIMES_ERROR_MESSAGE, responseTimesErrorMessage } from './respo
 import { ALL_PROJECTS, buildResponseTimesFilters, resolveProjectSelection } from './response-times-filters';
 import { cohortLabel, formatDuration } from './response-times-format';
 import { ResponseTimesResponse } from '../../../api/models/response-times-response';
+import { InfoHintComponent } from '../../../shared/info-hint/info-hint.component';
+import { METRICS_CHART_HELP } from '../../../shared/help-texts';
 
 export type TiemposState = 'loading' | 'error' | 'empty' | 'loaded';
 
 @Component({
   selector: 'app-metrics-tiempos-comparativa',
   standalone: true,
-  imports: [CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, TimeSeriesComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, MatSlideToggleModule],
+  imports: [InfoHintComponent, CategoryComparisonComponent, CohortCardComponent, OutcomesBreakdownComponent, TimeSeriesComponent, MatButtonModule, MatFormFieldModule, MatIconModule, MatSelectModule, MatSlideToggleModule],
   templateUrl: './tiempos-comparativa.component.html',
   styleUrl: './tiempos-comparativa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TiemposComparativaComponent {
+  readonly help = METRICS_CHART_HELP;
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly metricsService = inject(MetricsService);

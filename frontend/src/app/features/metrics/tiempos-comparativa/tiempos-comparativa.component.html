@@ -68,7 +68,10 @@
     </div>
 
     <section class="tc-section" aria-labelledby="tc-main-title">
-      <h2 id="tc-main-title" class="tc-section-title">Primera respuesta por tipo de atención</h2>
+      <div class="app-title-row">
+        <h2 id="tc-main-title" class="tc-section-title">Primera respuesta por tipo de atención</h2>
+        <app-info-hint [title]="help.firstResponse.title" [text]="help.firstResponse.text" />
+      </div>
       <div class="tc-grid">
         @for (card of mainCards(); track card.key) {
           <app-cohort-card [card]="card" [showClosure]="showClosure()" />
@@ -77,7 +80,10 @@
     </section>
 
     <section class="tc-section" aria-labelledby="tc-comparison-title">
-      <h2 id="tc-comparison-title" class="tc-section-title">Comparativa por categoría</h2>
+      <div class="app-title-row">
+        <h2 id="tc-comparison-title" class="tc-section-title">Comparativa por categoría</h2>
+        <app-info-hint [title]="help.categoryComparison.title" [text]="help.categoryComparison.text" />
+      </div>
       @if (comparisonDisplay() === 'choose-project') {
         <p class="tc-card tc-choose-project">
           <mat-icon aria-hidden="true">info</mat-icon>
@@ -99,12 +105,18 @@
     </section>
 
     <section class="tc-section" aria-labelledby="tc-series-title">
-      <h2 id="tc-series-title" class="tc-section-title">Evolución de la primera respuesta</h2>
+      <div class="app-title-row">
+        <h2 id="tc-series-title" class="tc-section-title">Evolución de la primera respuesta</h2>
+        <app-info-hint [title]="help.firstResponseTrend.title" [text]="help.firstResponseTrend.text" />
+      </div>
       <app-time-series [data]="data()!" />
     </section>
 
     <section class="tc-section" aria-labelledby="tc-outcomes-title">
-      <h2 id="tc-outcomes-title" class="tc-section-title">Cómo terminaron los tickets con revisión</h2>
+      <div class="app-title-row">
+        <h2 id="tc-outcomes-title" class="tc-section-title">Cómo terminaron los tickets con revisión</h2>
+        <app-info-hint [title]="help.reviewOutcomes.title" [text]="help.reviewOutcomes.text" />
+      </div>
       <p class="tc-section-text">
         Resultado de cada ticket en que el sistema sugirió la respuesta y una persona resolvió, con la mediana de primera
         respuesta de cada resultado. «Pendiente» son los que todavía esperan una decisión. «Sin primera respuesta medida»
@@ -115,7 +127,10 @@
     </section>
 
     <section class="tc-section" aria-labelledby="tc-system-title">
-      <h2 id="tc-system-title" class="tc-section-title">Respuestas que no resuelven el ticket</h2>
+      <div class="app-title-row">
+        <h2 id="tc-system-title" class="tc-section-title">Respuestas que no resuelven el ticket</h2>
+        <app-info-hint [title]="help.nonResolvingResponses.title" [text]="help.nonResolvingResponses.text" />
+      </div>
       <p class="tc-section-text">
         Estas dos miden un acuse de recibo (el sistema avisa que una persona va a seguir el ticket) o un pedido de
         información (el sistema pide más datos al cliente). No son una respuesta que resuelve, por eso no se comparan con

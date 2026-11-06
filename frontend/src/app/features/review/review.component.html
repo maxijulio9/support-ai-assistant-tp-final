@@ -5,7 +5,7 @@
       <p class="app-page-subtitle">Aprobá o regenerá las respuestas sugeridas por el sistema antes de enviarlas</p>
     </div>
     @if (queueState() !== 'loading' && queueState() !== 'error') {
-      <span class="app-page-chip">{{ totalPending() }} pendientes</span>
+      <span class="app-page-chip">{{ totalFiltered() }} pendientes</span>
     }
   </header>
 
@@ -22,9 +22,15 @@
       [searchTerm]="searchTerm()"
       [priorityFilter]="priorityFilter()"
       [priorityOptions]="priorityOptions()"
+      [projectFilter]="projectFilter()"
+      [projectOptions]="projectOptions()"
+      [sort]="sort()"
       [truncated]="queueTruncated()"
       (searchTermChange)="onSearchTermChange($event)"
       (priorityFilterChange)="onPriorityFilterChange($event)"
+      (projectFilterChange)="onProjectFilterChange($event)"
+      (sortChange)="onSortChange($event)"
+      (clearFilters)="clearFilters()"
       (selectItem)="selectItem($event)"
       (pageChange)="onPageChange($event)"
       (retry)="loadQueue()"

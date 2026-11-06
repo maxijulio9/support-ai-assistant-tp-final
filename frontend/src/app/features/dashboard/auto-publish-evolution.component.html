@@ -1,7 +1,10 @@
 <section class="evolution-card" aria-labelledby="evolution-title">
   <div class="evolution-header">
     <div>
-      <h2 id="evolution-title">Evolución de la resolución automática</h2>
+      <div class="app-title-row">
+        <h2 id="evolution-title">Evolución de la resolución automática</h2>
+        <app-info-hint [title]="help.autoPublishEvolution.title" [text]="help.autoPublishEvolution.text" />
+      </div>
       <p class="evolution-subtitle">Solicitudes por día y cuántas resolvió el sistema sin intervención</p>
     </div>
     <mat-button-toggle-group

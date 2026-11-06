@@ -77,6 +77,13 @@
   background-color: var(--mat-sys-surface-container-low);
 }
 
+// Titulo de un grafico con su icono de ayuda al lado
+.app-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 // Acciones al pie, a la derecha
 .app-page-actions {
   display: flex;

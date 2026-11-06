@@ -17,6 +17,8 @@ import { formatDelta, rate, ppDelta, rawDelta } from '../../shared/kpi-metrics';
 import { MetricsSummaryResponse } from '../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../api/models/category-metric';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
+import { InfoHintComponent } from '../../shared/info-hint/info-hint.component';
+import { DASHBOARD_CHART_HELP } from '../../shared/help-texts';
 
 export type DashboardState = 'loading' | 'error' | 'empty' | 'loaded';
 
@@ -34,12 +36,13 @@ const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent, AutoPublishEvolutionComponent],
+  imports: [InfoHintComponent, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent, AutoPublishEvolutionComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {
+  readonly help = DASHBOARD_CHART_HELP;
   private readonly authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
   private readonly destroyRef = inject(DestroyRef);

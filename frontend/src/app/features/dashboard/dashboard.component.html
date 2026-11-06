@@ -198,7 +198,10 @@
       </div>
 
       <div class="dashboard-card dashboard-decisions">
-        <h2>Distribución de decisiones</h2>
+        <div class="app-title-row">
+          <h2>Distribución de decisiones</h2>
+          <app-info-hint [title]="help.decisions.title" [text]="help.decisions.text" />
+        </div>
         <p class="dashboard-card-subtitle">Decisiones del período</p>
         <app-decisions-donut [segments]="donutSegments()" [total]="totalInteractions() ?? 0" />
       </div>
@@ -206,7 +209,10 @@
       <app-auto-publish-evolution class="dashboard-evolution" />
 
       <div class="dashboard-card dashboard-categories">
-        <h2>Solicitudes por categoría</h2>
+        <div class="app-title-row">
+          <h2>Solicitudes por categoría</h2>
+          <app-info-hint [title]="help.categories.title" [text]="help.categories.text" />
+        </div>
         <p class="dashboard-card-subtitle">Cuatro categorías, ordenadas por volumen</p>
 
         @if (categoryRows().length === 0) {

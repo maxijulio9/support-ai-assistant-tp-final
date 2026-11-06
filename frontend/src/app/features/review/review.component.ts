@@ -17,6 +17,16 @@ import { RegenerateDialogComponent, RegenerateDialogData, RegenerateDialogResult
 import { DiscardDialogComponent, DiscardDialogData, DiscardDialogResult } from './discard-dialog.component';
 import { DiscardSuccessDialogComponent, DiscardSuccessDialogData } from './discard-success-dialog.component';
 import { EditApproveDialogComponent, EditApproveDialogData, EditApproveDialogResult } from './edit-approve-dialog.component';
+import {
+  DEFAULT_QUEUE_SORT,
+  EMPTY_QUEUE_FILTERS,
+  QueueFilters,
+  QueueSort,
+  filterQueue,
+  priorityOptions,
+  projectOptions,
+  sortQueue,
+} from './review-queue-filters';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
@@ -43,6 +53,8 @@ export class ReviewComponent {
   readonly detail = signal<InteractionDetailResponse | null>(null);
   readonly searchTerm = signal('');
   readonly priorityFilter = signal<string | null>(null);
+  readonly projectFilter = signal<string | null>(null);
+  readonly sort = signal<QueueSort>(DEFAULT_QUEUE_SORT);
   readonly page = signal(1);
   // Cubre las 4 acciones (aprobar, regenerar, descartar, editar y aprobar):
   // mientras cualquiera de ellas tiene un POST en vuelo, los 4 botones del
@@ -51,18 +63,13 @@ export class ReviewComponent {
 
   private readonly selectionRequest$ = new Subject<string>();
 
-  readonly filteredItems = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const priority = this.priorityFilter();
-    return this.queueItems().filter((item) => {
-      const matchesTerm =
-        !term ||
-        (item.summary ?? '').toLowerCase().includes(term) ||
-        item.issue_key.toLowerCase().includes(term);
-      const matchesPriority = !priority || item.priority === priority;
-      return matchesTerm && matchesPriority;
-    });
-  });
+  private readonly filters = computed<QueueFilters>(() => ({
+    term: this.searchTerm(),
+    priority: this.priorityFilter(),
+    project: this.projectFilter(),
+  }));
+
+  readonly filteredItems = computed(() => sortQueue(filterQueue(this.queueItems(), this.filters()), this.sort()));
 
   readonly totalPending = computed(() => this.queueItems().length);
   readonly totalFiltered = computed(() => this.filteredItems().length);
@@ -71,14 +78,8 @@ export class ReviewComponent {
     const start = (this.page() - 1) * PAGE_SIZE;
     return this.filteredItems().slice(start, start + PAGE_SIZE);
   });
-  readonly priorityOptions = computed(() => {
-    const set = new Set(
-      this.queueItems()
-        .map((item) => item.priority)
-        .filter((priority): priority is string => !!priority),
-    );
-    return Array.from(set).sort();
-  });
+  readonly priorityOptions = computed(() => priorityOptions(this.queueItems(), this.filters()));
+  readonly projectOptions = computed(() => projectOptions(this.queueItems(), this.filters()));
   readonly queueTruncated = computed(() => this.queueItems().length === this.reviewService.queueLimit);
 
   constructor() {
@@ -124,14 +125,29 @@ export class ReviewComponent {
 
   onSearchTermChange(term: string): void {
     this.searchTerm.set(term);
-    this.page.set(1);
-    this.updateQueueState();
+    this.onFiltersChanged();
   }
 
   onPriorityFilterChange(priority: string | null): void {
     this.priorityFilter.set(priority);
-    this.page.set(1);
-    this.updateQueueState();
+    this.onFiltersChanged();
+  }
+
+  onProjectFilterChange(project: string | null): void {
+    this.projectFilter.set(project);
+    this.onFiltersChanged();
+  }
+
+  onSortChange(sort: QueueSort): void {
+    this.sort.set(sort);
+    this.onFiltersChanged();
+  }
+
+  clearFilters(): void {
+    this.searchTerm.set(EMPTY_QUEUE_FILTERS.term);
+    this.priorityFilter.set(EMPTY_QUEUE_FILTERS.priority);
+    this.projectFilter.set(EMPTY_QUEUE_FILTERS.project);
+    this.onFiltersChanged();
   }
 
   onPageChange(page: number): void {
@@ -401,15 +417,25 @@ export class ReviewComponent {
     this.afterQueueLoaded();
   }
 
-  private afterQueueLoaded(): void {
-    // Si la seleccion sigue en la lista se mantiene; si no, se selecciona
-    // la primera visible (segun el filtro actual) o queda vacio.
+  private onFiltersChanged(): void {
+    this.page.set(1);
+    this.keepSelectionVisible();
+    this.updateQueueState();
+  }
+
+  // Si la seleccion sigue en la lista filtrada se mantiene; si no, se
+  // selecciona la primera visible o queda vacio.
+  private keepSelectionVisible(): void {
     const current = this.selectedId();
-    const stillThere = current !== null && this.queueItems().some((item) => item.interaction_id === current);
+    const stillThere = current !== null && this.filteredItems().some((item) => item.interaction_id === current);
     if (!stillThere) {
       const first = this.filteredItems()[0] ?? null;
       this.selectItemIgnoringLock(first ? first.interaction_id : null);
     }
+  }
+
+  private afterQueueLoaded(): void {
+    this.keepSelectionVisible();
     this.updateQueueState();
     this.clampPage();
   }

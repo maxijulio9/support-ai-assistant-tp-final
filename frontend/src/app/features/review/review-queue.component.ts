@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
+import { CountedOption, QUEUE_SORT_OPTIONS, QueueSort } from './review-queue-filters';
 import { formatRelativeTime } from '../../shared/format-relative-time';
 
 export type QueueState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
@@ -36,15 +37,22 @@ export class ReviewQueueComponent {
   readonly totalPages = input(1);
   readonly searchTerm = input('');
   readonly priorityFilter = input<string | null>(null);
-  readonly priorityOptions = input<string[]>([]);
+  readonly priorityOptions = input<CountedOption[]>([]);
+  readonly projectFilter = input<string | null>(null);
+  readonly projectOptions = input<CountedOption[]>([]);
+  readonly sort = input<QueueSort>('newest');
   readonly truncated = input(false);
 
   readonly searchTermChange = output<string>();
   readonly priorityFilterChange = output<string | null>();
+  readonly projectFilterChange = output<string | null>();
+  readonly sortChange = output<QueueSort>();
+  readonly clearFilters = output<void>();
   readonly selectItem = output<string>();
   readonly pageChange = output<number>();
   readonly retry = output<void>();
 
+  readonly sortOptions = QUEUE_SORT_OPTIONS;
   readonly pageSize = PAGE_SIZE;
   readonly skeletonRows = [0, 1, 2, 3, 4, 5];
 

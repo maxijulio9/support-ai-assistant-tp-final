@@ -1,19 +1,35 @@
 <div class="review-queue">
-  <mat-form-field appearance="outline" class="review-queue-search app-filter">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="review-queue-search app-filter">
     <mat-label>Buscar por asunto o ID</mat-label>
     <input matInput [value]="searchTerm()" (input)="onSearchInput($event)" />
   </mat-form-field>
 
-  <div class="review-queue-meta">
-    @if (state() !== 'loading' && state() !== 'error') {
-      <span>{{ totalPending() }} pendientes</span>
-    }
-    <mat-form-field appearance="outline" class="review-queue-priority app-filter">
+  <div class="review-queue-filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="review-queue-sort app-filter">
+      <mat-label>Ordenar por</mat-label>
+      <mat-select panelClass="app-filter-panel" [value]="sort()" (selectionChange)="sortChange.emit($event.value)">
+        @for (option of sortOptions; track option.value) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="review-queue-priority app-filter">
       <mat-label>Prioridad</mat-label>
       <mat-select panelClass="app-filter-panel" [value]="priorityFilter()" (selectionChange)="onPriorityChange($event.value)">
         <mat-option [value]="null">Todas</mat-option>
-        @for (option of priorityOptions(); track option) {
-          <mat-option [value]="option">{{ option }}</mat-option>
+        @for (option of priorityOptions(); track option.value) {
+          <mat-option [value]="option.value" [disabled]="option.count === 0">{{ option.value }} ({{ option.count }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="review-queue-project app-filter">
+      <mat-label>Proyecto</mat-label>
+      <mat-select panelClass="app-filter-panel" [value]="projectFilter()" (selectionChange)="projectFilterChange.emit($event.value)">
+        <mat-option [value]="null">Todos</mat-option>
+        @for (option of projectOptions(); track option.value) {
+          <mat-option [value]="option.value" [disabled]="option.count === 0">{{ option.value }} ({{ option.count }})</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -36,7 +52,10 @@
   }
 
   @if (state() === 'no-results') {
-    <p class="review-queue-empty">No hay resultados para este filtro</p>
+    <div class="review-queue-empty">
+      <p>No hay solicitudes con estos filtros</p>
+      <button mat-stroked-button type="button" (click)="clearFilters.emit()">Limpiar filtros</button>
+    </div>
   }
 
   @if (state() === 'error') {

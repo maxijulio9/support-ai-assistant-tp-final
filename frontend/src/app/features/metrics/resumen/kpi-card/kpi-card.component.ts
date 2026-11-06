@@ -1,15 +1,24 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
+import { resolveThemeColor, resolveThemeColorRgba } from '../../../../shared/decision-colors';
+import { HelpText } from '../../../../shared/help-texts';
+import { InfoHintComponent } from '../../../../shared/info-hint/info-hint.component';
 import { DeltaView } from '../../../../shared/kpi-metrics';
-import { sparklineTrend } from '../../sparkline-trend';
+import { MiniChart, MiniMetric, miniTooltip } from '../kpi-mini-chart';
 
-// El canvas de echarts no puede resolver var(--token) solo, hace falta el
-// color literal, leido en runtime (mismo patron que el resto de los graficos
-// de Metricas).
-function resolveSparklineColor(): string {
-  return getComputedStyle(document.documentElement).getPropertyValue('--mat-sys-primary').trim();
-}
+const CHART_FONT_SIZE = 14;
+// Con muchos dias los puntos se achican para que la linea siga leyendose
+const MANY_POINTS = 31;
+
+// Tokens de cada tarjeta: linea y puntos (con contraste) y degradado del
+// relleno (decorativo)
+const CHART_TOKENS: Record<MiniMetric, { line: string; top: string; bottom: string }> = {
+  'auto-publish': { line: '--app-spark-line-teal', top: '--app-spark-auto-top', bottom: '--app-spark-auto-bottom' },
+  escalate: { line: '--app-spark-line-violet', top: '--app-spark-escalate-top', bottom: '--app-spark-escalate-bottom' },
+  total: { line: '--app-spark-line-teal', top: '--app-spark-total-top', bottom: '--app-spark-total-bottom' },
+  confidence: { line: '--app-spark-line-violet', top: '--app-spark-confidence-top', bottom: '--app-spark-confidence-bottom' },
+};
 
 // Presentacional puro: recibe el valor y el delta ya preparados (formatDelta),
 // no sabe de donde sale el numero ni que significa la suba o la baja para
@@ -17,7 +26,7 @@ function resolveSparklineColor(): string {
 @Component({
   selector: 'app-metrics-kpi-card',
   standalone: true,
-  imports: [NgxEchartsDirective],
+  imports: [NgxEchartsDirective, InfoHintComponent],
   templateUrl: './kpi-card.component.html',
   styleUrl: './kpi-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,34 +39,67 @@ export class KpiCardComponent {
   readonly delta = input<DeltaView | null>(null);
   readonly highlight = input(false);
 
-  // Serie diaria del minigrafico: null es un dia sin datos (hueco), no un
-  // cero. Vacio por defecto, asi un KpiCardComponent sin este input no
-  // cambia de comportamiento.
-  readonly sparklineValues = input<(number | null)[]>([]);
+  // Minigrafico por dia; null si no hay datos o no se pudieron cargar
+  readonly chart = input<MiniChart | null>(null);
 
-  // Fuerza a recalcular sparklineOptions cuando cambia el esquema de color
-  // del sistema operativo (mismo mecanismo que los demas graficos).
+  // Fuerza a recalcular las opciones cuando cambia el esquema de color del
+  // sistema operativo (mismo mecanismo que los demas graficos).
   private readonly colorSchemeTick = signal(0);
 
-  readonly trendLabel = computed(() => sparklineTrend(this.sparklineValues()));
+  // Texto del icono de informacion junto al titulo; sin texto no hay icono
+  readonly help = input<HelpText | null>(null);
 
-  readonly sparklineOptions = computed<EChartsCoreOption>(() => {
+  readonly chartOptions = computed<EChartsCoreOption>(() => {
     this.colorSchemeTick();
-    const color = resolveSparklineColor();
+    const chart = this.chart();
+    if (!chart) return {};
+
+    const tokens = CHART_TOKENS[chart.metric];
+    const line = resolveThemeColor(tokens.line);
+    const surface = resolveThemeColor('--mat-sys-surface-container-lowest');
+    const crowded = chart.points.length > MANY_POINTS;
 
     return {
-      grid: { left: 0, right: 0, top: 4, bottom: 4 },
-      xAxis: { type: 'category', show: false, data: this.sparklineValues().map((_, index) => index) },
-      yAxis: { type: 'value', show: false },
+      grid: { left: 8, right: 8, top: 8, bottom: 4 },
+      xAxis: { type: 'category', show: false, data: chart.points.map((point) => point.label) },
+      // El eje se ajusta a los datos de esta tarjeta, con margen
+      yAxis: { type: 'value', show: false, min: chart.yMin, max: chart.yMax },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'line' },
+        textStyle: { fontSize: CHART_FONT_SIZE },
+        confine: true,
+        formatter: (params: unknown) => {
+          const first = Array.isArray(params) ? (params[0] as { dataIndex?: number } | undefined) : undefined;
+          return first?.dataIndex === undefined ? '' : miniTooltip(chart, first.dataIndex);
+        },
+      },
       series: [
         {
           type: 'line',
-          data: this.sparklineValues(),
-          connectNulls: false,
-          showSymbol: true,
-          symbolSize: 4,
-          lineStyle: { color, width: 1.5 },
-          itemStyle: { color },
+          smooth: true,
+          // Une solo los dias con dato: el dia sin dato no baja a cero
+          connectNulls: true,
+          data: chart.points.map((point) => point.value),
+          symbol: 'circle',
+          // Todos los puntos marcados, sin que echarts oculte los que se pisan
+          showAllSymbol: true,
+          symbolSize: crowded ? 4 : 7,
+          lineStyle: { color: line, width: 2 },
+          itemStyle: { color: line, borderColor: surface, borderWidth: crowded ? 0 : 1.5 },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: resolveThemeColorRgba(tokens.top) },
+                { offset: 1, color: resolveThemeColorRgba(tokens.bottom) },
+              ],
+            },
+          },
         },
       ],
     };

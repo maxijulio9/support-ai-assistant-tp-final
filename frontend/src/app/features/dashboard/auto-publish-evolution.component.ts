@@ -21,6 +21,8 @@ import {
   evolutionPeriod,
   hasEvolutionData,
 } from './auto-publish-evolution';
+import { InfoHintComponent } from '../../shared/info-hint/info-hint.component';
+import { DASHBOARD_CHART_HELP } from '../../shared/help-texts';
 
 export type EvolutionState = 'loading' | 'error' | 'empty' | 'loaded';
 
@@ -29,12 +31,13 @@ const AXIS_FONT_SIZE = 14;
 @Component({
   selector: 'app-auto-publish-evolution',
   standalone: true,
-  imports: [MatButtonModule, MatButtonToggleModule, NgxEchartsDirective],
+  imports: [InfoHintComponent, MatButtonModule, MatButtonToggleModule, NgxEchartsDirective],
   templateUrl: './auto-publish-evolution.component.html',
   styleUrl: './auto-publish-evolution.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AutoPublishEvolutionComponent {
+  readonly help = DASHBOARD_CHART_HELP;
   private readonly metricsService = inject(MetricsService);
   private readonly destroyRef = inject(DestroyRef);
 

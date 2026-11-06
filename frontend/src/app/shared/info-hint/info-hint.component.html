@@ -1,0 +1,37 @@
+<button
+  type="button"
+  class="info-hint-button"
+  cdkOverlayOrigin
+  #trigger="cdkOverlayOrigin"
+  [attr.aria-label]="buttonLabel()"
+  [attr.aria-describedby]="open() ? popupId : null"
+  [attr.aria-expanded]="open()"
+  (mouseenter)="show()"
+  (mouseleave)="scheduleClose()"
+  (focus)="show()"
+  (blur)="close()"
+  (click)="onClick()"
+>
+  <mat-icon aria-hidden="true" class="info-hint-icon">info_outline</mat-icon>
+</button>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="trigger"
+  [cdkConnectedOverlayOpen]="open()"
+  [cdkConnectedOverlayPositions]="positions"
+  [cdkConnectedOverlayPush]="true"
+  [cdkConnectedOverlayViewportMargin]="8"
+  (overlayOutsideClick)="close()"
+>
+  <div
+    class="info-hint-popup"
+    role="tooltip"
+    [id]="popupId"
+    (mouseenter)="show()"
+    (mouseleave)="scheduleClose()"
+  >
+    <strong class="info-hint-title">{{ title() }}</strong>
+    <p class="info-hint-text">{{ text() }}</p>
+  </div>
+</ng-template>

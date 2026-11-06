@@ -10,6 +10,7 @@ import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsCoreOption } from 'echarts/core';
 import { MetricsService } from '../metrics.service';
 import {
+  DayRange,
   METRICS_TIMEZONE,
   daysInRange,
   defaultMetricsDayRange,
@@ -20,12 +21,16 @@ import { formatDelta, percentGrowth, ppDelta, rate, rawDelta } from '../../../sh
 import { decisionStatus, STATUS_FILTER_OPTIONS } from '../../interactions/interaction-status';
 import { DecisionSegmentTone, DECISION_SEGMENTS, decisionSegmentValue } from '../decision-segments';
 import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
+import { buildEvolutionPoints } from '../../dashboard/auto-publish-evolution';
+import { buildMiniChart } from './kpi-mini-chart';
 import { KpiCardComponent } from './kpi-card/kpi-card.component';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../../api/models/category-metric';
 import { DailyMetric } from '../../../api/models/daily-metric';
 import { formatShortDay } from '../../../shared/format-short-day';
 import { HeatmapCell } from '../../../api/models/heatmap-cell';
+import { InfoHintComponent } from '../../../shared/info-hint/info-hint.component';
+import { KPI_HELP, METRICS_CHART_HELP } from '../../../shared/help-texts';
 
 export type ResumenState = 'loading' | 'error' | 'empty' | 'loaded';
 export type DailyState = 'loading' | 'error' | 'rangeTooLong' | 'loaded';
@@ -71,12 +76,14 @@ function resolveHeatmapColors(): [string, string] {
 @Component({
   selector: 'app-metrics-resumen',
   standalone: true,
-  imports: [DecimalPipe, MatButtonModule, MatIconModule, MatSlideToggleModule, NgxEchartsDirective, KpiCardComponent],
+  imports: [InfoHintComponent, DecimalPipe, MatButtonModule, MatIconModule, MatSlideToggleModule, NgxEchartsDirective, KpiCardComponent],
   templateUrl: './resumen.component.html',
   styleUrl: './resumen.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResumenComponent {
+  readonly help = METRICS_CHART_HELP;
+  readonly kpiHelp = KPI_HELP;
   private readonly route = inject(ActivatedRoute);
   private readonly metricsService = inject(MetricsService);
   private readonly destroyRef = inject(DestroyRef);
@@ -156,20 +163,18 @@ export class ResumenComponent {
   readonly dailySegments = DECISION_SEGMENTS;
 
   // --- Minigraficos de las tarjetas de indicadores ---
-  // Se arman a partir de dailyMetrics, que ya pide la tarjeta de barras
-  // apiladas: no hay ningun pedido nuevo. Resolucion automatica y
-  // Escalamiento son tasas (rate() da null en un dia sin interacciones, un
-  // hueco en la linea, no un cero). Total de solicitudes es un conteo
-  // crudo: ahi el 0 es un dato real y la linea llega a 0. Confianza media
-  // ya viene como numero o null por dia desde el backend, sin calculo.
-  readonly autoPublishSparkline = computed(() =>
-    this.dailyMetrics().map((day) => rate(day.auto_publish_count, day.total_interactions)),
-  );
-  readonly escalateSparkline = computed(() =>
-    this.dailyMetrics().map((day) => rate(day.escalate_count, day.total_interactions)),
-  );
-  readonly totalSparkline = computed(() => this.dailyMetrics().map((day) => day.total_interactions));
-  readonly avgConfidenceSparkline = computed(() => this.dailyMetrics().map((day) => day.avg_confidence_score));
+  // Se arman con los mismos puntos diarios de la evolucion de Inicio, a
+  // partir de dailyMetrics, que ya pide la tarjeta de barras apiladas: no hay
+  // ningun pedido nuevo.
+  private readonly dailyRange = signal<DayRange | null>(null);
+  private readonly dailyPoints = computed(() => {
+    const range = this.dailyRange();
+    return range && this.dailyState() === 'loaded' ? buildEvolutionPoints(range, this.dailyMetrics()) : [];
+  });
+  readonly autoPublishChart = computed(() => buildMiniChart('auto-publish', this.dailyPoints()));
+  readonly escalateChart = computed(() => buildMiniChart('escalate', this.dailyPoints()));
+  readonly totalChart = computed(() => buildMiniChart('total', this.dailyPoints()));
+  readonly avgConfidenceChart = computed(() => buildMiniChart('confidence', this.dailyPoints()));
 
   readonly dailyRows = computed(() =>
     this.dailyMetrics().map((day) => ({
@@ -310,6 +315,7 @@ export class ResumenComponent {
                 )
               : this.metricsService.getDaily(current.from, current.to, METRICS_TIMEZONE, filters).pipe(
                   tap((days) => {
+                    this.dailyRange.set(current);
                     this.dailyMetrics.set(days);
                     this.dailyState.set('loaded');
                   }),

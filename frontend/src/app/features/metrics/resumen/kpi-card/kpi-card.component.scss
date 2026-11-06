@@ -16,6 +16,12 @@
   background-color: color-mix(in srgb, var(--app-color-success) 10%, var(--mat-sys-surface));
 }
 
+.kpi-card-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .kpi-card-label {
   font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
@@ -59,9 +65,20 @@
   opacity: 0.8;
 }
 
-.kpi-card-sparkline {
+.kpi-card-chart {
   width: 100%;
   min-width: 0;
-  height: 32px;
+  height: 56px;
   margin-top: var(--app-space-xs);
+}
+
+// Inicio y fin del periodo a los costados, maximo diario al centro
+.kpi-card-axis {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--app-space-xs);
+  margin: 4px 0 0;
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
 }

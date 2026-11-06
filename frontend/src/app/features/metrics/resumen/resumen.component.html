@@ -42,28 +42,32 @@
     <div class="resumen-kpis">
       <app-metrics-kpi-card
         label="Resolución automática"
+        [help]="kpiHelp.autoPublish"
         [value]="autoPublishRate() !== null ? (autoPublishRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
         [delta]="autoPublishDeltaView()"
         [highlight]="true"
-        [sparklineValues]="autoPublishSparkline()"
+        [chart]="autoPublishChart()"
       />
       <app-metrics-kpi-card
         label="Escalamiento"
+        [help]="kpiHelp.escalate"
         [value]="escalateRate() !== null ? (escalateRate()! * 100 | number: '1.0-0') + '%' : 'Sin dato'"
         [delta]="escalateDeltaView()"
-        [sparklineValues]="escalateSparkline()"
+        [chart]="escalateChart()"
       />
       <app-metrics-kpi-card
         label="Total de solicitudes"
+        [help]="kpiHelp.total"
         [value]="(totalInteractions() ?? 0 | number) ?? ''"
         [delta]="totalDeltaView()"
-        [sparklineValues]="totalSparkline()"
+        [chart]="totalChart()"
       />
       <app-metrics-kpi-card
         label="Confianza media"
+        [help]="kpiHelp.confidence"
         [value]="avgConfidence() !== null ? ((avgConfidence() | number: '1.2-2') ?? '') : 'Sin dato'"
         [delta]="avgConfidenceDeltaView()"
-        [sparklineValues]="avgConfidenceSparkline()"
+        [chart]="avgConfidenceChart()"
       />
     </div>
 
@@ -71,7 +75,10 @@
       <div class="resumen-card resumen-categories">
         <div class="resumen-categories-header">
           <div>
-            <h2>Solicitudes por categoría</h2>
+            <div class="app-title-row">
+              <h2>Solicitudes por categoría</h2>
+              <app-info-hint [title]="help.categories.title" [text]="help.categories.text" />
+            </div>
             <p class="resumen-card-subtitle">Categorías, ordenadas por volumen</p>
           </div>
           <mat-slide-toggle [checked]="categoriesAsTable()" (change)="toggleCategoriesAsTable()">
@@ -129,7 +136,10 @@
       <div class="resumen-card resumen-daily">
         <div class="resumen-categories-header">
           <div>
-            <h2>Solicitudes por día y decisión</h2>
+            <div class="app-title-row">
+              <h2>Solicitudes por día y decisión</h2>
+              <app-info-hint [title]="help.dailyDecisions.title" [text]="help.dailyDecisions.text" />
+            </div>
             <p class="resumen-card-subtitle">Serie diaria, apilada por decisión</p>
           </div>
           @if (dailyState() === 'loaded' && dailyRows().length > 0) {
@@ -200,7 +210,10 @@
       </div>
 
       <div class="resumen-card">
-        <h2>Mapa de calor de actividad</h2>
+        <div class="app-title-row">
+          <h2>Mapa de calor de actividad</h2>
+          <app-info-hint [title]="help.heatmap.title" [text]="help.heatmap.text" />
+        </div>
         <p class="resumen-card-subtitle">Solicitudes por día y hora</p>
 
         @if (heatmapState() === 'loading') {

@@ -16,17 +16,21 @@
   width: 100%;
 }
 
-.review-queue-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.review-queue-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--app-space-xs);
-  font: var(--app-text-secondary);
-  color: var(--app-color-text-secondary);
 }
 
-.review-queue-priority {
-  width: 140px;
+.review-queue-sort {
+  grid-column: 1 / -1;
+}
+
+// Con poco ancho, prioridad y proyecto se apilan
+@media (max-width: 480px) {
+  .review-queue-filters {
+    grid-template-columns: 1fr;
+  }
 }
 
 .review-queue-truncated {
@@ -36,10 +40,18 @@
 }
 
 .review-queue-empty {
-  font: var(--app-text-body);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--app-space-xs);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
   text-align: center;
   padding: var(--app-space-lg) 0;
+}
+
+.review-queue-empty p {
+  margin: 0;
 }
 
 .review-queue-error {

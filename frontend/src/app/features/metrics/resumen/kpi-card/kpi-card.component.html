@@ -1,20 +1,24 @@
 <div class="kpi-card" [class.kpi-card--highlight]="highlight()">
-  <p class="kpi-card-label">{{ label() }}</p>
+  <div class="kpi-card-head">
+    <p class="kpi-card-label">{{ label() }}</p>
+    @if (help(); as help) {
+      <app-info-hint [title]="help.title" [text]="help.text" />
+    }
+  </div>
   <p class="kpi-card-value">{{ value() }}</p>
   @if (delta(); as delta) {
     <p class="kpi-card-delta kpi-card-delta--{{ delta.tone }}">
       <span aria-hidden="true">{{ delta.arrow }} {{ delta.text }}</span>
       <span class="visually-hidden">{{ delta.spoken }}</span>
-      <span class="kpi-card-delta-label" aria-hidden="true">vs. anterior</span>
+      <span class="kpi-card-delta-label" aria-hidden="true">vs. período anterior</span>
     </p>
   }
-  @if (sparklineValues().length > 0) {
-    <div
-      echarts
-      [options]="sparklineOptions()"
-      class="kpi-card-sparkline"
-      role="img"
-      [attr.aria-label]="'Serie diaria del período, ' + trendLabel()"
-    ></div>
+  @if (chart(); as chart) {
+    <div echarts [options]="chartOptions()" class="kpi-card-chart" role="img" [attr.aria-label]="chart.summary"></div>
+    <p class="kpi-card-axis" aria-hidden="true">
+      <span>{{ chart.startLabel }}</span>
+      <span class="kpi-card-axis-max">{{ chart.maxText }}</span>
+      <span>{{ chart.endLabel }}</span>
+    </p>
   }
 </div>

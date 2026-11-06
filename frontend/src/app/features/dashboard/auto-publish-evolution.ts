@@ -13,6 +13,9 @@ export interface EvolutionPoint {
   date: string;
   label: string;
   autoPublish: number;
+  escalate: number;
+  // Promedio de confianza del dia; null si ningun puntaje ese dia
+  avgConfidence: number | null;
   // Solicitudes que no se resolvieron automaticamente
   rest: number;
   total: number;
@@ -50,6 +53,8 @@ export function buildEvolutionPoints(range: DayRange, days: DailyMetric[]): Evol
       date,
       label: formatShortDay(date),
       autoPublish,
+      escalate: metric?.escalate_count ?? 0,
+      avgConfidence: metric?.avg_confidence_score ?? null,
       rest: Math.max(0, total - autoPublish),
       total,
       percent: percentOf(autoPublish, total),

@@ -56,6 +56,25 @@
   // Segmento "resto" de las barras apiladas (3,46:1 sobre blanco, minimo 3:1)
   --app-chart-neutral: #868a94;
 
+  // Relleno de area de los minigraficos de las tarjetas de Metricas: degradado
+  // vertical entre violetas y verdes, semitransparente y solo decorativo (la
+  // linea y los puntos son los que cumplen el contraste).
+  --app-spark-auto-top: color-mix(in srgb, var(--app-nav-accent) 42%, transparent);
+  --app-spark-auto-bottom: color-mix(in srgb, var(--app-filter-accent) 10%, transparent);
+  --app-spark-escalate-top: color-mix(in srgb, var(--app-filter-accent) 34%, transparent);
+  --app-spark-escalate-bottom: color-mix(in srgb, var(--app-chart-line) 12%, transparent);
+  --app-spark-total-top: color-mix(in srgb, var(--app-nav-accent) 28%, transparent);
+  --app-spark-total-bottom: color-mix(in srgb, var(--app-chart-line) 6%, transparent);
+  --app-spark-confidence-top: color-mix(in srgb, var(--app-filter-accent) 36%, transparent);
+  --app-spark-confidence-bottom: color-mix(in srgb, var(--app-nav-accent) 14%, transparent);
+  // Linea y puntos: 3:1 como minimo contra el fondo de la tarjeta
+  --app-spark-line-teal: var(--app-chart-line);
+  --app-spark-line-violet: var(--app-filter-accent-text);
+
+  // Popup de ayuda de los graficos
+  --app-info-hint-icon-size: 22px;
+  --app-info-hint-max-width: 320px;
+
   // Marca: solo el simbolo, sin texto
   --app-brand-size: 30px;
   --app-brand-size-login: 52px;

@@ -41,7 +41,10 @@
     <div class="dc-card">
       <div class="dc-card-header">
         <div>
-          <h2>Distribución de decisiones</h2>
+          <div class="app-title-row">
+            <h2>Distribución de decisiones</h2>
+            <app-info-hint [title]="help.decisionShare.title" [text]="help.decisionShare.text" />
+          </div>
           <p class="dc-card-subtitle">{{ totalInteractions() | number }} solicitudes, participación sobre el total</p>
         </div>
         <mat-slide-toggle [checked]="distributionAsTable()" (change)="toggleDistributionAsTable()">
@@ -105,7 +108,10 @@
     <div class="dc-card">
       <div class="dc-card-header">
         <div>
-          <h2>Distribución de confianza</h2>
+          <div class="app-title-row">
+            <h2>Distribución de confianza</h2>
+            <app-info-hint [title]="help.confidenceDistribution.title" [text]="help.confidenceDistribution.text" />
+          </div>
           <p class="dc-card-subtitle">Solicitudes por intervalo, eje continuo de 0 a 1</p>
         </div>
         @if (confidenceState() === 'loaded' && intervals().length > 0) {
@@ -175,7 +181,10 @@
 
     <div class="dc-card">
       <div class="dc-card-header">
-        <h2>Confianza media por categoría</h2>
+        <div class="app-title-row">
+          <h2>Confianza media por categoría</h2>
+          <app-info-hint [title]="help.confidenceByCategory.title" [text]="help.confidenceByCategory.text" />
+        </div>
         @if (categoryConfidenceState() === 'loaded' && categoryConfidenceRows().length > 0) {
           <mat-slide-toggle [checked]="categoryConfidenceAsTable()" (change)="toggleCategoryConfidenceAsTable()">
             Ver como tabla
