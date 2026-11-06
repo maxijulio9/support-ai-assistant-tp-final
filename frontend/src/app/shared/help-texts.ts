@@ -86,6 +86,6 @@ export const DASHBOARD_CHART_HELP = {
   },
   categories: {
     title: 'Solicitudes por categoría',
-    text: 'Las categorías con más solicitudes del período, de mayor a menor. La barra y el porcentaje muestran qué parte del total representa cada una.',
+    text: 'Las categorías del período, de la que más solicitudes tiene a la que menos. El número es la cantidad de solicitudes y el porcentaje es la parte del total del período. La barra se compara con la categoría de mayor volumen, que ocupa todo el ancho.',
   },
 } satisfies Record<string, HelpText>;

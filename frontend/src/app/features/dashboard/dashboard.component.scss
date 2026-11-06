@@ -282,14 +282,52 @@
   gap: var(--app-space-sm);
 }
 
+.dashboard-categories-head,
 .dashboard-categories-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.25rem 4rem;
+  align-items: baseline;
   gap: var(--app-space-xs);
-  font: var(--mat-sys-body-medium);
+}
+
+.dashboard-categories-head {
+  margin-bottom: var(--app-space-xs);
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.dashboard-categories-head span:not(:first-child),
+.dashboard-categories-count,
+.dashboard-categories-percent {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-categories-row {
+  font: var(--app-text-subtitle);
   color: var(--mat-sys-on-surface);
   margin-bottom: 0.25rem;
+}
+
+.dashboard-categories-name {
+  overflow-wrap: break-word;
+}
+
+// Las dos columnas de cifras: el encabezado queda sobre ellas
+.dashboard-categories-head span:first-child {
+  grid-column: 2;
+}
+
+.dashboard-categories-count {
+  font-weight: 700;
+}
+
+.dashboard-categories-percent {
+  color: var(--app-color-text-secondary);
+}
+
+.dashboard-categories-toggle {
+  margin-top: var(--app-space-xs);
 }
 
 .dashboard-categories-bar {

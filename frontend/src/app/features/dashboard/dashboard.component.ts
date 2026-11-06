@@ -6,6 +6,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardService } from './dashboard.service';
+import {
+  buildCategoryRows,
+  categorySubtitle,
+  categoryToggleLabel,
+  formatCount,
+  isCategoryListFoldable,
+  visibleCategoryRows,
+} from './category-list';
 import { computePeriodRanges, PeriodOption, periodRangeLabel } from './period';
 import { AutoPublishEvolutionComponent } from './auto-publish-evolution.component';
 import { DecisionsDonutComponent, DonutSegment } from './decisions-donut.component';
@@ -141,17 +149,18 @@ export class DashboardComponent {
   });
 
   // --- Solicitudes por categoria ---
-  readonly categoryRows = computed(() => {
-    const total = this.byCategory().reduce((sum, category) => sum + category.total_interactions, 0);
-    return this.byCategory()
-      .slice()
-      .sort((a, b) => b.total_interactions - a.total_interactions)
-      .map((category) => ({
-        category: category.category,
-        total: category.total_interactions,
-        percent: total > 0 ? (category.total_interactions / total) * 100 : 0,
-      }));
-  });
+  readonly formatCount = formatCount;
+  readonly categoryRows = computed(() => buildCategoryRows(this.byCategory()));
+  readonly categorySubtitle = computed(() => categorySubtitle(this.categoryRows().length));
+  readonly categoriesExpanded = signal(false);
+  readonly categoriesFoldable = computed(() => isCategoryListFoldable(this.categoryRows().length));
+  readonly visibleCategories = computed(() => visibleCategoryRows(this.categoryRows(), this.categoriesExpanded()));
+  readonly categoryToggleText = computed(() => categoryToggleLabel(this.categoryRows().length, this.categoriesExpanded()));
+
+  toggleCategories(): void {
+    this.categoriesExpanded.update((expanded) => !expanded);
+  }
+
   readonly leaderCategory = computed(() => this.categoryRows()[0] ?? null);
 
   readonly safeTicketUrl = safeTicketUrl;

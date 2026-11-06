@@ -17,6 +17,11 @@
 }
 
 .shell-content-pane--desktop {
+  // Contiene a los elementos absolutos del contenido (por ejemplo las tablas
+  // visually-hidden de los graficos): sin esto escapan del scroll de este
+  // panel y estiran la pagina, que termina con una segunda barra y una franja
+  // vacia debajo del ultimo bloque.
+  position: relative;
   flex: 1 1 auto;
   min-width: 0;
   height: 100%;

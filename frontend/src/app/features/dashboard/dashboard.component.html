@@ -213,28 +213,48 @@
           <h2>Solicitudes por categoría</h2>
           <app-info-hint [title]="help.categories.title" [text]="help.categories.text" />
         </div>
-        <p class="dashboard-card-subtitle">Cuatro categorías, ordenadas por volumen</p>
+        <p class="dashboard-card-subtitle">{{ categorySubtitle() }}</p>
 
         @if (categoryRows().length === 0) {
           <p class="dashboard-activity-empty">Todavía no hay categorías para mostrar.</p>
         } @else {
-          <ul class="dashboard-categories-list">
-            @for (row of categoryRows(); track row.category) {
+          <div class="dashboard-categories-head" aria-hidden="true">
+            <span>Solicitudes</span>
+            <span>% del total</span>
+          </div>
+          <ul class="dashboard-categories-list" id="dashboard-categories-list">
+            @for (row of visibleCategories(); track row.category) {
               <li>
-                <div class="dashboard-categories-row">
-                  <span>{{ row.category }}</span>
-                  <span>{{ row.total | number }} {{ row.percent | number: '1.1-1' }}%</span>
+                <span class="visually-hidden">{{ row.spoken }}</span>
+                <div class="dashboard-categories-row" aria-hidden="true">
+                  <span class="dashboard-categories-name">{{ row.category }}</span>
+                  <span class="dashboard-categories-count">{{ row.totalText }}</span>
+                  <span class="dashboard-categories-percent">{{ row.percentText }}</span>
                 </div>
-                <div class="dashboard-categories-bar">
-                  <div class="dashboard-categories-bar-fill" [style.width.%]="row.percent"></div>
+                <div class="dashboard-categories-bar" aria-hidden="true">
+                  <div class="dashboard-categories-bar-fill" [style.width.%]="row.barPercent"></div>
                 </div>
               </li>
             }
           </ul>
 
+          @if (categoriesFoldable()) {
+            <button
+              mat-button
+              type="button"
+              class="dashboard-categories-toggle"
+              aria-controls="dashboard-categories-list"
+              [attr.aria-expanded]="categoriesExpanded()"
+              (click)="toggleCategories()"
+            >
+              {{ categoryToggleText() }}
+              <mat-icon aria-hidden="true">{{ categoriesExpanded() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          }
+
           @if (leaderCategory()) {
             <p class="dashboard-categories-leader">
-              {{ leaderCategory()!.category }} lidera con {{ leaderCategory()!.total | number }} solicitudes
+              {{ leaderCategory()!.category }} lidera con {{ formatCount(leaderCategory()!.total) }} solicitudes
             </p>
           }
         }
