@@ -28,5 +28,5 @@ async def receive_jsm_webhook(payload: JsmWebhookPayload):
 # punto de entrada para eventos de confluence, disparados por una regla de automation cuando una pagina cambia
 @router.post("/webhook/confluence", dependencies=[Depends(verify_confluence_webhook)])
 async def receive_confluence_webhook(payload: ConfluenceWebhookPayload):
-    await _receiver.dispatch_confluence_event(payload.page_id, payload.space_key)
-    return {"status": "dispatched", "route": "knowledge_indexer", "page_id": payload.page_id}
+    await _receiver.dispatch_confluence_event(payload.page_id, payload.space_key, payload.action)
+    return {"status": "dispatched", "route": "knowledge_indexer", "page_id": payload.page_id, "action": payload.action}

@@ -4,7 +4,7 @@ Esquemas de entrada del payload raw de JSM y salida dekl evento normalizado).
 """
 
 from pydantic import BaseModel
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 
 # payload raw que manda JSM 
@@ -104,4 +104,6 @@ class NormalizedEvent(BaseModel):
 class ConfluenceWebhookPayload(BaseModel):
     page_id: str
     space_key: str
+    # reindex es lo de siempre, delete borra los fragmentos de la pagina cuando se elimina o se archiva
+    action: Literal["reindex", "delete"] = "reindex"
     
