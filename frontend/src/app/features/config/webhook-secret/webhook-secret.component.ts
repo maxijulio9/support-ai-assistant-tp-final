@@ -5,7 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subscription, timer } from 'rxjs';
 import { ConfigService } from '../config.service';
 import { ConfigStatusService } from '../config-status.service';
 import {
@@ -13,20 +12,20 @@ import {
   CONFLUENCE_HELP,
   COPIED_MESSAGE,
   COPY_FAILED_MESSAGE,
+  FULL_NOTE,
   GENERATED_MESSAGE,
   JIRA_HELP,
+  MASKED_NOTE,
   NO_SECRET_TEXT,
   REGENERATED_MESSAGE,
-  SECRET_VISIBLE_MS,
   webhookSecretError,
 } from './webhook-secret-messages';
 import {
   INITIAL_SECRET_STATE,
   SecretAction,
   SecretEvent,
-  isSecretRetainedHidden,
   reduceSecret,
-  secretDisplayText,
+  secretDisplay,
 } from './webhook-secret-state';
 import { RegenerateSecretDialogComponent, RegenerateSecretDialogResult } from './regenerate-secret-dialog.component';
 import { webhookSecretBlockView } from './webhook-secret-view';
@@ -37,7 +36,9 @@ const SNACKBAR_MS = 3000;
 
 // El secreto vive solo en el estado de este componente (secretState), nunca
 // en un servicio, en el almacenamiento del navegador, en la consola ni en un
-// mensaje de error. La logica de cuando se descarta esta en reduceSecret.
+// mensaje de error. Al cargar la pantalla llega enmascarado; el valor completo
+// solo aparece al generar o regenerar y se pierde al salir. La logica esta en
+// reduceSecret.
 @Component({
   selector: 'app-webhook-secret',
   standalone: true,
@@ -59,10 +60,11 @@ export class WebhookSecretComponent {
   readonly confluenceHelp = CONFLUENCE_HELP;
   readonly clipboardNote = CLIPBOARD_NOTE;
   readonly regeneratedMessage = REGENERATED_MESSAGE;
+  readonly maskedNote = MASKED_NOTE;
+  readonly fullNote = FULL_NOTE;
 
   // Unico lugar donde puede estar el secreto
   private readonly secretState = signal(INITIAL_SECRET_STATE);
-  private timerSub: Subscription | null = null;
 
   // El pedido de ver o copiar respondio 404
   private readonly notFound = signal(false);
@@ -72,10 +74,7 @@ export class WebhookSecretComponent {
   readonly regeneratedNote = signal(false);
 
   readonly pending = computed(() => this.secretState().pending);
-  readonly isVisible = computed(() => this.secretState().visible && this.secretState().secret !== null);
-  readonly displayText = computed(() => secretDisplayText(this.secretState()));
-  // Despues de regenerar queda en memoria, oculto, hasta que vence
-  readonly retainedHidden = computed(() => isSecretRetainedHidden(this.secretState()));
+  readonly display = computed(() => secretDisplay(this.secretState()));
 
   readonly blockState = computed<WebhookSecretBlockState>(() => {
     const slot = this.status.jsm();
@@ -98,29 +97,33 @@ export class WebhookSecretComponent {
       untracked(() => this.notFound.set(false));
     });
 
+    // Con el secreto ya generado se pide su version enmascarada para mostrarla
+    effect(() => {
+      if (this.blockState() === 'has-secret') {
+        untracked(() => this.load());
+      }
+    });
+
     this.destroyRef.onDestroy(() => this.apply({ type: 'destroy' }));
   }
 
-  reveal(): void {
+  load(): void {
     this.errorMessage.set(null);
-    this.apply({ type: 'request', action: 'reveal' });
+    this.apply({ type: 'request', action: 'load' });
   }
 
-  hide(): void {
-    this.apply({ type: 'hide' });
-  }
-
+  // Solo el valor completo (recien regenerado) se puede copiar
   copy(): void {
+    const { canCopy, text } = this.display();
+    if (!canCopy) return;
     this.errorMessage.set(null);
-    this.apply({ type: 'request', action: 'copy' });
+    this.copyToClipboard(text);
   }
 
   // Regenerar cuando ya hay uno: pide confirmacion, porque el anterior deja de
-  // valer al instante. Antes de abrirla oculta el secreto que estuviera
-  // visible, que esta por dejar de servir.
+  // valer al instante.
   openRegenerateDialog(): void {
     if (this.pending() !== null) return;
-    this.hide();
 
     this.dialog
       .open<RegenerateSecretDialogComponent, void, RegenerateSecretDialogResult>(RegenerateSecretDialogComponent, {
@@ -148,18 +151,7 @@ export class WebhookSecretComponent {
     const transition = reduceSecret(this.secretState(), event);
     this.secretState.set(transition.state);
 
-    if (transition.timer !== null) this.syncTimer(transition.timer);
-    // El texto a copiar nunca se guarda: solo pasa de la transicion al portapapeles
-    if (transition.copyText !== null) this.copyToClipboard(transition.copyText);
     if (transition.fetch !== null) this.fetchSecret(transition.fetch);
-  }
-
-  private syncTimer(command: 'start' | 'stop'): void {
-    this.timerSub?.unsubscribe();
-    this.timerSub = null;
-    if (command === 'start') {
-      this.timerSub = timer(SECRET_VISIBLE_MS).subscribe(() => this.apply({ type: 'expire' }));
-    }
   }
 
   private copyToClipboard(text: string): void {

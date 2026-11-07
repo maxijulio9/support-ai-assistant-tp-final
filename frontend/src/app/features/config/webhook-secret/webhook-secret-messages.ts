@@ -1,12 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { SecretAction } from './webhook-secret-state';
 
-// Tiempo que el secreto queda visible, y que queda retenido oculto despues de
-// regenerar, antes de descartarse de memoria.
-export const SECRET_VISIBLE_MS = 30_000;
-
 export const COPIED_MESSAGE = 'Copiado';
-export const COPY_FAILED_MESSAGE = 'No se pudo copiar. Mostralo y copialo a mano.';
+export const COPY_FAILED_MESSAGE = 'No se pudo copiar. Seleccioná el valor y copialo a mano.';
+export const MASKED_NOTE = 'El valor completo solo se ve al regenerar.';
+export const FULL_NOTE = 'No se va a volver a mostrar. Copialo ahora.';
 export const GENERATED_MESSAGE = 'Secreto generado. Pegalo en Jira y en Confluence.';
 export const REGENERATED_MESSAGE = 'Secreto regenerado. Actualizalo en Jira y en Confluence ahora.';
 
@@ -22,7 +20,8 @@ export const REGENERATE_DIALOG = {
   title: 'Regenerar el secreto',
   body:
     'Al regenerar el secreto, el anterior deja de valer enseguida. Hasta que lo actualices en Jira y en Confluence, ' +
-    'esos sistemas van a recibir un 401 y sus avisos se van a rechazar. Tené a mano Jira y Confluence para actualizarlos ahora.',
+    'esos sistemas van a recibir un 401 y sus avisos se van a rechazar. El valor nuevo se muestra completo una sola vez: ' +
+    'tené a mano Jira y Confluence para pegarlo ahora.',
   cancel: 'Cancelar',
   confirm: 'Regenerar',
 };
@@ -35,8 +34,8 @@ const GENERIC_READ_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 const GENERIC_REGENERATE_MESSAGE = 'No se pudo regenerar el secreto. Intentá de nuevo.';
 // Si no se pudo confirmar el cambio, el secreto nuevo puede haberse generado
 // igual y el anterior ya no sirve.
-export const UNCONFIRMED_REGENERATE_MESSAGE = 'No pudimos confirmar el cambio. Pedí el secreto con «Ver» para comprobar el actual.';
-export const UNCONFIRMED_FIRST_MESSAGE = 'No pudimos confirmar si se generó el secreto. Actualizá la página para comprobarlo.';
+export const UNCONFIRMED_REGENERATE_MESSAGE = 'No pudimos confirmar el cambio. Puede que el secreto se haya regenerado sin que veas el valor nuevo: volvé a regenerarlo para obtenerlo.';
+export const UNCONFIRMED_FIRST_MESSAGE = 'No pudimos confirmar si se generó el secreto. Actualizá la página para comprobarlo: si ya existe, regeneralo para ver el valor.';
 
 export type WebhookSecretError = { kind: 'not-configured' } | { kind: 'error'; message: string };
 
@@ -51,7 +50,7 @@ export function webhookSecretError(error: unknown, action: SecretAction, hadSecr
     return { kind: 'error', message: isRegenerate ? GENERIC_REGENERATE_MESSAGE : GENERIC_READ_MESSAGE };
   }
 
-  // Solo la lectura puede responder "todavia no hay"
+  // Solo la carga puede responder "todavia no hay"
   if (status === 404 && !isRegenerate) return { kind: 'not-configured' };
 
   if (status === 403) {

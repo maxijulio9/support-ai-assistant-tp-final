@@ -1,42 +1,38 @@
-// Ciclo de vida del secreto de los webhooks en memoria. El secreto solo
-// existe en este estado mientras se muestra o durante la retencion corta
-// despues de regenerar: en cualquier otro caso es null. Es una funcion pura
-// para poder fijar con specs cuando se descarta, y el componente solo la
-// aplica y ejecuta los efectos que devuelve.
-export type SecretAction = 'reveal' | 'copy' | 'regenerate';
+// Ciclo de vida del secreto de los webhooks en memoria. El backend manda el
+// secreto enmascarado al consultarlo y completo solo al generarlo o
+// regenerarlo (campo masked de la respuesta). Es una funcion pura para poder
+// fijar con specs que el valor completo no se conserva mas alla de este
+// estado, y el componente solo la aplica y ejecuta los efectos que devuelve.
+export type SecretAction = 'load' | 'regenerate';
+
+export interface SecretValue {
+  value: string;
+  // true: viene enmascarado y no se puede copiar
+  masked: boolean;
+}
 
 export interface SecretState {
-  secret: string | null;
-  // Solo se muestra el valor real si esto es true
-  visible: boolean;
+  secret: SecretValue | null;
   pending: SecretAction | null;
   // Una vez destruido ya no acepta nada, ni respuestas tardias
   destroyed: boolean;
 }
 
-export const INITIAL_SECRET_STATE: SecretState = { secret: null, visible: false, pending: null, destroyed: false };
+export const INITIAL_SECRET_STATE: SecretState = { secret: null, pending: null, destroyed: false };
 
 export type SecretEvent =
   | { type: 'request'; action: SecretAction }
-  | { type: 'received'; action: SecretAction; secret: string }
+  | { type: 'received'; action: SecretAction; secret: SecretValue }
   | { type: 'failed'; action: SecretAction }
-  | { type: 'hide' }
-  | { type: 'expire' }
   | { type: 'destroy' };
 
 export interface SecretTransition {
   state: SecretState;
   // Accion que hay que pedir al backend
   fetch: SecretAction | null;
-  // Texto que hay que poner en el portapapeles ahora
-  copyText: string | null;
-  // Temporizador de 30 s: reiniciarlo o frenarlo
-  timer: 'start' | 'stop' | null;
 }
 
-const IGNORED = (state: SecretState): SecretTransition => ({ state, fetch: null, copyText: null, timer: null });
-
-const CLEARED: Pick<SecretState, 'secret' | 'visible'> = { secret: null, visible: false };
+const IGNORED = (state: SecretState): SecretTransition => ({ state, fetch: null });
 
 export function reduceSecret(state: SecretState, event: SecretEvent): SecretTransition {
   if (state.destroyed) return IGNORED(state);
@@ -46,75 +42,54 @@ export function reduceSecret(state: SecretState, event: SecretEvent): SecretTran
       // Una operacion a la vez
       if (state.pending !== null) return IGNORED(state);
 
-      if (event.action === 'reveal') {
-        // Si quedo retenido despues de regenerar, se muestra sin otro pedido
-        if (state.secret !== null) {
-          return { state: { ...state, visible: true }, fetch: null, copyText: null, timer: 'start' };
-        }
-        return { state: { ...state, pending: 'reveal' }, fetch: 'reveal', copyText: null, timer: null };
+      if (event.action === 'load') {
+        // Con algo en memoria no se vuelve a pedir: el completo recien
+        // generado no se pisa con el enmascarado
+        if (state.secret !== null) return IGNORED(state);
+        return { state: { ...state, pending: 'load' }, fetch: 'load' };
       }
 
-      if (event.action === 'copy') {
-        if (state.secret !== null) {
-          return { state, fetch: null, copyText: state.secret, timer: null };
-        }
-        return { state: { ...state, pending: 'copy' }, fetch: 'copy', copyText: null, timer: null };
-      }
-
-      // Regenerar: el secreto que hubiera en memoria deja de valer, se suelta ya
-      return { state: { ...state, ...CLEARED, pending: 'regenerate' }, fetch: 'regenerate', copyText: null, timer: 'stop' };
+      // Regenerar: el valor que hubiera en memoria deja de valer, se suelta ya
+      return { state: { ...state, secret: null, pending: 'regenerate' }, fetch: 'regenerate' };
     }
 
     case 'received': {
       // Una respuesta que no corresponde a lo pendiente se descarta
       if (state.pending !== event.action) return IGNORED(state);
-
-      if (event.action === 'reveal') {
-        return { state: { ...state, secret: event.secret, visible: true, pending: null }, fetch: null, copyText: null, timer: 'start' };
-      }
-
-      if (event.action === 'copy') {
-        // Se copia y se descarta enseguida: no estaba visible ni retenido
-        return { state: { ...state, ...CLEARED, pending: null }, fetch: null, copyText: event.secret, timer: null };
-      }
-
-      // Regenerar: queda retenido pero oculto, por tiempo limitado
-      return {
-        state: { ...state, secret: event.secret, visible: false, pending: null },
-        fetch: null,
-        copyText: null,
-        timer: 'start',
-      };
+      // Solo regenerar puede dejar un valor completo: lo que llega al
+      // consultar nunca se puede copiar, aunque la respuesta diga otra cosa
+      const secret = event.action === 'load' ? { ...event.secret, masked: true } : event.secret;
+      return { state: { ...state, secret, pending: null }, fetch: null };
     }
 
     case 'failed': {
       if (state.pending !== event.action) return IGNORED(state);
-      return { state: { ...state, pending: null }, fetch: null, copyText: null, timer: null };
+      return { state: { ...state, pending: null }, fetch: null };
     }
 
-    case 'hide':
-    case 'expire':
-      return { state: { ...state, ...CLEARED }, fetch: null, copyText: null, timer: 'stop' };
-
     case 'destroy':
-      return {
-        state: { secret: null, visible: false, pending: null, destroyed: true },
-        fetch: null,
-        copyText: null,
-        timer: 'stop',
-      };
+      return { state: { secret: null, pending: null, destroyed: true }, fetch: null };
   }
 }
 
-// Mascara de largo fijo: no revela el largo del secreto
+// Mascara que se muestra mientras todavia no llego el valor
 export const SECRET_MASK = '••••••••••••';
 
-// Lo que muestra la pantalla: el valor real solo si esta visible
-export function secretDisplayText(state: SecretState): string {
-  return state.visible && state.secret !== null ? state.secret : SECRET_MASK;
+// empty: el backend mando un valor vacio, se trata como sin secreto
+export type SecretDisplayMode = 'loading' | 'empty' | 'masked' | 'full';
+
+export interface SecretDisplay {
+  mode: SecretDisplayMode;
+  text: string;
+  // Solo el valor completo se puede copiar
+  canCopy: boolean;
 }
 
-// Hay un secreto en memoria que no se esta mostrando (retencion despues de regenerar)
-export function isSecretRetainedHidden(state: SecretState): boolean {
-  return state.secret !== null && !state.visible;
+// Lo que muestra la pantalla segun lo que haya en memoria
+export function secretDisplay(state: SecretState): SecretDisplay {
+  const secret = state.secret;
+  if (secret === null) return { mode: 'loading', text: SECRET_MASK, canCopy: false };
+  if (secret.value === '') return { mode: 'empty', text: SECRET_MASK, canCopy: false };
+  if (secret.masked) return { mode: 'masked', text: secret.value, canCopy: false };
+  return { mode: 'full', text: secret.value, canCopy: true };
 }

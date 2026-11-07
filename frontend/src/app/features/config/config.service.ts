@@ -74,6 +74,9 @@ import { thresholdsFromProject } from './project-statuses-form';
 
 // Nivel universal de prioridad como clave, lista de ids reales de JSM como
 // valor: misma forma que usan tanto el POST como el detalle del proyecto.
+import { SecretValue } from './webhook-secret/webhook-secret-state';
+import { toSecretValue } from './webhook-secret/webhook-secret-value';
+
 export type PriorityMapping = Record<string, string[]>;
 
 export interface PrioritiesWithSuggestion {
@@ -106,18 +109,18 @@ export class ConfigService {
   }
 
   // Secreto de los webhooks, solo para administradores. Devuelve unicamente el
-  // texto: no se guarda aca ni en ningun otro servicio, quien lo pide es el
-  // unico que lo tiene y lo suelta cuando deja de mostrarlo.
-  getWebhookSecret(): Observable<string> {
+  // texto y si viene enmascarado: no se guarda aca ni en ningun otro servicio,
+  // quien lo pide es el unico que lo tiene y lo suelta al salir de la pantalla.
+  getWebhookSecret(): Observable<SecretValue> {
     return getWebhookSecretApiConfigItsmWebhookSecretGet(this.http, this.apiConfig.rootUrl).pipe(
-      map((response) => response.body.webhook_secret),
+      map((response) => toSecretValue(response.body)),
     );
   }
 
-  // Genera uno nuevo, lo guarda y lo devuelve. El anterior deja de valer al instante.
-  regenerateWebhookSecret(): Observable<string> {
+  // Genera uno nuevo, lo guarda y lo devuelve completo. El anterior deja de valer al instante.
+  regenerateWebhookSecret(): Observable<SecretValue> {
     return regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost(this.http, this.apiConfig.rootUrl).pipe(
-      map((response) => response.body.webhook_secret),
+      map((response) => toSecretValue(response.body)),
     );
   }
 

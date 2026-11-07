@@ -3,9 +3,10 @@ import {
   CLIPBOARD_NOTE,
   CONFLUENCE_HELP,
   COPY_FAILED_MESSAGE,
+  FULL_NOTE,
+  MASKED_NOTE,
   JIRA_HELP,
   REGENERATE_DIALOG,
-  SECRET_VISIBLE_MS,
   UNCONFIRMED_FIRST_MESSAGE,
   UNCONFIRMED_REGENERATE_MESSAGE,
   webhookSecretError,
@@ -13,12 +14,13 @@ import {
 
 const http = (status: number, body: unknown = null) => new HttpErrorResponse({ status, error: body });
 
-describe('webhookSecretError al pedir el secreto (ver y copiar)', () => {
-  it.each(['reveal', 'copy'] as const)('%s: un 404 significa que todavia no hay secreto', (action) => {
-    expect(webhookSecretError(http(404), action)).toEqual({ kind: 'not-configured' });
+describe('webhookSecretError al cargar el secreto', () => {
+  it('un 404 significa que todavia no hay secreto', () => {
+    expect(webhookSecretError(http(404), 'load')).toEqual({ kind: 'not-configured' });
   });
 
-  it.each(['reveal', 'copy'] as const)('%s: 403, 503, red y otros tienen su mensaje', (action) => {
+  it('403, 503, red y otros tienen su mensaje', () => {
+    const action = 'load';
     expect(webhookSecretError(http(403), action)).toEqual({
       kind: 'error',
       message: 'No tenés permiso para ver el secreto. Solo lo puede ver un administrador.',
@@ -38,7 +40,7 @@ describe('webhookSecretError al pedir el secreto (ver y copiar)', () => {
   });
 
   it('un error que no es HTTP cae en el mensaje generico', () => {
-    expect(webhookSecretError(new Error('x'), 'reveal')).toEqual({
+    expect(webhookSecretError(new Error('x'), 'load')).toEqual({
       kind: 'error',
       message: 'Ocurrió un error inesperado. Intentá de nuevo.',
     });
@@ -57,14 +59,14 @@ describe('webhookSecretError al regenerar', () => {
     });
   });
 
-  it.each([0, 500, 502, 503])('con estado %s no se puede confirmar el cambio y se pide comprobar con Ver', (status) => {
+  it.each([0, 500, 502, 503])('con estado %s no se puede confirmar el cambio y se pide volver a regenerar', (status) => {
     expect(webhookSecretError(http(status), 'regenerate')).toEqual({ kind: 'error', message: UNCONFIRMED_REGENERATE_MESSAGE });
-    expect(UNCONFIRMED_REGENERATE_MESSAGE).toBe('No pudimos confirmar el cambio. Pedí el secreto con «Ver» para comprobar el actual.');
+    expect(UNCONFIRMED_REGENERATE_MESSAGE).toContain('volvé a regenerarlo');
   });
 
-  it('la primera generacion no manda a "Ver", que todavia no existe', () => {
+  it('la primera generacion no menciona un valor que ya existiera', () => {
     expect(webhookSecretError(http(0), 'regenerate', false)).toEqual({ kind: 'error', message: UNCONFIRMED_FIRST_MESSAGE });
-    expect(UNCONFIRMED_FIRST_MESSAGE).not.toContain('«Ver»');
+    expect(UNCONFIRMED_FIRST_MESSAGE).toContain('Actualizá la página');
   });
 
   it('otro error 4xx cae en el mensaje generico de regenerar', () => {
@@ -80,7 +82,7 @@ describe('seguridad de los mensajes', () => {
   const bodies: unknown[] = [{ detail: SECRET }, { webhook_secret: SECRET }, SECRET, { detail: [{ msg: SECRET }] }];
 
   it.each([400, 403, 404, 500, 503, 0])('con estado %s ningun mensaje incluye el cuerpo de la respuesta', (status) => {
-    for (const action of ['reveal', 'copy', 'regenerate'] as const) {
+    for (const action of ['load', 'regenerate'] as const) {
       for (const body of bodies) {
         const result = webhookSecretError(http(status, body), action);
         expect(JSON.stringify(result)).not.toContain(SECRET);
@@ -112,10 +114,12 @@ describe('textos fijos', () => {
   });
 
   it('textos aprobados', () => {
-    expect(COPY_FAILED_MESSAGE).toBe('No se pudo copiar. Mostralo y copialo a mano.');
+    expect(COPY_FAILED_MESSAGE).toBe('No se pudo copiar. Seleccioná el valor y copialo a mano.');
+    expect(MASKED_NOTE).toBe('El valor completo solo se ve al regenerar.');
+    expect(FULL_NOTE).toBe('No se va a volver a mostrar. Copialo ahora.');
   });
 
-  it('el tiempo de visibilidad y de retencion es de 30 s', () => {
-    expect(SECRET_VISIBLE_MS).toBe(30_000);
+  it('la confirmacion avisa que el valor nuevo se ve una sola vez', () => {
+    expect(REGENERATE_DIALOG.body).toContain('una sola vez');
   });
 });

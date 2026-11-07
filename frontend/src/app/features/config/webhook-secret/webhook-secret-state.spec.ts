@@ -4,12 +4,12 @@ import {
   SecretAction,
   SecretEvent,
   SecretState,
-  isSecretRetainedHidden,
   reduceSecret,
-  secretDisplayText,
+  secretDisplay,
 } from './webhook-secret-state';
 
-const SECRET = 'secreto-de-prueba';
+const MASKED = { value: '********abcd', masked: true };
+const FULL = { value: 'secreto-completo-de-prueba', masked: false };
 
 function run(events: SecretEvent[], from: SecretState = INITIAL_SECRET_STATE) {
   let state = from;
@@ -21,194 +21,165 @@ function run(events: SecretEvent[], from: SecretState = INITIAL_SECRET_STATE) {
   return { state, transitions, last: transitions[transitions.length - 1] };
 }
 
-const revealed = () => run([{ type: 'request', action: 'reveal' }, { type: 'received', action: 'reveal', secret: SECRET }]).state;
-const retained = () => run([{ type: 'request', action: 'regenerate' }, { type: 'received', action: 'regenerate', secret: SECRET }]).state;
+const loaded = () =>
+  run([
+    { type: 'request', action: 'load' },
+    { type: 'received', action: 'load', secret: MASKED },
+  ]).state;
+const regenerated = () =>
+  run([
+    { type: 'request', action: 'regenerate' },
+    { type: 'received', action: 'regenerate', secret: FULL },
+  ]).state;
 
-describe('ver', () => {
-  it('pedir ver sin secreto en memoria lo pide al backend y queda pendiente', () => {
-    const { state, last } = run([{ type: 'request', action: 'reveal' }]);
+describe('cargar el secreto enmascarado', () => {
+  it('pedirlo sin nada en memoria lo pide al backend y queda pendiente', () => {
+    const { state, last } = run([{ type: 'request', action: 'load' }]);
 
-    expect(last.fetch).toBe('reveal');
-    expect(state.pending).toBe('reveal');
-    expect(state.secret).toBeNull();
+    expect(last.fetch).toBe('load');
+    expect(state).toMatchObject({ pending: 'load', secret: null });
   });
 
-  it('al recibirlo queda visible y arranca el temporizador de 30 s', () => {
-    const { state, last } = run([{ type: 'request', action: 'reveal' }, { type: 'received', action: 'reveal', secret: SECRET }]);
+  it('al recibirlo queda en memoria y deja de estar pendiente', () => {
+    const state = loaded();
 
-    expect(state).toMatchObject({ secret: SECRET, visible: true, pending: null });
-    expect(last.timer).toBe('start');
+    expect(state).toMatchObject({ secret: MASKED, pending: null });
   });
 
-  it('ocultar lo borra de memoria y frena el temporizador', () => {
-    const { state, last } = run([{ type: 'hide' }], revealed());
+  it('lo que llega al consultar nunca se puede copiar, aunque diga masked false', () => {
+    const { state } = run([
+      { type: 'request', action: 'load' },
+      { type: 'received', action: 'load', secret: FULL },
+    ]);
 
-    expect(state).toMatchObject({ secret: null, visible: false });
-    expect(last.timer).toBe('stop');
+    expect(state.secret).toEqual({ value: FULL.value, masked: true });
+    expect(secretDisplay(state).canCopy).toBe(false);
   });
 
-  it('al vencer el temporizador lo borra de memoria', () => {
-    expect(run([{ type: 'expire' }], revealed()).state).toMatchObject({ secret: null, visible: false });
-  });
-
-  it('si falla el pedido no queda nada en memoria y se puede volver a intentar', () => {
-    const { state } = run([{ type: 'request', action: 'reveal' }, { type: 'failed', action: 'reveal' }]);
-
-    expect(state).toMatchObject({ secret: null, visible: false, pending: null });
-    expect(run([{ type: 'request', action: 'reveal' }], state).last.fetch).toBe('reveal');
-  });
-});
-
-describe('copiar', () => {
-  it('sin secreto en memoria lo pide, lo copia al recibirlo y lo descarta enseguida', () => {
-    const { state, transitions } = run([{ type: 'request', action: 'copy' }, { type: 'received', action: 'copy', secret: SECRET }]);
-
-    expect(transitions[0].fetch).toBe('copy');
-    expect(transitions[1].copyText).toBe(SECRET);
-    expect(state).toMatchObject({ secret: null, visible: false, pending: null });
-  });
-
-  it('si ya esta visible lo copia sin pedirlo y sigue visible', () => {
-    const start = revealed();
-    const { state, last } = run([{ type: 'request', action: 'copy' }], start);
+  it('con algo en memoria no se vuelve a pedir', () => {
+    const { last } = run([{ type: 'request', action: 'load' }], loaded());
 
     expect(last.fetch).toBeNull();
-    expect(last.copyText).toBe(SECRET);
-    expect(state).toEqual(start);
   });
 
-  it('si esta retenido oculto despues de regenerar lo copia sin pedirlo y sigue retenido', () => {
-    const start = retained();
-    const { state, last } = run([{ type: 'request', action: 'copy' }], start);
+  it('el completo recien regenerado no se pisa con una carga', () => {
+    const { state, last } = run([{ type: 'request', action: 'load' }], regenerated());
 
     expect(last.fetch).toBeNull();
-    expect(last.copyText).toBe(SECRET);
-    expect(state).toEqual(start);
+    expect(state.secret).toEqual(FULL);
   });
 
-  it('si falla el pedido no copia nada ni deja nada en memoria', () => {
-    const { state, last } = run([{ type: 'request', action: 'copy' }, { type: 'failed', action: 'copy' }]);
+  it('si falla, vuelve a no estar pendiente y no deja nada en memoria', () => {
+    const { state } = run([
+      { type: 'request', action: 'load' },
+      { type: 'failed', action: 'load' },
+    ]);
 
-    expect(last.copyText).toBeNull();
-    expect(state.secret).toBeNull();
+    expect(state).toMatchObject({ pending: null, secret: null });
   });
 });
 
 describe('regenerar', () => {
-  it('pedir regenerar suelta ya el secreto que hubiera en memoria, porque deja de valer', () => {
-    const { state, last } = run([{ type: 'request', action: 'regenerate' }], revealed());
+  it('lo pide al backend y suelta lo que hubiera en memoria', () => {
+    const { state, last } = run([{ type: 'request', action: 'regenerate' }], loaded());
 
     expect(last.fetch).toBe('regenerate');
-    expect(state).toMatchObject({ secret: null, visible: false, pending: 'regenerate' });
-    expect(last.timer).toBe('stop');
+    expect(state).toMatchObject({ pending: 'regenerate', secret: null });
   });
 
-  it('el secreto nuevo queda retenido pero oculto, con el temporizador de 30 s', () => {
-    const { state, last } = run([{ type: 'request', action: 'regenerate' }, { type: 'received', action: 'regenerate', secret: SECRET }]);
+  it('suelta tambien un completo anterior, que deja de valer', () => {
+    const { state } = run([{ type: 'request', action: 'regenerate' }], regenerated());
 
-    expect(state).toMatchObject({ secret: SECRET, visible: false, pending: null });
-    expect(isSecretRetainedHidden(state)).toBe(true);
-    expect(secretDisplayText(state)).toBe(SECRET_MASK);
-    expect(last.timer).toBe('start');
+    expect(state.secret).toBeNull();
   });
 
-  it('desde la retencion, ver lo muestra sin otro pedido y reinicia el temporizador', () => {
-    const { state, last } = run([{ type: 'request', action: 'reveal' }], retained());
-
-    expect(last.fetch).toBeNull();
-    expect(state).toMatchObject({ secret: SECRET, visible: true });
-    expect(last.timer).toBe('start');
+  it('al recibirlo queda el valor completo en memoria', () => {
+    expect(regenerated()).toMatchObject({ secret: FULL, pending: null });
   });
 
-  it('la retencion termina al vencer, al ocultar o al destruir', () => {
-    for (const type of ['expire', 'hide', 'destroy'] as const) {
-      expect(run([{ type }], retained()).state.secret).toBeNull();
-    }
-  });
+  it('si falla, no queda nada en memoria', () => {
+    const { state } = run([
+      { type: 'request', action: 'regenerate' },
+      { type: 'failed', action: 'regenerate' },
+    ]);
 
-  it('si falla no queda secreto en memoria', () => {
-    const { state } = run([{ type: 'request', action: 'regenerate' }, { type: 'failed', action: 'regenerate' }], revealed());
-
-    expect(state).toMatchObject({ secret: null, visible: false, pending: null });
+    expect(state).toMatchObject({ secret: null, pending: null });
   });
 });
 
 describe('una operacion a la vez', () => {
-  it.each<SecretAction>(['reveal', 'copy', 'regenerate'])('con %s pendiente se ignora cualquier otro pedido', (pending) => {
-    const busy = run([{ type: 'request', action: pending }]).state;
+  it('mientras hay algo pendiente se ignoran los pedidos nuevos', () => {
+    const pending = run([{ type: 'request', action: 'load' }]).state;
 
-    for (const action of ['reveal', 'copy', 'regenerate'] as const) {
-      const { state, fetch, copyText } = reduceSecret(busy, { type: 'request', action });
-      expect(state).toEqual(busy);
-      expect(fetch).toBeNull();
-      expect(copyText).toBeNull();
-    }
+    expect(run([{ type: 'request', action: 'regenerate' }], pending).last.fetch).toBeNull();
+    expect(run([{ type: 'request', action: 'load' }], pending).last.fetch).toBeNull();
   });
 
-  it('una respuesta que no es la de la accion pendiente se descarta', () => {
-    const busy = run([{ type: 'request', action: 'reveal' }]).state;
-    const { state, copyText } = reduceSecret(busy, { type: 'received', action: 'copy', secret: SECRET });
+  it('una respuesta que no corresponde a lo pendiente se descarta', () => {
+    const pending = run([{ type: 'request', action: 'load' }]).state;
+    const { state } = run([{ type: 'received', action: 'regenerate', secret: FULL }], pending);
 
-    expect(state).toEqual(busy);
-    expect(copyText).toBeNull();
+    expect(state).toEqual(pending);
   });
 
-  it('una respuesta sin nada pendiente se descarta y no deja el secreto en memoria', () => {
-    const { state } = reduceSecret(INITIAL_SECRET_STATE, { type: 'received', action: 'reveal', secret: SECRET });
+  it('una respuesta sin nada pendiente se descarta', () => {
+    const { state } = run([{ type: 'received', action: 'regenerate', secret: FULL }]);
 
     expect(state.secret).toBeNull();
   });
 });
 
 describe('destruir', () => {
-  it('descarta el secreto, frena el temporizador y marca el estado como destruido', () => {
-    const { state, last } = run([{ type: 'destroy' }], revealed());
-
-    expect(state).toEqual({ secret: null, visible: false, pending: null, destroyed: true });
-    expect(last.timer).toBe('stop');
-  });
-
-  it('una respuesta que llega despues de destruir no vuelve a poner el secreto en memoria', () => {
-    const { state, last } = run([
-      { type: 'request', action: 'reveal' },
-      { type: 'destroy' },
-      { type: 'received', action: 'reveal', secret: SECRET },
-    ]);
+  it('suelta el valor completo de la memoria', () => {
+    const { state } = run([{ type: 'destroy' }], regenerated());
 
     expect(state.secret).toBeNull();
-    expect(last.copyText).toBeNull();
+    expect(state.destroyed).toBe(true);
   });
 
-  it('despues de destruir se ignora todo', () => {
+  it('una respuesta tardia despues de destruir no vuelve a poner nada', () => {
+    const { state } = run(
+      [
+        { type: 'request', action: 'regenerate' },
+        { type: 'destroy' },
+        { type: 'received', action: 'regenerate', secret: FULL },
+      ],
+      INITIAL_SECRET_STATE,
+    );
+
+    expect(state.secret).toBeNull();
+  });
+
+  it('despues de destruir no se pide nada', () => {
     const destroyed = run([{ type: 'destroy' }]).state;
 
-    for (const event of [
-      { type: 'request', action: 'reveal' },
-      { type: 'request', action: 'copy' },
-      { type: 'request', action: 'regenerate' },
-      { type: 'received', action: 'copy', secret: SECRET },
-      { type: 'hide' },
-    ] as SecretEvent[]) {
-      const { state, fetch, copyText, timer } = reduceSecret(destroyed, event);
-      expect(state).toEqual(destroyed);
-      expect([fetch, copyText, timer]).toEqual([null, null, null]);
-    }
+    expect(run([{ type: 'request', action: 'load' }], destroyed).last.fetch).toBeNull();
+    expect(run([{ type: 'request', action: 'regenerate' }], destroyed).last.fetch).toBeNull();
   });
 });
 
-describe('lo que se muestra', () => {
-  it('oculto, sin secreto o retenido: solo la mascara', () => {
-    expect(secretDisplayText(INITIAL_SECRET_STATE)).toBe(SECRET_MASK);
-    expect(secretDisplayText(retained())).toBe(SECRET_MASK);
+describe('secretDisplay', () => {
+  it('sin nada en memoria muestra la mascara y no se puede copiar', () => {
+    expect(secretDisplay(INITIAL_SECRET_STATE)).toEqual({ mode: 'loading', text: SECRET_MASK, canCopy: false });
   });
 
-  it('visible: el valor real', () => {
-    expect(secretDisplayText(revealed())).toBe(SECRET);
+  it('enmascarado muestra el valor del backend y no se puede copiar', () => {
+    expect(secretDisplay(loaded())).toEqual({ mode: 'masked', text: MASKED.value, canCopy: false });
   });
 
-  it('la mascara es de largo fijo y no contiene el secreto', () => {
-    expect(SECRET_MASK.length).toBeGreaterThan(0);
-    expect(SECRET_MASK).not.toContain(SECRET);
+  it('un valor vacio es "sin secreto": muestra la mascara y no se puede copiar', () => {
+    for (const masked of [false, true]) {
+      const state = run([
+        { type: 'request', action: 'regenerate' },
+        { type: 'received', action: 'regenerate', secret: { value: '', masked } },
+      ]).state;
+
+      expect(secretDisplay(state)).toEqual({ mode: 'empty', text: SECRET_MASK, canCopy: false });
+    }
+  });
+
+  it('completo muestra el valor y se puede copiar', () => {
+    expect(secretDisplay(regenerated())).toEqual({ mode: 'full', text: FULL.value, canCopy: true });
   });
 });
 
@@ -222,69 +193,54 @@ describe('invariantes con secuencias de eventos al azar', () => {
     };
   }
 
-  const ACTIONS: SecretAction[] = ['reveal', 'copy', 'regenerate'];
+  const ACTIONS: SecretAction[] = ['load', 'regenerate'];
 
   function randomEvent(random: () => number): SecretEvent {
     const action = ACTIONS[Math.floor(random() * ACTIONS.length)];
-    const kinds = ['request', 'received', 'failed', 'hide', 'expire', 'destroy'];
+    const kinds = ['request', 'received', 'failed', 'destroy'];
     const type = kinds[Math.floor(random() * kinds.length)];
-    if (type === 'request') return { type, action };
-    if (type === 'received') return { type, action, secret: `s${Math.floor(random() * 1000)}` };
-    if (type === 'failed') return { type, action };
-    return { type } as SecretEvent;
+    if (type === 'request' || type === 'failed') return { type, action } as SecretEvent;
+    if (type === 'received') {
+      const value = random() < 0.1 ? '' : `s${Math.floor(random() * 1000)}`;
+      return { type, action, secret: { value, masked: random() < 0.5 } };
+    }
+    return { type: 'destroy' };
   }
 
-  it('visible implica que hay secreto, y destruido implica que no lo hay', () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const random = lcg(seed);
-      let state = INITIAL_SECRET_STATE;
-      for (let step = 0; step < 60; step++) {
-        state = reduceSecret(state, randomEvent(random)).state;
-        if (state.visible) expect(state.secret).not.toBeNull();
-        if (state.destroyed) expect(state).toEqual({ secret: null, visible: false, pending: null, destroyed: true });
-      }
-    }
-  });
-
-  it('despues de ocultar, vencer o destruir nunca queda secreto en memoria', () => {
+  function forEachStep(check: (before: SecretState, event: SecretEvent, after: SecretState) => void) {
     for (let seed = 1; seed <= 200; seed++) {
       const random = lcg(seed);
       let state = INITIAL_SECRET_STATE;
       for (let step = 0; step < 60; step++) {
         const event = randomEvent(random);
-        state = reduceSecret(state, event).state;
-        if (event.type === 'hide' || event.type === 'expire' || event.type === 'destroy') expect(state.secret).toBeNull();
+        const next = reduceSecret(state, event).state;
+        check(state, event, next);
+        state = next;
       }
     }
+  }
+
+  it('despues de destruir nunca hay secreto en memoria', () => {
+    forEachStep((_before, _event, after) => {
+      if (after.destroyed) expect(after).toEqual({ secret: null, pending: null, destroyed: true });
+    });
   });
 
-  it('el valor real solo se muestra si esta visible', () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const random = lcg(seed);
-      let state = INITIAL_SECRET_STATE;
-      for (let step = 0; step < 60; step++) {
-        state = reduceSecret(state, randomEvent(random)).state;
-        const shown = secretDisplayText(state);
-        if (!state.visible) expect(shown).toBe(SECRET_MASK);
-        if (state.visible) expect(shown).toBe(state.secret);
-      }
-    }
+  it('un valor enmascarado nunca se puede copiar', () => {
+    forEachStep((_before, _event, after) => {
+      const display = secretDisplay(after);
+      if (after.secret?.masked) expect(display.canCopy).toBe(false);
+      if (display.canCopy) expect(after.secret).toMatchObject({ masked: false });
+    });
   });
 
-  it('copyText solo sale de una copia pedida o de un secreto ya en memoria, nunca de una respuesta ajena', () => {
-    for (let seed = 1; seed <= 200; seed++) {
-      const random = lcg(seed);
-      let state = INITIAL_SECRET_STATE;
-      for (let step = 0; step < 60; step++) {
-        const event = randomEvent(random);
-        const transition = reduceSecret(state, event);
-        if (transition.copyText !== null) {
-          const fromReceivedCopy = event.type === 'received' && event.action === 'copy' && state.pending === 'copy';
-          const fromMemory = event.type === 'request' && event.action === 'copy' && state.secret === transition.copyText;
-          expect(fromReceivedCopy || fromMemory).toBe(true);
-        }
-        state = transition.state;
+  it('solo un received de regenerar puede dejar un valor completo', () => {
+    forEachStep((before, event, after) => {
+      const isFull = after.secret !== null && !after.secret.masked;
+      if (isFull && after.secret !== before.secret) {
+        expect(event).toMatchObject({ type: 'received', action: 'regenerate' });
+        expect(before.pending).toBe('regenerate');
       }
-    }
+    });
   });
 });
