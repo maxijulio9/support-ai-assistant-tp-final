@@ -3,6 +3,7 @@
 import logging
 from app.core.database import get_db
 from app.modules.knowledge_indexer.client import ConfluenceClient
+from app.modules.internal_api.repositories.confluence_credentials_repository import ConfluenceCredentialsRepository
 from app.modules.knowledge_indexer.text_cleaner import TextCleaner
 from app.modules.knowledge_indexer.chunker import TextChunker
 from app.modules.knowledge_indexer.schemas import ExtractedPage
@@ -17,12 +18,17 @@ class KnowledgeIndexer:
 
     def __init__(self):
         # self.db = next(get_db())
-        self.client = ConfluenceClient()
+        self.credentials_repository = ConfluenceCredentialsRepository()
         self.cleaner = TextCleaner()
         self.chunker = TextChunker()
         self.embedding_client = EmbeddingClient()
         self.storage = ChunkStorage()
         self.space_repo = KbSpaceRepository()
+
+    # arma el cliente de confluence con las credenciales guardadas en la base, se leen y se desencriptan en cada trabajo
+    # el cliente no se guarda en el objeto, asi un cambio hecho desde la configuracion vale desde el trabajo siguiente
+    def _resolve_client(self) -> ConfluenceClient:
+        return ConfluenceClient.from_credentials(self.credentials_repository.get_credentials())
 
     # extrae category y doc_type desde los labels de ls kb
     # si la pagina no tiene labels, devuelve None en ambos campos - formato harcoreado para probar
@@ -83,6 +89,7 @@ class KnowledgeIndexer:
                     embedding = self.embedding_client.generate_embedding(chunk_texto)
                     self.storage.save_chunk(db, pagina, chunk_texto, embedding, i, total_chunks)
 
+                self.storage.delete_stale_chunks(db, pagina.page_id, total_chunks)
                 processed += 1
                 generated += total_chunks
                 self._notify(on_progress, documents_processed=processed, chunks_generated=generated)
@@ -100,8 +107,10 @@ class KnowledgeIndexer:
 
 
      # recorre todos los spaces indicados y extrae el contenido de cada pagina
-    def extract_pages(self, space_keys: list[str], on_page=None) -> list[ExtractedPage]:
+    def extract_pages(self, space_keys: list[str], on_page=None, client: ConfluenceClient | None = None) -> list[ExtractedPage]:
         paginas_extraidas = []
+        # si no llega un cliente se arma con las credenciales de la base, antes de abrir la conexion
+        client = client or self._resolve_client()
 
         db = next(get_db())
 
@@ -112,11 +121,11 @@ class KnowledgeIndexer:
                 logger.info(f"extrayendo paginas del space {space_key}")
 
                 country_code = self.space_repo.get_country_code(db, space_key)
-                pages = self.client.get_pages_from_space(space_key)
+                pages = client.get_pages_from_space(space_key)
 
                 for page in pages:
                     page_id = page["id"]
-                    content = self.client.get_page_content(page_id)
+                    content = client.get_page_content(page_id)
 
                     html = content["body"]["storage"]["value"]
                     texto_plano = self.cleaner.clean_html(html)
@@ -147,11 +156,13 @@ class KnowledgeIndexer:
     
         # indexa una sola pagina puntual, disparado por el webhook cuando la pagina cambia
     def index_single_page(self, page_id: str, space_key: str):
+        client = self._resolve_client()
+
         db = next(get_db())
 
         try:
             country_code = self.space_repo.get_country_code(db, space_key)
-            content = self.client.get_page_content(page_id)
+            content = client.get_page_content(page_id)
 
             html = content["body"]["storage"]["value"]
             texto_plano = self.cleaner.clean_html(html)
@@ -174,6 +185,7 @@ class KnowledgeIndexer:
                 embedding = self.embedding_client.generate_embedding(chunk_texto)
                 self.storage.save_chunk(db, pagina, chunk_texto, embedding, i, total_chunks)
 
+            self.storage.delete_stale_chunks(db, pagina.page_id, total_chunks)
             db.commit()
             logger.info(f"pagina {page_id} reindexada correctamente")
 
