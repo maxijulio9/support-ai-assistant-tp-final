@@ -111,6 +111,17 @@ async def process_page_reindex(arq_context, page_id: str, space_key: str):
     logger.info(f"worker: pagina {page_id} reindexada")
     return {"status": "completed", "page_id": page_id, "space_key": space_key}
 
+# tarea para sacar de la base de conocimiento una pagina eliminada o archivada en confluence, la dispara el webhook con action delete
+async def process_page_delete(arq_context, page_id: str, space_key: str):
+    logger.info(f"worker: borrando pagina {page_id} del space {space_key}")
+
+    from app.modules.knowledge_indexer.service import KnowledgeIndexer
+    indexer = KnowledgeIndexer()
+    deleted = indexer.delete_page(page_id)
+
+    logger.info(f"worker: pagina {page_id} borrada, {deleted} chunks")
+    return {"status": "completed", "page_id": page_id, "space_key": space_key, "deleted": deleted}
+
 # tarea para descartar una interaccion pendiente cuando un agente resuelve el ticket directo en jsm
 async def process_agent_resolution(arq_context, issue_key: str):
     logger.info(f"worker: procesando resolucion externa para {issue_key}")
