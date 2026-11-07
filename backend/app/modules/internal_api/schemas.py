@@ -528,7 +528,8 @@ class JsmConnectionStatusResponse(ConnectionStatusResponse):
 
 class WebhookSecretResponse(BaseModel):
     """Secreto compartido que Jira y Confluence tienen que mandar a los webhooks, solo para administradores."""
-    webhook_secret: str = Field(description="secreto en texto plano, va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, no se guarda en cache")
+    webhook_secret: str = Field(description="secreto compartido que va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, completo solo cuando se acaba de generar o regenerar, si no viene enmascarado con los ultimos 4 caracteres, no se guarda en cache")
+    masked: bool = Field(default=False, description="true si webhook_secret viene enmascarado y no se puede copiar, el valor completo se ve una sola vez al regenerar el secreto")
 
 
 class LlmGenerationStatus(BaseModel):
