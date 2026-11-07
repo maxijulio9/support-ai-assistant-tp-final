@@ -98,6 +98,9 @@ class InteractionReviewService:
             responded=True,
         )
 
+        # la respuesta ya se publico y la revision quedo guardada, ahora el ticket pasa a esperar al cliente
+        await self._leave_waiting_for_customer(context, jsm_executor)
+
         return ACTION_AUTO_PUBLISH
 
     # regenera la respuesta con el motivo del rechazo, publica si sale bien o escala si no
@@ -139,6 +142,9 @@ class InteractionReviewService:
             resolution_channel=RESOLUTION_CHANNEL_REVIEWED_REGENERATED,
             responded=result.action_type == ACTION_AUTO_PUBLISH,
         )
+
+        if result.action_type == ACTION_AUTO_PUBLISH:
+            await self._leave_waiting_for_customer(context, jsm_executor)
 
         return result.action_type
 
@@ -354,6 +360,17 @@ class InteractionReviewService:
         finally:
             db.close()
     
+    # despues de publicar la respuesta deja el ticket esperando al cliente, iugal que cuando el sistema responde solo
+    # la revision ya quedo guardada, un fallo aca nunca la deshace, si no se puede mover el ticket el orquestador deja una nota interna
+    async def _leave_waiting_for_customer(self, context: dict, jsm_executor: JsmExecutor) -> None:
+        try:
+            # se importa aca para no crear un ciclo entre la api interna y el pipeline
+            from app.modules.event_pipeline.orchestrator import Orchestrator
+
+            await Orchestrator().leave_waiting_for_customer(context["issue_key"], context.get("project_id"), jsm_executor)
+        except Exception as e:
+            logger.error(f"no se pudo dejar el ticket esperando al cliente despues de la revision: {type(e).__name__}: {e}")
+
     # resuelve un jsm_executor fresco con las credenciales configuradas, lanza si todavia no hay conexion
     def _get_jsm_executor(self) -> JsmExecutor:
         credentials = self.credentials_repository.get_credentials()
