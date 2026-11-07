@@ -22,7 +22,8 @@ DB_CONNECT_ARGS = {
     "keepalives_count": 3,
     "tcp_user_timeout": 30000,
 }
-engine = create_engine(settings.database_url, pool_pre_ping=True, pool_size=10, max_overflow=10, connect_args=DB_CONNECT_ARGS)
+# el tamano del pool sale de variables de entorno, cada proceso de la api y de los workers abre su propio pool
+engine = create_engine(settings.database_url, pool_pre_ping=True, pool_size=settings.db_pool_size, max_overflow=settings.db_max_overflow, connect_args=DB_CONNECT_ARGS)
 
 # fabrica de sesiones, cada sesion es como abrir una conversacion con la bd
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
