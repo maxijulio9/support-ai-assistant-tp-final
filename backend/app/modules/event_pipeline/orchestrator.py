@@ -443,6 +443,13 @@ class Orchestrator:
             note += "\nAtencion: el sistema no pudo cambiar el estado del ticket, hay que moverlo a mano."
         await self._post_internal_note(issue_key, note)
 
+    # deja un ticket esperando al cliente fuera del flujo de eventos, por ejemplo cuando una persona aprueba una respuesta desde la revision
+    # recibe el ejecutor de jsm ya resuelto, porque este proceso puede no haber atendido ningun evento todavia
+    async def leave_waiting_for_customer(self, issue_key: str, project_id: str | None, jsm_executor: JsmExecutor) -> None:
+        self.jsm_executor = jsm_executor
+        analysis = TicketAnalysis(issue_key=issue_key, project_id=project_id)
+        await self._move_to_awaiting_customer(issue_key, analysis)
+
     # deja el ticket esperando al cliente despues de responderle, si no se puede deja una nota interna y nunca corta el procesamiento
     async def _move_to_awaiting_customer(self, issue_key: str, analysis: TicketAnalysis) -> None:
         try:
@@ -544,22 +551,7 @@ class Orchestrator:
             return row.name if row else None
         finally:
             db.close()
-            
 
-    # busca en project_config el nombre del estado configurado para una accion, en un proyecto puntual
-    def _get_target_status_name(self, project_id: str, system_action: str) -> str | None:
-        db = next(get_db())
-        try:
-            row = db.execute(text("""
-                SELECT ts.name
-                FROM project_config pc
-                JOIN ticket_status ts ON pc.status_id = ts.id
-                WHERE pc.project_id = :project_id AND pc.system_action = :system_action AND pc.is_active = TRUE
-            """), {"project_id": project_id, "system_action": system_action}).fetchone()
-
-            return row.name if row else None
-        finally:
-            db.close()
     
     # motivo real del escalamiento directo, el alcance que marco el clasificador o el nivel 2, antes la nota siempre decia lo mismo
     def _direct_escalation_reason(self, analysis: TicketAnalysis) -> str:
