@@ -31,7 +31,8 @@ class Settings(BaseSettings):
     jsm_api_token: str = ""
     jsm_default_agent_id: str = ""
 
-    # Confluence
+    # Confluence, ya no se usan, las credenciales se leen de la base cifradas
+    # siguen declaradas para que un .env viejo con estas claves no impida el arranque
     confluence_base_url: str = ""
     confluence_user_email: str = ""
     confluence_api_token: str = ""
