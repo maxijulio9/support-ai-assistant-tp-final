@@ -17,7 +17,12 @@ _service = WebhookSecretService()
 NO_STORE = "no-store"
 
 
-# devuelve el secreto guardado en texto plano, para que el administrador lo copie y lo pegue en jira y en confluence
+# deja visibles solo los ultimos 4 caracteres, el valor completo se ve una sola vez cuando se regenera
+def _mask(secret: str) -> str:
+    return "*" * 8 + secret[-4:]
+
+
+# devuelve el secreto enmascarado, para ver que hay uno configurado, el valor completo solo se muestra al regenerarlo
 @router.get("/api/config/itsm/webhook-secret", response_model=WebhookSecretResponse,
             responses={404: {"model": ErrorResponse, "description": "Todavia no hay un secreto configurado"},
                        503: {"model": ErrorResponse, "description": "No se pudo consultar el secreto"}})
@@ -33,7 +38,7 @@ def get_webhook_secret(response: Response, admin: AppUser = Depends(require_admi
 
     response.headers["Cache-Control"] = NO_STORE
     logger.info(f"el usuario {admin.id} consulto el secreto del webhook")
-    return WebhookSecretResponse(webhook_secret=secret)
+    return WebhookSecretResponse(webhook_secret=_mask(secret), masked=True)
 
 
 # genera un secreto nuevo y lo devuelve, el anterior deja de valer al instante y los avisos de jira y de confluence dan 401 hasta que se actualicen
