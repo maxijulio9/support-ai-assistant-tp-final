@@ -363,7 +363,8 @@ async def test_regenerate_that_escalates_does_not_mark_the_response():
 
     with patch.object(InteractionReviewService, "_get_jsm_executor", return_value=jsm), \
          patch.object(InteractionReviewService, "_update_interaction") as update, \
-         patch.object(InteractionReviewService, "_claim_interaction"):
+         patch.object(InteractionReviewService, "_claim_interaction"), \
+         patch.object(InteractionReviewService, "_escalate_in_jira", new=AsyncMock()):
         await service.regenerate_interaction("int-1", "motivo", "user-1")
 
     assert update.call_args.kwargs["responded"] is False
