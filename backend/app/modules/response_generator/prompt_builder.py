@@ -25,13 +25,17 @@ VOSEO_COUNTRIES = {"AR"}
 # se agrega al prompt de respuesta como una regla mas, no suma llamadas al modelo
 MISSING_DATA_RULE = "\n                - Si el contexto indica que datos o documentacion hacen falta para investigar este tipo de consulta y el cliente todavia no los dio en la conversacion, pedilos en una frase corta antes del cierre, sin inventar requisitos que el contexto no mencione. El pedido de datos nunca reemplaza la respuesta: contesta primero con lo que dice el contexto, y si no alcanza para responder aplica la regla anterior en lugar de pedir datos."
 
+# palabra clave con la que el modelo avisa que el contexto no alcanza, el sistema la detecta y escala en vez de publicarla
+NO_INFORMATION_MARKER = "SIN_INFORMACION"
+
 SYSTEM_PROMPT = """Sos el canal de soporte nivel 1 de una plataforma financiera, respondiendo directamente al cliente de {country}. Tu tarea es responder la consulta del usuario basandote UNICAMENTE en el contexto de la base de conocimiento que se te provee abajo.
 
                 Reglas estrictas:
                 - Vos SOS el soporte. Si el contexto menciona "el equipo de soporte", "contactanos" o frases similares, no las repitas como si fueran otra entidad, response, sos vos quien esta atendiendo esta consulta ahora mismo.
                 - El contexto puede incluir informacion de varios paises a la vez (documentos, montos, regulaciones). Mencioná UNICAMENTE los datos que aplican a {country}, el pais del cliente. No menciones datos de otros paises, aunque aparezcan en el contexto.
                 - No inventes datos especificos del caso, como montos, fechas o numeros de operacion, que no esten en el contexto.
-                - Si el contexto no alcanza para responder con seguridad, decilo de forma directa: "No tengo informacion suficiente para resolver esto, un agente se va a poner en contacto".
+                - Si el contexto no alcanza para responder con seguridad, responde unicamente con la palabra clave SIN_INFORMACION y nada mas, sin saludo ni explicacion, el sistema se encarga de avisarle al cliente. Si el contexto responde solo una parte de la consulta, contesta esa parte sin inventar ni prometer el resto.
+                - Nunca prometas que alguien se va a poner en contacto ni derives al cliente a otro canal, eso lo resuelve el sistema por su cuenta.
                 - Si dos fragmentos del contexto se contradicen entre si, priorizá el mas especifico a la categoria del ticket y avisá de la ambiguedad en tu respuesta.
                 - No menciones "el contexto", "la base de conocimiento" ni terminos tecnicos internos, escribi como si supieras la respuesta directamente.{missing_data_rule}
                 - Se conciso, una respuesta de soporte no deberia superar los 3 parrafos cortos.
@@ -80,6 +84,7 @@ CONFIDENCE_PROMPT = """Tu tarea es evaluar si la respuesta generada esta fundame
                     - Evaluá unicamente la relacion entre el contexto y la respuesta, sin conocimiento externo.
                     - No supongas que una afirmacion es verdadera si el contexto no la respalda.
                     - Si la respuesta contradice el contexto, asigná un score muy bajo.
+                    - Una afirmacion negativa, como que algo no se puede, no existe o no esta disponible, solo esta respaldada si el contexto lo dice de forma explicita. Que el contexto no mencione algo no respalda decir que no es posible, en ese caso asigná un score bajo.
                     """
 
 SUFFICIENCY_PROMPT = """Evaluá si el contexto de abajo tiene informacion suficiente para responder la consulta con precision, sin necesidad de inventar ni asumir datos que no esten ahi.
