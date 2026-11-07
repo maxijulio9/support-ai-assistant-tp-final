@@ -194,11 +194,12 @@ class WebhookReceiver:
             return False
 
     # encola la reindexacion puntual de una pagina de confluence
-    async def dispatch_confluence_event(self, page_id: str, space_key: str):
+    async def dispatch_confluence_event(self, page_id: str, space_key: str, action: str = "reindex"):
         from app.modules.event_pipeline.settings import KB_QUEUE_NAME
 
         pool = await get_arq_pool()
-        await pool.enqueue_job("process_page_reindex", page_id, space_key, _queue_name=KB_QUEUE_NAME)
+        job_name = "process_page_delete" if action == "delete" else "process_page_reindex"
+        await pool.enqueue_job(job_name, page_id, space_key, _queue_name=KB_QUEUE_NAME)
     
    
         

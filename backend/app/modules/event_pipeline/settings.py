@@ -6,7 +6,7 @@ import faulthandler
 from arq import cron
 from arq.connections import RedisSettings
 from app.core.config import settings
-from app.modules.event_pipeline.worker import process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex, process_agent_resolution, resync_all_project_workflows
+from app.modules.event_pipeline.worker import process_issue_created, process_comment_created, process_kb_indexing, process_page_reindex, process_page_delete, process_agent_resolution, resync_all_project_workflows
 
 # nombre de la cola dedicada a las tareas de kb, usado tambien al encolar desde m1 y m7
 KB_QUEUE_NAME = "kb_queue"
@@ -69,7 +69,7 @@ class WorkerSettings:
     
 class KbWorkerSettings:
     # worker dedicado a kb, escucha una cola separada para no competir con los tickets
-    functions = [process_kb_indexing, process_page_reindex]
+    functions = [process_kb_indexing, process_page_reindex, process_page_delete]
     queue_name = KB_QUEUE_NAME
 
     redis_settings = build_redis_settings()

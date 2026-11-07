@@ -30,6 +30,25 @@ class KnowledgeIndexer:
     def _resolve_client(self) -> ConfluenceClient:
         return ConfluenceClient.from_credentials(self.credentials_repository.get_credentials())
 
+    # borra todos los chunks de una pagina que se elimnino o se archivo en confluence, lo dispara el webhook
+    # el page_id es unico en toda la instancia, por eso no hace falta el space
+    def delete_page(self, page_id: str) -> int:
+        db = next(get_db())
+
+        try:
+            deleted = self.storage.delete_stale_chunks(db, page_id, 0)
+            db.commit()
+            logger.info(f"pagina {page_id} borrada de la base de conocimiento, {deleted} chunks")
+            return deleted
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al borrar la pagina {page_id}: {e}")
+            raise
+
+        finally:
+            db.close()
+
     # extrae category y doc_type desde los labels de ls kb
     # si la pagina no tiene labels, devuelve None en ambos campos - formato harcoreado para probar
     def _extract_metadata_from_labels(self, page_content: dict) -> dict:
