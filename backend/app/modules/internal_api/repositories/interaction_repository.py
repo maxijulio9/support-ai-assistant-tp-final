@@ -34,6 +34,7 @@ class InteractionRepository:
                 "issue_key": interaction_row.issue_key,
                 "project_id": str(interaction_row.project_id) if interaction_row.project_id else None,
                 "generated_response": interaction_row.generated_response,
+                "summary": getattr(interaction_row, "text_input", None),
                 "retrieval": retrieval,
                 "threshold_auto_publish": thresholds.threshold_auto_publish if thresholds else 0.85,
                 "threshold_needs_review": thresholds.threshold_needs_review if thresholds else 0.60,
@@ -45,7 +46,7 @@ class InteractionRepository:
     # busca la interaccion con join a ticket, para sacar issue_key y project_id
     def _fetch_interaction_with_ticket(self, db, interaction_id: str):
         query = text("""
-            SELECT i.generated_response, t.issue_key, t.project_id
+            SELECT i.generated_response, i.text_input, t.issue_key, t.project_id
             FROM interaction i
             JOIN ticket t ON i.ticket_id = t.id
             WHERE i.id = :interaction_id

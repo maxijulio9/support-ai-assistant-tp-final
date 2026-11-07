@@ -146,10 +146,13 @@ class InteractionReviewService:
         if result.action_type == ACTION_AUTO_PUBLISH:
             await self._leave_waiting_for_customer(context, jsm_executor)
 
+        if result.action_type == "ESCALATE":
+            await self._escalate_in_jira(context, interaction_id, "regenerada_sin_confianza_suficiente")
+
         return result.action_type
 
     # escala directo, sin generar nada nuevo
-    def escalate_interaction(self, interaction_id: str, rejection_reason: str | None, reviewed_by: str | None) -> str:
+    async def escalate_interaction(self, interaction_id: str, rejection_reason: str | None, reviewed_by: str | None) -> str:
         context = self.interaction_repository.get_interaction_context(interaction_id)
         if context is None:
             raise ValueError(f"interaction '{interaction_id}' no encontrada")
@@ -164,6 +167,9 @@ class InteractionReviewService:
             rejection_reason=rejection_reason,
             resolution_channel=RESOLUTION_CHANNEL_ESCALATED_BY_HUMAN,
         )
+
+        # la decision ya esta guardada, ahora el ticket se escala tambien en jira
+        await self._escalate_in_jira(context, interaction_id, rejection_reason or "escalado_desde_la_revision")
 
         return "ESCALATE"
 
@@ -370,6 +376,21 @@ class InteractionReviewService:
             await Orchestrator().leave_waiting_for_customer(context["issue_key"], context.get("project_id"), jsm_executor)
         except Exception as e:
             logger.error(f"no se pudo dejar el ticket esperando al cliente despues de la revision: {type(e).__name__}: {e}")
+
+    # escala el ticket en jira cuando una persona escala desde la revision o la regeneracion no alcanza confianza
+    # mueve el ticket, le avisa al cliente y deja la nota interna, igual que un escalamineto automatico
+    # la decision ya esta guardada, un fallo aca nunca la deshace y queda en el registro
+    async def _escalate_in_jira(self, context: dict, interaction_id: str, reason: str) -> None:
+        try:
+            # se importa aca para no crear un ciclo entre la api interna y el pipeline
+            from app.modules.event_pipeline.orchestrator import Orchestrator
+
+            jsm_executor = self._get_jsm_executor()
+            await Orchestrator().escalate_after_review(
+                context["issue_key"], context.get("project_id"), context.get("summary"), jsm_executor, interaction_id, reason
+            )
+        except Exception as e:
+            logger.error(f"no se pudo escalar el ticket en jira despues de la revision: {type(e).__name__}: {e}")
 
     # resuelve un jsm_executor fresco con las credenciales configuradas, lanza si todavia no hay conexion
     def _get_jsm_executor(self) -> JsmExecutor:

@@ -191,9 +191,9 @@ async def regenerate_interaction(interaction_id: str, request: RegenerateRequest
              responses={404: {"model": ErrorResponse, "description": "La interaccion no existe"},
                         409: {"model": ErrorResponse, "description": "La interaccion ya no esta pendiente de revision"},
                         503: {"model": ErrorResponse, "description": "No se pudo escalar la interaccion"}})
-def escalate_interaction(interaction_id: str, request: EscalateRequest, usuario: AppUser = Depends(get_current_user)):
+async def escalate_interaction(interaction_id: str, request: EscalateRequest, usuario: AppUser = Depends(get_current_user)):
     try:
-        action_type = _review_service.escalate_interaction(interaction_id, request.rejection_reason, str(usuario.id))
+        action_type = await _review_service.escalate_interaction(interaction_id, request.rejection_reason, str(usuario.id))
     except InteractionNotPendingError as e:
         raise HTTPException(status_code=409, detail=str(e))
     except ValueError as e:

@@ -450,6 +450,13 @@ class Orchestrator:
         analysis = TicketAnalysis(issue_key=issue_key, project_id=project_id)
         await self._move_to_awaiting_customer(issue_key, analysis)
 
+    # escala un ticket fuera del flujo de eventos, por ejemplo cuando una persona escala desde la revision
+    # recibe el ejecutor de jsm ya resuelto y hace lo mismo que un escalamiento automatico, estado, aviso al cliente y nota interna
+    async def escalate_after_review(self, issue_key: str, project_id: str | None, summary: str | None, jsm_executor: JsmExecutor, interaction_id: str | None, reason: str | None) -> None:
+        self.jsm_executor = jsm_executor
+        analysis = TicketAnalysis(issue_key=issue_key, project_id=project_id, summary=summary)
+        await self._escalate_in_jsm(issue_key, analysis, interaction_id, reason)
+
     # deja el ticket esperando al cliente despues de responderle, si no se puede deja una nota interna y nunca corta el procesamiento
     async def _move_to_awaiting_customer(self, issue_key: str, analysis: TicketAnalysis) -> None:
         try:

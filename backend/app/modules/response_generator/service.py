@@ -12,7 +12,7 @@ from app.modules.response_generator.schemas import (
     ESCALATION_REASON_LLM_FAILURE,
     ESCALATION_REASON_LOW_CONFIDENCE,
 )
-from app.modules.response_generator.prompt_builder import PromptBuilder 
+from app.modules.response_generator.prompt_builder import PromptBuilder, NO_INFORMATION_MARKER
 from app.modules.response_generator.llm_client import LlmClient
 
 logger = logging.getLogger(__name__)
@@ -53,6 +53,11 @@ class ResponseGenerator:
             logger.error(f"[{analysis.issue_key}] fallo la llamada al llm, escalando")
             return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE, escalation_reason=ESCALATION_REASON_LLM_FAILURE)
 
+        # si el modelo avisa que el contexto no alcanza no se publica nada, se escala y el sistema le avisa al cliente
+        if self._has_no_information_marker(response_text):
+            logger.info(f"[{analysis.issue_key}] el modelo indico que el contexto no alcanza, escalando")
+            return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE, escalation_reason=ESCALATION_REASON_NO_CONTEXT)
+
         confidence_prompt = self.prompt_builder.build_confidence_prompt(retrieval, response_text)
         confidence_score = self.llm_client.evaluate_confidence(confidence_prompt)
         action_type = self._evaluate_action(
@@ -88,6 +93,11 @@ class ResponseGenerator:
                 escalation_reason=ESCALATION_REASON_LLM_FAILURE,
             )
 
+        # si la regeneracion tampoco alcanza el contexto, se escala igual que al generar
+        if self._has_no_information_marker(response_text):
+            logger.info(f"[{analysis.issue_key}] la regeneracion indico que el contexto no alcanza, escalando")
+            return GeneratedResponse(issue_key=analysis.issue_key, action_type=ACTION_ESCALATE, rejection_reason=rejection_reason, escalation_reason=ESCALATION_REASON_NO_CONTEXT)
+
         confidence_prompt = self.prompt_builder.build_confidence_prompt(retrieval, response_text)
         confidence_score = self.llm_client.evaluate_confidence(confidence_prompt)
         action_type = self._evaluate_action(
@@ -111,6 +121,10 @@ class ResponseGenerator:
             escalation_reason=escalation_reason,
         )   
         
+    # dice si la respuesta trae la palabra clave con la que el modelo avisa que el contexto no alcanza
+    def _has_no_information_marker(self, response_text: str | None) -> bool:
+        return NO_INFORMATION_MARKER in (response_text or "").upper().replace("Ó", "O")
+
     # si TicketAnalysis llego sin umbrales resueltos (caso raro, deberia venir siempre completo desde M2)
     # usa los mismos defaults conservadores que ya definimos en ProjectContext
     def _evaluate_action(self, confidence_score: float, threshold_auto_publish: float | None, threshold_needs_review: float | None) -> str:
