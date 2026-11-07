@@ -1,6 +1,7 @@
 # M9 AuthModule: endpoints de login, logout y gestion de usuarios
 
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.concurrency import run_in_threadpool
 from fastapi.security import HTTPAuthorizationCredentials
 from app.modules.auth.schemas import (
     LoginRequest,
@@ -18,6 +19,8 @@ from app.modules.auth.services.auth_service import AuthService
 from app.modules.auth.services.user_management_service import UserManagementService
 from app.modules.auth.dependencies import get_current_user, require_admin, _bearer_scheme
 from app.modules.auth.jwt_handler import decode_token
+from app.core.config import settings
+from app.modules.auth import rate_limiter
 
 
 router = APIRouter(tags=["Auth"])
@@ -27,12 +30,22 @@ _user_management_service = UserManagementService()
 
 
 
-@router.post("/auth/login", response_model=LoginResponse)
+@router.post(
+    "/auth/login",
+    response_model=LoginResponse,
+    responses={429: {"description": "Demasiados intentos fallidos con ese correo, se desbloquea solo pasado un rato"}},
+)
 def login(request: LoginRequest):
+    # despues de varios intentos fallidos seguidos con el mismo correo se cortan los pedidos un rato
+    rate_limiter.ensure_allowed("login", request.email, settings.login_max_attempts)
+
     try:
         result = _auth_service.login(request.email, request.password)
     except ValueError:
+        rate_limiter.record_failure("login", request.email, settings.login_window_seconds)
         raise HTTPException(status_code=401, detail="Credenciales invalidas")
+
+    rate_limiter.reset("login", request.email)
 
     return LoginResponse(access_token=result["access_token"], role=result["role"])
 
@@ -105,8 +118,20 @@ def update_profile(request: UpdateProfileRequest, usuario: AppUser = Depends(get
     actualizado = _user_management_service.update_profile(usuario.id, request.full_name, usuario.role)
     return UserResponse(**actualizado.model_dump())
 
-@router.post("/auth/forgot-password")
+@router.post(
+    "/auth/forgot-password",
+    responses={429: {"description": "Demasiados pedidos de restablecimiento, se habilita de nuevo pasado un rato"}},
+)
 async def forgot_password(request: ForgotPasswordRequest):
+    # cada pedido cuenta aunque el correo no exista, para no revelar que cuentas existen
+    # primero el tope por correo y despues el tope general, que cuida la cuota del servicio de mails
+    await run_in_threadpool(
+        rate_limiter.hit, "forgot-email", request.email, settings.forgot_password_max_per_email, settings.forgot_password_window_seconds
+    )
+    await run_in_threadpool(
+        rate_limiter.hit, "forgot-global", "todos", settings.forgot_password_max_global, settings.forgot_password_window_seconds
+    )
+
     await _auth_service.forgot_password(request.email)
     return {"status": "ok"}
 

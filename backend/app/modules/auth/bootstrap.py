@@ -9,17 +9,22 @@ from app.modules.auth.repositories.app_user_repository import AppUserRepository
 from app.modules.auth.password_hasher import hash_password
 
 logger = logging.getLogger(__name__)
+# las lineas de arranque salen por el logger de uvicorn para que se vean en los registros del servicio
+startup_logger = logging.getLogger("uvicorn.error")
 
 
 def bootstrap_admin() -> None:
     if not settings.admin_email or not settings.admin_password:
+        startup_logger.info("bootstrap: administrador omitido, ADMIN_EMAIL y ADMIN_PASSWORD no estan definidos")
         return
 
     repo = AppUserRepository()
 
-    if repo.count_users() > 0:
+    existing_users = repo.count_users()
+    if existing_users > 0:
+        startup_logger.info(f"bootstrap: administrador omitido, ya hay {existing_users} usuarios en la base")
         return
 
     password_hash = hash_password(settings.admin_password)
     repo.create(settings.admin_email, password_hash, "Administrador", "admin")
-    logger.info(f"bootstrap: primer admin creado ({settings.admin_email})")
+    startup_logger.info(f"bootstrap: primer admin creado ({settings.admin_email})")
