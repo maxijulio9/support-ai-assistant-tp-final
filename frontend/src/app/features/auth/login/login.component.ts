@@ -13,6 +13,7 @@ import { AuthErrorCategory, classifyAuthError } from '../../../core/auth/auth-er
 
 const ERROR_MESSAGES: Record<AuthErrorCategory, string> = {
   credentials: 'Email o contraseña incorrectos.',
+  'rate-limited': 'Demasiados intentos fallidos. Esperá unos minutos y volvé a intentar.',
   network: 'No se pudo conectar con el servidor. Revisá tu conexión e intentá de nuevo.',
   server: 'El servidor tuvo un problema. Intentá de nuevo en unos minutos.',
   request: 'Revisá los datos ingresados.',

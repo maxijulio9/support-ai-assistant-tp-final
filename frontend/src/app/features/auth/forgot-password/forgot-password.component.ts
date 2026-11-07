@@ -7,9 +7,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../../core/auth/auth.service';
+import { classifyAuthError } from '../../../core/auth/auth-errors';
 import { classifyFormError } from '../../../shared/form-error';
 
 const SUBMIT_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
+const RATE_LIMITED_MESSAGE = 'Hiciste demasiados pedidos. Esperá unos minutos antes de pedir otro enlace.';
 
 @Component({
   selector: 'app-forgot-password',
@@ -56,6 +58,10 @@ export class ForgotPasswordComponent {
         },
         error: (error: unknown) => {
           this.submitting.set(false);
+          if (classifyAuthError(error) === 'rate-limited') {
+            this.errorMessage.set(RATE_LIMITED_MESSAGE);
+            return;
+          }
           const result = classifyFormError(error);
           this.errorMessage.set(result.message ?? SUBMIT_ERROR_MESSAGE);
         },
