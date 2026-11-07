@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS interaction (
     ragas_faithfulness      FLOAT,
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     reviewed_at             TIMESTAMPTZ,
-    reviewed_by             UUID REFERENCES app_user(id),
+    reviewed_by             UUID,
     rejection_reason        TEXT,
     system_decision         VARCHAR(50),
     resolution_channel      VARCHAR(50),
@@ -227,6 +227,15 @@ CREATE TABLE IF NOT EXISTS app_user (
 
 -- evita duplicados de email por mayusculas/minusculas (Test@x.com y test@x.com son el mismo usuario)
 CREATE UNIQUE INDEX IF NOT EXISTS app_user_email_lower_idx ON app_user (LOWER(email));
+
+-- la llave foranea de reviewed_by se agrega aca porque app_user se crea despues de interaction
+-- si no, en una base nueva falla la creacion de interaction y no queda el historial
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'interaction_reviewed_by_fkey') THEN
+        ALTER TABLE interaction ADD CONSTRAINT interaction_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES app_user(id);
+    END IF;
+END $$;
 
 -- workflow completo de jira descubierto para un proyecto + tipo de issue, reemplaza el cache de redis
 -- workflow_data guarda el json crudo que ya arma WorkflowDiscoveryService (estados reales y transiciones)
