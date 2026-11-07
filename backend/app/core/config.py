@@ -56,6 +56,21 @@ class Settings(BaseSettings):
     # bootstrap del primer admin, opcional, solo actua si app_user esta vacia
     admin_email: str = ""
     admin_password: str = ""
+
+    # documentacion interactiva de la api, cerrada por defecto, ENABLE_API_DOCS=true la abre
+    enable_api_docs: bool = False
+
+    # pool de conexiones a la base, cada proceso de la api y de los workers abre el suyo
+    db_pool_size: int = 10
+    db_max_overflow: int = 10
+
+    # limite de intentos, se cuenta por correo y no por ip
+    login_max_attempts: int = 5
+    login_window_seconds: int = 900
+    forgot_password_max_per_email: int = 3
+    forgot_password_max_global: int = 30
+    forgot_password_window_seconds: int = 3600
+
     class Config:
         env_file = ".env"
     
