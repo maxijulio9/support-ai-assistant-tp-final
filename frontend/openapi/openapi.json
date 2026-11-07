@@ -4053,6 +4053,15 @@
           "space_key": {
             "type": "string",
             "title": "Space Key"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "reindex",
+              "delete"
+            ],
+            "title": "Action",
+            "default": "reindex"
           }
         },
         "type": "object",
@@ -7372,7 +7381,13 @@
           "webhook_secret": {
             "type": "string",
             "title": "Webhook Secret",
-            "description": "secreto en texto plano, va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, no se guarda en cache"
+            "description": "secreto compartido que va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, completo solo cuando se acaba de generar o regenerar, si no viene enmascarado con los ultimos 4 caracteres, no se guarda en cache"
+          },
+          "masked": {
+            "type": "boolean",
+            "title": "Masked",
+            "description": "true si webhook_secret viene enmascarado y no se puede copiar, el valor completo se ve una sola vez al regenerar el secreto",
+            "default": false
           }
         },
         "type": "object",

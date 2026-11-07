@@ -8,7 +8,12 @@
 export interface WebhookSecretResponse {
 
   /**
-   * secreto en texto plano, va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, no se guarda en cache
+   * true si webhook_secret viene enmascarado y no se puede copiar, el valor completo se ve una sola vez al regenerar el secreto
+   */
+  masked?: boolean;
+
+  /**
+   * secreto compartido que va en el campo Secret de los webhooks de Jira y en el encabezado X-Webhook-Secret de la regla de Confluence, completo solo cuando se acaba de generar o regenerar, si no viene enmascarado con los ultimos 4 caracteres, no se guarda en cache
    */
   webhook_secret: string;
 }
