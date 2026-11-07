@@ -44,6 +44,9 @@ services:
     container_name: support-ai-frontend
     ports:
       - "4200:80"
+    environment:
+      # URL base del backend: Caddy reenvia /auth y /api a este destino
+      API_UPSTREAM: http://backend:8000
     restart: unless-stopped
 
   redis:

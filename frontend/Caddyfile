@@ -1,0 +1,62 @@
+# Servidor del frontend en produccion: sirve la SPA de Angular y reenvia
+# /auth y /api a la API.
+{
+	# Sin API de administracion expuesta
+	admin off
+	# Railway termina el TLS antes de llegar a este servidor
+	auto_https off
+	# Confia en los encabezados X-Forwarded-* que llegan desde la red privada
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+# El puerto lo define la variable PORT (Railway la inyecta); 3000 si no existe
+:{$PORT:3000} {
+	# Comprime las respuestas de texto
+	encode gzip
+
+	# Healthcheck de Railway: responde siempre, sin depender de la API
+	handle /health {
+		respond "ok" 200
+	}
+
+	# API_UPSTREAM es una URL base completa: http://host:puerto o https://dominio.
+	# El encabezado Host lleva el host del upstream, sin puerto, para que
+	# funcione tanto con un host privado como con un dominio publico.
+	# La ruta se conserva completa: /auth/login llega como /auth/login.
+	handle /auth/* {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up Host {http.reverse_proxy.upstream.host}
+		}
+	}
+
+	handle /api/* {
+		reverse_proxy {$API_UPSTREAM} {
+			header_up Host {http.reverse_proxy.upstream.host}
+		}
+	}
+
+	# Todo lo demas es la SPA: archivos estaticos y rutas del router de Angular
+	handle {
+		root * /usr/share/caddy
+
+		# Archivos con hash en el nombre (cambia si cambia el contenido): se
+		# cachean un anio y no se vuelven a pedir. Incluye las fuentes de
+		# media/ y polyfills por si el proyecto lo agrega mas adelante.
+		@hashed path_regexp ^/((chunk|main|polyfills|styles)-[^/]+\.(js|css)|media/.+)$
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+		# Todo lo demas se revalida siempre, asi index.html nunca queda cacheado
+		# y una version nueva se ve en la siguiente carga. Es la negacion exacta
+		# de @hashed (misma expresion) para que el resultado no dependa del
+		# orden en que Caddy aplica los header.
+		@mutable not path_regexp ^/((chunk|main|polyfills|styles)-[^/]+\.(js|css)|media/.+)$
+		header @mutable Cache-Control "no-cache"
+
+		# Si la ruta no es un archivo real (por ejemplo /dashboard), devuelve
+		# index.html para que la resuelva el router de Angular
+		try_files {path} /index.html
+		file_server
+	}
+}
