@@ -105,9 +105,11 @@ async def test_regenerate_interaction_does_not_publish_and_sets_regenerated_chan
     mock_db = MagicMock()
     mock_get_db.side_effect = lambda: iter([mock_db])
 
-    result = await InteractionReviewService().regenerate_interaction("int-1", "motivo del rechazo", "user-1")
+    with patch.object(InteractionReviewService, "_escalate_in_jira", new=AsyncMock()) as escalate:
+        result = await InteractionReviewService().regenerate_interaction("int-1", "motivo del rechazo", "user-1")
 
     assert result == ACTION_ESCALATE
+    escalate.assert_awaited_once()
     mock_jsm_class.assert_not_called()
     mock_credentials_class.return_value.get_credentials.assert_not_called()
     params = mock_db.execute.call_args[0][1]
@@ -121,14 +123,16 @@ async def test_regenerate_interaction_does_not_publish_and_sets_regenerated_chan
 @patch(f"{MODULE}.ResponseGenerator")
 @patch(f"{MODULE}.ConversationHistory")
 @patch(f"{MODULE}.InteractionRepository")
-def test_escalate_interaction_sets_escalated_by_human_channel(
+@pytest.mark.asyncio
+async def test_escalate_interaction_sets_escalated_by_human_channel(
     mock_repo_class, mock_history_class, mock_generator_class, mock_credentials_class, mock_get_db,
 ):
     mock_repo_class.return_value.get_interaction_context.return_value = _build_context()
     mock_db = MagicMock()
     mock_get_db.side_effect = lambda: iter([mock_db])
 
-    result = InteractionReviewService().escalate_interaction("int-1", "motivo", "user-1")
+    with patch.object(InteractionReviewService, "_escalate_in_jira", new=AsyncMock()):
+        result = await InteractionReviewService().escalate_interaction("int-1", "motivo", "user-1")
 
     assert result == "ESCALATE"
     sql = str(mock_db.execute.call_args[0][0])

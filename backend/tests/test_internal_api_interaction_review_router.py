@@ -69,7 +69,7 @@ def test_regenerate_interaction_requires_reason():
 # verifica que escalate responde 200
 @patch("app.modules.internal_api.router._review_service")
 def test_escalate_interaction_success(mock_review_service):
-    mock_review_service.escalate_interaction = MagicMock(return_value="ESCALATE")
+    mock_review_service.escalate_interaction = AsyncMock(return_value="ESCALATE")
 
     app.dependency_overrides[get_current_user] = lambda: MagicMock(id="user-1", role="agent")
 

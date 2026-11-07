@@ -17,9 +17,9 @@ from app.modules.auth.dependencies import get_current_user, require_admin
 from app.modules.internal_api import router as router_module
 
 # endpoints que solo usan la base, se atienden en hilos para que varios pedidos avancen a la vez
-SYNC_ENDPOINTS = ['configure_project', 'escalate_interaction', 'discard_interaction', 'onboard_projects', 'list_countries', 'configure_categories', 'get_project_request_types', 'configure_priority_mapping', 'configure_spaces', 'get_indexing_status', 'get_metrics_summary', 'get_metrics_daily', 'get_metrics_by_category', 'get_metrics_confidence_distribution', 'get_metrics_heatmap', 'get_metrics_thresholds', 'list_onboarded_projects', 'get_project_configuration', 'get_itsm_connection', 'get_confluence_connection', 'get_llm_config_status', 'list_interactions', 'get_interaction_detail']
+SYNC_ENDPOINTS = ['configure_project', 'discard_interaction', 'onboard_projects', 'list_countries', 'configure_categories', 'get_project_request_types', 'configure_priority_mapping', 'configure_spaces', 'get_indexing_status', 'get_metrics_summary', 'get_metrics_daily', 'get_metrics_by_category', 'get_metrics_confidence_distribution', 'get_metrics_heatmap', 'get_metrics_thresholds', 'list_onboarded_projects', 'get_project_configuration', 'get_itsm_connection', 'get_confluence_connection', 'get_llm_config_status', 'list_interactions', 'get_interaction_detail']
 # endpoints que esperan servicios externos o redis, siguen siendo async
-ASYNC_ENDPOINTS = ['approve_interaction', 'regenerate_interaction', 'configure_itsm_connection', 'list_available_projects', 'list_project_statuses', 'list_select_fields', 'list_field_options', 'configure_request_types', 'list_available_request_types', 'list_priorities', 'configure_confluence_connection', 'list_available_spaces', 'start_indexing', 'list_llm_models', 'save_llm_config']
+ASYNC_ENDPOINTS = ['approve_interaction', 'regenerate_interaction', 'escalate_interaction', 'configure_itsm_connection', 'list_available_projects', 'list_project_statuses', 'list_select_fields', 'list_field_options', 'configure_request_types', 'list_available_request_types', 'list_priorities', 'configure_confluence_connection', 'list_available_spaces', 'start_indexing', 'list_llm_models', 'save_llm_config']
 
 
 # verifca que los endpoints que solo usan la base ya no son corrutinas
