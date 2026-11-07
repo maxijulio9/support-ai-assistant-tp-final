@@ -17,3 +17,14 @@ CREATE TABLE IF NOT EXISTS knowledge_chunk (
     updated_at   TIMESTAMPTZ,
     UNIQUE (page_id, chunk_index)
 );
+
+
+-- fragmentos que uso cada interaccion para responder, en el orden en que se recuperaron
+CREATE TABLE IF NOT EXISTS retrieved_chunk (
+    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    interaction_id    UUID REFERENCES interaction(id),
+    chunk_id          UUID,  -- sin llave foranea a proposito, los chunks se borran al reindexar y la interaccion los conserva como historial
+    page_title        VARCHAR(255),
+    rank_position     INTEGER,
+    similarity_score  FLOAT
+);
