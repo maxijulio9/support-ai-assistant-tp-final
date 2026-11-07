@@ -112,6 +112,9 @@
               }
             }
           },
+          "429": {
+            "description": "Demasiados intentos fallidos con ese correo, se desbloquea solo pasado un rato"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -465,6 +468,9 @@
                 "schema": {}
               }
             }
+          },
+          "429": {
+            "description": "Demasiados pedidos de restablecimiento, se habilita de nuevo pasado un rato"
           },
           "422": {
             "description": "Validation Error",
