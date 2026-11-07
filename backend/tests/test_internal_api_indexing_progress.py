@@ -53,7 +53,7 @@ def _as_admin():
 def test_create_queued_job_inserts_a_queued_row_and_returns_its_id_and_start(mock_get_db):
     db = MagicMock()
     started = datetime(2026, 10, 22, 21, 40, tzinfo=timezone.utc)
-    db.execute.return_value.fetchone.return_value = SimpleNamespace(id="run-1", started_at=started)
+    db.execute.return_value.fetchone.return_value = SimpleNamespace(page_id="page-test", id="run-1", started_at=started)
     mock_get_db.return_value = iter([db])
 
     result = IndexingStatusRepository().create_queued_job(["TA"])
@@ -139,7 +139,7 @@ def test_update_progress_raises_after_two_failures(mock_get_engine):
 @patch(INDEXER_DB)
 def test_index_spaces_reports_the_total_and_then_the_progress_of_each_page(mock_get_db):
     mock_get_db.return_value = iter([MagicMock()])
-    pages = [SimpleNamespace(content="a"), SimpleNamespace(content="b")]
+    pages = [SimpleNamespace(page_id="page-test", content="a"), SimpleNamespace(page_id="page-test", content="b")]
     callback = MagicMock()
 
     _indexer(pages).index_spaces(["TA"], on_progress=callback)
@@ -156,7 +156,7 @@ def test_index_spaces_reports_the_total_and_then_the_progress_of_each_page(mock_
 def test_index_spaces_works_without_a_callback(mock_get_db):
     db = MagicMock()
     mock_get_db.return_value = iter([db])
-    indexer = _indexer([SimpleNamespace(content="a"), SimpleNamespace(content="b")])
+    indexer = _indexer([SimpleNamespace(page_id="page-test", content="a"), SimpleNamespace(page_id="page-test", content="b")])
 
     indexer.index_spaces(["TA"])
 
@@ -169,7 +169,7 @@ def test_index_spaces_works_without_a_callback(mock_get_db):
 def test_a_failing_callback_does_not_interrupt_the_indexing(mock_get_db):
     db = MagicMock()
     mock_get_db.return_value = iter([db])
-    indexer = _indexer([SimpleNamespace(content="a"), SimpleNamespace(content="b")])
+    indexer = _indexer([SimpleNamespace(page_id="page-test", content="a"), SimpleNamespace(page_id="page-test", content="b")])
 
     indexer.index_spaces(["TA"], on_progress=MagicMock(side_effect=Exception("falla de bd")))
 
@@ -318,7 +318,7 @@ def test_get_status_returns_the_id(mock_repo):
 def test_status_repository_returns_the_id(mock_get_db):
     db = MagicMock()
     moment = datetime(2026, 10, 22, 21, 40, tzinfo=timezone.utc)
-    db.execute.return_value.fetchone.return_value = SimpleNamespace(
+    db.execute.return_value.fetchone.return_value = SimpleNamespace(page_id="page-test", 
         id="run-1", space_keys=["TA"], status="running", total_documents=7, documents_processed=3,
         chunks_generated=9, error_detail=None, started_at=moment, updated_at=moment, is_stale=False,
     )
