@@ -1,11 +1,13 @@
 #M2: TicketAnalyze, tiene la lógica principal de análisis y clasificación de solicitudes.
 
 
+import asyncio
 import logging
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
 from app.modules.ticket_analyzer.llm_client import LlmClient
+from app.modules.ticket_analyzer.attachment_reader import fetch_images
 from app.modules.ticket_analyzer.project_repository import ProjectRepository
 from app.modules.jsm_executor.client import JsmExecutor
 from app.modules.internal_api.repositories.jsm_credentials_repository import JsmCredentialsRepository
@@ -53,7 +55,9 @@ class TicketAnalyzer:
         
         # cu9 agrega el turno nuevo del usuario al historial
         # si es comentario usa comment_body, si es ticket nuevo usa summary + description
-        texto_usuario = f"{event.summary or ''} {event.description or ''}".strip()
+        # si el proyecto habilito el analisis de adjuntos, la descripcion suma lo que se ve en las imagenes del ticket
+        description = await self._describe_attachments(event, project_context, jsm_executor)
+        texto_usuario = f"{event.summary or ''} {description or ''}".strip()
         if event.comment_body:
             texto_usuario = event.comment_body
         if texto_usuario:
@@ -89,7 +93,7 @@ class TicketAnalyzer:
             issue_key=event.issue_key,
             event_type=event.event_type,
             summary=event.summary,
-            description=event.description,
+            description=description,
             country=project_context.country,
             project_id=project_context.project_id,
             issue_type_id=event.issue_type_id,
@@ -117,6 +121,28 @@ class TicketAnalyzer:
     def _classify(self, text: str, conversation_history: list = [], categories: list[str] = []):
         return self.llm_client.classify(text, conversation_history, categories)
     
+
+    # si el proyecto habilito el analisis de adjuntos, lee las imagenes del ticket nuevo y suma lo que se ve a la descripcion
+    # es opcional y viene apagado, ante cualquier fallo se ignora el adjunto y el ticket sigue solo con el texto
+    async def _describe_attachments(self, event: NormalizedEvent, project_context, jsm_executor) -> str | None:
+        if event.comment_body or not event.attachments or not project_context.analyze_attachments:
+            return event.description
+
+        try:
+            images = await fetch_images(jsm_executor, event.attachments)
+            if not images:
+                return event.description
+
+            seen = await asyncio.to_thread(self.llm_client.describe_images, images)
+        except Exception as e:
+            logger.error(f"[{event.issue_key}] fallo el analisis de los adjuntos, se sigue solo con el texto: {type(e).__name__}: {e}")
+            return event.description
+
+        if not seen:
+            return event.description
+
+        logger.info(f"[{event.issue_key}] se leyeron {len(images)} imagenes adjuntas")
+        return f"{event.description or ''}\n\n[Contenido de las imagenes adjuntas]\n{seen}".strip()
 
     # decide si el mensaje se escala directo sin buscar en la base de conocimiento
     # un agradecimeinto o confirmacion de cierre dentro de una conversacion nunca se escala, el clasificador a veces lo marca como fuera de alcance porque no trae ninguna consulta

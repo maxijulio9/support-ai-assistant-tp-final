@@ -13,7 +13,7 @@ from app.modules.internal_api.repositories.project_thresholds_repository import 
 PROJECTS_QUERY = """
     SELECT p.id, p.code, p.name, c.code AS country_code, p.language_code, p.is_active,
            p.threshold_auto_publish, p.threshold_needs_review, p.similarity_threshold,
-           p.first_response_target_seconds, p.multi_step_transitions_enabled
+           p.first_response_target_seconds, p.multi_step_transitions_enabled, p.analyze_attachments_enabled
     FROM project p
     LEFT JOIN country c ON c.id = p.country_id
 """
@@ -122,6 +122,7 @@ class ProjectConfigurationReaderRepository:
             "similarity_threshold": self._to_float(row.similarity_threshold, DEFAULT_SIMILARITY_THRESHOLD),
             "first_response_target_seconds": row.first_response_target_seconds if row.first_response_target_seconds is not None else DEFAULT_FIRST_RESPONSE_TARGET_SECONDS,
             "multi_step_transitions_enabled": row.multi_step_transitions_enabled is True,
+            "analyze_attachments_enabled": row.analyze_attachments_enabled is True,
         }
 
     # convierte el numeric de la base a float, o devuelve el valor por defecto si viene vacio

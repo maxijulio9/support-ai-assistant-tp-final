@@ -69,6 +69,8 @@ class TicketAnalysis(BaseModel):
     
     
 class ProjectContext(BaseModel):
+    # si el proyecto habilito el analisis de archivos adjuntos, viene apagado
+    analyze_attachments: bool = False
     project_id: Optional[str] = None
     country: str = "unknown"
     categories: List[str] = []

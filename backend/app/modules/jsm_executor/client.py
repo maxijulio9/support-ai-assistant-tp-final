@@ -96,6 +96,16 @@ class JsmExecutor:
         except (AttributeError, TypeError, ValueError):
             return float(2 ** attempt)
 
+    # descarga el contenido de un adjunto de un ticket, solo de la misma instancia de jira con la que esta configurado el sistema
+    # jira redirige a un almacenamiento temporal, por eso sigue las redirecciones
+    async def download_attachment(self, content_url: str) -> bytes:
+        if not content_url.startswith(self.base_url.rstrip("/") + "/"):
+            raise ValueError("el adjunto no pertenece a la instancia de jira configurada")
+
+        response = await self._send("get", content_url, follow_redirects=True)
+        response.raise_for_status()
+        return response.content
+
     async def close(self):
         await self._client.aclose()
     
