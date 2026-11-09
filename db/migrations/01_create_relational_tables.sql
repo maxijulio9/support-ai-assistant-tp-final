@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS project (
     similarity_threshold    NUMERIC(4,3) DEFAULT 0.40,
     language_code VARCHAR(10),
     first_response_target_seconds INTEGER NOT NULL DEFAULT 30,
-    multi_step_transitions_enabled BOOLEAN NOT NULL DEFAULT FALSE
+    multi_step_transitions_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    analyze_attachments_enabled BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- categorias de soporte que usa cada proyecto/organizacion
