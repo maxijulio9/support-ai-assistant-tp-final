@@ -11,7 +11,7 @@ import { AvailableProject } from '../../api/models/available-project';
 import { Country } from '../../api/models/country';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { AddProjectDialogComponent, AddProjectDialogData, AddProjectDialogResult } from './add-project-dialog.component';
-import { AttachmentAnalysisChange, ProjectAttachmentAnalysisComponent } from './project-attachment-analysis.component';
+import { AttachmentAnalysisChange } from './project-attachment-analysis.component';
 import { MultiStepChange, ProjectMultiStepComponent } from './project-multi-step.component';
 import { ProjectActivationChange, ProjectThresholdsComponent } from './project-thresholds.component';
 import { ProjectStatusesComponent } from './project-statuses.component';
@@ -23,7 +23,7 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 @Component({
   selector: 'app-projects-tab',
   standalone: true,
-  imports: [MatButtonModule, ProjectAttachmentAnalysisComponent, ProjectMultiStepComponent, ProjectThresholdsComponent, ProjectStatusesComponent],
+  imports: [MatButtonModule, ProjectMultiStepComponent, ProjectThresholdsComponent, ProjectStatusesComponent],
   templateUrl: './projects-tab.component.html',
   styleUrl: './projects-tab.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

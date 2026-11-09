@@ -8,7 +8,7 @@
   margin: 0;
 }
 
-// En anchos medios la tabla de 7 columnas no entra sin apretarse: scrollea
+// En anchos medios la tabla de 8 columnas no entra sin apretarse: scrollea
 // dentro de su contenedor en vez de ensanchar la pagina.
 .project-thresholds-scroll {
   overflow-x: auto;
@@ -16,7 +16,7 @@
 
 .project-thresholds-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 880px;
   border-collapse: collapse;
 }
 
@@ -91,6 +91,13 @@
     gap: var(--app-space-sm);
     border-bottom: none;
     padding: calc(var(--app-space-xs) / 2) var(--app-space-sm);
+  }
+
+  // Los tres botones no entran en una linea en pantallas angostas: pasan a la
+  // siguiente en vez de quedar cortados
+  .project-thresholds-table td.project-thresholds-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .project-thresholds-table td::before {

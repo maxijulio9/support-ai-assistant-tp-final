@@ -3,7 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import {
   ATTACHMENT_ANALYSIS_DIALOG,
-  ATTACHMENT_ANALYSIS_PARAGRAPHS,
+  ATTACHMENT_ANALYSIS_INTRO,
+  ATTACHMENT_ANALYSIS_SECTIONS,
   ATTACHMENT_ANALYSIS_TITLE,
   attachmentAnalysisDialogProjectLine,
 } from './attachment-analysis';
@@ -30,10 +31,11 @@ export class AttachmentAnalysisDialogComponent {
 
   readonly title = ATTACHMENT_ANALYSIS_TITLE;
   readonly projectLine = attachmentAnalysisDialogProjectLine(this.data.projectName);
-  readonly paragraphs = ATTACHMENT_ANALYSIS_PARAGRAPHS;
+  readonly intro = ATTACHMENT_ANALYSIS_INTRO;
+  readonly sections = ATTACHMENT_ANALYSIS_SECTIONS;
   readonly texts = ATTACHMENT_ANALYSIS_DIALOG;
 
-  // Un doble clic en "Encender" no confirma dos veces
+  // Un doble clic en "Activar" no confirma dos veces
   private closed = false;
 
   confirm(): void {

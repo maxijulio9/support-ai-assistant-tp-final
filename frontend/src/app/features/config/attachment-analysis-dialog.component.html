@@ -2,8 +2,17 @@
 
 <mat-dialog-content>
   <p class="attachment-analysis-dialog-project">{{ projectLine }}</p>
-  @for (paragraph of paragraphs; track paragraph) {
-    <p class="attachment-analysis-dialog-text">{{ paragraph }}</p>
+  <p class="attachment-analysis-dialog-text">{{ intro }}</p>
+
+  @for (section of sections; track section.title) {
+    <section class="attachment-analysis-dialog-section">
+      <h3 class="attachment-analysis-dialog-heading">{{ section.title }}</h3>
+      <ul class="attachment-analysis-dialog-list">
+        @for (item of section.items; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </section>
   }
 </mat-dialog-content>
 

@@ -4,12 +4,31 @@
   margin: 0 0 var(--app-space-sm);
 }
 
-.attachment-analysis-dialog-text {
+.attachment-analysis-dialog-text,
+.attachment-analysis-dialog-list {
   font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface);
-  margin: 0 0 var(--app-space-sm);
+}
 
-  &:last-child {
-    margin-bottom: 0;
+.attachment-analysis-dialog-text {
+  margin: 0 0 var(--app-space-sm);
+}
+
+.attachment-analysis-dialog-section {
+  margin-top: var(--app-space-md);
+}
+
+.attachment-analysis-dialog-heading {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-xs);
+}
+
+.attachment-analysis-dialog-list {
+  margin: 0;
+  padding-left: var(--app-space-md);
+
+  li + li {
+    margin-top: var(--app-space-xs);
   }
 }

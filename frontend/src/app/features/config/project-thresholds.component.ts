@@ -24,6 +24,7 @@ import {
   activationSnackbarMessage,
 } from './project-activation';
 import { isProjectActive } from '../../shared/project-activity';
+import { AttachmentAnalysisChange, ProjectAttachmentAnalysisComponent } from './project-attachment-analysis.component';
 
 export interface ProjectActivationChange {
   projectKey: string;
@@ -40,7 +41,7 @@ const SETTLE_MS = 600;
 @Component({
   selector: 'app-project-thresholds',
   standalone: true,
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, ProjectAttachmentAnalysisComponent],
   templateUrl: './project-thresholds.component.html',
   styleUrl: './project-thresholds.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,6 +62,7 @@ export class ProjectThresholdsComponent {
   readonly viewStatuses = output<string>();
   readonly thresholdsSaved = output<void>();
   readonly activationChanged = output<ProjectActivationChange>();
+  readonly attachmentAnalysisChanged = output<AttachmentAnalysisChange>();
 
   // Proyectos con un pedido de activacion o desactivacion en curso (y el
   // instante posterior). Mientras esta la clave, el boton queda bloqueado y
