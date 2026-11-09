@@ -31,6 +31,7 @@ class ProjectRepository:
                 threshold_needs_review=project_row.threshold_needs_review,
                 similarity_threshold=project_row.similarity_threshold,
                 language_code=project_row.language_code,
+                analyze_attachments=project_row.analyze_attachments_enabled is True,
             )
 
         finally:
@@ -42,7 +43,7 @@ class ProjectRepository:
         query = text("""
             SELECT p.id, c.code AS country_code,
                    p.threshold_auto_publish, p.threshold_needs_review, p.similarity_threshold,
-                   p.language_code
+                   p.language_code, p.analyze_attachments_enabled
             FROM project p
             LEFT JOIN country c ON p.country_id = c.id
             WHERE p.code = :project_key
