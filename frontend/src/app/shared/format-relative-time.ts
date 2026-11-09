@@ -1,23 +1,37 @@
-// "ayer, HH:mm" para cualquier diferencia de 24h o mas es una
-// simplificacion deliberada pedida en el diseño, no distingue 1 dia de
-// varios.
-export function formatRelativeTime(createdAt: string | null | undefined): string {
-  if (!createdAt) return '';
-  const date = new Date(createdAt);
+const TIME_FORMATTER = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+const DAY_MONTH_FORMATTER = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' });
+const DAY_MONTH_YEAR_FORMATTER = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const MINUTE_MS = 60 * 1000;
+
+// "hoy" y "ayer" se miden por dia calendario en la zona del navegador, no por
+// horas transcurridas: lo de anoche a las 21:57 es "ayer" aunque hayan pasado
+// pocas horas. "now" se recibe por parametro para poder fijar el reloj.
+export function formatRelativeTime(value: string | null | undefined, now: Date = new Date()): string {
+  if (!value) return '';
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
 
-  const diffMs = Date.now() - date.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
+  // Una fecha apenas en el futuro (reloj desfasado) tambien es "un momento"
+  const diffMs = now.getTime() - date.getTime();
+  if (diffMs < MINUTE_MS) return 'hace un momento';
 
-  if (diffHours >= 24) {
-    const time = date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-    return `ayer, ${time}`;
-  }
+  const minutes = Math.floor(diffMs / MINUTE_MS);
+  if (minutes < 60) return `hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
 
-  const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
-  const diffMinutes = Math.round(diffMs / (1000 * 60));
-  if (diffMinutes < 60) {
-    return rtf.format(-diffMinutes, 'minute');
-  }
-  return rtf.format(-Math.round(diffHours), 'hour');
+  const time = TIME_FORMATTER.format(date);
+  const dayOffset = calendarDaysBetween(date, now);
+  if (dayOffset === 0) return `hoy, ${time}`;
+  if (dayOffset === 1) return `ayer, ${time}`;
+
+  const day = (date.getFullYear() === now.getFullYear() ? DAY_MONTH_FORMATTER : DAY_MONTH_YEAR_FORMATTER).format(date);
+  return `${day}, ${time}`;
+}
+
+// Dias de calendario entre dos fechas. Se compara el dia local (anio, mes,
+// dia) con Date.UTC para que un cambio de horario de verano no corra la cuenta.
+function calendarDaysBetween(earlier: Date, later: Date): number {
+  const start = Date.UTC(earlier.getFullYear(), earlier.getMonth(), earlier.getDate());
+  const end = Date.UTC(later.getFullYear(), later.getMonth(), later.getDate());
+  return Math.round((end - start) / (24 * 60 * 60 * 1000));
 }
