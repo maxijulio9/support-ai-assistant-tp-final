@@ -1,0 +1,81 @@
+// Estado de la pantalla Historial que vive en la URL (busqueda, filtros,
+// pagina y casos abiertos), para que Atras, recargar o pegar el enlace lo
+// restauren. Lectura y escritura son funciones puras: un valor invalido se
+// ignora sin error y un valor vacio no deja parametros sueltos.
+export interface HistoryViewState {
+  term: string;
+  status: string | null;
+  category: string | null;
+  page: number;
+  // Claves de los tickets expandidos, en el orden en que se abrieron
+  expanded: string[];
+}
+
+export const EMPTY_HISTORY_VIEW: HistoryViewState = { term: '', status: null, category: null, page: 1, expanded: [] };
+
+export const HISTORY_PARAMS = {
+  term: 'q',
+  status: 'estado',
+  category: 'categoria',
+  page: 'pagina',
+  expanded: 'abiertos',
+} as const;
+
+interface ParamSource {
+  get(name: string): string | null;
+}
+
+const EXPANDED_SEPARATOR = ',';
+// Tope de casos abiertos que se leen de la URL, para que un enlace armado a mano no la infle
+const MAX_EXPANDED = 50;
+
+function parsePage(raw: string | null): number {
+  if (raw === null || !/^\d+$/.test(raw)) return 1;
+  const page = Number(raw);
+  return Number.isSafeInteger(page) && page >= 1 ? page : 1;
+}
+
+function parseExpanded(raw: string | null): string[] {
+  if (!raw) return [];
+  const keys = raw
+    .split(EXPANDED_SEPARATOR)
+    .map((key) => key.trim())
+    .filter((key) => key !== '');
+  return Array.from(new Set(keys)).slice(0, MAX_EXPANDED);
+}
+
+// validStatuses: los estados que existen. Una categoria desconocida no se
+// puede juzgar aca, porque sale de los datos cargados: ver sanitizeCategory.
+export function parseHistoryParams(params: ParamSource, validStatuses: readonly string[]): HistoryViewState {
+  const status = params.get(HISTORY_PARAMS.status);
+  const category = params.get(HISTORY_PARAMS.category)?.trim();
+
+  return {
+    term: params.get(HISTORY_PARAMS.term)?.trim() ?? '',
+    status: status !== null && validStatuses.includes(status) ? status : null,
+    category: category ? category : null,
+    page: parsePage(params.get(HISTORY_PARAMS.page)),
+    expanded: parseExpanded(params.get(HISTORY_PARAMS.expanded)),
+  };
+}
+
+// null en un parametro significa "sin parametro": el router lo saca de la URL
+export function serializeHistoryParams(state: HistoryViewState): Record<string, string | null> {
+  const term = state.term.trim();
+  return {
+    [HISTORY_PARAMS.term]: term === '' ? null : term,
+    [HISTORY_PARAMS.status]: state.status ? state.status : null,
+    [HISTORY_PARAMS.category]: state.category ? state.category : null,
+    [HISTORY_PARAMS.page]: state.page > 1 ? String(state.page) : null,
+    [HISTORY_PARAMS.expanded]: state.expanded.length > 0 ? state.expanded.join(EXPANDED_SEPARATOR) : null,
+  };
+}
+
+// Una categoria que no esta entre las de los datos cargados se ignora
+export function sanitizeCategory(category: string | null, availableCategories: readonly string[]): string | null {
+  return category !== null && availableCategories.includes(category) ? category : null;
+}
+
+export function toggleExpanded(expanded: readonly string[], issueKey: string): string[] {
+  return expanded.includes(issueKey) ? expanded.filter((key) => key !== issueKey) : [...expanded, issueKey];
+}

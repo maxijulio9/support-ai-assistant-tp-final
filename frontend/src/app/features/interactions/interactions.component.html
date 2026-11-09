@@ -5,7 +5,7 @@
       <p class="app-page-subtitle">Consultá las solicitudes que procesó el sistema y cómo se resolvió cada una</p>
     </div>
     @if (loadState() === 'loaded') {
-      <span class="app-page-chip">{{ totalFiltered() }} {{ totalFiltered() === 1 ? 'solicitud' : 'solicitudes' }}</span>
+      <span class="app-page-chip">{{ totalFiltered() }} {{ totalFiltered() === 1 ? 'caso' : 'casos' }}</span>
     }
   </header>
 
@@ -45,7 +45,7 @@
   </div>
 
   @if (truncated()) {
-    <p class="interactions-truncated">Mostrando las últimas {{ historyLimit }} solicitudes</p>
+    <p class="interactions-truncated">Mostrando las últimas {{ historyLimit }} interacciones</p>
   }
 
   @if (rowsState() === 'loading') {
@@ -59,7 +59,7 @@
             <th scope="col">Estado</th>
             <th scope="col">Asunto</th>
             <th scope="col">Prioridad</th>
-            <th scope="col">Fecha</th>
+            <th scope="col">Última actividad</th>
           </tr>
         </thead>
         <tbody aria-hidden="true">
@@ -89,62 +89,14 @@
   }
 
   @if (rowsState() === 'loaded') {
-    <div class="interactions-table-wrapper">
-      <table class="interactions-table">
-        <caption class="visually-hidden">Historial de solicitudes</caption>
-        <thead>
-          <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Categoría</th>
-            <th scope="col">Estado</th>
-            <th scope="col">Asunto</th>
-            <th scope="col">Prioridad</th>
-            <th scope="col">Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of pageItems(); track item.interaction_id) {
-            @let status = statusFor(item.decision);
-            @let url = safeTicketUrl(item.ticket_url);
-            <tr>
-              <td>
-                @if (url) {
-                  <a [href]="url" target="_blank" rel="noopener noreferrer" class="interactions-ticket-link">
-                    {{ item.issue_key }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
-                  </a>
-                } @else {
-                  {{ item.issue_key }}
-                }
-              </td>
-              <td>{{ item.category }}</td>
-              <td>
-                <span [class]="'interactions-status interactions-status--' + status.tone">
-                  <span class="interactions-status-dot"></span>
-                  {{ status.label }}
-                </span>
-                @if (item.was_edited) {
-                  <span class="interactions-edited-chip">Editada por el agente</span>
-                }
-              </td>
-              <td>
-                <a [routerLink]="['/interactions', item.interaction_id]" class="interactions-subject-link">{{
-                  item.summary
-                }}</a>
-              </td>
-              <td>{{ item.priority }}</td>
-              <td>{{ formatDate(item.created_at) }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+    <app-case-table [cases]="pageItems()" [expanded]="expandedCases()" (toggled)="onCaseToggled($event)" />
   }
 
   <div class="interactions-pagination">
     <span aria-live="polite">
       @if (rowsState() === 'loaded') {
         {{ (effectivePage() - 1) * pageSize + 1 }}-{{ (effectivePage() - 1) * pageSize + pageItems().length }} de
-        {{ totalFiltered() }} resultados
+        {{ totalFiltered() }} {{ totalFiltered() === 1 ? 'caso' : 'casos' }}
       }
     </span>
     @if (rowsState() === 'loaded') {

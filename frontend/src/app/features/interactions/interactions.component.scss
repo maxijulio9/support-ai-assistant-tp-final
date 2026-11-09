@@ -22,7 +22,7 @@
 }
 
 .interactions-truncated {
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
   margin: 0;
 }
@@ -49,92 +49,8 @@
 }
 
 .interactions-table th {
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
-}
-
-.interactions-table tbody tr {
-  position: relative;
-  cursor: pointer;
-}
-
-.interactions-table tbody tr:hover {
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
-}
-
-.interactions-subject-link {
-  position: static;
-  color: inherit;
-  text-decoration: none;
-  outline: none;
-}
-
-.interactions-subject-link:hover {
-  text-decoration: underline;
-}
-
-// El area clicable se extiende a toda la fila: la fila (tr) es el
-// contenedor posicionado, y este pseudo-elemento se estira a sus bordes
-// (inset: 0 resuelve contra el ancestro posicionado mas cercano, no contra
-// el propio link). El link de la key a JSM queda por encima con z-index.
-.interactions-subject-link::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-}
-
-.interactions-subject-link:focus-visible::after {
-  outline: 2px solid var(--mat-sys-primary);
-  outline-offset: -2px;
-}
-
-.interactions-ticket-link {
-  position: relative;
-  z-index: 1;
-  color: var(--mat-sys-primary);
-  text-decoration: underline;
-}
-
-.interactions-ticket-link:focus-visible {
-  outline: 2px solid var(--mat-sys-primary);
-  outline-offset: 2px;
-}
-
-.interactions-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.interactions-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: currentColor;
-}
-
-.interactions-status--success {
-  color: var(--app-color-success);
-}
-
-.interactions-status--warning {
-  color: var(--app-color-warning);
-}
-
-.interactions-status--error {
-  color: var(--mat-sys-error);
-}
-
-.interactions-status--neutral {
-  color: var(--app-color-text-secondary);
-}
-
-.interactions-edited-chip {
-  display: block;
-  margin-top: 2px;
-  font: var(--app-text-metadata);
-  color: var(--app-color-text-secondary);
-  white-space: nowrap;
 }
 
 .interactions-empty {
@@ -164,7 +80,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font: var(--app-text-metadata);
+  font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
 }
 

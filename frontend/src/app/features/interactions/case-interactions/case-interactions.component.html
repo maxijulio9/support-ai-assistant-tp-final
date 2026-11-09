@@ -1,0 +1,21 @@
+<ul class="case-interactions" [attr.aria-label]="'Interacciones de ' + issueKey()">
+  @for (item of interactions(); track item.interaction_id) {
+    <li>
+      <a [routerLink]="['/interactions', item.interaction_id]" class="case-interaction">
+        <span class="case-interaction-main">
+          <span class="case-interaction-date">{{ formatDate(item.created_at) }}</span>
+          <app-decision-chip [decision]="item.decision" />
+        </span>
+        <span class="case-interaction-detail">
+          <span class="case-interaction-category">{{ item.category }}</span>
+          @if (confidenceText(item.confidence_score); as confidence) {
+            <span class="case-interaction-meta">Confianza {{ confidence }}</span>
+          }
+          @if (item.was_edited) {
+            <span class="case-interaction-meta">Editada por el agente</span>
+          }
+        </span>
+      </a>
+    </li>
+  }
+</ul>

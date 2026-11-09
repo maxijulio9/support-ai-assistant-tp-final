@@ -1,0 +1,78 @@
+<div class="case-table-wrapper">
+  <table class="case-table">
+    <caption class="visually-hidden">Historial de solicitudes agrupado por ticket</caption>
+    <thead>
+      <tr>
+        <th scope="col" class="case-toggle-cell"><span class="visually-hidden">Interacciones</span></th>
+        <th scope="col">ID</th>
+        <th scope="col">Categoría</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Asunto</th>
+        <th scope="col">Prioridad</th>
+        <th scope="col">Última actividad</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (group of cases(); track group.issueKey) {
+        @let latest = group.latest;
+        @let url = safeTicketUrl(latest.ticket_url);
+        @let single = isSingle(group);
+        <tr [class.case-row--plain]="single">
+          <td class="case-toggle-cell">
+            @if (!single) {
+              <button
+                type="button"
+                class="case-toggle"
+                [attr.aria-expanded]="isExpanded()(group.issueKey)"
+                [attr.aria-controls]="'case-' + group.issueKey"
+                [attr.aria-label]="(isExpanded()(group.issueKey) ? 'Ocultar' : 'Ver') + ' las interacciones de ' + group.issueKey"
+                (click)="toggle(group.issueKey)"
+              >
+                <mat-icon aria-hidden="true">{{ isExpanded()(group.issueKey) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+              </button>
+            }
+          </td>
+          <td>
+            @if (url) {
+              <a [href]="url" target="_blank" rel="noopener noreferrer" class="case-ticket-link">
+                {{ group.issueKey }}<span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+              </a>
+            } @else {
+              {{ group.issueKey }}
+            }
+            @if (group.possiblyIncomplete) {
+              <span class="case-incomplete" [title]="incompleteDetail">
+                {{ incompleteLabel }}<span class="visually-hidden">. {{ incompleteDetail }}</span>
+              </span>
+            }
+          </td>
+          <td>{{ group.categoryLabel }}</td>
+          <td>
+            <app-decision-chip [decision]="latest.decision" />
+            @if (!single) {
+              <span class="case-count">{{ countText(group) }}</span>
+            } @else if (latest.was_edited) {
+              <span class="case-count">Editada por el agente</span>
+            }
+          </td>
+          <td>
+            @if (single) {
+              <a [routerLink]="['/interactions', latest.interaction_id]" class="case-subject-link">{{ latest.summary }}</a>
+            } @else {
+              {{ latest.summary }}
+            }
+          </td>
+          <td>{{ latest.priority }}</td>
+          <td>{{ relativeTime(latest.created_at) }}</td>
+        </tr>
+        @if (!single && isExpanded()(group.issueKey)) {
+          <tr class="case-detail-row">
+            <td colspan="7" [id]="'case-' + group.issueKey">
+              <app-case-interactions [issueKey]="group.issueKey" [interactions]="group.interactions" />
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+</div>

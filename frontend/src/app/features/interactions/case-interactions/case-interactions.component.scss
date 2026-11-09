@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.case-interactions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.case-interactions li + li {
+  border-top: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.case-interaction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-xs) var(--app-space-md);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  font: var(--app-text-subtitle);
+  color: var(--mat-sys-on-surface);
+  text-decoration: none;
+}
+
+.case-interaction:hover {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+}
+
+.case-interaction:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: -2px;
+}
+
+.case-interaction-date {
+  min-width: 9ch;
+}
+
+.case-interaction-meta {
+  color: var(--app-color-text-secondary);
+}
+
+.case-interaction-main,
+.case-interaction-detail {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-xs) var(--app-space-md);
+}
+
+// En pantallas angostas se apila: hora y estado arriba, categoria y confianza abajo
+@media (max-width: 767.98px) {
+  .case-interaction {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}

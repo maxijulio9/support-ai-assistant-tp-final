@@ -1,0 +1,147 @@
+:host {
+  display: block;
+}
+
+.case-table-wrapper {
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--app-radius-lg);
+  overflow-x: auto;
+}
+
+.case-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--app-text-subtitle);
+  color: var(--mat-sys-on-surface);
+}
+
+.case-table th,
+.case-table td {
+  text-align: left;
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.case-table th {
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+// Espacio del boton: queda vacio en los casos planos para alinear las columnas
+.case-table .case-toggle-cell {
+  width: 48px;
+  padding-right: 0;
+}
+
+.case-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  cursor: pointer;
+}
+
+.case-toggle:hover {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+}
+
+.case-toggle:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.case-table tbody tr:not(.case-detail-row) {
+  position: relative;
+}
+
+.case-row--plain {
+  cursor: pointer;
+}
+
+.case-row--plain:hover {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+}
+
+// Los casos de una sola interaccion abren el detalle desde toda la fila: el
+// link estira su area a los bordes de la fila (tr), que es el contenedor
+// posicionado. El link al ticket queda por encima con z-index.
+.case-subject-link {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.case-subject-link:hover {
+  text-decoration: underline;
+}
+
+.case-subject-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.case-subject-link:focus-visible::after {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: -2px;
+}
+
+.case-ticket-link {
+  position: relative;
+  z-index: 1;
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+}
+
+.case-ticket-link:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.case-count,
+.case-incomplete {
+  display: block;
+  margin-top: 2px;
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.case-incomplete {
+  color: var(--app-color-warning);
+}
+
+.case-detail-row td {
+  padding: 0;
+  white-space: normal;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 3%, transparent);
+}
+
+// Alineada con la columna del ID, debajo del espacio del boton
+.case-detail-row app-case-interactions {
+  margin-left: 48px;
+}
+
+// En pantallas angostas la tabla scrollea, pero la lista de interacciones
+// se queda del ancho visible (100cqw es el ancho del contenedor con scroll)
+// para apilarse sin pedir scroll horizontal
+@media (max-width: 767.98px) {
+  .case-table-wrapper {
+    container-type: inline-size;
+  }
+
+  .case-detail-row app-case-interactions {
+    position: sticky;
+    left: 0;
+    width: 100cqw;
+    margin-left: 0;
+    box-sizing: border-box;
+  }
+}
