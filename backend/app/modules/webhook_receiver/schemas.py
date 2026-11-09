@@ -51,6 +51,7 @@ class JsmFieldsRaw(BaseModel):
     created: Optional[str] = None
     customfield_10010: Optional[JsmCustomField10010Raw] = None
     comment: Optional[dict] = None
+    attachment: Optional[list] = None
 
 
 class JsmIssueRaw(BaseModel):
@@ -96,6 +97,8 @@ class NormalizedEvent(BaseModel):
     comment_author_id: Optional[str] = None
     # hora real en que el webhook entro al sistema, en utc con formato iso
     received_at: Optional[str] = None
+    # archivos adjuntos del ticket, con lo necesario para descargarlos si el proyecto habilito su analisis
+    attachments: Optional[list] = None
 
 
     

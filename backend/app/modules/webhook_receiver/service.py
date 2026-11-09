@@ -61,6 +61,7 @@ class WebhookReceiver:
             received_at=datetime.now(timezone.utc).isoformat(),
             comment_body=comment_body,
             comment_author_id=comment_author_id,
+            attachments=self._extract_attachments(fields),
         )
 
     #determina la ruta del evento y lo despacha al módulo que corresponda
@@ -158,6 +159,24 @@ class WebhookReceiver:
 
     #     # si en caso de revibir un evento no reconocido  ignorar simplemente, no debería pasar
     #     return {"status": "ignored", "event_type": event.event_type}
+
+    # extrae los datos de los archivos adjuntos que trae jira, solo lo necesario para descargarlos despues
+    def _extract_attachments(self, fields) -> list[dict]:
+        items = []
+
+        for raw in fields.attachment or []:
+            if not isinstance(raw, dict):
+                continue
+
+            items.append({
+                "id": raw.get("id"),
+                "filename": raw.get("filename"),
+                "mime_type": raw.get("mimeType"),
+                "size": raw.get("size"),
+                "content_url": raw.get("content"),
+            })
+
+        return items
 
     #ewxtrae texto plano desde el formato ADF Atlassian Document Format
     def _extract_plain_text(self, adf_node: dict) -> str:
