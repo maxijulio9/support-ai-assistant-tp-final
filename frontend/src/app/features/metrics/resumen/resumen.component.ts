@@ -24,6 +24,7 @@ import { MetricsFilters, resolveMetricsFilters } from '../metrics-filters';
 import { buildEvolutionPoints } from '../../dashboard/auto-publish-evolution';
 import { buildMiniChart } from './kpi-mini-chart';
 import { KpiCardComponent } from './kpi-card/kpi-card.component';
+import { CategoriesCardComponent } from './categories-card/categories-card.component';
 import { MetricsSummaryResponse } from '../../../api/models/metrics-summary-response';
 import { CategoryMetric } from '../../../api/models/category-metric';
 import { DailyMetric } from '../../../api/models/daily-metric';
@@ -76,7 +77,7 @@ function resolveHeatmapColors(): [string, string] {
 @Component({
   selector: 'app-metrics-resumen',
   standalone: true,
-  imports: [InfoHintComponent, DecimalPipe, MatButtonModule, MatIconModule, MatSlideToggleModule, NgxEchartsDirective, KpiCardComponent],
+  imports: [InfoHintComponent, DecimalPipe, MatButtonModule, MatIconModule, MatSlideToggleModule, NgxEchartsDirective, KpiCardComponent, CategoriesCardComponent],
   templateUrl: './resumen.component.html',
   styleUrl: './resumen.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -99,7 +100,6 @@ export class ResumenComponent {
   readonly summary = signal<MetricsSummaryResponse | null>(null);
   readonly previousSummary = signal<MetricsSummaryResponse | null>(null);
   readonly byCategory = signal<CategoryMetric[]>([]);
-  readonly categoriesAsTable = signal(false);
 
   readonly statusOptions = STATUS_FILTER_OPTIONS;
   readonly statusFor = decisionStatus;
@@ -154,7 +154,6 @@ export class ResumenComponent {
         percent: total > 0 ? (category.total_interactions / total) * 100 : 0,
       }));
   });
-  readonly leaderCategory = computed(() => this.categoryRows()[0] ?? null);
 
   // --- Solicitudes por dia y decision ---
   readonly dailyState = signal<DailyState>('loading');
@@ -361,10 +360,6 @@ export class ResumenComponent {
 
   retry(): void {
     this.retry$.next();
-  }
-
-  toggleCategoriesAsTable(): void {
-    this.categoriesAsTable.update((value) => !value);
   }
 
   toggleDailyAsTable(): void {

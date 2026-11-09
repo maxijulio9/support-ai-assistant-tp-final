@@ -3,12 +3,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { CategoryComparisonRow } from '../category-comparison';
 import { cohortLabel } from '../response-times-format';
 import { closurePlaceholder } from '../closure';
-import { StatsView, statsPlaceholder } from '../stats-view';
+import { NO_DATA_TEXT, StatsView, statsPlaceholder } from '../stats-view';
+import { NoDataComponent } from '../no-data/no-data.component';
 
 @Component({
   selector: 'app-category-comparison',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [MatIconModule, NoDataComponent],
   templateUrl: './category-comparison.component.html',
   styleUrl: './category-comparison.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,10 +17,13 @@ import { StatsView, statsPlaceholder } from '../stats-view';
 export class CategoryComparisonComponent {
   readonly rows = input.required<CategoryComparisonRow[]>();
   readonly baselineHasData = input.required<boolean>();
+  // Minimo de tickets del contrato, para explicar las celdas sin datos
+  readonly minSample = input.required<number>();
   readonly showClosure = input(false);
   // Como se mide el cierre en cada lado, para mostrarlo pegado a las cifras
   readonly closureNote = input('');
 
+  readonly noData = NO_DATA_TEXT;
   readonly automaticLabel = cohortLabel('automatic');
   readonly baselineLabel = cohortLabel('baseline');
   // En pantallas angostas el encabezado del baseline se acorta

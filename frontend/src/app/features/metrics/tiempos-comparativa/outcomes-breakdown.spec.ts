@@ -62,10 +62,10 @@ describe('buildOutcomeRows', () => {
       expect(row.tickets).toBe(4);
     });
 
-    it.each(ALL_CHANNELS)('count entre 1 y min_sample menos 1 en %s muestra n insuficiente con el n', (channel) => {
+    it.each(ALL_CHANNELS)('count entre 1 y min_sample menos 1 en %s muestra Sin datos con el n', (channel) => {
       const rows = buildOutcomeRows([outcome(channel, 9, stats(1)), outcome(channel, 9, stats(4))], 5);
 
-      expect(rows.map((row) => row.firstResponseText)).toEqual(['n insuficiente (1 ticket)', 'n insuficiente (4 tickets)']);
+      expect(rows.map((row) => row.firstResponseText)).toEqual(['Sin datos (1 ticket)', 'Sin datos (4 tickets)']);
     });
 
     it.each(ALL_CHANNELS)('count desde min_sample en %s muestra la mediana', (channel) => {
@@ -78,7 +78,7 @@ describe('buildOutcomeRows', () => {
     it('usa el min_sample recibido', () => {
       const [row] = buildOutcomeRows([outcome('REVIEWED_APPROVED', 9, stats(7, 30))], 10);
 
-      expect(row.firstResponseText).toBe('n insuficiente (7 tickets)');
+      expect(row.firstResponseText).toBe('Sin datos (7 tickets)');
     });
 
     it('un canal que antes se trataba como sin primera respuesta ahora muestra la mediana si tiene datos', () => {

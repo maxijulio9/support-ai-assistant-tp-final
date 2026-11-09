@@ -86,8 +86,8 @@ describe('closureNote', () => {
 });
 
 describe('closurePlaceholder', () => {
-  it('pocos cierres: n insuficiente', () => {
-    expect(closurePlaceholder(buildStatsView(stats(3), 5), 10)).toBe('n insuficiente');
+  it('pocos cierres: Sin datos', () => {
+    expect(closurePlaceholder(buildStatsView(stats(3), 5), 10)).toBe('Sin datos');
   });
 
   it('ningun cierre con tickets dice Sin cierres, y sin tickets dice Sin tickets', () => {

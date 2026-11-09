@@ -122,10 +122,10 @@ describe('placeholder y texto de tickets de la tarjeta', () => {
     expect(buildCohortCard(cohort('automatic', stats(40, 28, 90)), 5, null).placeholder).toBeNull();
   });
 
-  it('n insuficiente explica cuantos hay y cuantos hacen falta', () => {
+  it('Sin datos explica cuantos hay y cuantos hacen falta', () => {
     const card = buildCohortCard(cohort('automatic', stats(3, null, null)), 5, null);
 
-    expect(card.placeholder?.title).toBe('n insuficiente');
+    expect(card.placeholder?.title).toBe('Sin datos');
     expect(card.placeholder?.detail).toBe('Hay 3 tickets con tiempo de respuesta y hacen falta al menos 5 para calcular los tiempos.');
   });
 
@@ -188,9 +188,9 @@ describe('cierre de la tarjeta', () => {
     expect(card.closure.view.p90Indicative).toBe(true);
   });
 
-  it('pocos cierres: n insuficiente con el n; ninguno con tickets: Sin cierres; sin tickets: Sin tickets', () => {
+  it('pocos cierres: Sin datos con el n; ninguno con tickets: Sin cierres; sin tickets: Sin tickets', () => {
     expect(buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(3, null, null)), 5, null).closure.placeholder).toBe(
-      'n insuficiente',
+      'Sin datos',
     );
     expect(buildCohortCard(withClosure('automatic', 'detected_confirmation', stats(0, null, null), 6), 5, null).closure.placeholder).toBe(
       'Sin cierres',

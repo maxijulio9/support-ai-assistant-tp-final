@@ -72,69 +72,8 @@
     </div>
 
     <div class="resumen-lower">
-      <div class="resumen-card resumen-categories">
-        <div class="resumen-categories-header">
-          <div>
-            <div class="app-title-row">
-              <h2>Solicitudes por categoría</h2>
-              <app-info-hint [title]="help.categories.title" [text]="help.categories.text" />
-            </div>
-            <p class="resumen-card-subtitle">Categorías, ordenadas por volumen</p>
-          </div>
-          <mat-slide-toggle [checked]="categoriesAsTable()" (change)="toggleCategoriesAsTable()">
-            Ver como tabla
-          </mat-slide-toggle>
-        </div>
-
-        @if (categoryRows().length === 0) {
-          <p class="resumen-empty">Todavía no hay categorías para mostrar.</p>
-        } @else if (categoriesAsTable()) {
-          <div class="resumen-categories-table-wrapper">
-            <table class="resumen-categories-table">
-              <caption class="visually-hidden">Solicitudes por categoría</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Categoría</th>
-                  <th scope="col">Solicitudes</th>
-                  <th scope="col">Porcentaje</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of categoryRows(); track row.category) {
-                  <tr>
-                    <td>{{ row.category }}</td>
-                    <td>{{ row.total | number }}</td>
-                    <td>{{ row.percent | number: '1.1-1' }}%</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        } @else {
-          <ul class="resumen-categories-list">
-            @for (row of categoryRows(); track row.category) {
-              <li>
-                <div class="resumen-categories-row">
-                  <span>{{ row.category }}</span>
-                  <span>{{ row.total | number }} ({{ row.percent | number: '1.1-1' }}%)</span>
-                </div>
-                <div class="resumen-categories-bar">
-                  <div class="resumen-categories-bar-fill" [style.width.%]="row.percent"></div>
-                </div>
-              </li>
-            }
-          </ul>
-
-          @if (leaderCategory()) {
-            <p class="resumen-categories-leader">
-              {{ leaderCategory()!.category }} lidera con {{ leaderCategory()!.total | number }} solicitudes
-            </p>
-          }
-        }
-      </div>
-
       <div class="resumen-card resumen-daily">
-        <div class="resumen-categories-header">
+        <div class="resumen-daily-header">
           <div>
             <div class="app-title-row">
               <h2>Solicitudes por día y decisión</h2>
@@ -208,6 +147,8 @@
           }
         }
       </div>
+
+      <app-categories-card [rows]="categoryRows()" [helpTitle]="help.categories.title" [helpText]="help.categories.text" />
 
       <div class="resumen-card">
         <div class="app-title-row">

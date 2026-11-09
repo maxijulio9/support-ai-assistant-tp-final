@@ -1,7 +1,7 @@
 import { resolveSegmentColorVar } from '../../../shared/decision-colors';
 import { cohortDescription, cohortLabel, firstResponseKindLabel, formatPercent, withinTargetLabel } from './response-times-format';
 import { closureBasisText, closurePlaceholder } from './closure';
-import { buildStatsView, StatsView } from './stats-view';
+import { buildStatsView, NO_DATA_TEXT, StatsView } from './stats-view';
 import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
 import { ResponseTimesResponse } from '../../../api/models/response-times-response';
 
@@ -60,7 +60,7 @@ function ticketsWord(count: number): string {
 export function cohortPlaceholder(view: StatsView, tickets: number, minSample: number): CohortPlaceholder | null {
   if (view.state === 'insufficient') {
     return {
-      title: 'n insuficiente',
+      title: NO_DATA_TEXT,
       detail: `Hay ${view.n} ${ticketsWord(view.n)} con tiempo de respuesta y hacen falta al menos ${minSample} para calcular los tiempos.`,
     };
   }

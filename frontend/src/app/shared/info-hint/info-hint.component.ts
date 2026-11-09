@@ -35,11 +35,13 @@ const CLOSE_DELAY_MS = 200;
 export class InfoHintComponent implements OnDestroy {
   readonly title = input.required<string>();
   readonly text = input.required<string>();
+  // Nombre accesible propio, para cuando el de siempre no explica el motivo
+  readonly label = input<string | null>(null);
 
   readonly origin = inject(ElementRef);
   readonly positions = POSITIONS;
   readonly popupId = `info-hint-${nextInstanceId++}`;
-  readonly buttonLabel = computed(() => infoHintLabel(this.title()));
+  readonly buttonLabel = computed(() => this.label() ?? infoHintLabel(this.title()));
 
   readonly open = signal(false);
   private pinned = false;

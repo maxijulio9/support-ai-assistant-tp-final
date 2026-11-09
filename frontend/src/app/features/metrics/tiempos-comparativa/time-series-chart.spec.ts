@@ -44,15 +44,15 @@ describe('seriesTooltipLines', () => {
     ]);
   });
 
-  it('punto con pocos tickets agrega "n insuficiente" con el n y el minimo, y conserva los valores', () => {
+  it('punto con pocos tickets agrega "Valores orientativos" con el n y el minimo, y conserva los valores', () => {
     const lines = seriesTooltipLines(point('2026-10-24', 3, 20, 40), 'daily', 5);
 
     expect(lines).toContain('Mediana: 20 s');
-    expect(lines).toContain('n insuficiente: 3 tickets, el mínimo es 5');
+    expect(lines).toContain('Valores orientativos: 3 tickets, el mínimo es 5');
   });
 
   it('con 1 ticket va en singular', () => {
-    expect(seriesTooltipLines(point('2026-10-24', 1, 20, 20), 'daily', 5)).toContain('n insuficiente: 1 ticket, el mínimo es 5');
+    expect(seriesTooltipLines(point('2026-10-24', 1, 20, 20), 'daily', 5)).toContain('Valores orientativos: 1 ticket, el mínimo es 5');
   });
 
   it('punto sin tickets lo dice segun la granularidad', () => {
@@ -204,7 +204,7 @@ describe('buildSeriesChartOptions', () => {
     const tooltip = build(points).tooltip.formatter([{ dataIndex: 0 }]);
 
     expect(tooltip).toContain('Semana del 12 oct');
-    expect(tooltip).toContain('n insuficiente: 2 tickets, el mínimo es 5');
+    expect(tooltip).toContain('Valores orientativos: 2 tickets, el mínimo es 5');
   });
 
   it('todo el texto del grafico es de 14 px o mas', () => {

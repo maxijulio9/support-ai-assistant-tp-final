@@ -66,7 +66,7 @@ export function seriesTooltipLines(point: SeriesPoint, granularity: Granularity,
   if (point.p90 !== null) lines.push(`P90: ${formatDuration(point.p90)}`);
   lines.push(`Tickets: ${point.count}`);
   if (point.lowSample) {
-    lines.push(`n insuficiente: ${point.count} ${ticketsWord(point.count)}, el mínimo es ${minSample}`);
+    lines.push(`Valores orientativos: ${point.count} ${ticketsWord(point.count)}, el mínimo es ${minSample}`);
   }
   return lines;
 }

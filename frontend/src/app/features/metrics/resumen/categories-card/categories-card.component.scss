@@ -1,0 +1,112 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  background-color: var(--mat-sys-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-space-md);
+}
+
+h2 {
+  font: var(--app-text-card-heading);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.categories-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--app-space-sm);
+}
+
+.categories-subtitle {
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+  margin: var(--app-space-xs) 0 var(--app-space-sm);
+}
+
+.categories-empty {
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+  text-align: center;
+  padding: var(--app-space-md) 0;
+}
+
+.categories-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+}
+
+.categories-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--app-space-xs);
+  font: var(--app-text-subtitle);
+  color: var(--mat-sys-on-surface);
+  margin-bottom: var(--app-space-xs);
+}
+
+.categories-bar {
+  height: 6px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  overflow: hidden;
+}
+
+.categories-bar-fill {
+  height: 100%;
+  background-color: var(--mat-sys-on-surface);
+  border-radius: inherit;
+}
+
+.categories-table-wrapper {
+  overflow-x: auto;
+}
+
+.categories-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--app-text-subtitle);
+  color: var(--mat-sys-on-surface);
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--app-space-xs) 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+  }
+
+  th {
+    color: var(--app-color-text-secondary);
+  }
+}
+
+.categories-leader {
+  font: var(--app-text-subtitle);
+  color: var(--mat-sys-primary);
+  margin: var(--app-space-sm) 0 0;
+}
+
+// Queda abajo aunque la ultima pagina tenga menos filas
+.categories-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: var(--app-space-sm);
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.categories-pagination-buttons {
+  display: flex;
+  align-items: center;
+}

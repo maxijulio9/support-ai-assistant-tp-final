@@ -59,11 +59,7 @@
   gap: var(--app-space-sm);
 }
 
-.resumen-categories {
-  grid-column: 1 / -1;
-}
-
-.resumen-categories-header {
+.resumen-daily-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -75,66 +71,6 @@
   color: var(--app-color-text-secondary);
   text-align: center;
   padding: var(--app-space-md) 0;
-}
-
-.resumen-categories-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--app-space-sm);
-}
-
-.resumen-categories-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font: var(--app-text-subtitle);
-  color: var(--mat-sys-on-surface);
-  margin-bottom: 0.25rem;
-}
-
-.resumen-categories-bar {
-  height: 6px;
-  border-radius: 999px;
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
-  overflow: hidden;
-}
-
-.resumen-categories-bar-fill {
-  height: 100%;
-  background-color: var(--mat-sys-on-surface);
-  border-radius: inherit;
-}
-
-.resumen-categories-leader {
-  font: var(--app-text-subtitle);
-  color: var(--mat-sys-primary);
-  margin: var(--app-space-sm) 0 0;
-}
-
-.resumen-categories-table-wrapper {
-  overflow-x: auto;
-}
-
-.resumen-categories-table {
-  width: 100%;
-  border-collapse: collapse;
-  font: var(--app-text-subtitle);
-  color: var(--mat-sys-on-surface);
-}
-
-.resumen-categories-table th,
-.resumen-categories-table td {
-  text-align: left;
-  padding: var(--app-space-xs) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
-}
-
-.resumen-categories-table th {
-  font: var(--app-text-subtitle);
-  color: var(--app-color-text-secondary);
 }
 
 .resumen-placeholder {
@@ -172,14 +108,18 @@
   height: 1.5rem;
 }
 
+.resumen-daily {
+  grid-column: 1 / -1;
+}
+
 .resumen-daily-chart {
   width: 100%;
-  height: 280px;
+  height: 360px;
 }
 
 .resumen-heatmap-chart {
   width: 100%;
-  height: 280px;
+  height: 330px;
 }
 
 .resumen-daily-error {
@@ -220,7 +160,7 @@
     grid-template-columns: 1fr;
   }
 
-  .resumen-categories {
+  .resumen-daily {
     grid-column: 1;
   }
 }

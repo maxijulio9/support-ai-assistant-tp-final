@@ -1,6 +1,6 @@
 import { cohortLabel } from './response-times-format';
 import { CohortResponseTimes } from '../../../api/models/cohort-response-times';
-import { StatsView } from './stats-view';
+import { NO_DATA_TEXT, StatsView } from './stats-view';
 
 const LAST_CUSTOMER_COMMENT = 'last_customer_comment';
 const DETECTED_CONFIRMATION = 'detected_confirmation';
@@ -47,7 +47,7 @@ export function closureNote(cohorts: CohortResponseTimes[]): string {
 // Texto de una celda de cierre sin cifras. Sin cierres no es lo mismo que sin
 // tickets: puede haber tickets que todavia no se cerraron.
 export function closurePlaceholder(view: StatsView, ticketsOnSide: number): string | null {
-  if (view.state === 'insufficient') return 'n insuficiente';
+  if (view.state === 'insufficient') return NO_DATA_TEXT;
   if (view.state === 'empty') return ticketsOnSide > 0 ? 'Sin cierres' : 'Sin tickets';
   return null;
 }

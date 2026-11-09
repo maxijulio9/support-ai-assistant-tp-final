@@ -1,5 +1,5 @@
 import { formatPercent } from './response-times-format';
-import { buildStatsView, StatsView } from './stats-view';
+import { buildStatsView, NO_DATA_TEXT, StatsView } from './stats-view';
 import { OutcomeResponseTimes } from '../../../api/models/outcome-response-times';
 
 const OUTCOME_ORDER = [
@@ -43,7 +43,7 @@ export interface OutcomeRow {
 // persona resolvio directo en JSM) y el backend lo expresa con count 0.
 function firstResponseText(view: StatsView): string {
   if (view.state === 'empty') return NO_MEASURED_FIRST_RESPONSE_TEXT;
-  if (view.state === 'insufficient') return `n insuficiente (${view.n} ${view.n === 1 ? 'ticket' : 'tickets'})`;
+  if (view.state === 'insufficient') return `${NO_DATA_TEXT} (${view.n} ${view.n === 1 ? 'ticket' : 'tickets'})`;
   return view.median === null ? 'Sin dato' : `Mediana ${view.median}`;
 }
 

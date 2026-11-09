@@ -4,6 +4,19 @@ import { TimeStats } from '../../../api/models/time-stats';
 // Por debajo de esta cantidad de tickets el p90 se muestra como orientativo.
 export const P90_INDICATIVE_BELOW = 20;
 
+// Texto de una celda sin cifras por muestra chica, y su explicacion. El minimo
+// sale del contrato, no se fija aca.
+export const NO_DATA_TEXT = 'Sin datos';
+
+export function noDataExplanation(minSample: number): string {
+  return `Con menos de ${minSample} tickets no se calcula este valor.`;
+}
+
+// Nombre accesible del aviso: lo que lee el lector de pantalla en lugar del texto visible
+export function noDataLabel(minSample: number): string {
+  return `${NO_DATA_TEXT}: con menos de ${minSample} tickets no se calcula`;
+}
+
 export type StatsState = 'ok' | 'insufficient' | 'empty';
 
 export interface StatsView {
@@ -43,7 +56,7 @@ export function buildStatsView(stats: TimeStats, minSample: number): StatsView {
 
 // Texto de una celda que no tiene cifras: pocos tickets o ninguno.
 export function statsPlaceholder(view: StatsView): string | null {
-  if (view.state === 'insufficient') return 'n insuficiente';
+  if (view.state === 'insufficient') return NO_DATA_TEXT;
   if (view.state === 'empty') return 'Sin tickets';
   return null;
 }

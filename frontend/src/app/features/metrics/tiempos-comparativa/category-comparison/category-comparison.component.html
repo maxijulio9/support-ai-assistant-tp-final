@@ -60,12 +60,15 @@
               <th scope="row" class="comparison-category">{{ row.category }}</th>
 
               <td class="comparison-num">{{ row.automatic.n }}</td>
-              @if (placeholder(row.automatic); as note) {
+              @if (row.automatic.state === 'insufficient') {
+                <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+                <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+              } @else if (placeholder(row.automatic); as note) {
                 <td colspan="2" class="comparison-placeholder">{{ note }}</td>
               } @else {
-                <td>{{ row.automatic.median ?? 'Sin dato' }}</td>
+                <td>{{ row.automatic.median ?? noData }}</td>
                 <td>
-                  {{ row.automatic.p90 ?? 'Sin dato' }}
+                  {{ row.automatic.p90 ?? noData }}
                   @if (row.automatic.p90Indicative) {
                     <span class="comparison-indicative">(orientativo)</span>
                   }
@@ -73,12 +76,15 @@
               }
               @if (showClosure()) {
                 <td class="comparison-num comparison-cell--soft">{{ row.automaticClosure.n }}</td>
-                @if (closureCell(row.automaticClosure, row.automaticTickets); as note) {
+                @if (row.automaticClosure.state === 'insufficient') {
+                  <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+                  <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+                } @else if (closureCell(row.automaticClosure, row.automaticTickets); as note) {
                   <td colspan="2" class="comparison-placeholder">{{ note }}</td>
                 } @else {
-                  <td>{{ row.automaticClosure.median ?? 'Sin dato' }}</td>
+                  <td>{{ row.automaticClosure.median ?? noData }}</td>
                   <td>
-                    {{ row.automaticClosure.p90 ?? 'Sin dato' }}
+                    {{ row.automaticClosure.p90 ?? noData }}
                     @if (row.automaticClosure.p90Indicative) {
                       <span class="comparison-indicative">(orientativo)</span>
                     }
@@ -87,12 +93,15 @@
               }
 
               <td class="comparison-num comparison-cell--divided">{{ row.baseline.n }}</td>
-              @if (placeholder(row.baseline); as note) {
+              @if (row.baseline.state === 'insufficient') {
+                <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+                <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+              } @else if (placeholder(row.baseline); as note) {
                 <td colspan="2" class="comparison-placeholder">{{ note }}</td>
               } @else {
-                <td>{{ row.baseline.median ?? 'Sin dato' }}</td>
+                <td>{{ row.baseline.median ?? noData }}</td>
                 <td>
-                  {{ row.baseline.p90 ?? 'Sin dato' }}
+                  {{ row.baseline.p90 ?? noData }}
                   @if (row.baseline.p90Indicative) {
                     <span class="comparison-indicative">(orientativo)</span>
                   }
@@ -100,12 +109,15 @@
               }
               @if (showClosure()) {
                 <td class="comparison-num comparison-cell--soft">{{ row.baselineClosure.n }}</td>
-                @if (closureCell(row.baselineClosure, row.baselineTickets); as note) {
+                @if (row.baselineClosure.state === 'insufficient') {
+                  <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+                  <td class="comparison-nodata"><app-no-data [minSample]="minSample()" /></td>
+                } @else if (closureCell(row.baselineClosure, row.baselineTickets); as note) {
                   <td colspan="2" class="comparison-placeholder">{{ note }}</td>
                 } @else {
-                  <td>{{ row.baselineClosure.median ?? 'Sin dato' }}</td>
+                  <td>{{ row.baselineClosure.median ?? noData }}</td>
                   <td>
-                    {{ row.baselineClosure.p90 ?? 'Sin dato' }}
+                    {{ row.baselineClosure.p90 ?? noData }}
                     @if (row.baselineClosure.p90Indicative) {
                       <span class="comparison-indicative">(orientativo)</span>
                     }

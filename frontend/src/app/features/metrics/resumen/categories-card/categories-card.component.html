@@ -1,0 +1,70 @@
+<div class="categories-header">
+  <div>
+    <div class="app-title-row">
+      <h2>Solicitudes por categoría</h2>
+      <app-info-hint [title]="helpTitle()" [text]="helpText()" />
+    </div>
+    <p class="categories-subtitle">Categorías, ordenadas por volumen</p>
+  </div>
+  <mat-slide-toggle [checked]="asTable()" (change)="toggleTable()">Ver como tabla</mat-slide-toggle>
+</div>
+
+@if (rows().length === 0) {
+  <p class="categories-empty">Todavía no hay categorías para mostrar.</p>
+} @else {
+  @if (asTable()) {
+    <div class="categories-table-wrapper">
+      <table class="categories-table">
+        <caption class="visually-hidden">Solicitudes por categoría</caption>
+        <thead>
+          <tr>
+            <th scope="col">Categoría</th>
+            <th scope="col">Solicitudes</th>
+            <th scope="col">Porcentaje</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of page().items; track row.category) {
+            <tr>
+              <td>{{ row.category }}</td>
+              <td>{{ row.total | number }}</td>
+              <td>{{ row.percent | number: '1.1-1' }}%</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <ul class="categories-list">
+      @for (row of page().items; track row.category) {
+        <li>
+          <div class="categories-row">
+            <span>{{ row.category }}</span>
+            <span>{{ row.total | number }} ({{ row.percent | number: '1.1-1' }}%)</span>
+          </div>
+          <div class="categories-bar">
+            <div class="categories-bar-fill" [style.width.%]="row.percent"></div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (leader(); as top) {
+    <p class="categories-leader">{{ top.category }} lidera con {{ top.total | number }} solicitudes</p>
+  }
+
+  <div class="categories-pagination">
+    <span aria-live="polite">{{ rangeText() }}</span>
+    @if (page().totalPages > 1) {
+      <div class="categories-pagination-buttons">
+        <button mat-icon-button type="button" [disabled]="!page().hasPrevious" (click)="previous()" aria-label="Página anterior">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button mat-icon-button type="button" [disabled]="!page().hasNext" (click)="next()" aria-label="Página siguiente">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    }
+  </div>
+}
