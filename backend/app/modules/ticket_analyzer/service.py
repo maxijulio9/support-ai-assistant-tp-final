@@ -68,6 +68,10 @@ class TicketAnalyzer:
         
         # cu7 clasifica el ticket usando el llm
         classification = self._classify(texto_usuario, conversation_history, project_context.categories)
+        if classification and classification.resolved_by == "L2" and classification.scope != "OUT_OF_SCOPE" and not event.comment_body:
+            verdict = await asyncio.to_thread(self.llm_client.verify_reproduction_info, texto_usuario, conversation_history)
+            if verdict == "falta":
+                classification.resolved_by = "MISSING_INFO"
         
         
         # un cierre de conversacion o un mensaje sin info suficiente no tienen contenido real que evaluar, impact y urgency saldrian inventados, se mantiene la prioridad actual
