@@ -455,6 +455,7 @@ class OnboardedProject(BaseModel):
     similarity_threshold: float = Field(description="similarity_score minimo para usar un chunk como contexto, con el valor por defecto del pipeline si no esta cargado")
     first_response_target_seconds: int = Field(description="objetivo de tiempo de primera respuesta del proyecto en segundos, 30 por defecto")
     multi_step_transitions_enabled: bool = Field(description="si el sistema puede pasar por un estado intermedio cuando Jira no ofrece una transicion directa, viene apagado y guardar los umbrales no lo cambia")
+    analyze_attachments_enabled: bool = Field(description="si el sistema lee las imagenes adjuntas a los tickets nuevos del proyecto, viene apagado y guardar los umbrales no lo cambia")
 
 
 class OnboardedProjectsResponse(BaseModel):
@@ -505,6 +506,17 @@ class MultiStepTransitionsResponse(BaseModel):
     """Resultado de cambiar la opcion de caminos con estado intermedio."""
     status: str = Field(description="ok si la opcion quedo en el valor pedido")
     multi_step_transitions_enabled: bool = Field(description="valor en el que quedo la opcion")
+
+
+class AttachmentAnalysisRequest(BaseModel):
+    """Pedido para habilitar o deshabilitar el analisis de archivos adjuntos de un proyecto."""
+    enabled: bool = Field(description="true para que el sistema lea las imagenes PNG o JPG que los clientes adjuntan a los tickets nuevos del proyecto, hasta 3 por ticket y de hasta 5 MB cada una, y las use para responder, las imagenes se envian al proveedor del modelo configurado y pueden mostrar datos personales o financieros, false las ignora y responde solo con el texto, viene apagado")
+
+
+class AttachmentAnalysisResponse(BaseModel):
+    """Resultado de cambiar la opcion de analisis de adjuntos."""
+    status: str = Field(description="ok si la opcion quedo en el valor pedido")
+    analyze_attachments_enabled: bool = Field(description="valor en el que quedo la opcion")
 
 
 class ProjectActivationResponse(BaseModel):

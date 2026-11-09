@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from app.modules.auth.dependencies import require_admin
 from app.modules.auth.schemas import AppUser
-from app.modules.internal_api.schemas import ErrorResponse, MultiStepTransitionsRequest, MultiStepTransitionsResponse, ProjectActivationResponse
+from app.modules.internal_api.schemas import AttachmentAnalysisRequest, AttachmentAnalysisResponse, ErrorResponse, MultiStepTransitionsRequest, MultiStepTransitionsResponse, ProjectActivationResponse
 from app.modules.internal_api.services.project_activation_service import ProjectActivationService
 
 logger = logging.getLogger(__name__)
@@ -59,3 +59,19 @@ def set_multi_step_transitions(project_key: str, request: MultiStepTransitionsRe
 
     logger.info(f"el usuario {admin.id} dejo {'habilitados' if request.enabled else 'deshabilitados'} los caminos con estado intermedio del proyecto '{project_key}'")
     return MultiStepTransitionsResponse(**result)
+
+
+# habilita o deshabilita que el sistema lea las imagenes adjuntas a los tickets nuevos del proyecto
+# viene apagado, las imagenes se envian al proveedor del modelo configurado, y es idempotente
+@router.put("/api/config/itsm/projects/{project_key}/attachment-analysis", response_model=AttachmentAnalysisResponse, responses=ERROR_RESPONSES)
+def set_attachment_analysis(project_key: str, request: AttachmentAnalysisRequest, admin: AppUser = Depends(require_admin)):
+    try:
+        result = _service.set_attachment_analysis(project_key, request.enabled)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception(f"error al cambiar la opcion de analisis de adjuntos del proyecto '{project_key}'")
+        raise HTTPException(status_code=503, detail="No se pudo cambiar la opcion del proyecto")
+
+    logger.info(f"el usuario {admin.id} dejo {'habilitado' if request.enabled else 'deshabilitado'} el analisis de adjuntos del proyecto '{project_key}'")
+    return AttachmentAnalysisResponse(**result)
