@@ -6,6 +6,7 @@ import {
   activateProjectApiConfigItsmProjectsProjectKeyActivatePost,
   deactivateProjectApiConfigItsmProjectsProjectKeyDeactivatePost,
   getWebhookSecretApiConfigItsmWebhookSecretGet,
+  setAttachmentAnalysisApiConfigItsmProjectsProjectKeyAttachmentAnalysisPut,
   setMultiStepTransitionsApiConfigItsmProjectsProjectKeyMultiStepTransitionsPut,
   regenerateWebhookSecretApiConfigItsmWebhookSecretRegeneratePost,
 } from '../../api/functions';
@@ -71,12 +72,12 @@ import { StartIndexingResponse } from '../../api/models/start-indexing-response'
 import { IndexingStatusResponse } from '../../api/models/indexing-status-response';
 import { IndexedSpace } from '../../api/models/indexed-space';
 import { thresholdsFromProject } from './project-statuses-form';
+import { SecretValue } from './webhook-secret/webhook-secret-state';
+import { toSecretValue } from './webhook-secret/webhook-secret-value';
+import { AttachmentAnalysisResponse } from '../../api/models/attachment-analysis-response';
 
 // Nivel universal de prioridad como clave, lista de ids reales de JSM como
 // valor: misma forma que usan tanto el POST como el detalle del proyecto.
-import { SecretValue } from './webhook-secret/webhook-secret-state';
-import { toSecretValue } from './webhook-secret/webhook-secret-value';
-
 export type PriorityMapping = Record<string, string[]>;
 
 export interface PrioritiesWithSuggestion {
@@ -149,6 +150,15 @@ export class ConfigService {
   // mapeos no lo cambia.
   setMultiStepTransitions(projectKey: string, enabled: boolean): Observable<MultiStepTransitionsResponse> {
     return setMultiStepTransitionsApiConfigItsmProjectsProjectKeyMultiStepTransitionsPut(this.http, this.apiConfig.rootUrl, {
+      project_key: projectKey,
+      body: { enabled },
+    }).pipe(map((response) => response.body));
+  }
+
+  // Enciende o apaga el analisis de imagenes adjuntas de un proyecto.
+  // Idempotente: responde el valor en el que quedo la opcion.
+  setAttachmentAnalysis(projectKey: string, enabled: boolean): Observable<AttachmentAnalysisResponse> {
+    return setAttachmentAnalysisApiConfigItsmProjectsProjectKeyAttachmentAnalysisPut(this.http, this.apiConfig.rootUrl, {
       project_key: projectKey,
       body: { enabled },
     }).pipe(map((response) => response.body));

@@ -1,0 +1,15 @@
+.attachment-analysis-dialog-project {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-sm);
+}
+
+.attachment-analysis-dialog-text {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0 0 var(--app-space-sm);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}

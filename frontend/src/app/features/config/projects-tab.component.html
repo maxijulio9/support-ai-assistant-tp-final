@@ -48,6 +48,7 @@
         <h2 class="projects-tab-section-title">Estados de {{ projectKey }}</h2>
         @if (selectedProject(); as project) {
           <app-project-multi-step [project]="project" (changed)="onMultiStepChanged($event)" />
+          <app-project-attachment-analysis [project]="project" (changed)="onAttachmentAnalysisChanged($event)" />
         }
         <app-project-statuses [projectKey]="projectKey" />
       </section>

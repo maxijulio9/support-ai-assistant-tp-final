@@ -11,6 +11,7 @@ import { AvailableProject } from '../../api/models/available-project';
 import { Country } from '../../api/models/country';
 import { OnboardedProject } from '../../api/models/onboarded-project';
 import { AddProjectDialogComponent, AddProjectDialogData, AddProjectDialogResult } from './add-project-dialog.component';
+import { AttachmentAnalysisChange, ProjectAttachmentAnalysisComponent } from './project-attachment-analysis.component';
 import { MultiStepChange, ProjectMultiStepComponent } from './project-multi-step.component';
 import { ProjectActivationChange, ProjectThresholdsComponent } from './project-thresholds.component';
 import { ProjectStatusesComponent } from './project-statuses.component';
@@ -22,7 +23,7 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
 @Component({
   selector: 'app-projects-tab',
   standalone: true,
-  imports: [MatButtonModule, ProjectMultiStepComponent, ProjectThresholdsComponent, ProjectStatusesComponent],
+  imports: [MatButtonModule, ProjectAttachmentAnalysisComponent, ProjectMultiStepComponent, ProjectThresholdsComponent, ProjectStatusesComponent],
   templateUrl: './projects-tab.component.html',
   styleUrl: './projects-tab.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,6 +119,14 @@ export class ProjectsTabComponent {
   onMultiStepChanged(change: MultiStepChange): void {
     const updated = this.onboardedProjects().map((project) =>
       project.key === change.projectKey ? { ...project, multi_step_transitions_enabled: change.enabled } : project,
+    );
+    this.onboardedProjects.set(updated);
+    this.configStatus.setProjectsLoaded(updated);
+  }
+
+  onAttachmentAnalysisChanged(change: AttachmentAnalysisChange): void {
+    const updated = this.onboardedProjects().map((project) =>
+      project.key === change.projectKey ? { ...project, analyze_attachments_enabled: change.enabled } : project,
     );
     this.onboardedProjects.set(updated);
     this.configStatus.setProjectsLoaded(updated);
