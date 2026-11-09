@@ -8,6 +8,11 @@
 export interface OnboardedProject {
 
   /**
+   * si el sistema lee las imagenes adjuntas a los tickets nuevos del proyecto, viene apagado y guardar los umbrales no lo cambia
+   */
+  analyze_attachments_enabled: boolean;
+
+  /**
    * codigo del pais del proyecto, por ejemplo AR, o null si no tiene
    */
   country_code: (string | null);

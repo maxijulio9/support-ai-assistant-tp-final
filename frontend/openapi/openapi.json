@@ -3435,6 +3435,80 @@
         }
       }
     },
+    "/api/config/itsm/projects/{project_key}/attachment-analysis": {
+      "put": {
+        "summary": "Set Attachment Analysis",
+        "operationId": "set_attachment_analysis_api_config_itsm_projects__project_key__attachment_analysis_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachmentAnalysisRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentAnalysisResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El proyecto no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No se pudo cambiar el estado del proyecto",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -3484,6 +3558,42 @@
         "type": "object",
         "title": "ApproveRequest",
         "description": "Request para aprobar una interaccion en NEEDS_REVIEW, publica la respuesta generada tal cual esta o la version editada si viene edited_response."
+      },
+      "AttachmentAnalysisRequest": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "true para que el sistema lea las imagenes PNG o JPG que los clientes adjuntan a los tickets nuevos del proyecto, hasta 3 por ticket y de hasta 5 MB cada una, y las use para responder, las imagenes se envian al proveedor del modelo configurado y pueden mostrar datos personales o financieros, false las ignora y responde solo con el texto, viene apagado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "AttachmentAnalysisRequest",
+        "description": "Pedido para habilitar o deshabilitar el analisis de archivos adjuntos de un proyecto."
+      },
+      "AttachmentAnalysisResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "ok si la opcion quedo en el valor pedido"
+          },
+          "analyze_attachments_enabled": {
+            "type": "boolean",
+            "title": "Analyze Attachments Enabled",
+            "description": "valor en el que quedo la opcion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "analyze_attachments_enabled"
+        ],
+        "title": "AttachmentAnalysisResponse",
+        "description": "Resultado de cambiar la opcion de analisis de adjuntos."
       },
       "AvailableProject": {
         "properties": {
@@ -5456,6 +5566,18 @@
               }
             ],
             "title": "Comment"
+          },
+          "attachment": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment"
           }
         },
         "type": "object",
@@ -6197,6 +6319,11 @@
             "type": "boolean",
             "title": "Multi Step Transitions Enabled",
             "description": "si el sistema puede pasar por un estado intermedio cuando Jira no ofrece una transicion directa, viene apagado y guardar los umbrales no lo cambia"
+          },
+          "analyze_attachments_enabled": {
+            "type": "boolean",
+            "title": "Analyze Attachments Enabled",
+            "description": "si el sistema lee las imagenes adjuntas a los tickets nuevos del proyecto, viene apagado y guardar los umbrales no lo cambia"
           }
         },
         "type": "object",
@@ -6211,7 +6338,8 @@
           "threshold_needs_review",
           "similarity_threshold",
           "first_response_target_seconds",
-          "multi_step_transitions_enabled"
+          "multi_step_transitions_enabled",
+          "analyze_attachments_enabled"
         ],
         "title": "OnboardedProject",
         "description": "Un proyecto dado de alta, con su id interno y sus umbrales."
