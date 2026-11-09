@@ -1,3 +1,5 @@
+import { DEFAULT_PAGE_SIZE, parsePageSize } from './history-pagination';
+
 // Estado de la pantalla Historial que vive en la URL (busqueda, filtros,
 // pagina y casos abiertos), para que Atras, recargar o pegar el enlace lo
 // restauren. Lectura y escritura son funciones puras: un valor invalido se
@@ -7,17 +9,19 @@ export interface HistoryViewState {
   status: string | null;
   category: string | null;
   page: number;
+  pageSize: number;
   // Claves de los tickets expandidos, en el orden en que se abrieron
   expanded: string[];
 }
 
-export const EMPTY_HISTORY_VIEW: HistoryViewState = { term: '', status: null, category: null, page: 1, expanded: [] };
+export const EMPTY_HISTORY_VIEW: HistoryViewState = { term: '', status: null, category: null, page: 1, pageSize: DEFAULT_PAGE_SIZE, expanded: [] };
 
 export const HISTORY_PARAMS = {
   term: 'q',
   status: 'estado',
   category: 'categoria',
   page: 'pagina',
+  pageSize: 'tamano',
   expanded: 'abiertos',
 } as const;
 
@@ -55,6 +59,7 @@ export function parseHistoryParams(params: ParamSource, validStatuses: readonly 
     status: status !== null && validStatuses.includes(status) ? status : null,
     category: category ? category : null,
     page: parsePage(params.get(HISTORY_PARAMS.page)),
+    pageSize: parsePageSize(params.get(HISTORY_PARAMS.pageSize)),
     expanded: parseExpanded(params.get(HISTORY_PARAMS.expanded)),
   };
 }
@@ -67,6 +72,8 @@ export function serializeHistoryParams(state: HistoryViewState): Record<string, 
     [HISTORY_PARAMS.status]: state.status ? state.status : null,
     [HISTORY_PARAMS.category]: state.category ? state.category : null,
     [HISTORY_PARAMS.page]: state.page > 1 ? String(state.page) : null,
+    // El tamano por defecto no ensucia la URL
+    [HISTORY_PARAMS.pageSize]: parsePageSize(state.pageSize) === DEFAULT_PAGE_SIZE ? null : String(parsePageSize(state.pageSize)),
     [HISTORY_PARAMS.expanded]: state.expanded.length > 0 ? state.expanded.join(EXPANDED_SEPARATOR) : null,
   };
 }

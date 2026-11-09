@@ -115,6 +115,9 @@
 }
 
 .case-incomplete {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-xs);
   color: var(--app-color-warning);
 }
 

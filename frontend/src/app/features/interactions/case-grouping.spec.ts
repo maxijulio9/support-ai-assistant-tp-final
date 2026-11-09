@@ -4,6 +4,7 @@ import {
   filterInteractions,
   interactionsCountText,
   isSingleInteraction,
+  possiblyIncompleteDetail,
   possiblyIncompleteKeys,
 } from './case-grouping';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
@@ -245,5 +246,17 @@ describe('confidencePercentText', () => {
 
   it('sin puntaje queda vacio', () => {
     expect(confidencePercentText(null)).toBe('');
+  });
+});
+
+describe('possiblyIncompleteDetail', () => {
+  it('explica que es la interaccion mas antigua cargada, con el limite', () => {
+    expect(possiblyIncompleteDetail(200)).toBe(
+      'Es la interacción más antigua de las 200 cargadas. Este ticket puede tener interacciones anteriores que no se muestran.',
+    );
+  });
+
+  it('no usa guiones largos', () => {
+    expect(possiblyIncompleteDetail(200)).not.toMatch(/[\u2013\u2014]/);
   });
 });

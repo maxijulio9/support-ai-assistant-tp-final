@@ -24,7 +24,7 @@ describe('parseHistoryParams', () => {
       STATUSES,
     );
 
-    expect(state).toEqual({ term: 'vpn', status: 'ESCALATE', category: 'Red', page: 3, expanded: ['TARG-1', 'TARG-2'] });
+    expect(state).toEqual({ term: 'vpn', status: 'ESCALATE', category: 'Red', page: 3, pageSize: 20, expanded: ['TARG-1', 'TARG-2'] });
   });
 
   it('un estado que no existe se ignora', () => {
@@ -66,7 +66,7 @@ describe('serializeHistoryParams', () => {
   it('un filtro vacio queda sin parametro', () => {
     const params = serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, term: '  ', status: '', category: '' });
 
-    expect(params).toEqual({ q: null, estado: null, categoria: null, pagina: null, abiertos: null });
+    expect(params).toEqual({ q: null, estado: null, categoria: null, pagina: null, tamano: null, abiertos: null });
   });
 
   it('junta los casos abiertos en un solo parametro', () => {
@@ -74,7 +74,7 @@ describe('serializeHistoryParams', () => {
   });
 
   it('escribir y volver a leer devuelve el mismo estado', () => {
-    const state: HistoryViewState = { term: 'no anda', status: 'NEEDS_REVIEW', category: 'Depósitos y retiros', page: 4, expanded: ['TARG-9', 'TARG-1'] };
+    const state: HistoryViewState = { term: 'no anda', status: 'NEEDS_REVIEW', category: 'Depósitos y retiros', page: 4, pageSize: 50, expanded: ['TARG-9', 'TARG-1'] };
     const written = serializeHistoryParams(state);
     const roundTrip = parseHistoryParams(
       { get: (name) => written[name] ?? null },
@@ -82,6 +82,29 @@ describe('serializeHistoryParams', () => {
     );
 
     expect(roundTrip).toEqual(state);
+  });
+});
+
+describe('tamano de pagina en la URL', () => {
+  it('sin parametro o con uno invalido usa 20', () => {
+    expect(parseHistoryParams(paramsOf({}), STATUSES).pageSize).toBe(20);
+    expect(parseHistoryParams(paramsOf({ tamano: '15' }), STATUSES).pageSize).toBe(20);
+    expect(parseHistoryParams(paramsOf({ tamano: 'abc' }), STATUSES).pageSize).toBe(20);
+    expect(parseHistoryParams(paramsOf({ tamano: '' }), STATUSES).pageSize).toBe(20);
+  });
+
+  it.each(['10', '20', '50'])('lee el tamano %s', (raw) => {
+    expect(parseHistoryParams(paramsOf({ tamano: raw }), STATUSES).pageSize).toBe(Number(raw));
+  });
+
+  it('el tamano 20 no se escribe y los otros si', () => {
+    expect(serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, pageSize: 20 })['tamano']).toBeNull();
+    expect(serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, pageSize: 10 })['tamano']).toBe('10');
+    expect(serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, pageSize: 50 })['tamano']).toBe('50');
+  });
+
+  it('un tamano invalido en el estado no se escribe', () => {
+    expect(serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, pageSize: 7 })['tamano']).toBeNull();
   });
 });
 

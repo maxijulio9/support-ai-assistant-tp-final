@@ -41,8 +41,9 @@
               {{ group.issueKey }}
             }
             @if (group.possiblyIncomplete) {
-              <span class="case-incomplete" [title]="incompleteDetail">
-                {{ incompleteLabel }}<span class="visually-hidden">. {{ incompleteDetail }}</span>
+              <span class="case-incomplete">
+                {{ incompleteLabel }}
+                <app-info-hint [title]="incompleteLabel" [text]="incompleteDetail()" />
               </span>
             }
           </td>

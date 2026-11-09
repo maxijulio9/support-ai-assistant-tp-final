@@ -78,8 +78,10 @@
 
 .interactions-pagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--app-space-xs);
   font: var(--app-text-subtitle);
   color: var(--app-color-text-secondary);
 }
@@ -87,4 +89,9 @@
 .interactions-pagination-buttons {
   display: flex;
   align-items: center;
+  gap: var(--app-space-xs);
+}
+
+.interactions-page-size {
+  width: 210px;
 }

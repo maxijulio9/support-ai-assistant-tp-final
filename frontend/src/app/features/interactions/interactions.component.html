@@ -89,18 +89,26 @@
   }
 
   @if (rowsState() === 'loaded') {
-    <app-case-table [cases]="pageItems()" [expanded]="expandedCases()" (toggled)="onCaseToggled($event)" />
+    <app-case-table [cases]="pageItems()" [loadLimit]="historyLimit" [expanded]="expandedCases()" (toggled)="onCaseToggled($event)" />
   }
 
   <div class="interactions-pagination">
     <span aria-live="polite">
       @if (rowsState() === 'loaded') {
-        {{ (effectivePage() - 1) * pageSize + 1 }}-{{ (effectivePage() - 1) * pageSize + pageItems().length }} de
-        {{ totalFiltered() }} {{ totalFiltered() === 1 ? 'caso' : 'casos' }}
+        {{ pagination().from }}-{{ pagination().to }} de {{ totalFiltered() }}
+        {{ totalFiltered() === 1 ? 'caso' : 'casos' }}
       }
     </span>
     @if (rowsState() === 'loaded') {
       <div class="interactions-pagination-buttons">
+        <mat-form-field appearance="outline" class="interactions-page-size app-filter" subscriptSizing="dynamic">
+          <mat-label>Casos por página</mat-label>
+          <mat-select panelClass="app-filter-panel" [value]="pageSize()" (selectionChange)="onPageSizeChange($event.value)">
+            @for (size of pageSizeOptions; track size) {
+              <mat-option [value]="size">{{ size }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
         <button
           mat-icon-button
           type="button"

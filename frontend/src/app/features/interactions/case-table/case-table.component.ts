@@ -5,11 +5,12 @@ import { formatRelativeTime } from '../../../shared/format-relative-time';
 import { safeTicketUrl } from '../../../shared/safe-ticket-url';
 import {
   CaseGroup,
-  POSSIBLY_INCOMPLETE_DETAIL,
+  possiblyIncompleteDetail,
   POSSIBLY_INCOMPLETE_LABEL,
   interactionsCountText,
   isSingleInteraction,
 } from '../case-grouping';
+import { InfoHintComponent } from '../../../shared/info-hint/info-hint.component';
 import { CaseInteractionsComponent } from '../case-interactions/case-interactions.component';
 import { DecisionChipComponent } from '../decision-chip.component';
 
@@ -18,13 +19,15 @@ import { DecisionChipComponent } from '../decision-chip.component';
 @Component({
   selector: 'app-case-table',
   standalone: true,
-  imports: [RouterLink, MatIconModule, CaseInteractionsComponent, DecisionChipComponent],
+  imports: [RouterLink, MatIconModule, InfoHintComponent, CaseInteractionsComponent, DecisionChipComponent],
   templateUrl: './case-table.component.html',
   styleUrl: './case-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaseTableComponent {
   readonly cases = input.required<CaseGroup[]>();
+  // Cuantas interacciones carga la lista, para explicar el caso posiblemente incompleto
+  readonly loadLimit = input.required<number>();
 
   // Quien manda es la pantalla, que guarda los casos abiertos en la URL
   readonly expanded = input<readonly string[]>([]);
@@ -36,7 +39,7 @@ export class CaseTableComponent {
   });
 
   readonly incompleteLabel = POSSIBLY_INCOMPLETE_LABEL;
-  readonly incompleteDetail = POSSIBLY_INCOMPLETE_DETAIL;
+  readonly incompleteDetail = computed(() => possiblyIncompleteDetail(this.loadLimit()));
   readonly relativeTime = formatRelativeTime;
   readonly safeTicketUrl = safeTicketUrl;
   readonly isSingle = isSingleInteraction;

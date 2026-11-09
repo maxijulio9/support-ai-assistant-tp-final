@@ -125,8 +125,9 @@ export function interactionsCountText(group: CaseGroup): string {
 }
 
 export const POSSIBLY_INCOMPLETE_LABEL = 'Posiblemente incompleto';
-export const POSSIBLY_INCOMPLETE_DETAIL =
-  'Puede tener interacciones anteriores que no se cargaron, porque la lista muestra solo las últimas.';
+export function possiblyIncompleteDetail(limit: number): string {
+  return `Es la interacción más antigua de las ${limit} cargadas. Este ticket puede tener interacciones anteriores que no se muestran.`;
+}
 
 export function confidencePercentText(score: number | null): string {
   if (score === null || score === undefined || Number.isNaN(score)) return '';

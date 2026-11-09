@@ -10,12 +10,11 @@ import { InteractionsService } from './interactions.service';
 import { STATUS_FILTER_OPTIONS } from './interaction-status';
 import { buildCases, filterInteractions } from './case-grouping';
 import { CaseTableComponent } from './case-table/case-table.component';
+import { PAGE_SIZE_OPTIONS, paginateCases } from './history-pagination';
 import { parseHistoryParams, sanitizeCategory, serializeHistoryParams, toggleExpanded } from './history-url-state';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 
 export type RowsState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
-
-const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-interactions',
@@ -50,9 +49,10 @@ export class InteractionsComponent {
   readonly statusFilter = signal<string | null>(this.initial.status);
   private readonly requestedCategory = signal<string | null>(this.initial.category);
   readonly page = signal(this.initial.page);
+  readonly pageSize = signal(this.initial.pageSize);
   readonly expandedCases = signal<string[]>(this.initial.expanded);
 
-  readonly pageSize = PAGE_SIZE;
+  readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
   readonly historyLimit = this.interactionsService.historyLimit;
   readonly statusOptions = STATUS_FILTER_OPTIONS;
   readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -97,16 +97,14 @@ export class InteractionsComponent {
   );
 
   readonly totalFiltered = computed(() => this.cases().length);
-  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalFiltered() / PAGE_SIZE)));
   // Se deriva de page() en vez de corregirla con un effect: una pagina fuera
   // de rango (por ejemplo la de un enlace viejo) se ignora y vuelve a la
   // primera. Esta es la unica fuente que se usa para mostrar filas y el texto
   // de paginacion.
-  readonly effectivePage = computed(() => (this.page() <= this.totalPages() ? this.page() : 1));
-  readonly pageItems = computed(() => {
-    const start = (this.effectivePage() - 1) * PAGE_SIZE;
-    return this.cases().slice(start, start + PAGE_SIZE);
-  });
+  readonly pagination = computed(() => paginateCases(this.cases(), this.page(), this.pageSize()));
+  readonly pageItems = computed(() => this.pagination().items);
+  readonly effectivePage = computed(() => this.pagination().page);
+  readonly totalPages = computed(() => this.pagination().totalPages);
 
   readonly truncated = computed(() => this.items().length === this.interactionsService.historyLimit);
 
@@ -130,6 +128,7 @@ export class InteractionsComponent {
         category: this.categoryFilter(),
         // Hasta que cargan los datos no se sabe cuantas paginas hay: se conserva la pedida
         page: this.loadState() === 'loaded' ? this.effectivePage() : this.page(),
+        pageSize: this.pageSize(),
         expanded: this.knownExpandedCases(),
       });
       void this.router.navigate([], { relativeTo: this.route, queryParams, replaceUrl: true });
@@ -177,6 +176,11 @@ export class InteractionsComponent {
 
   onCaseToggled(issueKey: string): void {
     this.expandedCases.update((expanded) => toggleExpanded(expanded, issueKey));
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.page.set(1);
   }
 
   onPrevPage(): void {
