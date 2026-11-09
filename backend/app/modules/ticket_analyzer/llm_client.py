@@ -72,6 +72,24 @@ Si no se ve nada util, responde exactamente SIN_CONTENIDO_UTIL.
 Respondé en español, en un solo parrafo."""
 
 
+REPRODUCTION_PROMPT = """Sos un agente de soporte de nivel 1. Un cliente reporto un problema y hay que decidir si ya hay datos para que un agente de nivel 2 lo pueda reproducir.
+
+Responde "no_aplica" si el problema NO es un error o una falla tecnica de la app o la web. Por ejemplo: una cuenta bloqueada, un cobro incorrecto, un retiro o deposito que no llego, un acceso ajeno o cualquier gestion que necesita una accion humana sobre la cuenta.
+
+Si es un error o una falla tecnica de la app o la web:
+- Responde "suficiente" si el mensaje o el historial dicen que accion estaba haciendo el cliente cuando aparecio el problema (por ejemplo "al tocar confirmar en la pantalla de retiros") o dan los pasos para reproducirlo. Nombrar solo la seccion o la funcion no alcanza.
+- Responde "suficiente" tambien si el historial muestra que ya se le pidieron esos datos al cliente.
+- Responde "falta" si solo se describe el sintoma de forma general (por ejemplo "no carga", "se cierra", "tira error") sin decir que estaba haciendo ni como llego ahi.
+
+Historial:
+{history}
+
+Mensaje:
+{message}
+
+Responde solo con un JSON: {{"verdict": "falta" | "suficiente" | "no_aplica"}}"""
+
+
 class LlmClient:
 
     def __init__(self):
@@ -208,6 +226,27 @@ class LlmClient:
             return "pendiente"
 
         return verdict if verdict in ("resuelto", "cortesia", "pendiente") else "pendiente"
+
+    # decide si un reporte de error tecnico trae los datos para reproducirlo o si hay que pedirle al cliente la accion y los pasos
+    # solo se llama cuando el clasificador ya dijo l2 y es el primer mensaje del ticket, si falla devuelve suficiente para escalar como antes
+    def verify_reproduction_info(self, text: str, conversation_history: list[ConversationTurn] = []) -> str:
+        self._refresh()
+        history_text = "\n".join(f"{turn.role}: {turn.content}" for turn in conversation_history) or "(sin historial)"
+        prompt = REPRODUCTION_PROMPT.format(message=text, history=history_text)
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+                temperature=0,
+            )
+            verdict = json.loads(response.choices[0].message.content).get("verdict")
+        except Exception as e:
+            logger.error(f"error al verificar los datos de reproduccion: {type(e).__name__}: {e}")
+            return "suficiente"
+
+        return verdict if verdict in ("falta", "suficiente", "no_aplica") else "suficiente"
 
     # lee las imagenes adjuntas de un ticket con el modelo y devuelve una descripcion corta, o none si no se ve nada util o la llamada falla
     # las imagenes viajan al proveedor del modelo configurado, por eso solo se llama si el proyecto lo habilito
