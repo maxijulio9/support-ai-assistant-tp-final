@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../../core/auth/auth.service';
 import { classifyAuthError } from '../../../core/auth/auth-errors';
+import { formatRetryAfter } from '../../../core/auth/retry-after';
 import { classifyFormError } from '../../../shared/form-error';
 
 const SUBMIT_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
@@ -58,8 +59,10 @@ export class ForgotPasswordComponent {
         },
         error: (error: unknown) => {
           this.submitting.set(false);
-          if (classifyAuthError(error) === 'rate-limited') {
-            this.errorMessage.set(RATE_LIMITED_MESSAGE);
+          const { category, retryAfterSeconds } = classifyAuthError(error);
+          if (category === 'rate-limited') {
+            const wait = formatRetryAfter(retryAfterSeconds, 'auto');
+            this.errorMessage.set(wait ? `Hiciste demasiados pedidos. Probá de nuevo en ${wait}.` : RATE_LIMITED_MESSAGE);
             return;
           }
           const result = classifyFormError(error);

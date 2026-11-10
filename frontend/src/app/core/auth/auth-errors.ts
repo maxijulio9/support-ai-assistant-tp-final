@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { parseRetryAfterSeconds } from './retry-after';
 
 export type AuthErrorCategory = 'credentials' | 'rate-limited' | 'network' | 'server' | 'request' | 'unknown';
 
@@ -6,25 +7,34 @@ export type AuthErrorCategory = 'credentials' | 'rate-limited' | 'network' | 'se
 // decida que mensaje mostrar. No distingue mas de lo que el backend ya oculta
 // a proposito (login-auth-login-post.ts siempre devuelve el mismo 401
 // generico, sin importar si fue el email, la password o la cuenta inactiva).
-// El 429 (login y olvide mi contrasena) no trae cuerpo ni Retry-After.
-export function classifyAuthError(error: unknown): AuthErrorCategory {
+// El 429 (login y olvide mi contrasena) trae Retry-After con los segundos de
+// espera; retryAfterSeconds solo tiene valor en ese caso y si el encabezado es
+// un numero positivo.
+export interface AuthErrorResult {
+  category: AuthErrorCategory;
+  retryAfterSeconds: number | null;
+}
+
+export function classifyAuthError(error: unknown): AuthErrorResult {
+  const result = (category: AuthErrorCategory): AuthErrorResult => ({ category, retryAfterSeconds: null });
+
   if (!(error instanceof HttpErrorResponse)) {
-    return 'unknown';
+    return result('unknown');
   }
   if (error.status === 0) {
-    return 'network';
+    return result('network');
   }
   if (error.status === 401) {
-    return 'credentials';
+    return result('credentials');
   }
   if (error.status === 429) {
-    return 'rate-limited';
+    return { category: 'rate-limited', retryAfterSeconds: parseRetryAfterSeconds(error.headers?.get('Retry-After')) };
   }
   if (error.status >= 500) {
-    return 'server';
+    return result('server');
   }
   if (error.status >= 400) {
-    return 'request';
+    return result('request');
   }
-  return 'unknown';
+  return result('unknown');
 }

@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthErrorCategory, classifyAuthError } from '../../../core/auth/auth-errors';
+import { formatRetryAfter } from '../../../core/auth/retry-after';
 
 const ERROR_MESSAGES: Record<AuthErrorCategory, string> = {
   credentials: 'Email o contraseña incorrectos.',
@@ -88,8 +89,9 @@ export class LoginComponent {
         },
         error: (error: unknown) => {
           this.submitting.set(false);
-          const category = classifyAuthError(error);
-          this.errorMessage.set(ERROR_MESSAGES[category]);
+          const { category, retryAfterSeconds } = classifyAuthError(error);
+          const wait = category === 'rate-limited' ? formatRetryAfter(retryAfterSeconds) : null;
+          this.errorMessage.set(wait ? `Demasiados intentos fallidos. Probá de nuevo en ${wait}.` : ERROR_MESSAGES[category]);
           if (category === 'credentials') {
             this.form.controls.password.reset();
             this.passwordInput()?.nativeElement.focus();
