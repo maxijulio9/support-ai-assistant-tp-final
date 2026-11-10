@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, FormGroupDirective, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/auth/auth.service';
 import { classifyFormError } from '../../../shared/form-error';
 
@@ -25,9 +26,8 @@ function passwordsMatchValidator(control: AbstractControl): ValidationErrors | n
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, MatProgressSpinnerModule],
   templateUrl: './reset-password.component.html',
-  styleUrl: './reset-password.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResetPasswordComponent {
@@ -37,6 +37,7 @@ export class ResetPasswordComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly newPasswordInput = viewChild<ElementRef<HTMLInputElement>>('newPasswordInput');
+  private readonly formDirective = viewChild(FormGroupDirective);
 
   // Se lee una sola vez: esta pantalla es de un solo uso, no hace falta
   // reaccionar a cambios de query params despues de montada.
@@ -104,7 +105,8 @@ export class ResetPasswordComponent {
           this.submitting.set(false);
           const result = classifyFormError(error);
           this.errorMessage.set(result.message ?? SUBMIT_ERROR_MESSAGE);
-          this.form.reset();
+          // resetForm tambien limpia el estado de enviado: con form.reset() los campos quedaban en rojo
+          this.formDirective()?.resetForm();
           this.newPasswordInput()?.nativeElement.focus();
         },
       });

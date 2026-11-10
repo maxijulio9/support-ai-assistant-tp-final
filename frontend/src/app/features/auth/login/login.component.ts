@@ -35,7 +35,6 @@ const ERROR_MESSAGES: Record<AuthErrorCategory, string> = {
     MatProgressSpinnerModule,
   ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {

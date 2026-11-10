@@ -1,8 +1,14 @@
-:host {
+// Estilos compartidos de las pantallas de autenticacion: login, olvide mi
+// contrasena y restablecer contrasena. Son globales (como _page-layout) para
+// que las tres usen exactamente las mismas medidas sin duplicarlas.
+
+app-login,
+app-forgot-password,
+app-reset-password {
   display: block;
 }
 
-.login-page {
+.auth-page {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,15 +18,15 @@
   // Color base del tema como fallback: si la imagen no carga, el fondo
   // queda en este color solido, sin romper el diseño.
   background-color: var(--app-color-background);
-  // La imagen es decorativa (fondo CSS, no <img>), sin velo encima: la
-  // tarjeta se separa del fondo con su propia sombra, no oscureciendo la foto.
+  // La imagen es decorativa (fondo CSS, no <img>). El login la muestra sin
+  // velo: la tarjeta se separa con su propia sombra.
   background-image: url('/images/login-background.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.login-card {
+.auth-card {
   width: 100%;
   max-width: var(--app-login-card-max-width);
   box-sizing: border-box;
@@ -30,11 +36,11 @@
   box-shadow: var(--app-shadow-md);
 }
 
-.login-card mat-card-content {
+.auth-card mat-card-content {
   padding: 0;
 }
 
-.login-brand {
+.auth-brand {
   display: block;
   margin: 0 auto var(--app-space-md);
   width: var(--app-brand-size-login);
@@ -44,7 +50,7 @@
   color: var(--mat-sys-primary);
 }
 
-.login-title {
+.auth-title {
   margin: 0 0 var(--app-space-md);
   text-align: center;
   font: var(--mat-sys-headline-small);
@@ -52,7 +58,7 @@
   color: var(--mat-sys-on-surface);
 }
 
-.login-field {
+.auth-field {
   width: 100%;
   margin-bottom: var(--app-space-xs);
   --mat-form-field-container-height: var(--app-control-height);
@@ -61,22 +67,22 @@
 
 // Sin tamano propio el icono dentro del campo heredaba 16 px con line-height 0
 // y se recortaba
-.login-field-icon {
+.auth-field-icon {
   font-size: var(--app-field-icon-size);
   line-height: var(--app-field-icon-size);
   color: var(--mat-sys-primary);
 }
 
 // Autocompletado del navegador: el relleno azul se tapa con el fondo del campo
-.login-field input:-webkit-autofill,
-.login-field input:-webkit-autofill:hover,
-.login-field input:-webkit-autofill:focus {
+.auth-field input:-webkit-autofill,
+.auth-field input:-webkit-autofill:hover,
+.auth-field input:-webkit-autofill:focus {
   box-shadow: 0 0 0 100vmax var(--mat-sys-surface) inset;
   -webkit-text-fill-color: var(--mat-sys-on-surface);
   caret-color: var(--mat-sys-on-surface);
 }
 
-.login-error {
+.auth-error {
   display: flex;
   align-items: flex-start;
   gap: var(--app-space-xs);
@@ -88,7 +94,7 @@
   font: var(--app-text-subtitle);
 }
 
-.login-error mat-icon {
+.auth-error mat-icon {
   flex-shrink: 0;
   width: var(--app-field-icon-size);
   height: var(--app-field-icon-size);
@@ -96,35 +102,35 @@
   line-height: var(--app-field-icon-size);
 }
 
-.login-submit {
+.auth-submit {
   width: 100%;
   margin-top: var(--app-space-xs);
   --mat-button-filled-container-height: var(--app-control-height);
   transition: background-color 150ms ease;
 }
 
-.login-submit:hover:not(:disabled) {
+.auth-submit:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--mat-sys-primary) 88%, var(--mat-sys-surface));
 }
 
-.login-submit:focus-visible {
+.auth-submit:focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
 }
 
 // Enviando: sigue viendose como el boton activo, no gris
-.login-submit.is-loading {
+.auth-submit.is-loading {
   --mat-button-filled-disabled-container-color: var(--mat-sys-primary);
   --mat-button-filled-disabled-label-text-color: var(--mat-sys-on-primary);
 }
 
-.login-spinner {
+.auth-spinner {
   display: inline-block;
   margin-right: var(--app-space-xs);
   --mat-progress-spinner-active-indicator-color: var(--mat-sys-on-primary);
 }
 
-.login-forgot-link {
+.auth-link {
   display: block;
   margin-top: var(--app-space-md);
   text-align: center;
@@ -133,24 +139,67 @@
   text-decoration: none;
 }
 
-.login-forgot-link:hover,
-.login-forgot-link:focus-visible {
+.auth-link:hover,
+.auth-link:focus-visible {
   text-decoration: underline;
 }
 
-.login-forgot-link:focus-visible {
+.auth-link:focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
 }
 
 @media (max-width: 480px) {
-  .login-card {
+  .auth-card {
     padding: var(--app-space-md);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .login-submit {
+  .auth-submit {
     transition: none;
   }
+}
+
+// Olvide mi contrasena y restablecer: la misma imagen con una capa del violeta
+// oscuro del menu lateral encima, para distinguirlas del login. Si la imagen
+// no carga queda ese violeta solido.
+.auth-page--veiled {
+  background-color: var(--app-color-nav);
+  background-image: linear-gradient(var(--app-auth-veil), var(--app-auth-veil)), url('/images/login-background.png');
+}
+
+// Linea de ayuda debajo del titulo
+.auth-help {
+  margin: calc(var(--app-space-xs) * -1) 0 var(--app-space-md);
+  text-align: center;
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+// Confirmacion que no revela si la cuenta existe
+.auth-success {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  margin: 0 0 var(--app-space-xs);
+  padding: var(--app-space-xs) var(--app-space-sm);
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--app-color-success) 10%, var(--mat-sys-surface));
+  color: var(--app-color-success);
+  font: var(--app-text-subtitle);
+}
+
+.auth-success mat-icon {
+  flex-shrink: 0;
+  width: var(--app-field-icon-size);
+  height: var(--app-field-icon-size);
+  font-size: var(--app-field-icon-size);
+  line-height: var(--app-field-icon-size);
+}
+
+// Boton ancho que es un enlace (ir a iniciar sesion)
+a.auth-submit {
+  display: inline-flex;
+  text-decoration: none;
 }

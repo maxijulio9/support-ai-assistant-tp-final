@@ -76,6 +76,8 @@
 
   // Tarjeta de inicio de sesion
   --app-login-card-max-width: 400px;
+  // Capa del violeta del menu lateral sobre la imagen de fondo de las pantallas de recuperacion
+  --app-auth-veil: color-mix(in srgb, var(--app-color-nav) 70%, transparent);
   // Alto de campos y boton del formulario, y tamano de los iconos dentro de los campos
   --app-control-height: 48px;
   --app-field-icon-size: 24px;

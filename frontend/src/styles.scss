@@ -3,6 +3,7 @@
 @use './tokens';
 @use './page-layout';
 @use './filters';
+@use './auth';
 
 html {
   @include mat.theme(

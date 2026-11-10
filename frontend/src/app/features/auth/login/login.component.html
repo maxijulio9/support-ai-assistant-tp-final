@@ -1,13 +1,13 @@
-<div class="login-page">
-  <mat-card class="login-card">
-    <mat-icon class="login-brand" role="img" aria-label="Soporte N1">layers</mat-icon>
-    <h1 class="login-title">Iniciá sesión</h1>
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <mat-icon class="auth-brand" role="img" aria-label="Soporte N1">layers</mat-icon>
+    <h1 class="auth-title">Iniciá sesión</h1>
 
     <mat-card-content>
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-        <mat-form-field appearance="outline" class="login-field">
+        <mat-form-field appearance="outline" class="auth-field">
           <mat-label>Email</mat-label>
-          <mat-icon matPrefix aria-hidden="true" class="login-field-icon">mail_outline</mat-icon>
+          <mat-icon matPrefix aria-hidden="true" class="auth-field-icon">mail_outline</mat-icon>
           <input
             matInput
             type="email"
@@ -24,9 +24,9 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="login-field">
+        <mat-form-field appearance="outline" class="auth-field">
           <mat-label>Contraseña</mat-label>
-          <mat-icon matPrefix aria-hidden="true" class="login-field-icon">lock_outline</mat-icon>
+          <mat-icon matPrefix aria-hidden="true" class="auth-field-icon">lock_outline</mat-icon>
           <input
             #passwordInput
             matInput
@@ -49,7 +49,7 @@
         </mat-form-field>
 
         @if (errorMessage()) {
-          <p class="login-error" role="alert">
+          <p class="auth-error" role="alert">
             <mat-icon aria-hidden="true">error_outline</mat-icon>
             <span>{{ errorMessage() }}</span>
           </p>
@@ -58,13 +58,13 @@
         <button
           mat-flat-button
           type="submit"
-          class="login-submit"
+          class="auth-submit"
           [class.is-loading]="submitting()"
           [disabled]="submitting()"
           [attr.aria-busy]="submitting()"
         >
           @if (submitting()) {
-            <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" class="login-spinner" />
+            <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" class="auth-spinner" />
             Ingresando…
           } @else {
             Ingresar
@@ -72,7 +72,7 @@
         </button>
       </form>
 
-      <a routerLink="/forgot-password" class="login-forgot-link">¿Olvidaste tu contraseña?</a>
+      <a routerLink="/forgot-password" class="auth-link">¿Olvidaste tu contraseña?</a>
     </mat-card-content>
   </mat-card>
 </div>
