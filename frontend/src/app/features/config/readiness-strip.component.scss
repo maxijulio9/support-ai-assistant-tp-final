@@ -11,9 +11,10 @@
 
 .readiness-strip-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--app-space-sm);
+  gap: var(--app-space-xs) var(--app-space-sm);
   margin-bottom: var(--app-space-sm);
 }
 
@@ -26,76 +27,103 @@
   font: var(--app-text-metadata);
   color: var(--app-color-text-secondary);
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
+// El estado de carga conserva la fila de barras sin texto
 .readiness-strip-bar {
   display: flex;
   gap: var(--app-space-xs);
-  margin-bottom: var(--app-space-sm);
 }
 
-.readiness-strip-segment {
-  flex: 1;
-  height: 6px;
-  border-radius: var(--app-radius-sm);
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
-}
-
-.readiness-strip-segment--ready {
-  background-color: var(--app-color-success);
-}
-
-.readiness-strip-segment--pending {
-  background-color: var(--app-color-warning);
-}
-
-.readiness-strip-segment--error {
-  background-color: var(--mat-sys-error);
-}
-
-.readiness-strip-segment--muted {
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
-}
-
-.readiness-strip-segment--loading {
-  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
-}
-
-.readiness-strip-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--app-space-md);
+// Cada seccion es una columna: la barra arriba y debajo el icono y el texto,
+// alineados a la izquierda, al borde de su barra
+.readiness-strip-sections {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--app-space-sm) var(--app-space-xs);
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.readiness-strip-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font: var(--app-text-secondary);
+.readiness-strip-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--app-space-xs);
+  min-width: 0;
   color: var(--app-color-text-secondary);
 }
 
-.readiness-strip-legend-item mat-icon {
+.readiness-strip-segment {
+  align-self: stretch;
+  flex: none;
+  height: 6px;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.readiness-strip-label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+  font: var(--app-text-secondary);
+}
+
+.readiness-strip-label mat-icon {
+  flex-shrink: 0;
   font-size: 16px;
   width: 16px;
   height: 16px;
 }
 
-.readiness-strip-legend-item--ready {
-  color: var(--app-color-success);
+// Listo: violeta de los filtros, barra (3:1) y texto (AA)
+.readiness-strip-section--ready {
+  color: var(--app-filter-accent-text);
 }
 
-.readiness-strip-legend-item--pending {
+.readiness-strip-section--ready .readiness-strip-segment {
+  background-color: var(--app-filter-accent);
+}
+
+.readiness-strip-section--pending {
   color: var(--app-color-warning);
 }
 
-.readiness-strip-legend-item--error {
+.readiness-strip-section--pending .readiness-strip-segment {
+  background-color: var(--app-color-warning);
+}
+
+.readiness-strip-section--error {
   color: var(--mat-sys-error);
 }
 
-.readiness-strip-legend-item--muted {
+.readiness-strip-section--error .readiness-strip-segment {
+  background-color: var(--mat-sys-error);
+}
+
+.readiness-strip-section--muted {
   color: color-mix(in srgb, var(--app-color-text-secondary) 60%, transparent);
+}
+
+.readiness-strip-section--muted .readiness-strip-segment {
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 10%, transparent);
+}
+
+.readiness-strip-segment--loading {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 6%, transparent);
+}
+
+@media (max-width: 599.98px) {
+  .readiness-strip {
+    padding: var(--app-space-sm);
+  }
+
+  .readiness-strip-sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

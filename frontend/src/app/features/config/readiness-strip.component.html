@@ -16,25 +16,18 @@
       <span class="readiness-strip-caption">Puesta en marcha</span>
     </div>
 
-    <div class="readiness-strip-bar">
-      @for (section of sections(); track section.id) {
-        <span
-          class="readiness-strip-segment"
-          [class]="'readiness-strip-segment--' + section.state"
-          [class.readiness-strip-segment--muted]="!section.counts"
-        ></span>
-      }
-    </div>
-
-    <ul class="readiness-strip-legend">
+    <ul class="readiness-strip-sections">
       @for (section of sections(); track section.id) {
         <li
-          class="readiness-strip-legend-item"
-          [class]="'readiness-strip-legend-item--' + section.state"
-          [class.readiness-strip-legend-item--muted]="!section.counts"
+          class="readiness-strip-section"
+          [class]="'readiness-strip-section--' + section.state"
+          [class.readiness-strip-section--muted]="!section.counts"
         >
-          <mat-icon>{{ iconFor(section.state) }}</mat-icon>
-          <span>{{ section.label }}</span>
+          <span class="readiness-strip-segment" aria-hidden="true"></span>
+          <span class="readiness-strip-label">
+            <mat-icon>{{ iconFor(section.state) }}</mat-icon>
+            <span>{{ section.label }}</span>
+          </span>
         </li>
       }
     </ul>
