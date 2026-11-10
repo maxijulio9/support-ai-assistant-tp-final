@@ -3074,6 +3074,22 @@
               "default": 0,
               "title": "Offset"
             }
+          },
+          {
+            "name": "issue_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Issue Key"
+            }
           }
         ],
         "responses": {
@@ -4977,6 +4993,18 @@
             "title": "Created At",
             "description": "marca de tiempo de creacion de la interaccion"
           },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At",
+            "description": "marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato"
+          },
           "chunks": {
             "items": {
               "$ref": "#/components/schemas/RetrievedChunkDetail"
@@ -5011,6 +5039,7 @@
           "edited_response",
           "was_edited",
           "created_at",
+          "responded_at",
           "chunks",
           "sources"
         ],
@@ -5137,6 +5166,18 @@
             "title": "Created At",
             "description": "marca de tiempo de creacion de la interaccion"
           },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At",
+            "description": "marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato"
+          },
           "was_edited": {
             "type": "boolean",
             "title": "Was Edited",
@@ -5157,6 +5198,7 @@
           "decision",
           "confidence_score",
           "created_at",
+          "responded_at",
           "was_edited"
         ],
         "title": "InteractionListItem",
@@ -5170,11 +5212,18 @@
             },
             "type": "array",
             "title": "Interactions"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "cantidad total de interacciones que cumplen los filtros, sin contar el limite ni el desplazamiento",
+            "default": 0
           }
         },
         "type": "object",
         "required": [
-          "interactions"
+          "interactions",
+          "total"
         ],
         "title": "InteractionListResponse",
         "description": "Respuesta del listado paginado de interacciones, para el dashboard."
