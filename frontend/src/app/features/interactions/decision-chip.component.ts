@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { decisionStatus } from './interaction-status';
 
 // Punto de color y texto de una decision, el mismo en la fila del caso y en
@@ -6,7 +7,15 @@ import { decisionStatus } from './interaction-status';
 @Component({
   selector: 'app-decision-chip',
   standalone: true,
-  template: `<span class="chip" [class]="'chip chip--' + status().tone"><span class="dot"></span>{{ status().label }}</span>`,
+  imports: [MatIconModule],
+  template: `<span class="chip" [class]="'chip chip--' + status().tone">
+    @if (status().icon; as icon) {
+      <mat-icon class="chip-icon" aria-hidden="true">{{ icon }}</mat-icon>
+    } @else {
+      <span class="dot"></span>
+    }
+    {{ status().label }}
+  </span>`,
   styles: `
     :host {
       display: inline-flex;
@@ -36,6 +45,16 @@ import { decisionStatus } from './interaction-status';
 
     .chip--error {
       color: var(--mat-sys-error);
+    }
+
+    .chip-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+
+    .chip--failed {
+      color: var(--app-color-decision-publish-failed);
     }
 
     .chip--neutral {

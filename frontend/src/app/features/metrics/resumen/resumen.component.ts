@@ -50,6 +50,7 @@ const DAILY_SEGMENT_CSS_VAR: Record<DecisionSegmentTone, string> = {
   success: '--app-color-success',
   warning: '--app-color-warning',
   error: '--mat-sys-error',
+  failed: '--app-color-decision-publish-failed',
   neutral: '--app-color-text-secondary',
   resolved: '--mat-sys-tertiary',
 };

@@ -15,6 +15,7 @@ const DECISION_COLOR_VAR: Record<string, string> = {
   ESCALATE: '--app-color-decision-escalate',
   REQUEST_INFO: '--app-color-decision-request-info',
   DISCARDED: '--app-color-decision-discarded',
+  PUBLISH_FAILED: '--app-color-decision-publish-failed',
   RESOLVED_GROUP: '--app-color-decision-resolved',
   [OTHER_SEGMENT_KEY]: '--app-color-decision-other',
 };

@@ -82,9 +82,16 @@
         <div class="interaction-detail-fact">
           <span class="interaction-detail-label">Decisión del sistema</span>
           <span [class]="'interaction-detail-status interaction-detail-status--' + status.tone">
-            <span class="interaction-detail-status-dot" aria-hidden="true"></span>
+            @if (status.icon) {
+              <mat-icon class="interaction-detail-status-icon" aria-hidden="true">{{ status.icon }}</mat-icon>
+            } @else {
+              <span class="interaction-detail-status-dot" aria-hidden="true"></span>
+            }
             {{ status.label }}
           </span>
+          @if (originalDecisionText(data.decision, data.system_decision); as original) {
+            <span class="interaction-detail-value">{{ original }}</span>
+          }
         </div>
 
         <div class="interaction-detail-fact">

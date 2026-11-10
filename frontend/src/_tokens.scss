@@ -25,6 +25,9 @@
   --app-color-decision-escalate: #e41414; // Escalada, rojo vivo (4,7:1 contra texto blanco)
   --app-color-decision-request-info: #175ef9; // Informacion solicitada, azul vivo
   --app-color-decision-discarded: #ac10bb; // Descartada, magenta vivo
+  // Falló la publicación: índigo oscuro (7,9:1 sobre blanco), distinto del rojo de
+  // Escalada y del verde de Publicada; el chip suma un ícono para no depender del color
+  --app-color-decision-publish-failed: #4a3fb5;
   // Resuelta: en Metricas tambien pinta el grupo "Resueltas (incluye
   // externas)", un solo segmento que suma resueltas por el sistema y
   // externas. Resuelta externamente no aparece hoy como porcion propia en

@@ -18,7 +18,8 @@ import { computePeriodRanges, PeriodOption, periodRangeLabel } from './period';
 import { AutoPublishEvolutionComponent } from './auto-publish-evolution.component';
 import { DecisionsDonutComponent, DonutSegment } from './decisions-donut.component';
 import { OTHER_SEGMENT_KEY } from '../../shared/decision-colors';
-import { decisionStatus, STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
+import { DecisionChipComponent } from '../interactions/decision-chip.component';
+import { STATUS_FILTER_OPTIONS } from '../interactions/interaction-status';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { formatRelativeTime } from '../../shared/format-relative-time';
 import { formatDelta, rate, ppDelta, rawDelta } from '../../shared/kpi-metrics';
@@ -44,7 +45,7 @@ const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [InfoHintComponent, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent, AutoPublishEvolutionComponent],
+  imports: [InfoHintComponent, DecimalPipe, RouterLink, MatButtonModule, MatIconModule, DecisionsDonutComponent, AutoPublishEvolutionComponent, DecisionChipComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -134,7 +135,7 @@ export class DashboardComponent {
     const s = this.summary();
     if (!s) return [];
 
-    const segments = STATUS_FILTER_OPTIONS.map((option) => ({
+    const segments = STATUS_FILTER_OPTIONS.filter((option) => option.value in DECISION_COUNT_FIELD).map((option) => ({
       label: option.label,
       value: (s[DECISION_COUNT_FIELD[option.value]] as number) ?? 0,
       key: option.value,
@@ -164,7 +165,6 @@ export class DashboardComponent {
   readonly leaderCategory = computed(() => this.categoryRows()[0] ?? null);
 
   readonly safeTicketUrl = safeTicketUrl;
-  readonly statusFor = decisionStatus;
   readonly relativeTime = formatRelativeTime;
 
   constructor() {

@@ -24,18 +24,6 @@ export interface DecisionSegment {
 
 const RESOLVED_GROUP_KEY = 'RESOLVED_GROUP';
 
-// Las 5 decisiones mapeadas en interaction-status.ts, mismo orden y color
-// que decisionStatus, mas un sexto segmento que agrupa las dos decisiones
-// que decisionStatus no cubre (resolved_count y resolved_externally_count).
-export const DECISION_SEGMENTS: DecisionSegment[] = [
-  ...STATUS_FILTER_OPTIONS.map((option) => ({
-    key: option.value,
-    label: option.label,
-    tone: decisionStatus(option.value).tone as DecisionSegmentTone,
-  })),
-  { key: RESOLVED_GROUP_KEY, label: 'Resueltas (incluye externas)', tone: 'resolved' as DecisionSegmentTone },
-];
-
 const COUNT_FIELD: Record<string, keyof DecisionSegmentCounts> = {
   AUTO_PUBLISH: 'auto_publish_count',
   NEEDS_REVIEW: 'needs_review_count',
@@ -43,6 +31,20 @@ const COUNT_FIELD: Record<string, keyof DecisionSegmentCounts> = {
   REQUEST_INFO: 'request_info_count',
   DISCARDED: 'discarded_count',
 };
+
+// Las decisiones de interaction-status.ts que tienen conteo en el contrato,
+// mismo orden y color que decisionStatus, mas un segmento que agrupa las dos
+// decisiones que decisionStatus no cubre (resolved_count y
+// resolved_externally_count). PUBLISH_FAILED no tiene campo de conteo, por
+// eso no es un segmento: ver COUNT_FIELD.
+export const DECISION_SEGMENTS: DecisionSegment[] = [
+  ...STATUS_FILTER_OPTIONS.filter((option) => option.value in COUNT_FIELD).map((option) => ({
+    key: option.value,
+    label: option.label,
+    tone: decisionStatus(option.value).tone as DecisionSegmentTone,
+  })),
+  { key: RESOLVED_GROUP_KEY, label: 'Resueltas (incluye externas)', tone: 'resolved' as DecisionSegmentTone },
+];
 
 // Ancho minimo (en % de la barra) para escribir el porcentaje dentro del
 // segmento a 14 px. Por debajo, el dato queda en la leyenda y en el title.

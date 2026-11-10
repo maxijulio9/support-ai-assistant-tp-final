@@ -159,7 +159,6 @@
             <tbody>
               @for (item of recentActivity(); track item.interaction_id) {
                 @let ticketUrl = safeTicketUrl(item.ticket_url);
-                @let status = statusFor(item.decision);
                 <tr>
                   <td>
                     @if (ticketUrl) {
@@ -176,10 +175,7 @@
                     }}</a>
                   </td>
                   <td>
-                    <span [class]="'dashboard-activity-status dashboard-activity-status--' + status.tone">
-                      <span class="dashboard-activity-status-dot"></span>
-                      {{ status.label }}
-                    </span>
+                    <app-decision-chip [decision]="item.decision" />
                   </td>
                   <td>{{ relativeTime(item.created_at) }}</td>
                 </tr>

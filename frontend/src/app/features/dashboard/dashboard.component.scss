@@ -225,35 +225,6 @@
   inset: 0;
 }
 
-.dashboard-activity-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.dashboard-activity-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: currentColor;
-}
-
-.dashboard-activity-status--success {
-  color: var(--app-color-success);
-}
-
-.dashboard-activity-status--warning {
-  color: var(--app-color-warning);
-}
-
-.dashboard-activity-status--error {
-  color: var(--mat-sys-error);
-}
-
-.dashboard-activity-status--neutral {
-  color: var(--app-color-text-secondary);
-}
-
 .dashboard-footer,
 .dashboard-activity-footer {
   display: flex;

@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { InteractionsService } from './interactions.service';
 import { InteractionSourcesComponent } from './interaction-sources.component';
-import { DecisionStatus, decisionStatus } from './interaction-status';
+import { DecisionStatus, decisionStatus, originalDecisionText } from './interaction-status';
 import { resolutionChannelLabel } from './resolution-channel';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { formatShortDate } from '../../shared/format-short-date';
@@ -50,6 +50,7 @@ export class InteractionDetailComponent {
   readonly safeTicketUrl = safeTicketUrl;
   readonly formatDate = formatShortDate;
   readonly resolutionChannelLabel = resolutionChannelLabel;
+  readonly originalDecisionText = originalDecisionText;
 
   constructor() {
     // route.paramMap emite el id actual de forma sincrona al suscribirse.

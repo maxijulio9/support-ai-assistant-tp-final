@@ -149,6 +149,16 @@ a.interaction-detail-key {
   color: var(--mat-sys-error);
 }
 
+.interaction-detail-status-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.interaction-detail-status--failed {
+  color: var(--app-color-decision-publish-failed);
+}
+
 .interaction-detail-status--neutral {
   color: var(--app-color-text-secondary);
 }
