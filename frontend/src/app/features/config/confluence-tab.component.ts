@@ -1,3 +1,5 @@
+import { ProjectInactiveNoticeComponent } from './project-inactive-notice.component';
+import { isProjectEditable } from '../../shared/project-activity';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -21,6 +23,7 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
   selector: 'app-confluence-tab',
   standalone: true,
   imports: [
+    ProjectInactiveNoticeComponent,
     MatButtonModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -41,6 +44,7 @@ export class ConfluenceTabComponent {
   readonly loadErrorMessage = signal<string | null>(null);
   readonly projects = signal<OnboardedProject[]>([]);
   readonly projectLabel = configProjectLabel;
+  readonly isEditable = isProjectEditable;
 
   // Mismo query param (?project=) que usa la pestaña de Campos y
   // categorías: la seleccion viaja entre las dos.
@@ -50,6 +54,10 @@ export class ConfluenceTabComponent {
 
   readonly selectedProjectKey = computed(() =>
     resolveSelectedProjectKey(this.projects().map((project) => project.key), this.projectParam()),
+  );
+
+  readonly selectedProject = computed(
+    () => this.projects().find((project) => project.key === this.selectedProjectKey()) ?? null,
   );
 
   constructor() {

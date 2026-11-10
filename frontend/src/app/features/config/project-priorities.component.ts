@@ -39,6 +39,8 @@ export class ProjectPrioritiesComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly projectKey = input.required<string>();
+  // Un proyecto inactivo se puede ver pero no editar
+  readonly editable = input(false);
 
   private readonly prioritiesState = signal<ProjectPrioritiesState>('loading');
   private readonly mappingState = signal<ProjectPrioritiesState>('loading');
@@ -67,7 +69,7 @@ export class ProjectPrioritiesComponent {
   readonly levels = computed(() => sortLevels([...Object.keys(this.suggestions()), ...Object.keys(this.savedMapping())]));
 
   readonly canSubmit = computed(
-    () => !this.submitting() && Object.values(this.newAssignments()).some((level) => level !== null),
+    () => this.editable() && !this.submitting() && Object.values(this.newAssignments()).some((level) => level !== null),
   );
 
   readonly unassignedNames = computed(() => {

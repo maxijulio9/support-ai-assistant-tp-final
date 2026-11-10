@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ACTIVATE_TO_EDIT_HINT, isProjectEditable } from '../../shared/project-activity';
 import { MatSlideToggle, MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { timer } from 'rxjs';
@@ -48,11 +50,13 @@ const SETTLE_MS = 600;
 @Component({
   selector: 'app-project-attachment-analysis',
   standalone: true,
-  imports: [MatSlideToggleModule],
+  imports: [MatSlideToggleModule, MatTooltipModule],
   template: `
     <mat-slide-toggle
       [checked]="toggle().checked"
-      [disabled]="toggle().disabled"
+      [disabled]="toggle().disabled || !editable()"
+      [disabledInteractive]="!editable()"
+      [matTooltip]="editable() ? '' : blockedHint"
       [aria-label]="label()"
       (change)="onToggle($event)"
     />
@@ -73,6 +77,8 @@ export class ProjectAttachmentAnalysisComponent {
   private readonly slideToggle = viewChild(MatSlideToggle);
 
   readonly toggle = computed(() => attachmentAnalysisToggleState(this.project().analyze_attachments_enabled, this.state()));
+  readonly editable = computed(() => isProjectEditable(this.project()));
+  readonly blockedHint = ACTIVATE_TO_EDIT_HINT;
   readonly label = computed(() => attachmentAnalysisToggleLabel(this.project().name));
 
   onToggle(event: MatSlideToggleChange): void {
@@ -80,7 +86,7 @@ export class ProjectAttachmentAnalysisComponent {
     const saved = project.analyze_attachments_enabled;
 
     // Bloqueada o con la confirmacion abierta: la llave vuelve a como esta
-    if (this.state().locked || this.confirming) {
+    if (this.state().locked || this.confirming || !this.editable()) {
       event.source.checked = this.toggle().checked;
       return;
     }

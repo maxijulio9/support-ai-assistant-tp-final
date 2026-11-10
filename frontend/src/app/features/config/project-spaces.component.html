@@ -25,7 +25,7 @@
           <mat-label>Espacio</mat-label>
           <mat-select
             [value]="selectedSpaceKey()"
-            [disabled]="!hasEligible()"
+            [disabled]="!hasEligible() || !editable()"
             (selectionChange)="selectSpace($event.value)"
           >
             @for (space of availableSpaces(); track space.key) {

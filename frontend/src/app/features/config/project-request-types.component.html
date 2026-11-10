@@ -23,7 +23,7 @@
         <mat-label>Tipo de solicitud</mat-label>
         <mat-select
           [value]="selectedRequestTypeId()"
-          [disabled]="!hasEligible()"
+          [disabled]="!hasEligible() || !editable()"
           (selectionChange)="selectRequestType($event.value)"
         >
           @for (requestType of availableRequestTypes(); track requestType.id) {

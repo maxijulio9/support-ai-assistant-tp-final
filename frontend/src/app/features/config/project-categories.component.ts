@@ -4,6 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ACTIVATE_TO_EDIT_HINT } from '../../shared/project-activity';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfigService } from './config.service';
 import { classifyFormError } from '../../shared/form-error';
@@ -25,7 +27,7 @@ const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.'
 @Component({
   selector: 'app-project-categories',
   standalone: true,
-  imports: [MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatSelectModule],
+  imports: [MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatSelectModule, MatTooltipModule],
   templateUrl: './project-categories.component.html',
   styleUrl: './project-categories.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +38,9 @@ export class ProjectCategoriesComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly projectKey = input.required<string>();
+  // Un proyecto inactivo se puede ver pero no editar
+  readonly editable = input(false);
+  readonly blockedHint = ACTIVATE_TO_EDIT_HINT;
 
   private readonly fieldsState = signal<ProjectCategoriesState>('loading');
   private readonly detailState = signal<ProjectCategoriesState>('loading');
@@ -81,7 +86,7 @@ export class ProjectCategoriesComponent {
   );
 
   readonly canSubmit = computed(
-    () => this.hasChanges() && this.pendingActiveNames().size > 0 && !this.submitting(),
+    () => this.editable() && this.hasChanges() && this.pendingActiveNames().size > 0 && !this.submitting(),
   );
 
   // Solo se muestra si el admin ya destildo todo lo que habia activo: un

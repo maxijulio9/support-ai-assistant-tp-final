@@ -3,7 +3,6 @@ import {
   IDLE_MULTI_STEP_STATE,
   MULTI_STEP_DIALOG,
   MULTI_STEP_HELP_PARAGRAPHS,
-  MULTI_STEP_INACTIVE_NOTE,
   MULTI_STEP_TITLE,
   moreInfoLabel,
   multiStepActionFor,
@@ -34,16 +33,11 @@ describe('textos', () => {
     expect(multiStepDialogProjectLine('Soporte Argentina')).toBe('Proyecto: Soporte Argentina');
   });
 
-  it('el aviso de proyecto inactivo dice que se aplica al activarlo', () => {
-    expect(MULTI_STEP_INACTIVE_NOTE).toBe('El proyecto está inactivo: el cambio se aplica cuando lo actives.');
-  });
-
   it('ningun texto lleva em dash, el caracter de separador, enlaces ni claves de ticket', () => {
     const all = [
       MULTI_STEP_TITLE,
       ...MULTI_STEP_HELP_PARAGRAPHS,
-      MULTI_STEP_INACTIVE_NOTE,
-      multiStepShortHelp(true),
+          multiStepShortHelp(true),
       multiStepShortHelp(false),
       moreInfoLabel(true),
       moreInfoLabel(false),

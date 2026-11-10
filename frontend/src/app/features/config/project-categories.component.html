@@ -54,7 +54,13 @@
         <ul class="project-categories-list">
           @for (option of options(); track option) {
             <li class="project-categories-row">
-              <mat-checkbox [checked]="isPendingActive(option)" (change)="toggleOption(option, $event.checked)">
+              <mat-checkbox
+                [checked]="isPendingActive(option)"
+                [disabled]="!editable()"
+                [disabledInteractive]="!editable()"
+                [matTooltip]="editable() ? '' : blockedHint"
+                (change)="toggleOption(option, $event.checked)"
+              >
                 {{ option }}
               </mat-checkbox>
             </li>

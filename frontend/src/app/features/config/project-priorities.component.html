@@ -35,6 +35,7 @@
                 <mat-label>Nivel</mat-label>
                 <mat-select
                   [value]="assignmentFor(priority.id)"
+                  [disabled]="!editable()"
                   (selectionChange)="setAssignment(priority.id, $event.value)"
                 >
                   @for (level of levels(); track level) {

@@ -48,9 +48,12 @@
       <section class="projects-tab-section">
         <h2 class="projects-tab-section-title">Estados de {{ projectKey }}</h2>
         @if (selectedProject(); as project) {
+          @if (!isEditable(project)) {
+            <app-project-inactive-notice />
+          }
           <app-project-multi-step [project]="project" (changed)="onMultiStepChanged($event)" />
         }
-        <app-project-statuses [projectKey]="projectKey" />
+        <app-project-statuses [projectKey]="projectKey" [editable]="isEditable(selectedProject())" />
       </section>
     }
   }

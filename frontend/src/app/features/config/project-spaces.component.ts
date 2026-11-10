@@ -36,6 +36,8 @@ export class ProjectSpacesComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly projectKey = input.required<string>();
+  // Un proyecto inactivo se puede ver pero no editar
+  readonly editable = input(false);
 
   private readonly catalogsState = signal<ProjectSpacesState>('loading');
   private readonly detailState = signal<ProjectSpacesState>('loading');
@@ -67,10 +69,16 @@ export class ProjectSpacesComponent {
     countryCode: new FormControl<string | null>(null),
   });
 
-  readonly canSubmit = computed(() => !!this.selectedSpaceKey() && !this.submitting());
+  readonly canSubmit = computed(() => this.editable() && !!this.selectedSpaceKey() && !this.submitting());
 
   constructor() {
     this.fetchCatalogs();
+
+    // Los campos del espacio se bloquean o habilitan al activar o desactivar el proyecto
+    effect(() => {
+      if (this.editable()) this.form.enable({ emitEvent: false });
+      else this.form.disable({ emitEvent: false });
+    });
 
     effect(() => {
       const projectKey = this.projectKey();

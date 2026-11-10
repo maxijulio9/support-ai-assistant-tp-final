@@ -2,7 +2,9 @@
   <mat-slide-toggle
     class="multi-step-toggle"
     [checked]="toggle().checked"
-    [disabled]="toggle().disabled"
+    [disabled]="toggle().disabled || !editable()"
+    [disabledInteractive]="!editable()"
+    [matTooltip]="editable() ? '' : blockedHint"
     aria-describedby="multi-step-short-help"
     (change)="onToggle($event)"
   >
@@ -10,10 +12,6 @@
   </mat-slide-toggle>
 
   <p id="multi-step-short-help" class="multi-step-help">{{ shortHelp() }}</p>
-
-  @if (inactive()) {
-    <p class="multi-step-inactive-note">{{ inactiveNote }}</p>
-  }
 
   @if (current().error; as message) {
     <p class="multi-step-error" role="alert">{{ message }}</p>

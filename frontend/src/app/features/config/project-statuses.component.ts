@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { FormControl, FormRecord, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -49,6 +49,8 @@ export class ProjectStatusesComponent {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly projectKey = input.required<string>();
+  // Un proyecto inactivo se puede ver pero no editar
+  readonly editable = input(false);
 
   readonly noActionValue = NO_ACTION_VALUE;
   readonly texts = {
@@ -67,8 +69,8 @@ export class ProjectStatusesComponent {
   readonly saving = signal(false);
   readonly submitErrorMessage = signal<string | null>(null);
 
-  readonly canSave = computed(() => !this.saving() && canSaveStatusMappings(this.currentRows(), this.validation()));
-  readonly canDiscard = computed(() => !this.saving() && statusMappingsHaveChanges(this.currentRows()));
+  readonly canSave = computed(() => this.editable() && !this.saving() && canSaveStatusMappings(this.currentRows(), this.validation()));
+  readonly canDiscard = computed(() => this.editable() && !this.saving() && statusMappingsHaveChanges(this.currentRows()));
 
   private statuses: JsmStatus[] = [];
   private form = new FormRecord<FormControl<string>>({});
@@ -81,6 +83,13 @@ export class ProjectStatusesComponent {
     effect(() => {
       const projectKey = this.projectKey();
       this.fetchAll(projectKey);
+    });
+
+    // Al activar o desactivar el proyecto, los selectores se habilitan o
+    // bloquean sin recargar
+    effect(() => {
+      this.editable();
+      untracked(() => this.applyEditable());
     });
 
     this.destroyRef.onDestroy(() => {
@@ -132,7 +141,7 @@ export class ProjectStatusesComponent {
           if (projectKey !== this.projectKey()) return;
           this.submitErrorMessage.set(formSaveErrorMessage(error, SAVE_ERROR_MESSAGE));
           this.saving.set(false);
-          this.form.enable({ emitEvent: false });
+          this.applyEditable();
         },
       });
   }
@@ -189,6 +198,11 @@ export class ProjectStatusesComponent {
     });
   }
 
+  private applyEditable(): void {
+    if (this.editable() && !this.saving()) this.form.enable({ emitEvent: false });
+    else this.form.disable({ emitEvent: false });
+  }
+
   private initialValues(rows: StatusMappingRow[]): Record<string, string> {
     return Object.fromEntries(rows.map((row) => [row.statusId, row.savedAction ?? NO_ACTION_VALUE]));
   }
@@ -201,6 +215,7 @@ export class ProjectStatusesComponent {
       ),
     );
     this.valuesSubscription = this.form.valueChanges.subscribe(() => this.refreshValidation());
+    this.applyEditable();
     this.refreshValidation();
   }
 

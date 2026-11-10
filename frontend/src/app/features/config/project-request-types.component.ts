@@ -28,6 +28,8 @@ export class ProjectRequestTypesComponent {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly projectKey = input.required<string>();
+  // Un proyecto inactivo se puede ver pero no editar
+  readonly editable = input(false);
 
   readonly state = signal<ProjectRequestTypesState>('loading');
   readonly loadErrorMessage = signal<string | null>(null);
@@ -43,7 +45,7 @@ export class ProjectRequestTypesComponent {
   // admin vea de un vistazo cuales son, no solo las elegibles.
   readonly hasEligible = computed(() => this.availableRequestTypes().some((requestType) => !requestType.incorporated));
 
-  readonly canSubmit = computed(() => !!this.selectedRequestTypeId() && !this.submitting());
+  readonly canSubmit = computed(() => this.editable() && !!this.selectedRequestTypeId() && !this.submitting());
 
   constructor() {
     effect(() => {

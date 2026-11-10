@@ -57,13 +57,32 @@
   color: var(--app-color-text-secondary);
 }
 
-.project-thresholds-actions {
+.project-thresholds-table td {
+  vertical-align: middle;
+}
+
+.project-thresholds-table td:first-child {
+  min-width: 180px;
+}
+
+// Los botones van en un contenedor propio: la celda sigue siendo una celda de
+// tabla (si fuera flex, el alto de la fila cambiaria) y ningun texto se parte
+.project-thresholds-actions-group {
   display: flex;
+  align-items: center;
   gap: var(--app-space-xs);
+}
+
+.project-thresholds-action {
+  white-space: nowrap;
 }
 
 @media (max-width: 767.98px) {
   .project-thresholds-table {
+    min-width: 0;
+  }
+
+  .project-thresholds-table td:first-child {
     min-width: 0;
   }
 
@@ -95,7 +114,7 @@
 
   // Los tres botones no entran en una linea en pantallas angostas: pasan a la
   // siguiente en vez de quedar cortados
-  .project-thresholds-table td.project-thresholds-actions {
+  .project-thresholds-actions-group {
     flex-wrap: wrap;
     justify-content: flex-end;
   }

@@ -18,7 +18,8 @@ import { MatSlideToggle, MatSlideToggleChange, MatSlideToggleModule } from '@ang
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { timer } from 'rxjs';
 import { OnboardedProject } from '../../api/models/onboarded-project';
-import { isProjectActive } from '../../shared/project-activity';
+import { ACTIVATE_TO_EDIT_HINT, isProjectEditable } from '../../shared/project-activity';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ConfigService } from './config.service';
 import {
   EnableMultiStepDialogComponent,
@@ -28,7 +29,6 @@ import {
 import {
   IDLE_MULTI_STEP_STATE,
   MULTI_STEP_HELP_PARAGRAPHS,
-  MULTI_STEP_INACTIVE_NOTE,
   MULTI_STEP_TITLE,
   MultiStepKeyState,
   moreInfoLabel,
@@ -52,7 +52,7 @@ const SETTLE_MS = 600;
 @Component({
   selector: 'app-project-multi-step',
   standalone: true,
-  imports: [MatButtonModule, MatSlideToggleModule],
+  imports: [MatButtonModule, MatSlideToggleModule, MatTooltipModule],
   templateUrl: './project-multi-step.component.html',
   styleUrl: './project-multi-step.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,7 +70,7 @@ export class ProjectMultiStepComponent {
 
   readonly title = MULTI_STEP_TITLE;
   readonly paragraphs = MULTI_STEP_HELP_PARAGRAPHS;
-  readonly inactiveNote = MULTI_STEP_INACTIVE_NOTE;
+  readonly blockedHint = ACTIVATE_TO_EDIT_HINT;
 
   readonly expanded = signal(false);
 
@@ -86,7 +86,7 @@ export class ProjectMultiStepComponent {
   readonly toggle = computed(() => multiStepToggleState(this.project().multi_step_transitions_enabled, this.current()));
   readonly shortHelp = computed(() => multiStepShortHelp(this.project().multi_step_transitions_enabled));
   readonly moreLabel = computed(() => moreInfoLabel(this.expanded()));
-  readonly inactive = computed(() => !isProjectActive(this.project()));
+  readonly editable = computed(() => isProjectEditable(this.project()));
 
   constructor() {
     // Al cambiar de proyecto se cierra la ayuda y se limpian los errores
@@ -110,7 +110,7 @@ export class ProjectMultiStepComponent {
     const saved = project.multi_step_transitions_enabled;
 
     // Bloqueada o con la confirmacion abierta: la llave vuelve a como esta
-    if (this.current().locked || this.confirming) {
+    if (this.current().locked || this.confirming || !this.editable()) {
       event.source.checked = this.toggle().checked;
       return;
     }

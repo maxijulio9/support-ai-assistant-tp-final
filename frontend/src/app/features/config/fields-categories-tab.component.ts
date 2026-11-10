@@ -1,3 +1,5 @@
+import { ProjectInactiveNoticeComponent } from './project-inactive-notice.component';
+import { isProjectEditable } from '../../shared/project-activity';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -22,6 +24,7 @@ const LOAD_ERROR_MESSAGE = 'Ocurrió un error inesperado. Intentá de nuevo.';
   selector: 'app-fields-categories-tab',
   standalone: true,
   imports: [
+    ProjectInactiveNoticeComponent,
     MatButtonModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -43,6 +46,7 @@ export class FieldsCategoriesTabComponent {
   readonly loadErrorMessage = signal<string | null>(null);
   readonly projects = signal<OnboardedProject[]>([]);
   readonly projectLabel = configProjectLabel;
+  readonly isEditable = isProjectEditable;
 
   // Reactivo a la URL (no solo leido una vez al montar), para que el boton
   // atras/adelante del navegador tambien cambie el proyecto mostrado. El
@@ -53,6 +57,10 @@ export class FieldsCategoriesTabComponent {
 
   readonly selectedProjectKey = computed(() =>
     resolveSelectedProjectKey(this.projects().map((project) => project.key), this.projectParam()),
+  );
+
+  readonly selectedProject = computed(
+    () => this.projects().find((project) => project.key === this.selectedProjectKey()) ?? null,
   );
 
   constructor() {

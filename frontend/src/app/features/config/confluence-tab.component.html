@@ -34,7 +34,11 @@
           </mat-select>
         </mat-form-field>
 
-        <app-project-spaces [projectKey]="selectedProjectKey()!" />
+        @if (!isEditable(selectedProject())) {
+          <app-project-inactive-notice />
+        }
+
+        <app-project-spaces [projectKey]="selectedProjectKey()!" [editable]="isEditable(selectedProject())" />
       }
     }
   </section>

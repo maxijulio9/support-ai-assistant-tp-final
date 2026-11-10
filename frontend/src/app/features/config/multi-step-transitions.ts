@@ -12,8 +12,6 @@ export const MULTI_STEP_HELP_PARAGRAPHS: readonly string[] = [
   'La opción más segura es agregar en el flujo de Jira una transición desde cualquier estado hacia el estado que necesita el sistema.',
 ];
 
-export const MULTI_STEP_INACTIVE_NOTE = 'El proyecto está inactivo: el cambio se aplica cuando lo actives.';
-
 export const MULTI_STEP_DIALOG = { cancel: 'Cancelar', confirm: 'Permitir' };
 
 export function multiStepDialogProjectLine(projectName: string): string {

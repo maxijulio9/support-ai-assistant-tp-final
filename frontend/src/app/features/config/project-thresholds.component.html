@@ -35,17 +35,30 @@
               <app-project-attachment-analysis [project]="project" (changed)="attachmentAnalysisChanged.emit($event)" />
             </td>
             <td data-label="Acciones" class="project-thresholds-actions">
-              <button mat-button type="button" (click)="openEditThresholds(project)">Editar umbrales</button>
-              <button mat-button type="button" (click)="viewStatuses.emit(project.key)">Ver estados</button>
+              <div class="project-thresholds-actions-group">
               <button
                 mat-button
                 type="button"
+                class="project-thresholds-action"
+                [disabled]="!isEditable(project)"
+                [disabledInteractive]="!isEditable(project)"
+                [matTooltip]="isEditable(project) ? '' : blockedHint"
+                (click)="openEditThresholds(project)"
+              >
+                Editar umbrales
+              </button>
+              <button mat-button type="button" class="project-thresholds-action" (click)="viewStatuses.emit(project.key)">Ver estados</button>
+              <button
+                mat-button
+                type="button"
+                class="project-thresholds-action"
                 [disabled]="isPending(project.key)"
                 [attr.aria-label]="actionOf(project).label + ' ' + project.name"
                 (click)="toggleActivation(project)"
               >
                 {{ actionOf(project).label }}
               </button>
+              </div>
             </td>
           </tr>
         }

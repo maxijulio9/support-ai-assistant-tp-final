@@ -23,7 +23,8 @@ import {
   activationErrorMessage,
   activationSnackbarMessage,
 } from './project-activation';
-import { isProjectActive } from '../../shared/project-activity';
+import { ACTIVATE_TO_EDIT_HINT, isProjectActive, isProjectEditable } from '../../shared/project-activity';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AttachmentAnalysisChange, ProjectAttachmentAnalysisComponent } from './project-attachment-analysis.component';
 
 export interface ProjectActivationChange {
@@ -41,7 +42,7 @@ const SETTLE_MS = 600;
 @Component({
   selector: 'app-project-thresholds',
   standalone: true,
-  imports: [MatButtonModule, ProjectAttachmentAnalysisComponent],
+  imports: [MatButtonModule, MatTooltipModule, ProjectAttachmentAnalysisComponent],
   templateUrl: './project-thresholds.component.html',
   styleUrl: './project-thresholds.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,6 +58,8 @@ export class ProjectThresholdsComponent {
 
   readonly formatFirstResponseTarget = formatFirstResponseTarget;
   readonly isActive = isProjectActive;
+  readonly isEditable = isProjectEditable;
+  readonly blockedHint = ACTIVATE_TO_EDIT_HINT;
   readonly actionOf = activationAction;
 
   readonly viewStatuses = output<string>();
@@ -78,6 +81,7 @@ export class ProjectThresholdsComponent {
   }
 
   openEditThresholds(project: OnboardedProject): void {
+    if (!isProjectEditable(project)) return;
     const dialogRef = this.dialog.open<EditThresholdsDialogComponent, EditThresholdsDialogData, EditThresholdsDialogResult>(
       EditThresholdsDialogComponent,
       { data: { project }, disableClose: true, width: '640px', maxWidth: '92vw' },
