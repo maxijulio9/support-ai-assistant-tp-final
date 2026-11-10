@@ -48,6 +48,7 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "externalDependencies": ["html2canvas", "canvg", "dompurify"],
             "assets": [
               {
                 "glob": "**/*",

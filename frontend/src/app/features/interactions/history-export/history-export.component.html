@@ -1,0 +1,29 @@
+<button
+  mat-stroked-button
+  type="button"
+  class="history-export-button"
+  [matMenuTriggerFor]="menu"
+  [disabled]="preparing() || disabled()"
+  [attr.aria-busy]="preparing()"
+>
+  @if (preparing()) {
+    <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" class="history-export-spinner" />
+  } @else {
+    <mat-icon aria-hidden="true">download</mat-icon>
+  }
+  {{ preparing() ? 'Preparando archivo...' : 'Exportar' }}
+</button>
+
+<span class="visually-hidden" role="status">{{ preparing() ? 'Preparando archivo' : '' }}</span>
+
+<mat-menu #menu="matMenu" xPosition="before">
+  <p class="history-export-note">{{ notice() }}</p>
+  <button mat-menu-item type="button" (click)="export('csv')">
+    <mat-icon aria-hidden="true">table_view</mat-icon>
+    <span>Descargar CSV</span>
+  </button>
+  <button mat-menu-item type="button" (click)="export('pdf')">
+    <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
+    <span>Descargar PDF</span>
+  </button>
+</mat-menu>

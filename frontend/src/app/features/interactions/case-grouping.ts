@@ -48,7 +48,7 @@ function timeOf(item: InteractionListItem): number | null {
 
 // Mas reciente primero, sin fecha al final. El orden es estable: con la misma
 // fecha (o sin ninguna) se respeta el de la lista.
-function newestFirst(a: InteractionListItem, b: InteractionListItem): number {
+export function newestFirst(a: InteractionListItem, b: InteractionListItem): number {
   const timeA = timeOf(a);
   const timeB = timeOf(b);
   if (timeA === timeB) return 0;

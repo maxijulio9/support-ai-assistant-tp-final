@@ -2,6 +2,14 @@
   display: block;
 }
 
+.interactions-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--app-space-xs);
+}
+
 .interactions-filters {
   display: flex;
   align-items: center;

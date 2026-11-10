@@ -1,0 +1,21 @@
+:host {
+  display: inline-flex;
+}
+
+.history-export-button {
+  white-space: nowrap;
+}
+
+.history-export-spinner {
+  display: inline-block;
+  margin-right: var(--app-space-xs);
+  --mat-progress-spinner-active-indicator-color: var(--mat-sys-primary);
+}
+
+.history-export-note {
+  max-width: 300px;
+  margin: 0;
+  padding: var(--app-space-xs) var(--app-space-sm) var(--app-space-sm);
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}

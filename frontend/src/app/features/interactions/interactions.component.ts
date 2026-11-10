@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { InteractionsService } from './interactions.service';
 import { STATUS_FILTER_OPTIONS } from './interaction-status';
 import { buildCases, filterInteractions, limitNoticeText, mergeInteractions, unresolvedIncompleteKeys } from './case-grouping';
+import { HistoryExportComponent } from './history-export/history-export.component';
 import { CaseTableComponent } from './case-table/case-table.component';
 import { PAGE_SIZE_OPTIONS, paginateCases } from './history-pagination';
 import { parseHistoryParams, sanitizeCategory, serializeHistoryParams, toggleExpanded } from './history-url-state';
@@ -34,6 +35,7 @@ export type RowsState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
     MatInputModule,
     MatSelectModule,
     CaseTableComponent,
+    HistoryExportComponent,
   ],
   templateUrl: './interactions.component.html',
   styleUrl: './interactions.component.scss',
@@ -118,6 +120,17 @@ export class InteractionsComponent {
       ? sanitizeCategory(this.requestedCategory(), this.categoryOptions())
       : this.requestedCategory(),
   );
+
+  // Lo que se exporta es lo que se esta viendo: mismos filtros que la lista
+  readonly exportFilters = computed(() => ({
+    term: this.searchTerm(),
+    status: this.statusFilter(),
+    category: this.categoryFilter(),
+  }));
+  readonly statusLabel = computed(
+    () => this.statusOptions.find((option) => option.value === this.statusFilter())?.label ?? null,
+  );
+  readonly periodTotal = computed(() => this.total());
 
   readonly hasActiveFilters = computed(
     () =>

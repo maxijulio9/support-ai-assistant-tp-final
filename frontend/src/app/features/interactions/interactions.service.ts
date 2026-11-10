@@ -35,6 +35,24 @@ export class InteractionsService {
     }).pipe(map((response) => ({ items: response.body.interactions, total: response.body.total })));
   }
 
+  // Una pagina de la exportacion: el periodo, con estado y categoria si hay
+  // (el servidor los filtra igual que la lista) y total ya filtrado
+  listPage(params: {
+    range: HistoryRange | null;
+    status: string | null;
+    category: string | null;
+    limit: number;
+    offset: number;
+  }): Observable<InteractionsPage> {
+    return listInteractionsApiInteractionsGet(this.http, this.apiConfig.rootUrl, {
+      ...rangeApiParams(params.range),
+      ...(params.status ? { decision: params.status } : {}),
+      ...(params.category ? { category: params.category } : {}),
+      limit: params.limit,
+      offset: params.offset,
+    }).pipe(map((response) => ({ items: response.body.interactions, total: response.body.total })));
+  }
+
   // Todas las interacciones de un ticket, para completar un caso que el
   // limite de la lista pudo cortar. A proposito no filtra por rango de fechas:
   // el caso se completa con todas sus interacciones
