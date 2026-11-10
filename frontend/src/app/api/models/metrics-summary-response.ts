@@ -44,6 +44,11 @@ export interface MetricsSummaryResponse {
   needs_review_count: number;
 
   /**
+   * cantidad de interacciones cuyo comentario no se pudo publicar en JSM tras los reintentos, la suma de los conteos por decision, este incluido, da total_interactions
+   */
+  publish_failed_count: number;
+
+  /**
    * cantidad de interacciones donde se le pidio mas informacion al usuario
    */
   request_info_count: number;

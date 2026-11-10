@@ -65,6 +65,11 @@ export interface InteractionDetailResponse {
   resolution_channel: (string | null);
 
   /**
+   * marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato
+   */
+  responded_at: (string | null);
+
+  /**
    * fuentes de la base de conocimiento consultadas para generar la respuesta, una por pagina y ordenadas por relevancia, la mejor primero, vacia si el sistema no consulto la base o si la interaccion es anterior a que se guardaran los fragmentos, son las paginas de los fragmentos que se le pasaron al modelo, no se registra cuales uso
    */
   sources: Array<InteractionSource>;

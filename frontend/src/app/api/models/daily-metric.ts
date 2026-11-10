@@ -38,6 +38,11 @@ export interface DailyMetric {
   needs_review_count: number;
 
   /**
+   * cantidad de interacciones cuyo comentario no se pudo publicar en JSM ese dia
+   */
+  publish_failed_count: number;
+
+  /**
    * cantidad de interacciones donde se pidio mas informacion ese dia
    */
   request_info_count: number;

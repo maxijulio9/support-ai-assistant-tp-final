@@ -17,6 +17,7 @@ export interface ListInteractionsApiInteractionsGet$Params {
   to_date?: (string | null);
   limit?: number;
   offset?: number;
+  issue_key?: (string | null);
 }
 
 export function listInteractionsApiInteractionsGet(http: HttpClient, rootUrl: string, params?: ListInteractionsApiInteractionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<InteractionListResponse>> {
@@ -29,6 +30,7 @@ export function listInteractionsApiInteractionsGet(http: HttpClient, rootUrl: st
     rb.query('to_date', params.to_date, {});
     rb.query('limit', params.limit, {});
     rb.query('offset', params.offset, {});
+    rb.query('issue_key', params.issue_key, {});
   }
 
   return http.request(

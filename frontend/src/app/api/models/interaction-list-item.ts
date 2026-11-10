@@ -48,6 +48,11 @@ export interface InteractionListItem {
   resolution_channel: (string | null);
 
   /**
+   * marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato
+   */
+  responded_at: (string | null);
+
+  /**
    * resumen del ticket original
    */
   summary: (string | null);

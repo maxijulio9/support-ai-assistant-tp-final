@@ -8,4 +8,9 @@ import { InteractionListItem } from '../models/interaction-list-item';
  */
 export interface InteractionListResponse {
   interactions: Array<InteractionListItem>;
+
+  /**
+   * cantidad total de interacciones que cumplen los filtros, sin contar el limite ni el desplazamiento
+   */
+  total: number;
 }

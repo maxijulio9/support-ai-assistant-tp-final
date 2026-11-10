@@ -18,6 +18,7 @@ function day(date: string, autoPublish: number, total: number): DailyMetric {
     discarded_count: 0,
     escalate_count: 0,
     needs_review_count: 0,
+    publish_failed_count: 0,
     request_info_count: 0,
     resolved_count: 0,
     resolved_externally_count: 0,

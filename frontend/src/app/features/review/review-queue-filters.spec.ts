@@ -23,6 +23,7 @@ function item(id: string, issueKey: string, priority: string | null, createdAt: 
     system_decision: null,
     ticket_url: null,
     was_edited: false,
+    responded_at: null,
   };
 }
 
