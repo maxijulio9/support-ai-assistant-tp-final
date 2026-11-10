@@ -57,6 +57,10 @@ import { decisionStatus } from './interaction-status';
       color: var(--app-color-decision-publish-failed);
     }
 
+    .chip--resolved {
+      color: var(--mat-sys-tertiary);
+    }
+
     .chip--neutral {
       color: var(--app-color-text-secondary);
     }

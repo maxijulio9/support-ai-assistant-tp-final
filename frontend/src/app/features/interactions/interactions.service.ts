@@ -7,12 +7,16 @@ import { getInteractionDetailApiInteractionsInteractionIdGet } from '../../api/f
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
-// El contrato no declara un maximo para "limit" ni un "total" en la respuesta
-// (backend/app/modules/internal_api/router.py:349 y
-// backend/app/modules/internal_api/repositories/interaction_listing_repository.py:18-19
-// pasan el valor directo al SQL, sin tope ni conteo). Elegimos este valor
-// como techo razonable de UX, no viene del contrato.
+// El contrato no declara un maximo para "limit". Elegimos este valor como
+// techo razonable de UX, no viene del contrato; el "total" de la respuesta
+// dice cuantas interacciones hay en realidad.
 const HISTORY_LIMIT = 200;
+
+export interface InteractionsPage {
+  items: InteractionListItem[];
+  // Interacciones que cumplen los filtros, sin contar el limite
+  total: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class InteractionsService {
@@ -21,8 +25,18 @@ export class InteractionsService {
 
   readonly historyLimit = HISTORY_LIMIT;
 
-  listRecent(): Observable<InteractionListItem[]> {
+  listRecent(): Observable<InteractionsPage> {
     return listInteractionsApiInteractionsGet(this.http, this.apiConfig.rootUrl, {
+      limit: HISTORY_LIMIT,
+      offset: 0,
+    }).pipe(map((response) => ({ items: response.body.interactions, total: response.body.total })));
+  }
+
+  // Todas las interacciones de un ticket, para completar un caso que el
+  // limite de la lista pudo cortar
+  listByIssue(issueKey: string): Observable<InteractionListItem[]> {
+    return listInteractionsApiInteractionsGet(this.http, this.apiConfig.rootUrl, {
+      issue_key: issueKey,
       limit: HISTORY_LIMIT,
       offset: 0,
     }).pipe(map((response) => response.body.interactions));

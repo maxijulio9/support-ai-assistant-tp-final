@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,12 +8,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { InteractionsService } from './interactions.service';
 import { STATUS_FILTER_OPTIONS } from './interaction-status';
-import { buildCases, filterInteractions } from './case-grouping';
+import { buildCases, filterInteractions, limitNoticeText, mergeInteractions, unresolvedIncompleteKeys } from './case-grouping';
 import { CaseTableComponent } from './case-table/case-table.component';
 import { PAGE_SIZE_OPTIONS, paginateCases } from './history-pagination';
 import { parseHistoryParams, sanitizeCategory, serializeHistoryParams, toggleExpanded } from './history-url-state';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 
+export type CompletionState = 'loading' | 'error';
 export type RowsState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
 
 @Component({
@@ -43,7 +44,14 @@ export class InteractionsComponent {
     STATUS_FILTER_OPTIONS.map((option) => option.value),
   );
 
+  // Lo que devolvio la lista, y por separado lo que se pidio despues para
+  // completar casos cortados por el limite
   readonly items = signal<InteractionListItem[]>([]);
+  private readonly total = signal(0);
+  private readonly extraItems = signal<InteractionListItem[]>([]);
+  private readonly completedKeys = signal<ReadonlySet<string>>(new Set());
+  readonly completion = signal<Record<string, CompletionState>>({});
+  readonly allItems = computed(() => mergeInteractions(this.items(), this.extraItems()));
   readonly loadState = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly searchTerm = signal(this.initial.term);
   readonly statusFilter = signal<string | null>(this.initial.status);
@@ -60,18 +68,23 @@ export class InteractionsComponent {
   // Los filtros se aplican a las interacciones y despues se agrupa: un caso
   // aparece si alguna de sus interacciones cumple
   readonly filteredItems = computed(() =>
-    filterInteractions(this.items(), {
+    filterInteractions(this.allItems(), {
       term: this.searchTerm(),
       status: this.statusFilter(),
       category: this.categoryFilter(),
     }),
   );
 
-  readonly cases = computed(() => buildCases(this.items(), this.filteredItems(), this.historyLimit));
+  // Tickets que el limite pudo cortar y todavia no se completaron
+  private readonly incompleteKeys = computed(() =>
+    unresolvedIncompleteKeys(this.items(), this.historyLimit, this.completedKeys()),
+  );
+
+  readonly cases = computed(() => buildCases(this.allItems(), this.filteredItems(), this.incompleteKeys()));
 
   readonly categoryOptions = computed(() => {
     const set = new Set(
-      this.items()
+      this.allItems()
         .map((item) => item.category)
         .filter((category): category is string => !!category),
     );
@@ -81,7 +94,7 @@ export class InteractionsComponent {
   // Los casos abiertos que no estan entre los cargados se ignoran
   readonly knownExpandedCases = computed(() => {
     if (this.loadState() !== 'loaded') return this.expandedCases();
-    const known = new Set(this.items().map((item) => item.issue_key));
+    const known = new Set(this.allItems().map((item) => item.issue_key));
     return this.expandedCases().filter((key) => known.has(key));
   });
 
@@ -106,7 +119,7 @@ export class InteractionsComponent {
   readonly effectivePage = computed(() => this.pagination().page);
   readonly totalPages = computed(() => this.pagination().totalPages);
 
-  readonly truncated = computed(() => this.items().length === this.interactionsService.historyLimit);
+  readonly limitNotice = computed(() => limitNoticeText(this.items().length, this.total()));
 
   readonly rowsState = computed<RowsState>(() => {
     if (this.loadState() === 'loading') return 'loading';
@@ -133,6 +146,34 @@ export class InteractionsComponent {
       });
       void this.router.navigate([], { relativeTo: this.route, queryParams, replaceUrl: true });
     });
+
+    // Al abrir un caso marcado como posiblemente incompleto (tambien al
+    // restaurarlo desde la URL) se piden sus interacciones. Un caso con error
+    // no se vuelve a pedir solo: lo reintenta la persona.
+    effect(() => {
+      if (this.loadState() !== 'loaded') return;
+      const incomplete = this.incompleteKeys();
+      for (const key of this.knownExpandedCases()) {
+        if (incomplete.has(key) && !(key in untracked(this.completion))) this.completeCase(key);
+      }
+    });
+  }
+
+  completeCase(issueKey: string): void {
+    this.completion.update((state) => ({ ...state, [issueKey]: 'loading' }));
+    this.interactionsService
+      .listByIssue(issueKey)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (rows) => {
+          this.extraItems.update((extra) => mergeInteractions(extra, rows));
+          this.completedKeys.update((keys) => new Set(keys).add(issueKey));
+          this.completion.update(({ [issueKey]: _done, ...rest }) => rest);
+        },
+        error: () => {
+          this.completion.update((state) => ({ ...state, [issueKey]: 'error' }));
+        },
+      });
   }
 
   loadHistory(): void {
@@ -141,8 +182,12 @@ export class InteractionsComponent {
       .listRecent()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (items) => {
+        next: ({ items, total }) => {
           this.items.set(items);
+          this.total.set(total);
+          this.extraItems.set([]);
+          this.completedKeys.set(new Set());
+          this.completion.set({});
           this.loadState.set('loaded');
         },
         error: () => {

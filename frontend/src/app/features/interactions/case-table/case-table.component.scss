@@ -132,12 +132,36 @@
   margin-left: 48px;
 }
 
+.case-completion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--app-space-xs);
+  margin: 0 0 0 48px;
+  padding: var(--app-space-xs) 0;
+  font: var(--app-text-subtitle);
+  color: var(--app-color-text-secondary);
+}
+
+.case-completion--error {
+  color: var(--mat-sys-error);
+}
+
 // En pantallas angostas la tabla scrollea, pero la lista de interacciones
 // se queda del ancho visible (100cqw es el ancho del contenedor con scroll)
 // para apilarse sin pedir scroll horizontal
 @media (max-width: 767.98px) {
   .case-table-wrapper {
     container-type: inline-size;
+  }
+
+  .case-completion {
+    position: sticky;
+    left: 0;
+    width: 100cqw;
+    margin-left: 0;
+    padding-inline: var(--app-space-sm);
+    box-sizing: border-box;
   }
 
   .case-detail-row app-case-interactions {

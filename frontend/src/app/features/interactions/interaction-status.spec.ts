@@ -1,7 +1,7 @@
 import { STATUS_FILTER_OPTIONS, decisionStatus, originalDecisionText } from './interaction-status';
 
 describe('decisionStatus', () => {
-  it('mapea las 5 decisiones conocidas', () => {
+  it('mapea las decisiones de uso diario', () => {
     expect(decisionStatus('AUTO_PUBLISH')).toEqual({ label: 'Publicada', tone: 'success' });
     expect(decisionStatus('NEEDS_REVIEW')).toEqual({ label: 'Pendiente de revisión', tone: 'warning' });
     expect(decisionStatus('ESCALATE')).toEqual({ label: 'Escalada', tone: 'error' });
@@ -12,8 +12,8 @@ describe('decisionStatus', () => {
     expect(decisionStatus('DISCARDED')).toEqual({ label: 'Descartada', tone: 'neutral' });
   });
 
-  it('decision null usa un rotulo propio, no texto crudo', () => {
-    expect(decisionStatus(null)).toEqual({ label: 'Sin estado', tone: 'neutral' });
+  it('decision null usa el rotulo neutro "Sin decisión", no texto crudo', () => {
+    expect(decisionStatus(null)).toEqual({ label: 'Sin decisión', tone: 'neutral' });
   });
 
   it('PUBLISH_FAILED se muestra como "Falló la publicación" con ícono, en un tono propio', () => {
@@ -22,14 +22,19 @@ describe('decisionStatus', () => {
     expect(decisionStatus('PUBLISH_FAILED').tone).not.toBe(decisionStatus('AUTO_PUBLISH').tone);
   });
 
+  it('RESOLVED y RESOLVED_EXTERNALLY comparten el tono de resueltas', () => {
+    expect(decisionStatus('RESOLVED')).toEqual({ label: 'Resuelta', tone: 'resolved' });
+    expect(decisionStatus('RESOLVED_EXTERNALLY')).toEqual({ label: 'Resuelta externamente', tone: 'resolved' });
+  });
+
   it('una decision desconocida se muestra legible y en tono neutral, sin romper', () => {
     expect(decisionStatus('UNA_DECISION_FUTURA')).toEqual({ label: 'Una decision futura', tone: 'neutral' });
     expect(decisionStatus('publish-timeout')).toEqual({ label: 'Publish timeout', tone: 'neutral' });
   });
 
-  it('una decision vacia usa el rotulo "Sin estado"', () => {
-    expect(decisionStatus('')).toEqual({ label: 'Sin estado', tone: 'neutral' });
-    expect(decisionStatus('  _ ')).toEqual({ label: 'Sin estado', tone: 'neutral' });
+  it('una decision vacia usa el rotulo "Sin decisión"', () => {
+    expect(decisionStatus('')).toEqual({ label: 'Sin decisión', tone: 'neutral' });
+    expect(decisionStatus('  _ ')).toEqual({ label: 'Sin decisión', tone: 'neutral' });
   });
 });
 
@@ -49,11 +54,13 @@ describe('originalDecisionText', () => {
 });
 
 describe('STATUS_FILTER_OPTIONS', () => {
-  it('incluye las 6 decisiones, DISCARDED y PUBLISH_FAILED entre ellas', () => {
+  it('incluye las 8 decisiones, con las resueltas y PUBLISH_FAILED', () => {
     const values = STATUS_FILTER_OPTIONS.map((option) => option.value);
     expect(values).toContain('DISCARDED');
     expect(values).toContain('PUBLISH_FAILED');
-    expect(values.length).toBe(6);
+    expect(values).toContain('RESOLVED');
+    expect(values).toContain('RESOLVED_EXTERNALLY');
+    expect(values.length).toBe(8);
   });
 
   it('PUBLISH_FAILED tiene el label "Falló la publicación" en el filtro', () => {

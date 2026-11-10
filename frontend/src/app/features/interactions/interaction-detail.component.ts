@@ -9,6 +9,7 @@ import { InteractionsService } from './interactions.service';
 import { InteractionSourcesComponent } from './interaction-sources.component';
 import { DecisionStatus, decisionStatus, originalDecisionText } from './interaction-status';
 import { resolutionChannelLabel } from './resolution-channel';
+import { RESPONDED_AT_LABEL, respondedAtText } from './responded-at';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
 import { formatShortDate } from '../../shared/format-short-date';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
@@ -51,6 +52,8 @@ export class InteractionDetailComponent {
   readonly formatDate = formatShortDate;
   readonly resolutionChannelLabel = resolutionChannelLabel;
   readonly originalDecisionText = originalDecisionText;
+  readonly respondedAtLabel = RESPONDED_AT_LABEL;
+  readonly respondedAtText = respondedAtText;
 
   constructor() {
     // route.paramMap emite el id actual de forma sincrona al suscribirse.

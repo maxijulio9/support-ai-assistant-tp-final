@@ -12,6 +12,7 @@ import {
 } from '../case-grouping';
 import { InfoHintComponent } from '../../../shared/info-hint/info-hint.component';
 import { CaseInteractionsComponent } from '../case-interactions/case-interactions.component';
+import { MatButtonModule } from '@angular/material/button';
 import { DecisionChipComponent } from '../decision-chip.component';
 
 // Una fila por ticket. Los casos con varias interacciones se expanden; los de
@@ -19,7 +20,7 @@ import { DecisionChipComponent } from '../decision-chip.component';
 @Component({
   selector: 'app-case-table',
   standalone: true,
-  imports: [RouterLink, MatIconModule, InfoHintComponent, CaseInteractionsComponent, DecisionChipComponent],
+  imports: [RouterLink, MatButtonModule, MatIconModule, InfoHintComponent, CaseInteractionsComponent, DecisionChipComponent],
   templateUrl: './case-table.component.html',
   styleUrl: './case-table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +33,10 @@ export class CaseTableComponent {
   // Quien manda es la pantalla, que guarda los casos abiertos en la URL
   readonly expanded = input<readonly string[]>([]);
   readonly toggled = output<string>();
+
+  // Estado de la carga de las interacciones que faltan de cada caso abierto
+  readonly completion = input<Record<string, 'loading' | 'error'>>({});
+  readonly retryCompletion = output<string>();
 
   readonly isExpanded = computed(() => {
     const open = new Set(this.expanded());

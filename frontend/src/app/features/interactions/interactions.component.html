@@ -44,8 +44,8 @@
 
   </div>
 
-  @if (truncated()) {
-    <p class="interactions-truncated">Mostrando las últimas {{ historyLimit }} interacciones</p>
+  @if (limitNotice(); as notice) {
+    <p class="interactions-truncated">{{ notice }}</p>
   }
 
   @if (rowsState() === 'loading') {
@@ -89,7 +89,14 @@
   }
 
   @if (rowsState() === 'loaded') {
-    <app-case-table [cases]="pageItems()" [loadLimit]="historyLimit" [expanded]="expandedCases()" (toggled)="onCaseToggled($event)" />
+    <app-case-table
+      [cases]="pageItems()"
+      [loadLimit]="historyLimit"
+      [expanded]="expandedCases()"
+      [completion]="completion()"
+      (toggled)="onCaseToggled($event)"
+      (retryCompletion)="completeCase($event)"
+    />
   }
 
   <div class="interactions-pagination">

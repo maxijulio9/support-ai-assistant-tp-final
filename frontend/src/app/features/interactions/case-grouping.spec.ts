@@ -6,6 +6,9 @@ import {
   isSingleInteraction,
   possiblyIncompleteDetail,
   possiblyIncompleteKeys,
+  limitNoticeText,
+  mergeInteractions,
+  unresolvedIncompleteKeys,
 } from './case-grouping';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 
@@ -25,6 +28,7 @@ function row(issueKey: string, createdAt: string | null, overrides: Partial<Inte
     ticket_url: null,
     was_edited: false,
     created_at: createdAt,
+    responded_at: null,
     ...overrides,
   };
 }
@@ -63,7 +67,7 @@ describe('buildCases', () => {
       row('A-1', '2026-11-02T10:00:00Z'),
     ];
 
-    const cases = buildCases(items, items, 200);
+    const cases = buildCases(items, items, possiblyIncompleteKeys(items, 200));
     const a = cases.find((group) => group.issueKey === 'A-1')!;
 
     expect(cases.map((group) => group.issueKey)).toEqual(['B-2', 'A-1']);
@@ -78,7 +82,7 @@ describe('buildCases', () => {
   it('ordena los casos por su actividad mas reciente y deja los sin fecha al final', () => {
     const items = [row('SIN-FECHA', null), row('VIEJO', '2026-10-01T00:00:00Z'), row('NUEVO', '2026-11-01T00:00:00Z')];
 
-    expect(buildCases(items, items, 200).map((group) => group.issueKey)).toEqual(['NUEVO', 'VIEJO', 'SIN-FECHA']);
+    expect(buildCases(items, items, possiblyIncompleteKeys(items, 200)).map((group) => group.issueKey)).toEqual(['NUEVO', 'VIEJO', 'SIN-FECHA']);
   });
 
   it('las interacciones sin fecha van al final del caso y se conserva el orden de la lista', () => {
@@ -86,14 +90,14 @@ describe('buildCases', () => {
     const second = row('A-1', null);
     const dated = row('A-1', '2026-11-01T00:00:00Z');
 
-    const [group] = buildCases([first, second, dated], [first, second, dated], 200);
+    const [group] = buildCases([first, second, dated], [first, second, dated], possiblyIncompleteKeys([first, second, dated], 200));
 
     expect(group.interactions).toEqual([dated, first, second]);
   });
 
   it('un caso de una sola interaccion es plano', () => {
     const items = [row('A-1', '2026-11-01T00:00:00Z'), row('B-2', '2026-11-02T00:00:00Z'), row('B-2', '2026-11-03T00:00:00Z')];
-    const cases = buildCases(items, items, 200);
+    const cases = buildCases(items, items, possiblyIncompleteKeys(items, 200));
 
     expect(isSingleInteraction(cases.find((group) => group.issueKey === 'A-1')!)).toBe(true);
     expect(isSingleInteraction(cases.find((group) => group.issueKey === 'B-2')!)).toBe(false);
@@ -107,7 +111,7 @@ describe('buildCases', () => {
       row('B-2', '2026-11-01T00:00:00Z', { category: 'Acceso' }),
       row('C-3', '2026-11-01T00:00:00Z', { category: null }),
     ];
-    const label = (key: string) => buildCases(items, items, 200).find((group) => group.issueKey === key)!.categoryLabel;
+    const label = (key: string) => buildCases(items, items, possiblyIncompleteKeys(items, 200)).find((group) => group.issueKey === key)!.categoryLabel;
 
     expect(label('A-1')).toBe('Red');
     expect(label('B-2')).toBe('Varias');
@@ -117,14 +121,14 @@ describe('buildCases', () => {
   it('no modifica las listas que recibe', () => {
     const items = [row('A-1', '2026-11-01T00:00:00Z'), row('A-1', '2026-11-03T00:00:00Z')];
     const copy = items.slice();
-    buildCases(items, items, 200);
+    buildCases(items, items, possiblyIncompleteKeys(items, 200));
 
     expect(items).toEqual(copy);
   });
 
   it('recorrer los casos devuelve cada interaccion una sola vez', () => {
     const items = Array.from({ length: 30 }, (_, index) => row(`K-${index % 7}`, `2026-11-${String(index + 1).padStart(2, '0')}T00:00:00Z`));
-    const ids = buildCases(items, items, 200).flatMap((group) => group.interactions.map((item) => item.interaction_id));
+    const ids = buildCases(items, items, possiblyIncompleteKeys(items, 200)).flatMap((group) => group.interactions.map((item) => item.interaction_id));
 
     expect(ids.sort()).toEqual(items.map((item) => item.interaction_id).sort());
   });
@@ -140,7 +144,7 @@ describe('filtros sobre un caso con varias interacciones', () => {
 
   it('el caso aparece si alguna interaccion cumple y muestra solo las que cumplen', () => {
     const filtered = filterInteractions(items, { ...NO_FILTERS, status: 'NEEDS_REVIEW' });
-    const cases = buildCases(items, filtered, 200);
+    const cases = buildCases(items, filtered, possiblyIncompleteKeys(items, 200));
 
     expect(cases.map((group) => group.issueKey)).toEqual(['A-1']);
     expect(cases[0].interactions).toHaveLength(2);
@@ -151,23 +155,23 @@ describe('filtros sobre un caso con varias interacciones', () => {
   it('la fila toma el estado de la mas reciente de las que se muestran', () => {
     const filtered = filterInteractions(items, { ...NO_FILTERS, status: 'NEEDS_REVIEW' });
 
-    expect(buildCases(items, filtered, 200)[0].latest.decision).toBe('NEEDS_REVIEW');
+    expect(buildCases(items, filtered, possiblyIncompleteKeys(items, 200))[0].latest.decision).toBe('NEEDS_REVIEW');
   });
 
   it('un caso sin ninguna interaccion que cumpla no aparece', () => {
     const filtered = filterInteractions(items, { ...NO_FILTERS, status: 'DISCARDED' });
 
-    expect(buildCases(items, filtered, 200)).toEqual([]);
+    expect(buildCases(items, filtered, possiblyIncompleteKeys(items, 200))).toEqual([]);
   });
 
   it('sin filtros el texto no usa "de"', () => {
-    const [group] = buildCases(items, items, 200).filter((candidate) => candidate.issueKey === 'A-1');
+    const [group] = buildCases(items, items, possiblyIncompleteKeys(items, 200)).filter((candidate) => candidate.issueKey === 'A-1');
 
     expect(interactionsCountText(group)).toBe('3 interacciones');
   });
 
   it('con una sola interaccion el texto va en singular', () => {
-    const [group] = buildCases(items, items, 200).filter((candidate) => candidate.issueKey === 'B-2');
+    const [group] = buildCases(items, items, possiblyIncompleteKeys(items, 200)).filter((candidate) => candidate.issueKey === 'B-2');
 
     expect(interactionsCountText(group)).toBe('1 interacción');
   });
@@ -179,7 +183,7 @@ describe('filtros sobre un caso con varias interacciones', () => {
     ];
     const filtered = filterInteractions(mixed, { ...NO_FILTERS, category: 'Red' });
 
-    expect(buildCases(mixed, filtered, 200)[0].categoryLabel).toBe('Red');
+    expect(buildCases(mixed, filtered, possiblyIncompleteKeys(mixed, 200))[0].categoryLabel).toBe('Red');
   });
 });
 
@@ -190,12 +194,12 @@ describe('posiblemente incompleto', () => {
     const items = [row('A-1', day(3)), row('A-1', day(1))];
 
     expect(possiblyIncompleteKeys(items, 200).size).toBe(0);
-    expect(buildCases(items, items, 200).every((group) => !group.possiblyIncomplete)).toBe(true);
+    expect(buildCases(items, items, possiblyIncompleteKeys(items, 200)).every((group) => !group.possiblyIncomplete)).toBe(true);
   });
 
   it('con exactamente el limite marca el ticket de la interaccion mas antigua cargada', () => {
     const items = [row('NUEVO', day(5)), row('MEDIO', day(4)), row('CORTADO', day(2)), row('NUEVO', day(3))];
-    const cases = buildCases(items, items, 4);
+    const cases = buildCases(items, items, possiblyIncompleteKeys(items, 4));
 
     expect(cases.filter((group) => group.possiblyIncomplete).map((group) => group.issueKey)).toEqual(['CORTADO']);
   });
@@ -228,8 +232,8 @@ describe('posiblemente incompleto', () => {
     const items = [row('A-1', day(5), { decision: 'ESCALATE' }), row('CORTADO', day(1), { decision: 'AUTO_PUBLISH' })];
     const filtered = filterInteractions(items, { ...NO_FILTERS, status: 'AUTO_PUBLISH' });
 
-    expect(buildCases(items, filtered, 2)[0].possiblyIncomplete).toBe(true);
-    expect(buildCases(items, [items[0]], 2)[0].possiblyIncomplete).toBe(false);
+    expect(buildCases(items, filtered, possiblyIncompleteKeys(items, 2))[0].possiblyIncomplete).toBe(true);
+    expect(buildCases(items, [items[0]], possiblyIncompleteKeys(items, 2))[0].possiblyIncomplete).toBe(false);
   });
 
   it('sin filas no hay nada que marcar', () => {
@@ -258,5 +262,73 @@ describe('possiblyIncompleteDetail', () => {
 
   it('no usa guiones largos', () => {
     expect(possiblyIncompleteDetail(200)).not.toMatch(/[\u2013\u2014]/);
+  });
+});
+
+describe('completar un caso posiblemente incompleto', () => {
+  const day = (n: number) => `2026-10-${String(n).padStart(2, '0')}T10:00:00Z`;
+
+  it('un caso marcado con una sola interaccion cargada no es plano: hay que poder expandirlo', () => {
+    const items = [row('A-1', day(5)), row('CORTADO', day(1))];
+    const cases = buildCases(items, items, possiblyIncompleteKeys(items, 2));
+
+    expect(isSingleInteraction(cases.find((group) => group.issueKey === 'CORTADO')!)).toBe(false);
+    expect(isSingleInteraction(cases.find((group) => group.issueKey === 'A-1')!)).toBe(true);
+  });
+
+  it('mergeInteractions suma las que faltan sin duplicar por interaction_id', () => {
+    const base = [row('A-1', day(5)), row('CORTADO', day(1))];
+    const extra = [base[1], row('CORTADO', day(0)), row('CORTADO', day(0), { interaction_id: 'id-fijo' })];
+    const merged = mergeInteractions(base, extra);
+
+    expect(merged).toHaveLength(4);
+    expect(new Set(merged.map((item) => item.interaction_id)).size).toBe(4);
+    expect(merged.slice(0, 2)).toEqual(base);
+  });
+
+  it('mergeInteractions no repite una interaccion que viene dos veces en lo agregado', () => {
+    const base = [row('A-1', day(5))];
+    const dup = row('B-2', day(1));
+
+    expect(mergeInteractions(base, [dup, dup])).toHaveLength(2);
+  });
+
+  it('mergeInteractions sin nada nuevo devuelve la misma lista, sin tocar la original', () => {
+    const base = [row('A-1', day(5))];
+    const merged = mergeInteractions(base, [base[0]]);
+
+    expect(merged).toEqual(base);
+    expect(merged).not.toBe(base);
+  });
+
+  it('un ticket completado deja de estar marcado, el resto sigue igual', () => {
+    const items = [row('A-1', day(1)), row('B-2', day(1))];
+
+    expect([...unresolvedIncompleteKeys(items, 2, new Set(['A-1']))]).toEqual(['B-2']);
+    expect(unresolvedIncompleteKeys(items, 2, new Set(['A-1', 'B-2'])).size).toBe(0);
+    expect(unresolvedIncompleteKeys(items, 2, new Set()).size).toBe(2);
+  });
+
+  it('el caso completado muestra todas sus interacciones y ya no esta marcado', () => {
+    const base = [row('A-1', day(5)), row('CORTADO', day(2))];
+    const merged = mergeInteractions(base, [row('CORTADO', day(1)), row('CORTADO', day(0))]);
+    const incomplete = unresolvedIncompleteKeys(base, 2, new Set(['CORTADO']));
+    const group = buildCases(merged, merged, incomplete).find((candidate) => candidate.issueKey === 'CORTADO')!;
+
+    expect(group.interactions).toHaveLength(3);
+    expect(group.loadedCount).toBe(3);
+    expect(group.possiblyIncomplete).toBe(false);
+  });
+});
+
+describe('limitNoticeText', () => {
+  it('avisa con el total real cuando hay mas de lo cargado', () => {
+    expect(limitNoticeText(200, 1342)).toBe('Mostrando las últimas 200 de 1342 interacciones');
+  });
+
+  it('no avisa si el total es igual o menor a lo cargado', () => {
+    expect(limitNoticeText(200, 200)).toBeNull();
+    expect(limitNoticeText(37, 37)).toBeNull();
+    expect(limitNoticeText(37, 0)).toBeNull();
   });
 });

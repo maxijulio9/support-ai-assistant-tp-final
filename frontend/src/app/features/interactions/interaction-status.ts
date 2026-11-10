@@ -1,4 +1,4 @@
-export type DecisionTone = 'success' | 'warning' | 'error' | 'failed' | 'neutral';
+export type DecisionTone = 'success' | 'warning' | 'error' | 'failed' | 'resolved' | 'neutral';
 
 export interface DecisionStatus {
   label: string;
@@ -17,18 +17,21 @@ const DECISION_STATUS: Record<string, DecisionStatus> = {
   DISCARDED: { label: 'Descartada', tone: 'neutral' },
   // Jira rechazó el comentario después de todos los reintentos
   PUBLISH_FAILED: { label: 'Falló la publicación', tone: 'failed', icon: 'error_outline' },
+  RESOLVED: { label: 'Resuelta', tone: 'resolved' },
+  RESOLVED_EXTERNALLY: { label: 'Resuelta externamente', tone: 'resolved' },
 };
 
 // Un valor sin mapear (por ejemplo una decision nueva del backend) se muestra
 // legible y neutro: "UNA_DECISION_FUTURA" pasa a "Una decision futura".
 // decision ausente (null) o vacia: no hay texto para mostrar, se usa un rotulo propio.
+export const NO_DECISION_LABEL = 'Sin decisión';
 export function fallbackDecisionLabel(decision: string): string {
   const words = decision.replace(/[_\-\s]+/g, ' ').trim().toLowerCase();
-  return words === '' ? 'Sin estado' : words.charAt(0).toUpperCase() + words.slice(1);
+  return words === '' ? NO_DECISION_LABEL : words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 export function decisionStatus(decision: string | null): DecisionStatus {
-  if (decision === null) return { label: 'Sin estado', tone: 'neutral' };
+  if (decision === null) return { label: NO_DECISION_LABEL, tone: 'neutral' };
   return DECISION_STATUS[decision] ?? { label: fallbackDecisionLabel(decision), tone: 'neutral' };
 }
 

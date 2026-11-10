@@ -70,6 +70,17 @@
           <tr class="case-detail-row">
             <td colspan="7" [id]="'case-' + group.issueKey">
               <app-case-interactions [issueKey]="group.issueKey" [interactions]="group.interactions" />
+              @switch (completion()[group.issueKey]) {
+                @case ('loading') {
+                  <p class="case-completion" role="status">Cargando las interacciones anteriores</p>
+                }
+                @case ('error') {
+                  <div class="case-completion case-completion--error" role="alert">
+                    <span>No se pudieron cargar las interacciones anteriores de {{ group.issueKey }}.</span>
+                    <button mat-button type="button" (click)="retryCompletion.emit(group.issueKey)">Reintentar</button>
+                  </div>
+                }
+              }
             </td>
           </tr>
         }

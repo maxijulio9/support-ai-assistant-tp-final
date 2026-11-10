@@ -39,6 +39,7 @@
 
     <h2 class="review-detail-title">{{ data.summary }}</h2>
     <p class="review-detail-created">Creada el {{ formattedCreatedAt(data.created_at) }}</p>
+    <p class="review-detail-created">{{ respondedAtLabel }}: {{ respondedAtText(data.responded_at, data.decision) }}</p>
 
     <section class="review-detail-block">
       <h2>Solicitud original</h2>
