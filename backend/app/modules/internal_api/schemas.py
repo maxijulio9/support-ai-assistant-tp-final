@@ -360,6 +360,7 @@ class MetricsSummaryResponse(BaseModel):
     by_resolution_channel: list[ResolutionChannelCount] = Field(description="cantidad de interacciones por canal de resolucion, su suma coincide con total_interactions, el grupo con canal null reune las que todavia no se resolvieron y las anteriores a que se registrara el canal")
     resolved_externally_count: int = Field(description="cantidad de tickets resueltos por un humano fuera del sistema")
     discarded_count: int = Field(default=0, description="cantidad de interacciones cuya sugerencia descarto una persona, el ticket queda abierto en JSM para atenderlo a mano, la suma de los conteos por decision, este incluido, da total_interactions")
+    publish_failed_count: int = Field(default=0, description="cantidad de interacciones cuyo comentario no se pudo publicar en JSM tras los reintentos, la suma de los conteos por decision, este incluido, da total_interactions")
     automatic_resolution_rate: float = Field(description="porcentaje de interacciones resueltas sin intervencion humana")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de las interacciones del periodo")
 
@@ -389,6 +390,7 @@ class DailyMetric(BaseModel):
     resolved_count: int = Field(description="cantidad de interacciones resueltas por el sistema ese dia")
     resolved_externally_count: int = Field(description="cantidad de interacciones resueltas por un humano fuera del sistema ese dia")
     discarded_count: int = Field(default=0, description="cantidad de interacciones cuya sugerencia descarto una persona ese dia")
+    publish_failed_count: int = Field(default=0, description="cantidad de interacciones cuyo comentario no se pudo publicar en JSM ese dia")
     avg_confidence_score: float | None = Field(description="promedio del confidence_score de ese dia, o null si ninguna interaccion tiene puntaje")
 
 
