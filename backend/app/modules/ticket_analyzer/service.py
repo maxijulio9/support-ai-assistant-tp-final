@@ -6,6 +6,7 @@ import logging
 from app.modules.webhook_receiver.schemas import NormalizedEvent
 from app.modules.ticket_analyzer.schemas import TicketAnalysis
 from app.modules.ticket_analyzer.conversation_history import ConversationHistory
+from app.modules.ticket_analyzer.info_request_repository import InfoRequestRepository, MAX_INFO_REQUESTS
 from app.modules.ticket_analyzer.llm_client import LlmClient
 from app.modules.ticket_analyzer.attachment_reader import fetch_images
 from app.modules.ticket_analyzer.project_repository import ProjectRepository
@@ -43,6 +44,7 @@ class TicketAnalyzer:
 
     def __init__(self):
         self.history = ConversationHistory()
+        self.info_request_repository = InfoRequestRepository()
         self.llm_client = LlmClient()
         self.project_repository = ProjectRepository()
         #self.jsm_executor = JsmExecutor()
@@ -72,6 +74,10 @@ class TicketAnalyzer:
             verdict = await asyncio.to_thread(self.llm_client.verify_reproduction_info, texto_usuario, conversation_history)
             if verdict == "falta":
                 classification.resolved_by = "MISSING_INFO"
+        if classification and classification.resolved_by == "MISSING_INFO" and event.comment_body:
+            info_requests = await asyncio.to_thread(self.info_request_repository.count_info_requests, event.issue_key)
+            if info_requests >= MAX_INFO_REQUESTS:
+                classification.resolved_by = "L2"
         
         
         # un cierre de conversacion o un mensaje sin info suficiente no tienen contenido real que evaluar, impact y urgency saldrian inventados, se mantiene la prioridad actual
