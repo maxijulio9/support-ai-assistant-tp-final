@@ -93,7 +93,7 @@ export function parseIsoDateLocal(day: string): Date {
 
 // Formato AAAA-MM-DD y fecha calendario real (rechaza por ejemplo "30 de
 // febrero", que Date "arreglaria" corriendolo a marzo).
-function isValidIsoDate(value: string): boolean {
+export function isValidIsoDate(value: string): boolean {
   return ISO_DATE_PATTERN.test(value) && toIsoDate(parseIsoDateLocal(value)) === value;
 }
 

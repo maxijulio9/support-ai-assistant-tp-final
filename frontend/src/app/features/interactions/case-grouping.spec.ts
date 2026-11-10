@@ -326,6 +326,15 @@ describe('limitNoticeText', () => {
     expect(limitNoticeText(200, 1342)).toBe('Mostrando las últimas 200 de 1342 interacciones');
   });
 
+  it('con rango aclara que el total es del periodo', () => {
+    expect(limitNoticeText(200, 1342, true)).toBe('Mostrando las últimas 200 de 1342 interacciones del período');
+  });
+
+  it('con rango y sin cortes no avisa', () => {
+    expect(limitNoticeText(37, 37, true)).toBeNull();
+    expect(limitNoticeText(200, 200, true)).toBeNull();
+  });
+
   it('no avisa si el total es igual o menor a lo cargado', () => {
     expect(limitNoticeText(200, 200)).toBeNull();
     expect(limitNoticeText(37, 37)).toBeNull();

@@ -107,9 +107,11 @@ export function mergeInteractions(
   return added.length === 0 ? base.slice() : [...base, ...added];
 }
 
-// Aviso del limite: solo si hay mas interacciones que las cargadas
-export function limitNoticeText(loaded: number, total: number): string | null {
-  return total > loaded ? `Mostrando las últimas ${loaded} de ${total} interacciones` : null;
+// Aviso del limite: solo si hay mas interacciones que las cargadas. Con un
+// rango de fechas aclara que el total es el del periodo.
+export function limitNoticeText(loaded: number, total: number, withRange = false): string | null {
+  if (total <= loaded) return null;
+  return `Mostrando las últimas ${loaded} de ${total} interacciones${withRange ? ' del período' : ''}`;
 }
 
 // all: todo lo cargado. filtered: lo que cumple los filtros, que decide que

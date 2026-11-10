@@ -8,6 +8,7 @@ import {
 } from './history-url-state';
 
 const STATUSES = ['AUTO_PUBLISH', 'NEEDS_REVIEW', 'ESCALATE'];
+const TODAY = new Date(2026, 10, 9, 12, 0);
 
 function paramsOf(values: Record<string, string>) {
   return { get: (name: string) => values[name] ?? null };
@@ -24,7 +25,7 @@ describe('parseHistoryParams', () => {
       STATUSES,
     );
 
-    expect(state).toEqual({ term: 'vpn', status: 'ESCALATE', category: 'Red', page: 3, pageSize: 20, expanded: ['TARG-1', 'TARG-2'] });
+    expect(state).toEqual({ term: 'vpn', status: 'ESCALATE', category: 'Red', range: null, page: 3, pageSize: 20, expanded: ['TARG-1', 'TARG-2'] });
   });
 
   it('un estado que no existe se ignora', () => {
@@ -66,7 +67,7 @@ describe('serializeHistoryParams', () => {
   it('un filtro vacio queda sin parametro', () => {
     const params = serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, term: '  ', status: '', category: '' });
 
-    expect(params).toEqual({ q: null, estado: null, categoria: null, pagina: null, tamano: null, abiertos: null });
+    expect(params).toEqual({ q: null, estado: null, categoria: null, desde: null, hasta: null, pagina: null, tamano: null, abiertos: null });
   });
 
   it('junta los casos abiertos en un solo parametro', () => {
@@ -74,11 +75,12 @@ describe('serializeHistoryParams', () => {
   });
 
   it('escribir y volver a leer devuelve el mismo estado', () => {
-    const state: HistoryViewState = { term: 'no anda', status: 'NEEDS_REVIEW', category: 'Depósitos y retiros', page: 4, pageSize: 50, expanded: ['TARG-9', 'TARG-1'] };
+    const state: HistoryViewState = { term: 'no anda', status: 'NEEDS_REVIEW', category: 'Depósitos y retiros', range: { from: '2026-10-01', to: '2026-10-31' }, page: 4, pageSize: 50, expanded: ['TARG-9', 'TARG-1'] };
     const written = serializeHistoryParams(state);
     const roundTrip = parseHistoryParams(
       { get: (name) => written[name] ?? null },
       STATUSES,
+      TODAY,
     );
 
     expect(roundTrip).toEqual(state);
@@ -105,6 +107,43 @@ describe('tamano de pagina en la URL', () => {
 
   it('un tamano invalido en el estado no se escribe', () => {
     expect(serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, pageSize: 7 })['tamano']).toBeNull();
+  });
+});
+
+describe('rango de fechas en la URL', () => {
+  it('lee desde y hasta', () => {
+    expect(parseHistoryParams(paramsOf({ desde: '2026-11-01', hasta: '2026-11-05' }), STATUSES, TODAY).range).toEqual({
+      from: '2026-11-01',
+      to: '2026-11-05',
+    });
+  });
+
+  it('sin parametros o con uno solo no hay rango', () => {
+    expect(parseHistoryParams(paramsOf({}), STATUSES, TODAY).range).toBeNull();
+    expect(parseHistoryParams(paramsOf({ desde: '2026-11-01' }), STATUSES, TODAY).range).toBeNull();
+    expect(parseHistoryParams(paramsOf({ hasta: '2026-11-05' }), STATUSES, TODAY).range).toBeNull();
+  });
+
+  it.each([
+    ['formato invalido', { desde: '1/11/2026', hasta: '2026-11-05' }],
+    ['fecha inexistente', { desde: '2026-02-30', hasta: '2026-11-05' }],
+    ['desde mayor que hasta', { desde: '2026-11-06', hasta: '2026-11-05' }],
+    ['hasta en el futuro', { desde: '2026-11-01', hasta: '2026-11-10' }],
+  ])('%s se ignora sin tocar lo demas', (_label, values) => {
+    const state = parseHistoryParams(paramsOf({ ...values, q: 'vpn', pagina: '2' }), STATUSES, TODAY);
+
+    expect(state.range).toBeNull();
+    expect(state.term).toBe('vpn');
+    expect(state.page).toBe(2);
+  });
+
+  it('se escribe en desde y hasta, y sin rango no deja parametros', () => {
+    const written = serializeHistoryParams({ ...EMPTY_HISTORY_VIEW, range: { from: '2026-11-01', to: '2026-11-05' } });
+
+    expect(written['desde']).toBe('2026-11-01');
+    expect(written['hasta']).toBe('2026-11-05');
+    expect(serializeHistoryParams(EMPTY_HISTORY_VIEW)['desde']).toBeNull();
+    expect(serializeHistoryParams(EMPTY_HISTORY_VIEW)['hasta']).toBeNull();
   });
 });
 

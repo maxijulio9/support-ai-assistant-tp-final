@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 import { ApiConfiguration } from '../../api/api-configuration';
 import { listInteractionsApiInteractionsGet } from '../../api/fn/internal-api/list-interactions-api-interactions-get';
 import { getInteractionDetailApiInteractionsInteractionIdGet } from '../../api/fn/internal-api/get-interaction-detail-api-interactions-interaction-id-get';
+import { HistoryRange, rangeApiParams } from './history-range';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
@@ -25,15 +26,18 @@ export class InteractionsService {
 
   readonly historyLimit = HISTORY_LIMIT;
 
-  listRecent(): Observable<InteractionsPage> {
+  // Con rango, el servidor devuelve solo lo de esos dias argentinos (ver rangeApiParams)
+  listRecent(range: HistoryRange | null = null): Observable<InteractionsPage> {
     return listInteractionsApiInteractionsGet(this.http, this.apiConfig.rootUrl, {
+      ...rangeApiParams(range),
       limit: HISTORY_LIMIT,
       offset: 0,
     }).pipe(map((response) => ({ items: response.body.interactions, total: response.body.total })));
   }
 
   // Todas las interacciones de un ticket, para completar un caso que el
-  // limite de la lista pudo cortar
+  // limite de la lista pudo cortar. A proposito no filtra por rango de fechas:
+  // el caso se completa con todas sus interacciones
   listByIssue(issueKey: string): Observable<InteractionListItem[]> {
     return listInteractionsApiInteractionsGet(this.http, this.apiConfig.rootUrl, {
       issue_key: issueKey,

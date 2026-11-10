@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +15,8 @@ import { buildCases, filterInteractions, limitNoticeText, mergeInteractions, unr
 import { CaseTableComponent } from './case-table/case-table.component';
 import { PAGE_SIZE_OPTIONS, paginateCases } from './history-pagination';
 import { parseHistoryParams, sanitizeCategory, serializeHistoryParams, toggleExpanded } from './history-url-state';
+import { HistoryRange, resolveHistoryRange } from './history-range';
+import { parseIsoDateLocal, toIsoDate } from '../dashboard/period';
 import { InteractionListItem } from '../../api/models/interaction-list-item';
 
 export type CompletionState = 'loading' | 'error';
@@ -21,6 +26,8 @@ export type RowsState = 'loading' | 'empty' | 'no-results' | 'error' | 'loaded';
   selector: 'app-interactions',
   standalone: true,
   imports: [
+    ReactiveFormsModule,
+    MatDatepickerModule,
     MatButtonModule,
     MatFormFieldModule,
     MatIconModule,
@@ -56,11 +63,18 @@ export class InteractionsComponent {
   readonly searchTerm = signal(this.initial.term);
   readonly statusFilter = signal<string | null>(this.initial.status);
   private readonly requestedCategory = signal<string | null>(this.initial.category);
+  // Rango que se pide al servidor; el resto de los filtros se aplica sobre lo cargado
+  readonly range = signal<HistoryRange | null>(this.initial.range);
   readonly page = signal(this.initial.page);
   readonly pageSize = signal(this.initial.pageSize);
   readonly expandedCases = signal<string[]>(this.initial.expanded);
 
   readonly pageSizeOptions = PAGE_SIZE_OPTIONS;
+  // No se pueden elegir dias futuros
+  readonly today = new Date();
+  readonly rangeStart = new FormControl<Date | null>(null);
+  readonly rangeEnd = new FormControl<Date | null>(null);
+  private loadSubscription: Subscription | null = null;
   readonly historyLimit = this.interactionsService.historyLimit;
   readonly statusOptions = STATUS_FILTER_OPTIONS;
   readonly skeletonRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -106,7 +120,11 @@ export class InteractionsComponent {
   );
 
   readonly hasActiveFilters = computed(
-    () => this.searchTerm().trim() !== '' || this.statusFilter() !== null || this.categoryFilter() !== null,
+    () =>
+      this.searchTerm().trim() !== '' ||
+      this.statusFilter() !== null ||
+      this.categoryFilter() !== null ||
+      this.range() !== null,
   );
 
   readonly totalFiltered = computed(() => this.cases().length);
@@ -119,7 +137,7 @@ export class InteractionsComponent {
   readonly effectivePage = computed(() => this.pagination().page);
   readonly totalPages = computed(() => this.pagination().totalPages);
 
-  readonly limitNotice = computed(() => limitNoticeText(this.items().length, this.total()));
+  readonly limitNotice = computed(() => limitNoticeText(this.items().length, this.total(), this.range() !== null));
 
   readonly rowsState = computed<RowsState>(() => {
     if (this.loadState() === 'loading') return 'loading';
@@ -130,6 +148,7 @@ export class InteractionsComponent {
   });
 
   constructor() {
+    this.syncRangeControls();
     this.loadHistory();
 
     // Cada cambio se escribe en la URL sin sumar entradas al historial del
@@ -139,6 +158,7 @@ export class InteractionsComponent {
         term: this.searchTerm(),
         status: this.statusFilter(),
         category: this.categoryFilter(),
+        range: this.range(),
         // Hasta que cargan los datos no se sabe cuantas paginas hay: se conserva la pedida
         page: this.loadState() === 'loaded' ? this.effectivePage() : this.page(),
         pageSize: this.pageSize(),
@@ -178,8 +198,10 @@ export class InteractionsComponent {
 
   loadHistory(): void {
     this.loadState.set('loading');
-    this.interactionsService
-      .listRecent()
+    // Un pedido nuevo descarta el anterior: una respuesta lenta de otro rango no pisa a la actual
+    this.loadSubscription?.unsubscribe();
+    this.loadSubscription = this.interactionsService
+      .listRecent(this.range())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ items, total }) => {
@@ -194,6 +216,38 @@ export class InteractionsComponent {
           this.loadState.set('error');
         },
       });
+  }
+
+  private syncRangeControls(): void {
+    const range = this.range();
+    this.rangeStart.setValue(range ? parseIsoDateLocal(range.from) : null, { emitEvent: false });
+    this.rangeEnd.setValue(range ? parseIsoDateLocal(range.to) : null, { emitEvent: false });
+  }
+
+  // Se dispara al elegir o escribir el ultimo dia, o al vaciar el campo. Con
+  // un solo extremo no se hace nada hasta que esten los dos; un rango
+  // invalido (por ejemplo desde mayor que hasta) vuelve al anterior.
+  onRangeChanged(): void {
+    const start = this.rangeStart.value;
+    const end = this.rangeEnd.value;
+    if (start && !end) return;
+
+    const next = start && end ? resolveHistoryRange(toIsoDate(start), toIsoDate(end), this.today) : null;
+    if (start && end && next === null) {
+      this.syncRangeControls();
+      return;
+    }
+    this.applyRange(next);
+  }
+
+  // Cambiar el rango pide la lista de nuevo, vuelve a la pagina 1 y cierra los casos abiertos
+  private applyRange(next: HistoryRange | null): void {
+    const current = this.range();
+    if (current?.from === next?.from && current?.to === next?.to) return;
+    this.range.set(next);
+    this.page.set(1);
+    this.expandedCases.set([]);
+    this.loadHistory();
   }
 
   onSearchInput(event: Event): void {
@@ -217,6 +271,9 @@ export class InteractionsComponent {
     this.statusFilter.set(null);
     this.requestedCategory.set(null);
     this.page.set(1);
+    this.rangeStart.setValue(null, { emitEvent: false });
+    this.rangeEnd.setValue(null, { emitEvent: false });
+    this.applyRange(null);
   }
 
   onCaseToggled(issueKey: string): void {

@@ -2,9 +2,10 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideEchartsCore } from 'ngx-echarts';
-import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { DateAdapter, MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { ArgentineDateAdapter } from './shared/argentine-date-adapter';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,6 +19,8 @@ export const appConfig: ApplicationConfig = {
     // Inicio).
     provideEchartsCore({ echarts: () => import('echarts') }),
     provideNativeDateAdapter(),
+    // Lee las fechas escritas a mano como dia/mes/año, en Historial y Metricas
+    { provide: DateAdapter, useClass: ArgentineDateAdapter },
     { provide: MAT_DATE_LOCALE, useValue: 'es' },
   ],
 };

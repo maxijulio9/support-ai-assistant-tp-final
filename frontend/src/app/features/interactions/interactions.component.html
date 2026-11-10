@@ -18,6 +18,16 @@
       <input matInput [value]="searchTerm()" (input)="onSearchInput($event)" />
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="interactions-range app-filter">
+      <mat-label>Rango de fechas</mat-label>
+      <mat-date-range-input [rangePicker]="picker" [max]="today">
+        <input matStartDate [formControl]="rangeStart" placeholder="Desde" />
+        <input matEndDate [formControl]="rangeEnd" placeholder="Hasta" (dateChange)="onRangeChanged()" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-date-range-picker #picker></mat-date-range-picker>
+    </mat-form-field>
+
     <mat-form-field appearance="outline" class="interactions-filter app-filter">
       <mat-label>Estado</mat-label>
       <mat-select panelClass="app-filter-panel" [value]="statusFilter()" (selectionChange)="onStatusFilterChange($event.value)">
@@ -74,7 +84,9 @@
   }
 
   @if (rowsState() === 'empty') {
-    <p class="interactions-empty">Todavía no hay solicitudes</p>
+    <p class="interactions-empty">
+      {{ range() ? 'No hay interacciones en el período elegido' : 'Todavía no hay solicitudes' }}
+    </p>
   }
 
   @if (rowsState() === 'no-results') {
