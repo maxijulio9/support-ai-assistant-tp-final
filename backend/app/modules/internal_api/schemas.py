@@ -614,12 +614,15 @@ class InteractionListItem(BaseModel):
     decision: str | None = Field(description="decision final del pipeline para esta interaccion")
     confidence_score: float | None = Field(description="confidence_score de la respuesta generada")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
+    responded_at: str | None = Field(default=None, description="marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato")
     was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, la respuesta original del sistema se conserva en generated_response del detalle")
 
 
 class InteractionListResponse(BaseModel):
     """Respuesta del listado paginado de interacciones, para el dashboard."""
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
     interactions: list[InteractionListItem]
+    total: int = Field(default=0, description="cantidad total de interacciones que cumplen los filtros, sin contar el limite ni el desplazamiento")
 
 
 class RetrievedChunkDetail(BaseModel):
@@ -655,6 +658,7 @@ class InteractionDetailResponse(BaseModel):
     edited_response: str | None = Field(default=None, description="respuesta que se publico cuando el agente la edito antes de aprobarla, o null si no se edito")
     was_edited: bool = Field(default=False, description="true si el agente edito la respuesta antes de aprobarla, generated_response conserva la respuesta original del sistema")
     created_at: str | None = Field(description="marca de tiempo de creacion de la interaccion")
+    responded_at: str | None = Field(default=None, description="marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato")
     chunks: list[RetrievedChunkDetail] = Field(description="fragmentos de la base de conocimiento usados como contexto")
     sources: list[InteractionSource] = Field(default_factory=list, description="fuentes de la base de conocimiento consultadas para generar la respuesta, una por pagina y ordenadas por relevancia, la mejor primero, vacia si el sistema no consulto la base o si la interaccion es anterior a que se guardaran los fragmentos, son las paginas de los fragmentos que se le pasaron al modelo, no se registra cuales uso")
 
