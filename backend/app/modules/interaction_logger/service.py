@@ -26,6 +26,10 @@ class InteractionLogger:
 
             # busca los ids de las tablas de referencia (catalogo)
             category_id = self._find_catalog_id(db, "ticket_category", analysis.category, search_column="name")
+            # un comentario no cambia la categoria del ticket, la interaccion hereda la que tiene desde que se creo
+            ticket_category_id = db.execute(text("SELECT category_id FROM ticket WHERE id = :ticket_id"), {"ticket_id": ticket_id}).scalar()
+            if ticket_category_id is not None:
+                category_id = str(ticket_category_id)
             priority_id = self._find_catalog_id(db, "ticket_priority", analysis.priority)
             sentiment_id = self._find_catalog_id(db, "sentiment_type", analysis.sentiment)
 
@@ -308,6 +312,30 @@ class InteractionLogger:
         except Exception as e:
             db.rollback()
             logger.error(f"error al marcar la primera respuesta de la interaccion {interaction_id}: {e}")
+
+        finally:
+            db.close()
+
+    # deja la interaccion como publicacion fallida cuando jira rechazo el comentario despues de todos los reintentos
+    # la decision original queda en system_decision y sin canal, para que no cuente como resolucion automatica
+    # solo actua si todavia no hay un comentario publico registrado
+    def mark_publish_failed(self, interaction_id: str | None):
+        if not interaction_id:
+            return
+
+        db = next(get_db())
+        try:
+            db.execute(text("""
+                UPDATE interaction
+                SET decision = 'PUBLISH_FAILED',
+                    resolution_channel = NULL
+                WHERE id = :interaction_id AND first_response_at IS NULL
+            """), {"interaction_id": interaction_id})
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"error al marcar la publicacion fallida de la interaccion {interaction_id}: {e}")
 
         finally:
             db.close()
