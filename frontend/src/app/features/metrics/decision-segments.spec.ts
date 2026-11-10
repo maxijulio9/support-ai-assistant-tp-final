@@ -1,14 +1,15 @@
 import { DECISION_SEGMENTS, DecisionSegmentCounts, decisionSegmentValue, roundedSegmentPercentages } from './decision-segments';
 
 describe('DECISION_SEGMENTS', () => {
-  it('tiene 6 segmentos: las 5 decisiones mapeadas mas el grupo de resueltas', () => {
-    expect(DECISION_SEGMENTS.length).toBe(6);
+  it('tiene 7 segmentos: las 6 decisiones mapeadas mas el grupo de resueltas', () => {
+    expect(DECISION_SEGMENTS.length).toBe(7);
     expect(DECISION_SEGMENTS.map((segment) => segment.key)).toEqual([
       'AUTO_PUBLISH',
       'NEEDS_REVIEW',
       'ESCALATE',
       'REQUEST_INFO',
       'DISCARDED',
+      'PUBLISH_FAILED',
       'RESOLVED_GROUP',
     ]);
   });
@@ -19,6 +20,13 @@ describe('DECISION_SEGMENTS', () => {
   });
 });
 
+describe('segmento de publicacion fallida', () => {
+  it('tiene la etiqueta "Falló la publicación" y el tono propio', () => {
+    const failed = DECISION_SEGMENTS.find((segment) => segment.key === 'PUBLISH_FAILED');
+    expect(failed).toEqual({ key: 'PUBLISH_FAILED', label: 'Falló la publicación', tone: 'failed' });
+  });
+});
+
 describe('decisionSegmentValue', () => {
   const counts: DecisionSegmentCounts = {
     auto_publish_count: 10,
@@ -26,24 +34,26 @@ describe('decisionSegmentValue', () => {
     escalate_count: 5,
     request_info_count: 3,
     discarded_count: 6,
+    publish_failed_count: 7,
     resolved_count: 4,
     resolved_externally_count: 1,
   };
 
-  it('devuelve el campo correspondiente para cada una de las 5 decisiones mapeadas', () => {
+  it('devuelve el campo correspondiente para cada una de las 6 decisiones mapeadas', () => {
     expect(decisionSegmentValue(counts, 'AUTO_PUBLISH')).toBe(10);
     expect(decisionSegmentValue(counts, 'NEEDS_REVIEW')).toBe(2);
     expect(decisionSegmentValue(counts, 'ESCALATE')).toBe(5);
     expect(decisionSegmentValue(counts, 'REQUEST_INFO')).toBe(3);
     expect(decisionSegmentValue(counts, 'DISCARDED')).toBe(6);
+    expect(decisionSegmentValue(counts, 'PUBLISH_FAILED')).toBe(7);
   });
 
   it('el grupo "Resueltas" suma resolved_count y resolved_externally_count', () => {
     expect(decisionSegmentValue(counts, 'RESOLVED_GROUP')).toBe(5);
   });
 
-  it('los 7 conteos (6 segmentos, el grupo de resueltas cuenta como 2) suman total_interactions', () => {
-    const total = 10 + 2 + 5 + 3 + 6 + 4 + 1;
+  it('los 8 conteos (7 segmentos, el grupo de resueltas cuenta como 2) suman total_interactions', () => {
+    const total = 10 + 2 + 5 + 3 + 6 + 7 + 4 + 1;
     const sumOfSegments = DECISION_SEGMENTS.reduce((sum, segment) => sum + decisionSegmentValue(counts, segment.key), 0);
     expect(sumOfSegments).toBe(total);
   });

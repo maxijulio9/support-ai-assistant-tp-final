@@ -40,6 +40,7 @@ const DECISION_COUNT_FIELD: Record<string, keyof MetricsSummaryResponse> = {
   ESCALATE: 'escalate_count',
   REQUEST_INFO: 'request_info_count',
   DISCARDED: 'discarded_count',
+  PUBLISH_FAILED: 'publish_failed_count',
 };
 
 @Component({
