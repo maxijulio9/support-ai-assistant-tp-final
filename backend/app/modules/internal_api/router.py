@@ -669,9 +669,11 @@ def list_interactions(
     to_date: str | None = None,
     limit: int = 20,
     offset: int = 0,
+    issue_key: str | None = None,
 ):
-    result = _listing_service.list_interactions(project_id, category, decision, from_date, to_date, limit, offset)
-    return InteractionListResponse(interactions=result)
+    result = _listing_service.list_interactions(project_id, category, decision, from_date, to_date, limit, offset, issue_key)
+    total = _listing_service.count_interactions(project_id, category, decision, from_date, to_date, issue_key)
+    return InteractionListResponse(interactions=result, total=total)
 
 
 # detalle completo de una interaccion puntual, con sus chunks recuperados, para el dashboard

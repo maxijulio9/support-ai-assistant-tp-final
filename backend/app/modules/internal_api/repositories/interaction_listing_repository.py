@@ -17,6 +17,7 @@ class InteractionListingRepository:
         to_date: str | None = None,
         limit: int = 20,
         offset: int = 0,
+        issue_key: str | None = None,
     ) -> list[dict]:
         db = next(get_db())
         try:
@@ -32,7 +33,8 @@ class InteractionListingRepository:
                     i.resolution_channel,
                     i.confidence_score,
                     i.edited_response,
-                    i.created_at
+                    i.created_at,
+                    i.first_response_at
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
                 LEFT JOIN ticket_category tc ON i.category_id = tc.id
@@ -41,21 +43,7 @@ class InteractionListingRepository:
             """
             params = {"limit": limit, "offset": offset}
 
-            if project_id:
-                query += " AND t.project_id = :project_id"
-                params["project_id"] = project_id
-            if category:
-                query += " AND tc.name = :category"
-                params["category"] = category
-            if decision:
-                query += " AND i.decision = :decision"
-                params["decision"] = decision
-            if from_date:
-                query += " AND i.created_at >= :from_date"
-                params["from_date"] = from_date
-            if to_date:
-                query += " AND i.created_at <= :to_date"
-                params["to_date"] = to_date
+            query, params = self._apply_filters(query, params, project_id, category, decision, from_date, to_date, issue_key)
 
             query += " ORDER BY i.created_at DESC LIMIT :limit OFFSET :offset"
 
@@ -74,12 +62,61 @@ class InteractionListingRepository:
                     "confidence_score": row.confidence_score,
                     "was_edited": row.edited_response is not None,
                     "created_at": row.created_at.isoformat() if row.created_at else None,
+                    "responded_at": row.first_response_at.isoformat() if row.first_response_at else None,
                 }
                 for row in rows
             ]
         finally:
             db.close()
         
+    # agrega al query los filtros opcionales del listado, los mismos para listar y para contar
+    @staticmethod
+    def _apply_filters(query: str, params: dict, project_id: str | None, category: str | None, decision: str | None,
+                       from_date: str | None, to_date: str | None, issue_key: str | None) -> tuple[str, dict]:
+        if project_id:
+            query += " AND t.project_id = :project_id"
+            params["project_id"] = project_id
+        if category:
+            query += " AND tc.name = :category"
+            params["category"] = category
+        if decision:
+            query += " AND i.decision = :decision"
+            params["decision"] = decision
+        if from_date:
+            query += " AND i.created_at >= :from_date"
+            params["from_date"] = from_date
+        if to_date:
+            query += " AND i.created_at <= :to_date"
+            params["to_date"] = to_date
+        if issue_key:
+            query += " AND t.issue_key = :issue_key"
+            params["issue_key"] = issue_key.strip().upper()
+        return query, params
+
+    # cuenta todas las interacciones que cumplen los filtros, sin paginar
+    def count_interactions(
+        self,
+        project_id: str | None = None,
+        category: str | None = None,
+        decision: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        issue_key: str | None = None,
+    ) -> int:
+        db = next(get_db())
+        try:
+            query = """
+                SELECT COUNT(*)
+                FROM interaction i
+                JOIN ticket t ON i.ticket_id = t.id
+                LEFT JOIN ticket_category tc ON i.category_id = tc.id
+                WHERE 1=1
+            """
+            query, params = self._apply_filters(query, {}, project_id, category, decision, from_date, to_date, issue_key)
+            return db.execute(text(query), params).scalar() or 0
+        finally:
+            db.close()
+
     # trae el detalle completo de una interaccion puntual, incluyendo los chunks recuperados
     def get_detail(self, interaction_id: str) -> dict | None:
         db = next(get_db())
@@ -98,7 +135,8 @@ class InteractionListingRepository:
                     i.text_input,
                     i.generated_response,
                     i.edited_response,
-                    i.created_at
+                    i.created_at,
+                    i.first_response_at
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
                 LEFT JOIN ticket_category tc ON i.category_id = tc.id
@@ -133,6 +171,7 @@ class InteractionListingRepository:
                 "edited_response": row.edited_response,
                 "was_edited": row.edited_response is not None,
                 "created_at": row.created_at.isoformat() if row.created_at else None,
+                "responded_at": row.first_response_at.isoformat() if row.first_response_at else None,
                 "chunks": [
                     {
                         "page_title": c.page_title,

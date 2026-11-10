@@ -28,8 +28,9 @@ class InteractionListingService:
         to_date: str | None = None,
         limit: int = 20,
         offset: int = 0,
+        issue_key: str | None = None,
     ) -> list[dict]:
-        interactions = self.listing_repository.list_interactions(project_id, category, decision, from_date, to_date, limit, offset)
+        interactions = self.listing_repository.list_interactions(project_id, category, decision, from_date, to_date, limit, offset, issue_key)
 
         if not interactions:
             return interactions
@@ -40,6 +41,18 @@ class InteractionListingService:
             interaction["ticket_url"] = build_ticket_url(base_url, interaction["issue_key"])
 
         return interactions
+
+    # cuenta las interacciones que cumplen los filtros, sin paginar, para que el dashboard sepa cuantas hay en total
+    def count_interactions(
+        self,
+        project_id: str | None = None,
+        category: str | None = None,
+        decision: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        issue_key: str | None = None,
+    ) -> int:
+        return self.listing_repository.count_interactions(project_id, category, decision, from_date, to_date, issue_key)
 
     # trae el detalle completo de una interaccion puntual con el enlace al ticket y las fuentes consultadas, o none si no existe
     def get_detail(self, interaction_id: str) -> dict | None:

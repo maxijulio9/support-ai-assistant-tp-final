@@ -172,7 +172,12 @@ class Orchestrator:
         if generated_response.action_type in (ACTION_AUTO_PUBLISH, ACTION_NEEDS_REVIEW, ACTION_REQUEST_INFO) and generated_response.response_text:
             is_public = generated_response.action_type != ACTION_NEEDS_REVIEW
             try:
-                await self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
+                try:
+                    await self.jsm_executor.post_comment(event.issue_key, generated_response.response_text, public=is_public)
+                except Exception:
+                    if is_public:
+                        self.interaction_logger.mark_publish_failed(interaction_id)
+                    raise
                 # primer comentario publico de la interaccion, si es la respuesta automatica tambien la resuelve
                 if is_public:
                     self.interaction_logger.mark_first_response(interaction_id, resolved=generated_response.action_type == ACTION_AUTO_PUBLISH)
