@@ -4379,6 +4379,12 @@
             "description": "cantidad de interacciones cuya sugerencia descarto una persona ese dia",
             "default": 0
           },
+          "publish_failed_count": {
+            "type": "integer",
+            "title": "Publish Failed Count",
+            "description": "cantidad de interacciones cuyo comentario no se pudo publicar en JSM ese dia",
+            "default": 0
+          },
           "avg_confidence_score": {
             "anyOf": [
               {
@@ -4403,6 +4409,7 @@
           "resolved_count",
           "resolved_externally_count",
           "discarded_count",
+          "publish_failed_count",
           "avg_confidence_score"
         ],
         "title": "DailyMetric",
@@ -6188,6 +6195,12 @@
             "description": "cantidad de interacciones cuya sugerencia descarto una persona, el ticket queda abierto en JSM para atenderlo a mano, la suma de los conteos por decision, este incluido, da total_interactions",
             "default": 0
           },
+          "publish_failed_count": {
+            "type": "integer",
+            "title": "Publish Failed Count",
+            "description": "cantidad de interacciones cuyo comentario no se pudo publicar en JSM tras los reintentos, la suma de los conteos por decision, este incluido, da total_interactions",
+            "default": 0
+          },
           "automatic_resolution_rate": {
             "type": "number",
             "title": "Automatic Resolution Rate",
@@ -6218,6 +6231,7 @@
           "by_resolution_channel",
           "resolved_externally_count",
           "discarded_count",
+          "publish_failed_count",
           "automatic_resolution_rate",
           "avg_confidence_score"
         ],
