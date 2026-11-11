@@ -25,7 +25,23 @@ export const EXPORT_COLUMNS = [
   'Editada',
   'Respuesta al cliente',
   'Resumen',
+  'Respuesta generada',
+  'Revisada el',
+  'Revisada por',
 ] as const;
+
+// El PDF lleva solo las primeras columnas: con las tres de revision en A4
+// horizontal el resumen queda sin ancho legible. Las nuevas van al final
+// para poder cortarlas.
+export const PDF_COLUMN_COUNT = 10;
+
+export function pdfColumns(): string[] {
+  return EXPORT_COLUMNS.slice(0, PDF_COLUMN_COUNT);
+}
+
+export function pdfRows(rows: readonly (readonly string[])[]): string[][] {
+  return rows.map((row) => row.slice(0, PDF_COLUMN_COUNT));
+}
 
 export const NOT_RECORDED_TEXT = 'No registrada';
 
@@ -76,6 +92,9 @@ export function buildExportRows(items: readonly InteractionListItem[]): string[]
       item.was_edited ? 'Sí' : 'No',
       formatExportDate(item.responded_at) || NOT_RECORDED_TEXT,
       item.summary ?? '',
+      formatExportDate(item.generated_at) || NOT_RECORDED_TEXT,
+      formatExportDate(item.reviewed_at) || NOT_RECORDED_TEXT,
+      item.reviewed_by_name?.trim() || NOT_RECORDED_TEXT,
     ]);
 }
 

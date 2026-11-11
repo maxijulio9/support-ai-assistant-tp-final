@@ -5,6 +5,7 @@ import { InteractionDetailResponse } from '../../api/models/interaction-detail-r
 import { InteractionSourcesComponent } from '../interactions/interaction-sources.component';
 import { isSourcesFoldable, sourcesToggleTitle } from './review-sources';
 import { safeTicketUrl } from '../../shared/safe-ticket-url';
+import { generatedAtText } from '../interactions/review-info';
 import { RESPONDED_AT_LABEL, respondedAtText } from '../interactions/responded-at';
 
 export type DetailState = 'empty' | 'loading' | 'error' | 'loaded';
@@ -51,4 +52,5 @@ export class ReviewDetailComponent {
   readonly safeTicketUrl = safeTicketUrl;
   readonly respondedAtLabel = RESPONDED_AT_LABEL;
   readonly respondedAtText = respondedAtText;
+  readonly generatedAtText = generatedAtText;
 }

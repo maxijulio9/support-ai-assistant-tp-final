@@ -15,6 +15,8 @@ import {
   exportScopeNotice,
   formatExportDate,
   neutralizeFormula,
+  pdfColumns,
+  pdfRows,
   planExportPages,
   truncateText,
 } from './history-export';
@@ -34,6 +36,9 @@ function item(overrides: Partial<InteractionListItem> = {}): InteractionListItem
     was_edited: false,
     created_at: new Date(2026, 10, 5, 21, 57).toISOString(),
     responded_at: new Date(2026, 10, 5, 22, 3).toISOString(),
+    generated_at: null,
+    reviewed_at: null,
+    reviewed_by_name: null,
     ...overrides,
   };
 }
@@ -51,6 +56,17 @@ describe('columnas', () => {
       'Editada',
       'Respuesta al cliente',
       'Resumen',
+      'Respuesta generada',
+      'Revisada el',
+      'Revisada por',
+    ]);
+  });
+
+  it('el PDF lleva solo las diez primeras, con el resumen al final', () => {
+    expect(pdfColumns()).toEqual([...EXPORT_COLUMNS].slice(0, 10));
+    expect(pdfColumns().at(-1)).toBe('Resumen');
+    expect(pdfRows([['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm']])).toEqual([
+      ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
     ]);
   });
 });
@@ -85,8 +101,30 @@ describe('confidenceText', () => {
 describe('buildExportRows', () => {
   it('arma una fila por interaccion con las etiquetas legibles', () => {
     expect(buildExportRows([item()])).toEqual([
-      ['TARG-1', '05/11/2026 21:57', 'Publicada', 'Red', 'High', '85%', 'Automática', 'No', '05/11/2026 22:03', 'No anda la VPN'],
+      ['TARG-1', '05/11/2026 21:57', 'Publicada', 'Red', 'High', '85%', 'Automática', 'No', '05/11/2026 22:03', 'No anda la VPN', 'No registrada', 'No registrada', 'No registrada'],
     ]);
+  });
+
+  it('con generada, revisada y nombre los exporta; sin cada dato dice No registrada', () => {
+    const full = buildExportRows([
+      item({
+        generated_at: new Date(2026, 10, 5, 21, 56).toISOString(),
+        reviewed_at: new Date(2026, 10, 6, 9, 5).toISOString(),
+        reviewed_by_name: 'Ana Pérez',
+      }),
+    ])[0];
+    expect(full.slice(10)).toEqual(['05/11/2026 21:56', '06/11/2026 09:05', 'Ana Pérez']);
+
+    const onlyName = buildExportRows([item({ reviewed_by_name: 'Ana Pérez' })])[0];
+    expect(onlyName.slice(10)).toEqual(['No registrada', 'No registrada', 'Ana Pérez']);
+
+    const onlyDate = buildExportRows([item({ reviewed_at: new Date(2026, 10, 6, 9, 5).toISOString(), reviewed_by_name: '  ' })])[0];
+    expect(onlyDate.slice(10)).toEqual(['No registrada', '06/11/2026 09:05', 'No registrada']);
+  });
+
+  it('un nombre que parece formula se neutraliza en el CSV', () => {
+    const rows = buildExportRows([item({ reviewed_by_name: '=HYPERLINK("http://x")' })]);
+    expect(buildCsv(['a'], [[rows[0][12]]])).toContain(`"'=HYPERLINK(""http://x"")"`);
   });
 
   it('ordena de la mas reciente a la mas antigua, sin fecha al final', () => {

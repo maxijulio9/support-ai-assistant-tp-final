@@ -1,5 +1,5 @@
 import { resolveThemeColor } from '../../../shared/decision-colors';
-import { EXPORT_COLUMNS, ExportFilters, SUMMARY_MAX_LENGTH, buildCsv, describeFilters, truncateText } from './history-export';
+import { EXPORT_COLUMNS, ExportFilters, SUMMARY_MAX_LENGTH, buildCsv, describeFilters, pdfColumns, pdfRows, truncateText } from './history-export';
 
 // Parte del navegador de la exportacion: arma los archivos y los descarga.
 // jspdf y jspdf-autotable se cargan con import dinamico solo al exportar, para
@@ -61,8 +61,8 @@ export async function buildPdf(input: PdfInput): Promise<Blob> {
   autoTable(doc, {
     startY: tableTop,
     margin: { left: margin, right: margin, top: margin, bottom: margin + 16 },
-    head: [[...EXPORT_COLUMNS]],
-    body: input.rows.map((row) => row.map((cell, index) => (index === row.length - 1 ? truncateText(cell, SUMMARY_MAX_LENGTH) : cell))),
+    head: [pdfColumns()],
+    body: pdfRows(input.rows).map((row) => row.map((cell, index) => (index === row.length - 1 ? truncateText(cell, SUMMARY_MAX_LENGTH) : cell))),
     theme: 'grid',
     showHead: 'everyPage',
     styles: { font: 'helvetica', fontSize: 7.5, cellPadding: 3, textColor: text, lineColor: '#d7d9de', lineWidth: 0.4, overflow: 'linebreak' },

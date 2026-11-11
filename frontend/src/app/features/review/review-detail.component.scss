@@ -70,9 +70,16 @@ a.review-detail-id:focus-visible {
   border-color: color-mix(in srgb, var(--mat-sys-primary) 24%, transparent);
 }
 
+.review-detail-generated {
+  font: var(--app-text-secondary);
+  color: var(--app-color-text-secondary);
+  margin: 0 0 var(--app-space-xs);
+}
+
 .review-detail-block-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--app-space-sm);
   justify-content: space-between;
 }
 

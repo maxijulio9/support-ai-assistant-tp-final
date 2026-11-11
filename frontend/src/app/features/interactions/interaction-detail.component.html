@@ -71,7 +71,7 @@
           }
         </div>
         <h1 #heading tabindex="-1" class="app-page-title interaction-detail-title">{{ data.summary }}</h1>
-        <p class="app-page-subtitle">Creada el {{ formatDate(data.created_at) }}</p>
+        <p class="app-page-subtitle">Interacción registrada el {{ formatDate(data.created_at) }}</p>
       </div>
       <span class="app-page-chip">{{ status.label }}</span>
     </header>
@@ -113,6 +113,9 @@
         <div class="interaction-detail-fact">
           <span class="interaction-detail-label">{{ respondedAtLabel }}</span>
           <span class="interaction-detail-value">{{ respondedAtText(data.responded_at, data.decision) }}</span>
+          @if (reviewText(data); as review) {
+            <span class="interaction-detail-value">{{ review }}</span>
+          }
         </div>
 
 
