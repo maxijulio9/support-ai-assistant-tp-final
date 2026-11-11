@@ -165,7 +165,8 @@ CREATE TABLE IF NOT EXISTS interaction (
     resolution_channel      VARCHAR(50),
     edited_response         TEXT,
     first_response_at       TIMESTAMPTZ,
-    resolved_at             TIMESTAMPTZ
+    resolved_at             TIMESTAMPTZ,
+    generated_at            TIMESTAMPTZ
 );
 
 -- tabla para almacenar credenciales externas que van a estar encriptadas

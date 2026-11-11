@@ -178,6 +178,7 @@ class InteractionLogger:
                 UPDATE interaction
                 SET chunks_retrieved_count = :chunks_retrieved_count,
                     generated_response = :generated_response,
+                    generated_at = CASE WHEN CAST(:generated_response AS TEXT) IS NOT NULL THEN NOW() ELSE generated_at END,
                     confidence_score = :confidence_score,
                     decision = :decision,
                     system_decision = COALESCE(system_decision, :decision),
