@@ -337,6 +337,7 @@ class InteractionReviewService:
                     reviewed_at = NOW(),
                     rejection_reason = COALESCE(:rejection_reason, rejection_reason),
                     generated_response = COALESCE(:generated_response, generated_response),
+                    generated_at = CASE WHEN CAST(:generated_response AS TEXT) IS NOT NULL THEN NOW() ELSE generated_at END,
                     confidence_score = COALESCE(:confidence_score, confidence_score),
                     resolution_channel = COALESCE(:resolution_channel, resolution_channel),
                     edited_response = COALESCE(:edited_response, edited_response),

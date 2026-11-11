@@ -5012,6 +5012,42 @@
             "title": "Responded At",
             "description": "marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato"
           },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At",
+            "description": "momento en que el modelo genero generated_response, null si no se genero o si es anterior al registro de este dato"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At",
+            "description": "momento en que una persona resolvio la interaccion desde Revision, null si no la resolvio una persona o si todavia esta pendiente"
+          },
+          "reviewed_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By Name",
+            "description": "nombre de la persona que resolvio la interaccion, null en los mismos casos que reviewed_at"
+          },
           "chunks": {
             "items": {
               "$ref": "#/components/schemas/RetrievedChunkDetail"
@@ -5047,6 +5083,9 @@
           "was_edited",
           "created_at",
           "responded_at",
+          "generated_at",
+          "reviewed_at",
+          "reviewed_by_name",
           "chunks",
           "sources"
         ],
@@ -5185,6 +5224,42 @@
             "title": "Responded At",
             "description": "marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato"
           },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At",
+            "description": "momento en que el modelo genero generated_response, null si no se genero o si es anterior al registro de este dato"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At",
+            "description": "momento en que una persona resolvio la interaccion desde Revision, null si no la resolvio una persona o si todavia esta pendiente"
+          },
+          "reviewed_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed By Name",
+            "description": "nombre de la persona que resolvio la interaccion, null en los mismos casos que reviewed_at"
+          },
           "was_edited": {
             "type": "boolean",
             "title": "Was Edited",
@@ -5206,6 +5281,9 @@
           "confidence_score",
           "created_at",
           "responded_at",
+          "generated_at",
+          "reviewed_at",
+          "reviewed_by_name",
           "was_edited"
         ],
         "title": "InteractionListItem",
