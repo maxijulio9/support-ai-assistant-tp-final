@@ -34,11 +34,15 @@ class InteractionListingRepository:
                     i.confidence_score,
                     i.edited_response,
                     i.created_at,
-                    i.first_response_at
+                    i.first_response_at,
+                    i.generated_at,
+                    i.reviewed_at,
+                    u.full_name AS reviewed_by_name
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
                 LEFT JOIN ticket_category tc ON i.category_id = tc.id
                 LEFT JOIN ticket_priority tp ON i.priority_id = tp.id
+                LEFT JOIN app_user u ON i.reviewed_by = u.id
                 WHERE 1=1
             """
             params = {"limit": limit, "offset": offset}
@@ -63,12 +67,20 @@ class InteractionListingRepository:
                     "was_edited": row.edited_response is not None,
                     "created_at": row.created_at.isoformat() if row.created_at else None,
                     "responded_at": row.first_response_at.isoformat() if row.first_response_at else None,
+                    "generated_at": row.generated_at.isoformat() if row.generated_at else None,
+                    "reviewed_at": row.reviewed_at.isoformat() if row.reviewed_at and self._is_human_reviewed(row.resolution_channel) else None,
+                    "reviewed_by_name": row.reviewed_by_name if self._is_human_reviewed(row.resolution_channel) else None,
                 }
                 for row in rows
             ]
         finally:
             db.close()
         
+    # la fecha y el nombre de revision solo valen cuando una persona ya resolvio la interaccion, mientras esta reservada o pendiente reviewed_at es solo la marca del reclamo
+    @staticmethod
+    def _is_human_reviewed(resolution_channel: str | None) -> bool:
+        return resolution_channel in ("REVIEWED_APPROVED", "REVIEWED_EDITED", "REVIEWED_REGENERATED", "ESCALATED_BY_HUMAN", "DISCARDED_BY_HUMAN")
+
     # agrega al query los filtros opcionales del listado, los mismos para listar y para contar
     @staticmethod
     def _apply_filters(query: str, params: dict, project_id: str | None, category: str | None, decision: str | None,
@@ -136,11 +148,15 @@ class InteractionListingRepository:
                     i.generated_response,
                     i.edited_response,
                     i.created_at,
-                    i.first_response_at
+                    i.first_response_at,
+                    i.generated_at,
+                    i.reviewed_at,
+                    u.full_name AS reviewed_by_name
                 FROM interaction i
                 JOIN ticket t ON i.ticket_id = t.id
                 LEFT JOIN ticket_category tc ON i.category_id = tc.id
                 LEFT JOIN ticket_priority tp ON i.priority_id = tp.id
+                LEFT JOIN app_user u ON i.reviewed_by = u.id
                 WHERE i.id = :interaction_id
             """), {"interaction_id": interaction_id}).fetchone()
 
@@ -172,6 +188,9 @@ class InteractionListingRepository:
                 "was_edited": row.edited_response is not None,
                 "created_at": row.created_at.isoformat() if row.created_at else None,
                 "responded_at": row.first_response_at.isoformat() if row.first_response_at else None,
+                "generated_at": row.generated_at.isoformat() if row.generated_at else None,
+                "reviewed_at": row.reviewed_at.isoformat() if row.reviewed_at and self._is_human_reviewed(row.resolution_channel) else None,
+                "reviewed_by_name": row.reviewed_by_name if self._is_human_reviewed(row.resolution_channel) else None,
                 "chunks": [
                     {
                         "page_title": c.page_title,
