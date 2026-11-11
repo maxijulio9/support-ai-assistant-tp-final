@@ -24,6 +24,9 @@ function item(id: string, issueKey: string, priority: string | null, createdAt: 
     ticket_url: null,
     was_edited: false,
     responded_at: null,
+    generated_at: null,
+    reviewed_at: null,
+    reviewed_by_name: null,
   };
 }
 

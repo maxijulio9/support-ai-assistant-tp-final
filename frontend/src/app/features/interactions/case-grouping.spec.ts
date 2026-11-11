@@ -29,6 +29,9 @@ function row(issueKey: string, createdAt: string | null, overrides: Partial<Inte
     was_edited: false,
     created_at: createdAt,
     responded_at: null,
+    generated_at: null,
+    reviewed_at: null,
+    reviewed_by_name: null,
     ...overrides,
   };
 }

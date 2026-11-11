@@ -28,6 +28,11 @@ export interface InteractionListItem {
   decision: (string | null);
 
   /**
+   * momento en que el modelo genero generated_response, null si no se genero o si es anterior al registro de este dato
+   */
+  generated_at: (string | null);
+
+  /**
    * id de la interaccion
    */
   interaction_id: string;
@@ -51,6 +56,16 @@ export interface InteractionListItem {
    * marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato
    */
   responded_at: (string | null);
+
+  /**
+   * momento en que una persona resolvio la interaccion desde Revision, null si no la resolvio una persona o si todavia esta pendiente
+   */
+  reviewed_at: (string | null);
+
+  /**
+   * nombre de la persona que resolvio la interaccion, null en los mismos casos que reviewed_at
+   */
+  reviewed_by_name: (string | null);
 
   /**
    * resumen del ticket original

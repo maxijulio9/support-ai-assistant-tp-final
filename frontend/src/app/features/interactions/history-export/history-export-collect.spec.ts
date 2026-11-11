@@ -20,6 +20,9 @@ function row(id: number, overrides: Partial<InteractionListItem> = {}): Interact
     was_edited: false,
     created_at: new Date(2026, 10, 9, 12, 0, 0, 1000 - id).toISOString(),
     responded_at: null,
+    generated_at: null,
+    reviewed_at: null,
+    reviewed_by_name: null,
     ...overrides,
   };
 }

@@ -40,6 +40,11 @@ export interface InteractionDetailResponse {
   edited_response: (string | null);
 
   /**
+   * momento en que el modelo genero generated_response, null si no se genero o si es anterior al registro de este dato
+   */
+  generated_at: (string | null);
+
+  /**
    * respuesta generada por el sistema
    */
   generated_response: (string | null);
@@ -68,6 +73,16 @@ export interface InteractionDetailResponse {
    * marca de tiempo del primer comentario publico de la interaccion, o null si no se publico ninguno, por ejemplo una nota interna pendiente de revision, un cierre sin comentario o una interaccion anterior al registro de este dato
    */
   responded_at: (string | null);
+
+  /**
+   * momento en que una persona resolvio la interaccion desde Revision, null si no la resolvio una persona o si todavia esta pendiente
+   */
+  reviewed_at: (string | null);
+
+  /**
+   * nombre de la persona que resolvio la interaccion, null en los mismos casos que reviewed_at
+   */
+  reviewed_by_name: (string | null);
 
   /**
    * fuentes de la base de conocimiento consultadas para generar la respuesta, una por pagina y ordenadas por relevancia, la mejor primero, vacia si el sistema no consulto la base o si la interaccion es anterior a que se guardaran los fragmentos, son las paginas de los fragmentos que se le pasaron al modelo, no se registra cuales uso
