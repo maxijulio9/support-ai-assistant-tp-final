@@ -71,7 +71,7 @@ def stats_text(values: list[float]) -> str:
     if not values:
         return "sin datos"
     ordered = sorted(values)
-    return f"p50 {percentile(ordered, 50):.1f} s, p90 {percentile(ordered, 90):.1f} s, maximo {ordered[-1]:.1f} s"
+    return f"promedio {sum(ordered) / len(ordered):.1f} s, p50 {percentile(ordered, 50):.1f} s, p90 {percentile(ordered, 90):.1f} s, p95 {percentile(ordered, 95):.1f} s, maximo {ordered[-1]:.1f} s"
 
 
 # tickets que el sistema ya proceso, o sea que tienen una interaccion con decision
