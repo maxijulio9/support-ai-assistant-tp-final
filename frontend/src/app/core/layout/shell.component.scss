@@ -118,9 +118,11 @@
   flex-shrink: 0;
   width: var(--app-brand-size);
   height: var(--app-brand-size);
-  font-size: var(--app-brand-size);
-  line-height: var(--app-brand-size);
-  color: var(--mat-sys-inverse-on-surface);
+  box-sizing: border-box;
+  padding: 3px;
+  border-radius: var(--app-radius-sm);
+  background-color: var(--mat-sys-inverse-on-surface);
+  object-fit: contain;
 }
 
 .shell-nav-list {
