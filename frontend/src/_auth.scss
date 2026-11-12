@@ -45,9 +45,7 @@ app-reset-password {
   margin: 0 auto var(--app-space-md);
   width: var(--app-brand-size-login);
   height: var(--app-brand-size-login);
-  font-size: var(--app-brand-size-login);
-  line-height: var(--app-brand-size-login);
-  color: var(--mat-sys-primary);
+  object-fit: contain;
 }
 
 .auth-title {
