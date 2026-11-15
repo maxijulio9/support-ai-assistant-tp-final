@@ -1,0 +1,26 @@
+<div class="detail-cards">
+  <div class="detail-card">
+    <span class="detail-card-label">Ticket</span>
+    @if (ticketUrl(); as url) {
+      <a [href]="url" target="_blank" rel="noopener noreferrer" class="detail-card-value detail-card-link">
+        {{ data().issue_key }}
+        <mat-icon aria-hidden="true" class="detail-card-link-icon">open_in_new</mat-icon>
+        <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+      </a>
+    } @else {
+      <span class="detail-card-value">{{ data().issue_key }}</span>
+    }
+  </div>
+
+  <div class="detail-card">
+    <span class="detail-card-label">Interacción registrada el</span>
+    <span class="detail-card-value">{{ createdText() }}</span>
+  </div>
+
+  @if (responseTime(); as time) {
+    <div class="detail-card">
+      <span class="detail-card-label">{{ responseTimeLabel }}</span>
+      <span class="detail-card-value">{{ time }}</span>
+    </div>
+  }
+</div>

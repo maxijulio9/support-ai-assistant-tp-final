@@ -1,0 +1,22 @@
+@if (visible()) {
+  <section class="analysis" aria-labelledby="analysis-title">
+    <h2 id="analysis-title" class="analysis-title">{{ title }}</h2>
+
+    @for (row of rows(); track row.label) {
+      <div class="analysis-fact">
+        <span class="analysis-label">{{ row.label }}</span>
+        <span class="analysis-value">{{ row.value }}</span>
+      </div>
+    }
+
+    @let percent = confidence();
+    @if (percent !== null) {
+      <div class="analysis-fact">
+        <span class="analysis-label">Confianza {{ percent }}%</span>
+        <div class="analysis-bar" aria-hidden="true">
+          <div class="analysis-bar-fill" [style.width.%]="percent"></div>
+        </div>
+      </div>
+    }
+  </section>
+}

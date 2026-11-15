@@ -1,0 +1,112 @@
+:host {
+  display: block;
+}
+
+.chunks-title {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+}
+
+.chunks-note,
+.chunks-empty,
+.chunks-space,
+.chunks-fragment--empty {
+  font: var(--mat-sys-body-medium);
+  color: var(--app-color-text-secondary);
+}
+
+.chunks-note {
+  margin: var(--app-space-xs) 0 var(--app-space-sm);
+}
+
+.chunks-empty {
+  margin: 0;
+}
+
+.chunks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-space-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chunks-item {
+  background-color: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--app-radius-md);
+  padding: var(--app-space-sm);
+}
+
+.chunks-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px var(--app-space-xs);
+}
+
+.chunks-page {
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.chunks-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+}
+
+.chunks-link:focus-visible,
+.chunks-toggle:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+.chunks-link-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.chunks-fragment {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  margin: var(--app-space-xs) 0 0;
+  overflow-wrap: anywhere;
+}
+
+.chunks-fragment.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.chunks-toggle {
+  margin: 4px 0 0 -4px;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--app-radius-sm);
+  background: transparent;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-label-large);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chunks-similarity {
+  margin-left: auto;
+  padding: 2px var(--app-space-xs);
+  border-radius: var(--app-radius-sm);
+  background-color: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-label-large);
+}

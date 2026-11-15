@@ -1,0 +1,18 @@
+@if (events().length > 0) {
+  <section class="timeline" aria-labelledby="timeline-title">
+    <h2 id="timeline-title" class="timeline-title">Línea de tiempo</h2>
+    <ol class="timeline-list">
+      @for (event of events(); track event.key) {
+        <li class="timeline-item" [class.is-failed]="event.tone === 'failed'">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div class="timeline-body">
+            <span class="timeline-label">{{ event.label }}</span>
+            @if (event.date) {
+              <span class="timeline-date">{{ event.date }}</span>
+            }
+          </div>
+        </li>
+      }
+    </ol>
+  </section>
+}

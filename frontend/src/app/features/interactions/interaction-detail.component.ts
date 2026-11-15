@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -6,13 +6,13 @@ import { EMPTY, Subject, catchError, switchMap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { InteractionsService } from './interactions.service';
-import { InteractionSourcesComponent } from './interaction-sources.component';
-import { DecisionStatus, decisionStatus, originalDecisionText } from './interaction-status';
-import { resolutionChannelLabel } from './resolution-channel';
+import { DetailCardsComponent } from './detail/detail-cards.component';
+import { SystemAnalysisComponent } from './detail/system-analysis.component';
+import { RetrievedChunksComponent } from './detail/retrieved-chunks.component';
+import { InteractionTimelineComponent } from './detail/interaction-timeline.component';
+import { DecisionStatus, decisionStatus } from './interaction-status';
 import { reviewText } from './review-info';
 import { RESPONDED_AT_LABEL, respondedAtText } from './responded-at';
-import { safeTicketUrl } from '../../shared/safe-ticket-url';
-import { formatShortDate } from '../../shared/format-short-date';
 import { InteractionDetailResponse } from '../../api/models/interaction-detail-response';
 
 export type DetailViewState = 'loading' | 'error' | 'not-found' | 'loaded';
@@ -24,7 +24,15 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 @Component({
   selector: 'app-interaction-detail',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, RouterLink, InteractionSourcesComponent],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    RouterLink,
+    DetailCardsComponent,
+    SystemAnalysisComponent,
+    RetrievedChunksComponent,
+    InteractionTimelineComponent,
+  ],
   templateUrl: './interaction-detail.component.html',
   styleUrl: './interaction-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,16 +51,6 @@ export class InteractionDetailComponent {
 
   private readonly load$ = new Subject<string>();
 
-  readonly confidencePercent = computed(() => {
-    const score = this.detail()?.confidence_score;
-    if (score === null || score === undefined) return null;
-    return Math.min(100, Math.max(0, Math.round(score * 100)));
-  });
-
-  readonly safeTicketUrl = safeTicketUrl;
-  readonly formatDate = formatShortDate;
-  readonly resolutionChannelLabel = resolutionChannelLabel;
-  readonly originalDecisionText = originalDecisionText;
   readonly respondedAtLabel = RESPONDED_AT_LABEL;
   readonly respondedAtText = respondedAtText;
   readonly reviewText = reviewText;

@@ -1,0 +1,67 @@
+:host {
+  display: block;
+}
+
+.timeline-title {
+  margin: 0 0 var(--app-space-sm);
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+}
+
+.timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: var(--app-space-xs);
+  padding-bottom: var(--app-space-sm);
+}
+
+// Linea que une un hito con el siguiente
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  background-color: color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent);
+}
+
+.timeline-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background-color: var(--mat-sys-primary);
+}
+
+.timeline-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.timeline-label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.timeline-date {
+  font: var(--mat-sys-body-small);
+  color: var(--app-color-text-secondary);
+}
+
+.timeline-item.is-failed .timeline-dot {
+  background-color: var(--app-color-decision-publish-failed);
+}
+
+.timeline-item.is-failed .timeline-label {
+  color: var(--app-color-decision-publish-failed);
+}

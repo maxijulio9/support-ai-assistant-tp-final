@@ -1,0 +1,52 @@
+@if (chunks().length === 0) {
+  <app-interaction-sources [sources]="sources()" />
+} @else {
+  <section class="chunks" aria-labelledby="chunks-title">
+    <h2 id="chunks-title" class="chunks-title">{{ title }}</h2>
+    <p class="chunks-note">{{ note }}</p>
+
+    <ul class="chunks-list">
+      @for (row of rows(); track row.key; let index = $index) {
+        <li class="chunks-item">
+          <div class="chunks-head">
+            <h3 class="chunks-page">
+              @if (row.href) {
+                <a [href]="row.href" target="_blank" rel="noopener noreferrer" class="chunks-link">
+                  {{ row.title }}
+                  <mat-icon aria-hidden="true" class="chunks-link-icon">open_in_new</mat-icon>
+                  <span class="visually-hidden"> {{ newTabHint }}</span>
+                </a>
+              } @else {
+                {{ row.title }}
+              }
+            </h3>
+            @if (row.similarity) {
+              <span class="chunks-similarity">Similitud {{ row.similarity }}</span>
+            }
+          </div>
+
+          @if (row.space) {
+            <span class="chunks-space">{{ row.space }}</span>
+          }
+
+          @if (row.fragment) {
+            <p class="chunks-fragment" [class.is-clamped]="row.collapsible && !isExpanded(row.key)" [id]="'chunk-fragment-' + index">{{ row.fragment }}</p>
+            @if (row.collapsible) {
+              <button
+                type="button"
+                class="chunks-toggle"
+                [attr.aria-expanded]="isExpanded(row.key)"
+                [attr.aria-controls]="'chunk-fragment-' + index"
+                (click)="toggle(row.key)"
+              >
+                {{ toggleLabel(isExpanded(row.key)) }}<span class="visually-hidden">{{ toggleContext(row.title) }}</span>
+              </button>
+            }
+          } @else if (!row.fragmentShownAbove) {
+            <p class="chunks-fragment chunks-fragment--empty">{{ unavailableText }}</p>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+}
